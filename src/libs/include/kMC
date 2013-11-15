@@ -1,0 +1,10 @@
+#ifndef KMC
+#define KMC
+
+namespace kMC {
+
+#include "testStuff.h"
+
+} //End namespace kMC
+
+#endif
