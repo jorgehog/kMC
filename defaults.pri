@@ -8,12 +8,11 @@ QMAKE_CXXFLAGS_DEBUG += $$COMMON_CXXFLAGS
 QMAKE_CXXFLAGS_RELEASE += $$COMMON_CXXFLAGS
 
 CURRENT_COMPILER = $$QMAKE_CXX
-QMAKE_CXX = ccache $$CURRENT_COMPILER
+QMAKE_CXX = $$CURRENT_COMPILER
 
 # Directories
 INCLUDEPATH += $$TOP_PWD/src/libs
 SRC_DIR = $$TOP_PWD
-
 
 copydata.commands = $(COPY_DIR) $$PWD/infiles $$OUT_PWD
 first.depends = $(first) copydata
@@ -25,4 +24,10 @@ QMAKE_EXTRA_TARGETS += first copydata
 
 RNG_ZIG {
     DEFINES += KMC_RNG_ZIG
+}
+
+release {
+    QMAKE_CXXFLAGS -= -O2 -O1
+    QMAKE_CXXFLAGS += -O3
+    DEFINES += ARMA_NO_DEBUG
 }
