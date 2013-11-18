@@ -1,4 +1,6 @@
 LIBS += -llapack -larmadillo -lconfig++
+CONFIG += RNG_ZIG
+
 
 COMMON_CXXFLAGS = -std=c++0x
 QMAKE_CXXFLAGS += $$COMMON_CXXFLAGS
@@ -9,8 +11,7 @@ CURRENT_COMPILER = $$QMAKE_CXX
 QMAKE_CXX = ccache $$CURRENT_COMPILER
 
 # Directories
-INCLUDEPATH += $$TOP_PWD/src/libs \
-               $$TOP_PWD/src/libs/include
+INCLUDEPATH += $$TOP_PWD/src/libs
 SRC_DIR = $$TOP_PWD
 
 
@@ -19,3 +20,9 @@ first.depends = $(first) copydata
 export(first.depends)
 export(copydata.commands)
 QMAKE_EXTRA_TARGETS += first copydata
+
+
+
+RNG_ZIG {
+    DEFINES += KMC_RNG_ZIG
+}

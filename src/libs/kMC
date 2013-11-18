@@ -1,0 +1,12 @@
+#ifndef KMC_H
+#define KMC_H
+
+#include "RNG/kMCRNG.h"
+
+namespace kMC {
+
+#include "solver.h"
+
+} //End namespace kMC
+
+#endif

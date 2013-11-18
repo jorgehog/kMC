@@ -1,15 +1,12 @@
-#include <iostream>
 
-#include <kMC>
-
-using namespace std;
+#include <solver.h>
 
 int main()
 {
 
-    kMC::stuff A;
+    Solver* solver = new Solver();
+    solver->test();
 
-    cout << "Hello World!" << A.a << endl;
     return 0;
 }
 
