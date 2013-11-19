@@ -33,7 +33,7 @@ BoolCube makeBoolCube(uint N, uint M, uint L, bool fill=false) {
 Solver::Solver()
 {
 
-    KMC_INIT_RNG(100);
+    KMC_INIT_RNG(time(NULL));
 
     siteCube = makeBoolCube(N, M, L);
     neighbours.set_size(N, M);
@@ -65,7 +65,7 @@ Solver::Solver()
 
     cout << nTot/(double) (N*M*L) << endl;
 
-    double T = 1E6;
+    double T = 1E7;
 
     double dt;
 
@@ -74,7 +74,7 @@ Solver::Solver()
     dt = 1;
 
     uint nV, n;
-    double E0, E0p;
+    double E0, E0i;
     while(t < T) {
 
         i = (uint) (N*KMC_RNG_UNIFORM());
@@ -84,12 +84,11 @@ Solver::Solver()
         n = neighbours(i, j)(k).n_rows;
         nV = vacantNeighbours(i, j)(k).n_rows;
 
-        E0 = exp(-beta*pow(n/26.0, 3));
-        E0p = exp(-beta*pow(nV/26.0, 3));
+        E0 = getRate(pow(n/26.0, 1 + beta));
 
         if (siteCube[i][j][k]) {
-            double rateDiff = E0;
-            double rateAbsorbed = E0p;
+            double rateDiff = 1-E0;
+            double rateAbsorbed = E0;
             double totalRate = rateDiff + rateAbsorbed;
 
             double R = KMC_RNG_UNIFORM()*totalRate;
@@ -101,8 +100,8 @@ Solver::Solver()
             }
 
         } else {
-            double rateReleased = E0;
-            double ratePass = E0p;
+            double rateReleased = 1-E0;
+            double ratePass = E0;
             double totalRate = rateReleased + ratePass;
 
             double R = KMC_RNG_UNIFORM()*totalRate;
@@ -165,7 +164,7 @@ void Solver::dump()
         for (uint j = 0; j < M; ++j) {
             for (uint k = 0; k < L; ++k) {
                 if (siteCube[i][j][k]) {
-                    o << "\nC " << i << " " << j << " " << k;
+                    o << "\nC " << i << " " << j << " " << k << " " << neighbours(i, j)(k).n_rows;
                 }
             }
         }
@@ -176,7 +175,7 @@ void Solver::dump()
 
 double Solver::getRate(double E)
 {
-    return E*exp(-KMC_RNG_NORMAL()*E);
+    return E;
 }
 
 void Solver::getNeighbours(uint i, uint j, uint k)

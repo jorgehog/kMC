@@ -14,12 +14,11 @@ public:
 
     Solver();
 
-    double alpha = 1;
-    double beta = 0.1;
+    double beta = 0.01;
 
-    uint N = 30;
-    uint M = 30;
-    uint L = 30;
+    uint N = 50;
+    uint M = 50;
+    uint L = 50;
 
     ivec delta = {-1, 0, 1};
 
