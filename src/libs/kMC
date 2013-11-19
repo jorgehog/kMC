@@ -5,7 +5,7 @@
 
 namespace kMC {
 
-#include "solver.h"
+#include "kmcsolver.h"
 
 } //End namespace kMC
 

@@ -3,10 +3,16 @@ include(../../defaults.pri)
 TEMPLATE = lib 
 TARGET = kMC
 
-HEADERS = solver.h \
-          RNG/kMCRNG.h
+HEADERS = \
+          RNG/kMCRNG.h \
+    reactions/reaction.h \
+    kmcsolver.h \
+    site.h
 
-SOURCES += solver.cpp
+SOURCES += \
+    reactions/reaction.cpp \
+    kmcsolver.cpp \
+    site.cpp
 
 RNG_ZIG {
 

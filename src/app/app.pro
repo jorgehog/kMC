@@ -5,6 +5,9 @@ SOURCES = kmcmain.cpp
 
 LIBS += -L$$TOP_OUT_PWD/src/libs -lkMC
 
+
+
+
 DIRS = outfiles
 
 for(DIR, DIRS) {

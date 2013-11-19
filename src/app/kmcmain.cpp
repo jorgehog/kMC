@@ -1,11 +1,11 @@
 
-#include <solver.h>
+#include <kmcsolver.h>
 
 int main()
 {
 
-    Solver* solver = new Solver();
-    solver->test();
+    KMCSolver* solver = new KMCSolver(30, 30, 30);
+    solver->run();
 
     return 0;
 }
