@@ -4,7 +4,7 @@
 int main()
 {
 
-    KMCSolver* solver = new KMCSolver(30, 30, 30);
+    KMCSolver* solver = new KMCSolver(100, 100, 100);
     solver->run();
 
     return 0;

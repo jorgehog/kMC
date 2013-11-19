@@ -63,7 +63,7 @@ void KMCSolver::run(){
                     sites[i][j][k]->activate();
                     nTot++;
                 } else {
-                    if (KMC_RNG_UNIFORM() > 0.85) {
+                    if (KMC_RNG_UNIFORM() > 0.95) {
 
                         sites[i][j][k]->activate();
                         nTot++;
@@ -73,7 +73,6 @@ void KMCSolver::run(){
         }
     }
 
-    dumpXYZ();
 
     for (uint i = 0; i < NX; ++i) {
         for (uint j = 0; j < NY; ++j) {
@@ -83,6 +82,8 @@ void KMCSolver::run(){
         }
     }
 
+    dumpXYZ();
+
     double T = 1E7;
 
     double dt;
@@ -91,10 +92,13 @@ void KMCSolver::run(){
     std::vector<std::vector<uint>> transitions;
 
     double kTot;
-    double Enn = 0.05;
-    double Ennn = 0.01;
-    double temperature = 300;
+    double Enn = 2;
+    double Ennn = 1.7;
+    double EspN = 1;
+    double EspNN = 0.85;
+    double temperature = 100;
     double mu = 1;
+
     while(counter < 100000) {
 
         allRates.clear();
@@ -128,9 +132,44 @@ void KMCSolver::run(){
 
 
                                 if (!sites[inp][jnp][knp]->active()) {
-                                    uint nnsp = neighbours(inp, jnp)(knp).n_rows;
-                                    uint nnnsp = nextNeighbours(inp, jnp)(knp).n_rows;
-                                    double Esp = 1.5*((nn + nnsp)*Enn + (nnn + nnnsp)*Ennn);
+
+
+
+                                    uint ns = 0;
+                                    uint nns = 0;
+
+                                    uint xs = ((i + inp)%NX)/2;
+                                    uint ys = ((j + jnp)%NY)/2;
+                                    uint zs = ((k + knp)%NZ)/2;
+
+                                    for (uint is = 0; is < 6; ++is) {
+
+                                        uint I = (i-2 + is + NX)%NX;
+                                        for (uint js = 0; js < 6; ++js) {
+
+                                            uint J = (j - 2 + js + NY)%NY;
+                                            for (uint ks = 0; ks < 6; ++ks) {
+
+                                                uint K = (k - 2 + ks + NZ)%NZ;
+
+                                                double dx = (I - xs);
+                                                double dy = (J - ys);
+                                                double dz = (K - zs);
+
+                                                double l2 = dx*dx + dy*dy + dz*dz;
+
+                                                if ((l2 >= 1.25) && (l2 < 1.5)) {
+                                                    ns++;
+                                                } else if ((l2 >= 1.5) && (l2 < 3)) {
+                                                    nns++;
+                                                }
+
+                                            }
+                                        }
+
+                                    }
+
+                                    double Esp = nns*EspN + nns*EspNN;
 
                                     double rate = mu*exp(-(Eijk-Esp)/temperature);
                                     kTot += rate;
@@ -149,7 +188,6 @@ void KMCSolver::run(){
         double R = kTot*KMC_RNG_UNIFORM();
 
         int choice = 0;
-        double r = 0;
         while(allRates.at(choice) < R) {
             choice++;
         }
@@ -170,7 +208,7 @@ void KMCSolver::run(){
 
         counter2++;
 
-        if (counter2%200 == 0){
+        if (counter2%50 == 0){
             dumpXYZ();
             counter++;
             cout << t/T << endl;
