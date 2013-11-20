@@ -59,20 +59,27 @@ void KMCSolver::run(){
     for (uint i = 0; i < NX; ++i) {
         for (uint j = 0; j < NY; ++j) {
             for (uint k = 0; k < NZ; ++k) {
-                if ((i < NX/10) || (i > 9*NX/10)) {
+                if (KMC_RNG_UNIFORM() > 0.99) {
+
                     sites[i][j][k]->activate();
                     nTot++;
-                } else {
-                    if (KMC_RNG_UNIFORM() > 0.95) {
-
-                        sites[i][j][k]->activate();
-                        nTot++;
-                    }
                 }
             }
         }
     }
 
+    int D = 5;
+
+    for (uint i = NX/2 - D; i < NX/2 + D; ++i) {
+        for (uint j = NY/2 - D; j < NY/2 + D; ++j) {
+            for (uint k = NZ/2 - D; k < NZ/2 + D; ++k) {
+                if (!sites[i][j][k]->active()){
+                    sites[i][j][k]->activate();
+                    nTot++;
+                }
+            }
+        }
+    }
 
     for (uint i = 0; i < NX; ++i) {
         for (uint j = 0; j < NY; ++j) {
@@ -81,134 +88,54 @@ void KMCSolver::run(){
             }
         }
     }
-
+    cout << nTot << endl;
     dumpXYZ();
 
     double T = 1E7;
 
     double dt;
 
-    std::vector<double> allRates;
-    std::vector<std::vector<uint>> transitions;
-
-    double kTot;
-    double Enn = 2;
-    double Ennn = 1.7;
-    double EspN = 1;
-    double EspNN = 0.85;
-    double temperature = 100;
-    double mu = 1;
+    getAllTransitionsAndRates();
 
     while(counter < 100000) {
 
-        allRates.clear();
-        kTot = 0;
-        transitions.clear();
-        for (uint i = 0; i < NX; ++i) {
-            for (uint j = 0; j < NY; ++j) {
-                for (uint k = 0; k < NZ; ++k) {
-
-                    if(!sites[i][j][k]->active()) {
-                        continue;
-                    }
-
-                    uint nn = neighbours(i, j)(k).n_rows;
-                    uint nnn = nextNeighbours(i, j)(k).n_rows;
-
-                    double Eijk = nn*Enn + nnn*Ennn;
-
-                    for (uint ci = 0; ci < 3; ++ci) {
-                        uint inp = (i + delta(ci) + NX)%NX;
-
-                        for (uint cj = 0; cj < 3; ++cj) {
-                            uint jnp = (j + delta(cj) + NY)%NY;
-
-                            for (uint ck = 0; ck < 3; ++ck) {
-
-                                if((ci == 1) && (cj == 1) && (ck == 1)) {
-                                    continue;
-                                }
-                                uint knp = (k + delta(ck)+ NZ)%NZ;
-
-
-                                if (!sites[inp][jnp][knp]->active()) {
-
-
-
-                                    uint ns = 0;
-                                    uint nns = 0;
-
-                                    uint xs = ((i + inp)%NX)/2;
-                                    uint ys = ((j + jnp)%NY)/2;
-                                    uint zs = ((k + knp)%NZ)/2;
-
-                                    for (uint is = 0; is < 6; ++is) {
-
-                                        uint I = (i-2 + is + NX)%NX;
-                                        for (uint js = 0; js < 6; ++js) {
-
-                                            uint J = (j - 2 + js + NY)%NY;
-                                            for (uint ks = 0; ks < 6; ++ks) {
-
-                                                uint K = (k - 2 + ks + NZ)%NZ;
-
-                                                double dx = (I - xs);
-                                                double dy = (J - ys);
-                                                double dz = (K - zs);
-
-                                                double l2 = dx*dx + dy*dy + dz*dz;
-
-                                                if ((l2 >= 1.25) && (l2 < 1.5)) {
-                                                    ns++;
-                                                } else if ((l2 >= 1.5) && (l2 < 3)) {
-                                                    nns++;
-                                                }
-
-                                            }
-                                        }
-
-                                    }
-
-                                    double Esp = nns*EspN + nns*EspNN;
-
-                                    double rate = mu*exp(-(Eijk-Esp)/temperature);
-                                    kTot += rate;
-                                    allRates.push_back(kTot);
-                                    std::vector<uint> trans = {i, j, k, inp, jnp, knp};
-                                    transitions.push_back(trans);
-                                }
-                            }
-                        }
-                    }
-
-                }
-            }
-        }
 
         double R = kTot*KMC_RNG_UNIFORM();
 
         int choice = 0;
-        while(allRates.at(choice) < R) {
+        while(accuAllRates.at(choice) < R) {
             choice++;
         }
 
-        std::vector<uint> chosen = transitions.at(choice);
-        uint x0 = chosen.at(0);
-        uint y0 = chosen.at(1);
-        uint z0 = chosen.at(2);
-        uint x1 = chosen.at(3);
-        uint y1 = chosen.at(4);
-        uint z1 = chosen.at(5);
+        uvec chosen = transitions.at(choice);
+        uint x0 = chosen(0);
+        uint y0 = chosen(1);
+        uint z0 = chosen(2);
+        uint x1 = chosen(3);
+        uint y1 = chosen(4);
+        uint z1 = chosen(5);
 
+        updateRateQueue.clear();
+        //HERE IS THE ERROR... deactivate something that is already deactive.
+        if (!sites[x0][y0][z0]->active()) {
+            cout << "fail2." << endl;
+//            exit(1);
+        }
         deactivateSite(x0,y0, z0);
+        if (sites[x1][y1][z1]->active()) {
+            cout << "fail." << endl;
+//            exit(1);
+        }
         activateSite(x1, y1, z1);
+
+        updateTransitionsAndRates();
 
         dt = 1.0/kTot;
         t += dt;
 
         counter2++;
 
-        if (counter2%50 == 0){
+        if (counter2%250 == 0){
             dumpXYZ();
             counter++;
             cout << t/T << endl;
@@ -265,7 +192,7 @@ void KMCSolver::test()
         n = neighbours(i, j)(k).n_rows;
         nV = vacantNeighbours(i, j)(k).n_rows;
 
-        E0 = pow(n/26.0, 1.015);
+        E0 = pow(n/26.0, 1.02);
 
         if (sites[i][j][k]->active()) {
             double rateDiff = 1-E0;
@@ -529,6 +456,12 @@ void KMCSolver::getNeighbours(uint i, uint j, uint k)
 void KMCSolver::updateNextNeighbour(uint & x, uint& y, uint &z, const urowvec & newRow, bool activate)
 {
 
+    uint xnew = newRow(0);
+    uint ynew = newRow(1);
+    uint znew = newRow(2);
+
+    pushToRateQueue(x, y, z);
+
     //activate=true means the particle at (i j k) needs to be added to all surrounding neighbour lists
     if (activate) {
         nextNeighbours(x, y)(z).insert_rows(0, newRow);
@@ -539,7 +472,7 @@ void KMCSolver::updateNextNeighbour(uint & x, uint& y, uint &z, const urowvec & 
             uint & j = nextNeighbours(x, y)(z)(l, 1);
             uint & k = nextNeighbours(x, y)(z)(l, 2);
 
-            if ((x == i) && (y==j) && (z == k)) {
+            if ((xnew == i) && (ynew==j) && (znew == k)) {
                 nextNeighbours(x, y)(z).shed_row(l);
                 return;
             }
@@ -636,11 +569,13 @@ void KMCSolver::updateNeighbourLists(field<field<umat>> & A, field<field<umat>> 
                     //                        exit(1);
                     //                    }
                 }
+
+                pushToRateQueue(inp, jnp, knp);
+
             }
         }
     }
 
-    int C = 0;
 
     uint X, Y, Z;
     uint X0 = (i - 2 + NX) % NX;
@@ -661,7 +596,6 @@ void KMCSolver::updateNeighbourLists(field<field<umat>> & A, field<field<umat>> 
 
             updateNextNeighbour(X, Y, Z0, newRow, activate);
             updateNextNeighbour(X, Y, Z1, newRow, activate);
-            C+=2;
 
         }
     }
@@ -679,7 +613,6 @@ void KMCSolver::updateNeighbourLists(field<field<umat>> & A, field<field<umat>> 
             updateNextNeighbour(X, Y0, Z, newRow, activate);
             updateNextNeighbour(X, Y1, Z, newRow, activate);
 
-            C+=2;
         }
     }
 
@@ -695,11 +628,242 @@ void KMCSolver::updateNeighbourLists(field<field<umat>> & A, field<field<umat>> 
             updateNextNeighbour(X0, Y, Z, newRow, activate);
             updateNextNeighbour(X1, Y, Z, newRow, activate);
 
-            C+=2;
         }
     }
 
 
-//    cout << C << endl;
+}
 
+void KMCSolver::getAllTransitionsAndRates()
+{
+
+
+    accuAllRates.clear();
+    allRates.clear();
+    kTot = 0;
+    transitions.clear();
+    for (uint i = 0; i < NX; ++i) {
+        for (uint j = 0; j < NY; ++j) {
+            for (uint k = 0; k < NZ; ++k) {
+                getAllTransitionsAndRatesForSite(i, j, k);
+            }
+        }
+    }
+}
+
+void KMCSolver::getAllTransitionsAndRatesForSite(uint i, uint j, uint k)
+{
+    if(!sites[i][j][k]->active()) {
+        return;
+    }
+
+    uint nn = neighbours(i, j)(k).n_rows;
+    uint nnn = nextNeighbours(i, j)(k).n_rows;
+
+    double Eijk = nn*Enn + nnn*Ennn;
+
+    for (uint ci = 0; ci < 3; ++ci) {
+        uint inp = (i + delta(ci) + NX)%NX;
+
+        for (uint cj = 0; cj < 3; ++cj) {
+            uint jnp = (j + delta(cj) + NY)%NY;
+
+            for (uint ck = 0; ck < 3; ++ck) {
+
+                if((ci == 1) && (cj == 1) && (ck == 1)) {
+                    continue;
+                }
+                uint knp = (k + delta(ck)+ NZ)%NZ;
+
+
+                if (!sites[inp][jnp][knp]->active()) {
+
+
+
+                    uint ns = 0;
+                    uint nns = 0;
+
+                    uint xs = ((i + inp)%NX)/2;
+                    uint ys = ((j + jnp)%NY)/2;
+                    uint zs = ((k + knp)%NZ)/2;
+
+                    for (uint is = 0; is < 6; ++is) {
+
+                        uint I = (i-2 + is + NX)%NX;
+                        for (uint js = 0; js < 6; ++js) {
+
+                            uint J = (j - 2 + js + NY)%NY;
+                            for (uint ks = 0; ks < 6; ++ks) {
+
+                                uint K = (k - 2 + ks + NZ)%NZ;
+
+                                double dx = (I - xs);
+                                double dy = (J - ys);
+                                double dz = (K - zs);
+
+                                double l2 = dx*dx + dy*dy + dz*dz;
+
+                                if ((l2 >= 1.25) && (l2 < 1.5)) {
+                                    ns++;
+                                } else if ((l2 >= 1.5) && (l2 < 3)) {
+                                    nns++;
+                                }
+
+                            }
+                        }
+
+                    }
+
+                    double Esp = nns*EspN + nns*EspNN;
+
+                    double rate = mu*exp(-(Eijk-Esp)/temperature);
+                    kTot += rate;
+                    allRates.push_back(rate);
+                    accuAllRates.push_back(kTot);
+                    uvec trans = {i, j, k, inp, jnp, knp};
+                    transitions.push_back(trans);
+                }
+            }
+        }
+    }
+}
+
+void KMCSolver::updateTransitionsAndRates()
+{
+
+    uint i;
+    bool newTrans;
+    for (const uvec & changedState : updateRateQueue) {
+
+        i = 0;
+        newTrans = true;
+        for (const uvec & site : transitions) {
+
+            if (vectorEqual(changedState, site)) {
+                recalcSpecificSite(site, i);
+                newTrans = false;
+                break;
+            }
+
+            i++;
+
+        }
+
+        if (newTrans) {
+            getAllTransitionsAndRatesForSite(changedState(0), changedState(1), changedState(2));
+            cout << sites[changedState(0)][changedState(1)][changedState(2)]->active() << endl;
+        }
+    }
+
+    kTot = 0;
+    accuAllRates.clear();
+    uvec armaTrash = conv_to<uvec>::from(trash);
+    armaTrash = unique(armaTrash);
+    armaTrash = sort(armaTrash, 1);
+
+    for (uint j = 0; j < armaTrash.n_elem; ++j) {
+        uint index = armaTrash(j);
+        if (allRates.at(index) != 0) {
+            std::cout << "HMMHMM " << allRates.at(index)  << endl;
+            exit(1);
+        }
+
+        allRates.erase(allRates.begin() + index);
+        transitions.erase(transitions.begin() + index);
+    }
+
+    for (const double & rate : allRates) {
+        kTot += rate;
+        accuAllRates.push_back(kTot);
+    }
+
+    trash.clear();
+
+}
+
+void KMCSolver::pushToRateQueue(uint &x, uint &y, uint &z)
+{
+    for (const uvec & queuedSite : updateRateQueue) {
+
+        uint xq = queuedSite(0);
+        uint yq = queuedSite(1);
+        uint zq = queuedSite(2);
+
+        //Skip out of the function in the site is already queued
+        if ((x == xq) && (y == yq) && (z == zq)) {
+            return;
+        }
+    }
+
+    updateRateQueue.push_back(uvec({x, y, z}));
+}
+
+void KMCSolver::recalcSpecificSite(const uvec & site, uint index)
+{
+    uint i = site(0);
+    uint j = site(1);
+    uint k = site(2);
+    uint inp = site(3);
+    uint jnp = site(4);
+    uint knp = site(5);
+
+    if(!sites[i][j][k]->active()) {
+        trash.push_back(index);
+        allRates.at(index) = 0;
+        return;
+    }
+
+    uint nn = neighbours(i, j)(k).n_rows;
+    uint nnn = nextNeighbours(i, j)(k).n_rows;
+
+    double Eijk = nn*Enn + nnn*Ennn;
+
+
+    if (!sites[inp][jnp][knp]->active()) {
+
+
+
+        uint ns = 0;
+        uint nns = 0;
+
+        uint xs = ((i + inp)%NX)/2;
+        uint ys = ((j + jnp)%NY)/2;
+        uint zs = ((k + knp)%NZ)/2;
+
+        for (uint is = 0; is < 6; ++is) {
+
+            uint I = (i-2 + is + NX)%NX;
+            for (uint js = 0; js < 6; ++js) {
+
+                uint J = (j - 2 + js + NY)%NY;
+                for (uint ks = 0; ks < 6; ++ks) {
+
+                    uint K = (k - 2 + ks + NZ)%NZ;
+
+                    double dx = (I - xs);
+                    double dy = (J - ys);
+                    double dz = (K - zs);
+
+                    double l2 = dx*dx + dy*dy + dz*dz;
+
+                    if ((l2 >= 1.25) && (l2 < 1.5)) {
+                        ns++;
+                    } else if ((l2 >= 1.5) && (l2 < 3)) {
+                        nns++;
+                    }
+
+                }
+            }
+
+        }
+
+        double Esp = nns*EspN + nns*EspNN;
+
+        double rate = mu*exp(-(Eijk-Esp)/temperature);
+
+        allRates.at(index) = rate;
+    } else {
+        trash.push_back(index);
+        allRates.at(index) = 0;
+    }
 }
