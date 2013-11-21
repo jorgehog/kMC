@@ -7,12 +7,14 @@ HEADERS = \
           RNG/kMCRNG.h \
     reactions/reaction.h \
     kmcsolver.h \
-    site.h
+    site.h \
+    reactions/diffusion/diffusionreaction.h
 
 SOURCES += \
     reactions/reaction.cpp \
     kmcsolver.cpp \
-    site.cpp
+    site.cpp \
+    reactions/diffusion/diffusionreaction.cpp
 
 RNG_ZIG {
 

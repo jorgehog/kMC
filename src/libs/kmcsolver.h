@@ -13,28 +13,30 @@ class KMCSolver
 {
 public:
 
+    const uint NX;
+    const uint NY;
+    const uint NZ;
+
     KMCSolver(uint NX, uint NY, uint NZ);
-
-    void addReaction(Reaction* reaction, uint & x, uint &y, uint &z);
-
-    Site**** getSites() const {
-        return sites;
-    }
-
-
-    void test();
 
     void run();
 
     //REACTION API
-    void activateSite(uint i, uint j, uint k);
-    void deactivateSite(uint i, uint j, uint k);
+    void activateSite(Site *site);
+    void deactivateSite(Site *site);
+
+    uint nNeighbours(uint & x, uint & y, uint & z) {
+        return neighbours(x, y)(z).n_rows;
+    }
+
+    uint nNextNeighbours(uint & x, uint & y, uint & z) {
+        return nextNeighbours(x, y)(z).n_rows;
+    }
+
+
+
 
 private:
-
-    uint NX;
-    uint NY;
-    uint NZ;
 
     Site**** sites;
 
@@ -53,12 +55,7 @@ private:
     int counter=0;
     int counter2 = 0;
 
-    double Enn = 2;
-    double Ennn = 1.7;
-    double EspN = 1;
-    double EspNN = 0;
-    double temperature = 10;
-    double mu = 1;
+
 
     uint nTot = 0;
     field<field<umat>> neighbours;
@@ -68,16 +65,22 @@ private:
     void dumpXYZ();
 
     void getNeighbours(uint i, uint j, uint k);
+
+    void setDiffusionReactions();
+
     void updateNextNeighbour(uint &x, uint &y, uint &z, const urowvec &newRow, bool activate);
 
-    void reactionDiffusion(uint i, uint j, uint k);
 
     void updateNeighbourLists(field<field<umat> > &A, field<field<umat> > &B,
-                              uint i, uint j, uint k, bool activate = false);
+                              Site *site, bool activate = false);
 
-    void getAllTransitionsAndRates();
-    void getAllTransitionsAndRatesForSite(uint i, uint j, uint k);
-    void updateTransitionsAndRates();
+    void getRates();
+
+    void updateRates();
+
+    Reaction *getChosenReaction(uint choice);
+
+
     void pushToRateQueue(uint &x, uint &y, uint &z);
     void recalcSpecificSite(const uvec &site, uint index);
 

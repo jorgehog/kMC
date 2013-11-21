@@ -1,8 +1,18 @@
 #include "reaction.h"
-#include "../site.h"
+#include "../kmcsolver.h"
 
-Reaction::Reaction(Site* site)
+uint Reaction::IDcount = 0;
+
+Reaction::Reaction():
+    m_ID(IDcount++)
 {
-    site->addReaction(this);
+
 }
 
+void Reaction::setMainsolver(KMCSolver *solver)
+{
+        NX = solver->NX;
+        NY = solver->NY;
+        NZ = solver->NZ;
+        mainSolver = solver;
+}
