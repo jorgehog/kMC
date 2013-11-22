@@ -33,29 +33,28 @@ public:
         return nextNeighbours(x, y)(z).n_rows;
     }
 
-
+    void addReaction(Reaction* reaction) {
+        allReactions.push_back(reaction);
+    }
 
 
 private:
 
     Site**** sites;
 
-    std::vector<double> allRates;
     std::vector<double> accuAllRates;
-    std::vector<uvec> transitions;
-    std::vector<uvec> updateRateQueue;
-    std::vector<uint> trash;
+
+    std::vector<Site*> reactionAffectedSites;
+
+    std::vector<Reaction*> allReactions;
 
     ivec delta = {-1, 0, 1};
-    ivec delta2 = {-2, -1, 0, 1, 2};
 
     double t = 0;
     double kTot;
 
     int counter=0;
     int counter2 = 0;
-
-
 
     uint nTot = 0;
     field<field<umat>> neighbours;
@@ -66,27 +65,23 @@ private:
 
     void getNeighbours(uint i, uint j, uint k);
 
-    void setDiffusionReactions();
-
     void updateNextNeighbour(uint &x, uint &y, uint &z, const urowvec &newRow, bool activate);
-
 
     void updateNeighbourLists(field<field<umat> > &A, field<field<umat> > &B,
                               Site *site, bool activate = false);
 
-    void getRates();
 
-    void updateRates();
+    void setDiffusionReactions();
 
     Reaction *getChosenReaction(uint choice);
+    uint getReactionChoice(double R);
 
 
-    void pushToRateQueue(uint &x, uint &y, uint &z);
-    void recalcSpecificSite(const uvec &site, uint index);
+    void getRateVariables();
+    void updateRates();
 
-    bool vectorEqual(const uvec & x, const uvec & y) {
-        return ((x(0) == y(0))&&(x(1) == y(1))&&(x(2) == y(2)));
-    }
+    bool pushToRateQueue(Site* affectedSite);
+
 };
 
 #endif // SOLVER_H

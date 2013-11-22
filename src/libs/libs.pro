@@ -3,8 +3,7 @@ include(../../defaults.pri)
 TEMPLATE = lib 
 TARGET = kMC
 
-HEADERS = \
-          RNG/kMCRNG.h \
+HEADERS = RNG/kMCRNG.h \
     reactions/reaction.h \
     kmcsolver.h \
     site.h \
@@ -26,8 +25,4 @@ SOURCES += RNG/zigrandom.cpp \
 
 }
 
-release {
-    QMAKE_CXXFLAGS -= -O2 -O1
-    QMAKE_CXXFLAGS += -O3
-    DEFINES += ARMA_NO_DEBUG
-}
+

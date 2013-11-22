@@ -51,7 +51,9 @@ void DiffusionReaction::calcRate()
 
 bool DiffusionReaction::isActive()
 {
-    return destination->active();
+
+    //Diffusion is active if the destination is empty
+    return !destination->active();
 }
 
 void DiffusionReaction::execute()

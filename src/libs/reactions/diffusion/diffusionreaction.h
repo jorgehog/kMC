@@ -12,7 +12,7 @@ private:
 
     double EspN = 1;
     double EspNN = 0;
-    double temperature = 10;
+    double temperature = 1;
     double mu = 1;
 
     Site* destination;

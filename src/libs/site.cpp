@@ -15,6 +15,7 @@ void Site::addReaction(Reaction *reaction)
 {
     reaction->setSite(this);
     reaction->setMainsolver(mainSolver);
+
     m_siteReactions.push_back(reaction);
 }
 
@@ -30,6 +31,7 @@ void Site::updateReactions()
     for (Reaction* reaction : m_siteReactions) {
         if (reaction->isActive()) {
             m_activeReactions.push_back(reaction);
+
         }
     }
 
