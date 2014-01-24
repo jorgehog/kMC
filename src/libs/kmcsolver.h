@@ -4,10 +4,11 @@
 #include <sys/types.h>
 #include <armadillo>
 
+#include "site.h"
+
 using namespace arma;
 
 class Reaction;
-class Site;
 
 class KMCSolver
 {
@@ -21,26 +22,29 @@ public:
 
     void run();
 
-    //REACTION API
-    void activateSite(Site *site);
-    void deactivateSite(Site *site);
 
-    uint nNeighbours(uint & x, uint & y, uint & z) {
-        return neighbours(x, y)(z).n_rows;
+    uint nNeighbors(uint & x, uint & y, uint & z) {
+        return sites[x][y][z]->nNeighbors(0);
     }
 
-    uint nNextNeighbours(uint & x, uint & y, uint & z) {
-        return nextNeighbours(x, y)(z).n_rows;
+    uint nNextNeighbors(uint & x, uint & y, uint & z) {
+        return sites[x][y][z]->nNeighbors(1);
     }
 
     void addReaction(Reaction* reaction) {
         allReactions.push_back(reaction);
     }
 
+    Site**** getSites() {
+        return sites;
+    }
+
     friend class testBed;
 
 
 private:
+
+    const uint nNeighborLimit = 2;
 
     Site**** sites;
 
@@ -58,23 +62,12 @@ private:
     int counter=0;
     int counter2 = 0;
 
-    uint nTot = 0;
-    field<field<umat>> neighbours;
-    field<field<umat>> nextNeighbours;
-    field<field<umat>> vacantNeighbours;
 
     void initialize();
 
     void dumpXYZ();
 
-    void getAllNeighbours();
-    void getNeighbours(uint i, uint j, uint k);
-
-    void updateNextNeighbour(uint &x, uint &y, uint &z, const urowvec &newRow, bool activate);
-
-    void updateNeighbourLists(field<field<umat> > &A, field<field<umat> > &B,
-                              Site *site, bool activate = false);
-
+    void getAllNeighbors();
 
     void setDiffusionReactions();
 
@@ -86,6 +79,8 @@ private:
     void updateRates();
 
     bool pushToRateQueue(Site* affectedSite);
+
+
 
 };
 

@@ -58,6 +58,6 @@ bool DiffusionReaction::isActive()
 
 void DiffusionReaction::execute()
 {
-    mainSolver->deactivateSite(reactionSite);
-    mainSolver->activateSite(destination);
+    reactionSite->deactivate();
+    destination->activate();
 }

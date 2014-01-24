@@ -3,6 +3,10 @@
 
 #include <vector>
 #include <sys/types.h>
+#include <armadillo>
+#include <assert.h>
+
+using namespace arma;
 
 class KMCSolver;
 class Reaction;
@@ -10,7 +14,16 @@ class Reaction;
 class Site
 {
 public:
+
+    static const uint nNeighborsLimit = 2;
+    static const uint neighborhoodLength;
+    static ucube levelMatrix;
+
+    static uint totalActiveSites;
+
     Site(uint _x, uint _y, uint _z, KMCSolver* solver);
+
+    static uint getLevel(uint i, uint j, uint k);
 
     void addReaction(Reaction* reaction);
 
@@ -19,16 +32,32 @@ public:
     void calculateRates();
 
 
-    uint nNeighbours();
-
-    uint nNextNeighbours();
+    uint nNeighbors(uint level = 0) {
+        return m_nNeighbors(level);
+    }
 
     void activate() {
+
+        assert(m_active == false && "activating active site.");
+
         m_active = true;
+
+        informNeighborhoodOnChange(+1);
+
+        totalActiveSites++;
+
     }
 
     void deactivate() {
+
+        assert(m_active == true && "deactivating deactive site.");
+
         m_active = false;
+
+        informNeighborhoodOnChange(-1);
+
+        totalActiveSites--;
+
     }
 
     bool active() {
@@ -54,6 +83,12 @@ public:
         return m_activeReactions;
     }
 
+    void introduceNeighborhood();
+
+    void informNeighborhoodOnChange(int change);
+
+    void countNeighbors();
+
     //TEMPORARY SOLUTIONS
     double E;
     double En = 3;
@@ -63,6 +98,11 @@ private:
 
     KMCSolver* mainSolver;
 
+
+    uvec m_nNeighbors;
+
+    Site**** neighborHood;
+
     uint m_x;
     uint m_y;
     uint m_z;
@@ -71,6 +111,7 @@ private:
 
     std::vector<Reaction*> m_activeReactions;
     std::vector<Reaction*> m_siteReactions;
+
 
 };
 

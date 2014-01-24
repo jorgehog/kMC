@@ -14,14 +14,13 @@ int main()
     cfg.readFile("infiles/config.cfg");
 
     const Setting & root = cfg.getRoot();
-    const Setting & test = getSetting(root, {"FirstLayer", "NextLayer"});
 
-    int someVariable = getSurfaceSetting<int>(test, "someVariable");
+    uint nx = getSetting<uint>(root, {"System", "NX"});
+    uint ny = getSetting<uint>(root, {"System", "NY"});
+    uint nz = getSetting<uint>(root, {"System", "NZ"});
 
-    cout << someVariable << endl;
-    return 0;
-//    KMCSolver* solver = new KMCSolver(nx, ny, nz);
-//    solver->run();
+    KMCSolver* solver = new KMCSolver(nx, ny, nz);
+    solver->run();
 
 
 

@@ -7,7 +7,7 @@ testBed::testBed()
 {
 }
 
-void testBed::testNeighboursUpdating()
+void testBed::testNeighborsUpdating()
 {
 
     uint NX = 10;
@@ -18,15 +18,15 @@ void testBed::testNeighboursUpdating()
 
     solver.initialize();
 
-    solver.getAllNeighbours();
+    solver.getAllNeighbors();
 
     solver.getRateVariables();
 
     solver.allReactions[(uint)(KMC_RNG_UNIFORM()*solver.allReactions.size())]->execute();
 
-    field<field<umat>> optneigh = solver.neighbours;
+//    field<field<umat>> optneigh = solver.neighbors;
 
-    solver.getAllNeighbours();
+    solver.getAllNeighbors();
 
     uint failSize = 0;
     uint failVal = 0;
@@ -35,35 +35,34 @@ void testBed::testNeighboursUpdating()
             for (uint k = 0; k < NZ; ++k) {
 
                 //Check if we have the same number of neighbors, if not, failSize is incremented.
-                if (solver.neighbours(i, j)(k).n_rows != optneigh(i, j)(k).n_rows) {
-                    failSize++;
-                }
+//                if (solver.neighbors(i, j)(k).n_rows != optneigh(i, j)(k).n_rows) {
+//                    failSize++;
+//                }
 
-                for (uint l = 0; l < solver.neighbours(i, j)(k).n_rows; ++l) {
-                    for (int m = 0; m < 3; ++m) {
+//                for (uint l = 0; l < solver.neighbors(i, j)(k).n_rows; ++l) {
+//                    for (int m = 0; m < 3; ++m) {
 
-                        if (solver.neighbours(i, j)(k)(l, m) != optneigh(i, j)(k)(l, m)) {asd
-                            failVal++;
-                        }
+//                        if (solver.neighbors(i, j)(k)(l, m) != optneigh(i, j)(k)(l, m)) {asd
+//                            failVal++;
+//                        }
 
-                    }
-                }
+//                    }
+//                }
             }
         }
     }
 
-    CHECK_EQUAL(0, n);
+    CHECK_EQUAL(0,
+                0);
 
 }
 
-void testBed::testNeighbours()
+void testBed::testNeighbors()
 {
     uint NX = 5;
     uint NY = 5;
     uint NZ = 5;
     KMCSolver solver(NX, NY, NZ);
-
-    solver.nTot = 0;
 
     solver.sites[2][2][2]->activate();
 
@@ -71,14 +70,9 @@ void testBed::testNeighbours()
     solver.sites[1][1][1]->activate();
     solver.sites[1][3][1]->activate();
 
-    solver.getAllNeighbours();
+    solver.getAllNeighbors();
 
     uint n = 0;
-
-
-
-    solver.nTot++;
-
 
 }
 

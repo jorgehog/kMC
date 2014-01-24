@@ -28,7 +28,7 @@ TEST(NEIGHBOURUPDATE_CHECK) {
 
     testBed test;
 
-    test.testNeighboursUpdating();
+    test.testNeighborsUpdating();
 
 
 
@@ -38,7 +38,7 @@ TEST(NEIGHBOUR_CHECK) {
 
     testBed test;
 
-    test.testNeighbours();
+    test.testNeighbors();
 
 }
 

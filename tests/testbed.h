@@ -6,9 +6,9 @@ class testBed
 public:
     testBed();
 
-    void testNeighboursUpdating();
+    void testNeighborsUpdating();
 
-    void testNeighbours();
+    void testNeighbors();
 
     void testRNG();
 
