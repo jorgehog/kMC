@@ -3,10 +3,11 @@
 
 #include "RNG/kMCRNG.h"
 
-namespace kMC {
-
 #include "kmcsolver.h"
 
-} //End namespace kMC
+#include "reactions/reaction.h"
+#include "reactions/diffusion/diffusionreaction.h"
+
+#include "site.h"
 
 #endif

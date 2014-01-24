@@ -48,55 +48,20 @@ KMCSolver::KMCSolver(uint NX, uint NY, uint NZ) :
 
 }
 
+
+
 void KMCSolver::run(){
 
     uint choice;
 
-    nTot = 0;
-
-    for (uint i = 0; i < NX; ++i) {
-        for (uint j = 0; j < NY; ++j) {
-            for (uint k = 0; k < NZ; ++k) {
-                if (KMC_RNG_UNIFORM() > 0.9) {
-
-                    sites[i][j][k]->activate();
-                    nTot++;
-                }
-            }
-        }
-    }
-
-
-    int D = 10;
-    for (uint i = NX/2 - D; i < NX/2 + D; ++i) {
-        for (uint j = NY/2 - D; j < NY/2 + D; ++j) {
-            for (uint k = NZ/2 - D; k < NZ/2 + D; ++k) {
-                if (!sites[i][j][k]->active()){
-                    sites[i][j][k]->activate();
-                    nTot++;
-                }
-            }
-        }
-    }
-
-    for (uint i = 0; i < NX; ++i) {
-        for (uint j = 0; j < NY; ++j) {
-            for (uint k = 0; k < NZ; ++k) {
-                getNeighbours(i, j, k);
-            }
-        }
-    }
-
-    cout << nTot << endl;
-
-    dumpXYZ();
-
-    setDiffusionReactions();
+    initialize();
 
 //    wall_clock wc;
 //    double t1 = 0;
     while(counter < 100000) {
 //        wc.tic();
+
+        getAllNeighbours();
         getRateVariables();
 
         double R = kTot*KMC_RNG_UNIFORM();
@@ -108,7 +73,13 @@ void KMCSolver::run(){
         reactionAffectedSites.clear();
         chosenReaction->execute();
 
+
+
+        getAllNeighbours();
+
         updateRates();
+
+
 
         counter2++;
 
@@ -152,6 +123,17 @@ void KMCSolver::dumpXYZ()
     }
     o.close();
 
+}
+
+void KMCSolver::getAllNeighbours()
+{
+    for (uint i = 0; i < NX; ++i) {
+        for (uint j = 0; j < NY; ++j) {
+            for (uint k = 0; k < NZ; ++k) {
+                getNeighbours(i, j, k);
+            }
+        }
+    }
 }
 
 void KMCSolver::getNeighbours(uint i, uint j, uint k)
@@ -426,6 +408,45 @@ void KMCSolver::deactivateSite(Site* site)
 
     updateNeighbourLists(vacantNeighbours, neighbours, site);
 
+}
+
+void KMCSolver::initialize()
+{
+    nTot = 0;
+
+    for (uint i = 0; i < NX; ++i) {
+        for (uint j = 0; j < NY; ++j) {
+            for (uint k = 0; k < NZ; ++k) {
+                if (KMC_RNG_UNIFORM() > 0.98) {
+
+                    sites[i][j][k]->activate();
+                    nTot++;
+                }
+            }
+        }
+    }
+
+
+    int D = NX/5;
+    for (uint i = NX/2 - D; i < NX/2 + D; ++i) {
+        for (uint j = NY/2 - D; j < NY/2 + D; ++j) {
+            for (uint k = NZ/2 - D; k < NZ/2 + D; ++k) {
+                if (!sites[i][j][k]->active()){
+                    sites[i][j][k]->activate();
+                    nTot++;
+                }
+            }
+        }
+    }
+
+
+    getAllNeighbours();
+
+    cout << nTot << endl;
+
+    dumpXYZ();
+
+    setDiffusionReactions();
 }
 
 void KMCSolver::updateNeighbourLists(field<field<umat>> & A, field<field<umat>> & B,

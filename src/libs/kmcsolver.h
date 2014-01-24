@@ -2,8 +2,8 @@
 #define KMC_SOLVER_H
 
 #include <sys/types.h>
-
 #include <armadillo>
+
 using namespace arma;
 
 class Reaction;
@@ -37,6 +37,8 @@ public:
         allReactions.push_back(reaction);
     }
 
+    friend class testBed;
+
 
 private:
 
@@ -61,8 +63,11 @@ private:
     field<field<umat>> nextNeighbours;
     field<field<umat>> vacantNeighbours;
 
+    void initialize();
+
     void dumpXYZ();
 
+    void getAllNeighbours();
     void getNeighbours(uint i, uint j, uint k);
 
     void updateNextNeighbour(uint &x, uint &y, uint &z, const urowvec &newRow, bool activate);

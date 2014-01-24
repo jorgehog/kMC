@@ -10,9 +10,9 @@ public:
 
 private:
 
-    double EspN = 1;
-    double EspNN = 0;
-    double temperature = 1;
+    double EspN = 1.5;
+    double EspNN = 0.5;
+    double temperature = 2;
     double mu = 1;
 
     Site* destination;

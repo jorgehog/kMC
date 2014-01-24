@@ -56,8 +56,8 @@ public:
 
     //TEMPORARY SOLUTIONS
     double E;
-    double En = 2;
-    double Enn = 1.7;
+    double En = 3;
+    double Enn = 1;
 
 private:
 
