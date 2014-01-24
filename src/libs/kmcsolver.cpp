@@ -79,13 +79,7 @@ void KMCSolver::run(){
         }
     }
 
-    for (uint i = 0; i < NX; ++i) {
-        for (uint j = 0; j < NY; ++j) {
-            for (uint k = 0; k < NZ; ++k) {
-                getNeighbours(i, j, k);
-            }
-        }
-    }
+    getAllNeighbours();
 
     cout << nTot << endl;
 

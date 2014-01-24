@@ -55,6 +55,12 @@ TEST(RNG_CHECK) {
 
 }
 
+TEST(NEIGHBORS){
+    KMC_INIT_RNG(time(NULL));
+
+
+}
+
 int main()
 {
     return UnitTest::RunAllTests();

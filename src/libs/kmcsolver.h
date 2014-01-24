@@ -64,6 +64,7 @@ private:
     void dumpXYZ();
 
     void getNeighbours(uint i, uint j, uint k);
+    inline void getAllNeighbours();
 
     void updateNextNeighbour(uint &x, uint &y, uint &z, const urowvec &newRow, bool activate);
 
@@ -83,5 +84,17 @@ private:
     bool pushToRateQueue(Site* affectedSite);
 
 };
+
+inline void KMCSolver::getAllNeighbours() {
+
+    for (uint i = 0; i < NX; ++i) {
+        for (uint j = 0; j < NY; ++j) {
+            for (uint k = 0; k < NZ; ++k) {
+                getNeighbours(i, j, k);
+            }
+        }
+    }
+}
+
 
 #endif // SOLVER_H
