@@ -42,6 +42,9 @@ public:
 
         m_active = true;
 
+        updateReactions();
+        calculateRates();
+
         informNeighborhoodOnChange(+1);
 
         totalActiveSites++;
@@ -53,6 +56,9 @@ public:
         assert(m_active == true && "deactivating deactive site.");
 
         m_active = false;
+
+        updateReactions();
+        calculateRates();
 
         informNeighborhoodOnChange(-1);
 
@@ -79,8 +85,12 @@ public:
         return m_z;
     }
 
-    std::vector<Reaction*> activeReactions() {
+    const std::vector<Reaction*> & activeReactions() {
         return m_activeReactions;
+    }
+
+    Site**** getNeighborhood() {
+        return neighborHood;
     }
 
     void introduceNeighborhood();
@@ -97,7 +107,6 @@ public:
 private:
 
     KMCSolver* mainSolver;
-
 
     uvec m_nNeighbors;
 

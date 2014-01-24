@@ -52,8 +52,8 @@ KMCSolver::KMCSolver(uint NX, uint NY, uint NZ) :
 
 
     for (uint x = 0; x < NX; ++x) {
-       for (uint y = 0; y < NY; ++y) {
-           for (uint z = 0; z < NZ; ++z) {
+        for (uint y = 0; y < NY; ++y) {
+            for (uint z = 0; z < NZ; ++z) {
                 sites[x][y][z]->introduceNeighborhood();
             }
         }
@@ -68,44 +68,32 @@ KMCSolver::KMCSolver(uint NX, uint NY, uint NZ) :
 void KMCSolver::run(){
 
     uint choice;
+    double R;
 
     initialize();
 
-//    wall_clock wc;
-//    double t1 = 0;
-    while(counter < 100000) {
-//        wc.tic();
+    while(cycle < nCycles)
+    {
 
-        getAllNeighbors();
         getRateVariables();
 
-        double R = kTot*KMC_RNG_UNIFORM();
+
+        R = kTot*KMC_RNG_UNIFORM();
 
         choice = getReactionChoice(R);
 
-        Reaction* chosenReaction = allReactions[choice];
-
-        reactionAffectedSites.clear();
-        chosenReaction->execute();
+        allReactions[choice]->execute();
 
 
-
-        getAllNeighbors();
-
-        updateRates();
-
-
-
-        counter2++;
-
-        if (counter2%250 == 0){
-            cout << counter << endl;
+        if (cycle%cyclesPerOutput == 0)
+        {
+            dumpOutput();
             dumpXYZ();
         }
 
 
-        t += 1.0/kTot;
-//        t1 += wc.toc();
+        totalTime += 1.0/kTot;
+        cycle++;
 
     }
 
@@ -115,29 +103,33 @@ void KMCSolver::run(){
 
 void KMCSolver::dumpXYZ()
 {
-    ofstream o;
     stringstream s;
-    s << "kMC" << counter++ << ".xyz";
-    o.open("outfiles/" + s.str());
+    s << "kMC" << outputCounter++ << ".xyz";
 
+    ofstream o;
+    o.open("outfiles/" + s.str());
     o << Site::totalActiveSites << "\n - ";
-    uint COUNT = 0;
+
     for (uint i = 0; i < NX; ++i) {
         for (uint j = 0; j < NY; ++j) {
             for (uint k = 0; k < NZ; ++k) {
                 if (sites[i][j][k]->active()) {
                     o << "\nC " << i << " " << j << " " << k << " " << sites[i][j][k]->nNeighbors();
-                    COUNT++;
                 }
             }
         }
     }
-    if (COUNT != Site::totalActiveSites) {
-        cout << "FAIL FAIL FAIL "<< COUNT << "  " << Site::totalActiveSites << endl;
-        exit(1);
-    }
+
     o.close();
 
+}
+
+void KMCSolver::dumpOutput()
+{
+    cout << (double)cycle/nCycles*100
+         << "%   "
+         << outputCounter
+         << endl;
 }
 
 void KMCSolver::getAllNeighbors()
@@ -154,38 +146,38 @@ void KMCSolver::getAllNeighbors()
 
 void KMCSolver::setDiffusionReactions()
 {
+
+    Site* currentSite;
+
     //Loop over all sites
     for (uint x = 0; x < NX; ++x) {
         for (uint y = 0; y < NY; ++y) {
             for (uint z = 0; z < NZ; ++z) {
 
+                currentSite = sites[x][y][z];
+
                 //For each site, loop over all neightbours
-                for (uint dx_i = 0; dx_i < 3; ++dx_i) {
-                    uint x1 = (x + delta(dx_i) + NX)%NX;
-
-                    for (uint dy_i = 0; dy_i < 3; ++dy_i) {
-                        uint y1 = (y + delta(dy_i) + NY)%NY;
-
-                        for (uint dz_i = 0; dz_i < 3; ++dz_i) {
+                for (uint i = 0; i < 3; ++i) {
+                    for (uint j = 0; j < 3; ++j) {
+                        for (uint k = 0; k < 3; ++k) {
 
                             //This menas we are at the current site.
-                            if((dx_i == 1) && (dy_i == 1) && (dz_i == 1)) {
+                            if((i == 1) && (j == 1) && (k == 1)) {
                                 continue;
                             }
-                            uint z1 = (z + delta(dz_i)+ NZ)%NZ;
 
                             //And add diffusion reactions
-                            sites[x][y][z]->addReaction(new DiffusionReaction(sites[x1][y1][z1]));
+                            currentSite->addReaction(new DiffusionReaction(currentSite->getNeighborhood()[i][j][k]));
 
                         }
                     }
                 }
 
                 //Then we update the site reactions based on the current setup
-                sites[x][y][z]->updateReactions();
+                currentSite->updateReactions();
 
                 //And calculate the process rates (only dependent on other sites, not reactions)
-                sites[x][y][z]->calculateRates();
+                currentSite->calculateRates();
 
             }
         }
@@ -223,11 +215,15 @@ void KMCSolver::initialize()
 
     getAllNeighbors();
 
-    cout << Site::totalActiveSites << endl;
+    cout << "Initialized "
+         << Site::totalActiveSites
+         << " active sites."
+         << endl;
 
     dumpXYZ();
 
     setDiffusionReactions();
+
 }
 
 
@@ -253,16 +249,6 @@ void KMCSolver::getRateVariables()
 
 }
 
-
-void KMCSolver::updateRates()
-{
-
-    for (Site* affectedSite : reactionAffectedSites) {
-        affectedSite->updateReactions();
-        affectedSite->calculateRates();
-    }
-
-}
 
 Reaction* KMCSolver::getChosenReaction(uint choice)
 {
@@ -323,23 +309,9 @@ uint KMCSolver::getReactionChoice(double R)
 
     }
 
-    cout << "FAILED" << endl;
+    cout << "LOCATING RATE FAILED" << endl;
     return 0;
 
 }
 
-bool KMCSolver::pushToRateQueue(Site *affectedSite)
-{
-    for (const Site * prevAffectedSite : reactionAffectedSites) {
-
-        //Skip out of the function in the site is already queued
-        if (prevAffectedSite == affectedSite) {
-            return false;
-        }
-    }
-
-    reactionAffectedSites.push_back(affectedSite);
-
-    return true;
-}
 

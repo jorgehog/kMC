@@ -1,7 +1,7 @@
 #include "diffusionreaction.h"
 #include "../../kmcsolver.h"
 
-DiffusionReaction::DiffusionReaction(Site* destination) :
+DiffusionReaction::DiffusionReaction(Site *destination) :
     Reaction(),
     destination(destination)
 {
@@ -17,6 +17,7 @@ void DiffusionReaction::calcRate()
     uint ys = ((y() + y1())%NY)/2;
     uint zs = ((z() + z1())%NZ)/2;
 
+    //? IS THIS RIGHT?
     for (uint is = 0; is < 6; ++is) {
 
         uint I = (x()-2 + is + NX)%NX;

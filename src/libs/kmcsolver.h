@@ -18,7 +18,9 @@ public:
     const uint NY;
     const uint NZ;
 
+
     KMCSolver(uint NX, uint NY, uint NZ);
+
 
     void run();
 
@@ -31,9 +33,11 @@ public:
         return sites[x][y][z]->nNeighbors(1);
     }
 
+
     void addReaction(Reaction* reaction) {
         allReactions.push_back(reaction);
     }
+
 
     Site**** getSites() {
         return sites;
@@ -46,40 +50,40 @@ private:
 
     const uint nNeighborLimit = 2;
 
+
     Site**** sites;
+
 
     std::vector<double> accuAllRates;
 
-    std::vector<Site*> reactionAffectedSites;
-
     std::vector<Reaction*> allReactions;
 
-    ivec delta = {-1, 0, 1};
 
-    double t = 0;
     double kTot;
+    double totalTime = 0;
 
-    int counter=0;
-    int counter2 = 0;
+    uint nCycles = 100000;
+    uint cycle   = 0;
+
+    uint cyclesPerOutput = 100;
+    uint outputCounter   = 0;
 
 
     void initialize();
-
-    void dumpXYZ();
 
     void getAllNeighbors();
 
     void setDiffusionReactions();
 
-    Reaction *getChosenReaction(uint choice);
+    void getRateVariables();
+
     uint getReactionChoice(double R);
 
+    Reaction *getChosenReaction(uint choice);
 
-    void getRateVariables();
-    void updateRates();
+    void dumpXYZ();
 
-    bool pushToRateQueue(Site* affectedSite);
-
+    void dumpOutput();
 
 
 };

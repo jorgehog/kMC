@@ -44,6 +44,8 @@ void Site::updateReactions()
         return;
     }
 
+    //? If a disabled site gets active, does it activate the events?
+    //? If a disables site gets active, does neighbours activate this event?
     for (Reaction* reaction : m_siteReactions) {
         if (reaction->isActive()) {
             m_activeReactions.push_back(reaction);
@@ -106,6 +108,9 @@ void Site::informNeighborhoodOnChange(int change)
 
                 level = levelMatrix(i, j, k);
                 neighbor->m_nNeighbors(level)+=change;
+
+                neighbor->updateReactions();
+                neighbor->calculateRates();
 
             }
         }
