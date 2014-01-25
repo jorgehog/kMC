@@ -11,6 +11,7 @@
 using namespace arma;
 
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 
 using namespace std;
@@ -23,16 +24,36 @@ KMCSolver::KMCSolver(uint NX, uint NY, uint NZ) :
 
     KMC_INIT_RNG(time(NULL));
 
-    for (uint i = 0; i < Site::neighborhoodLength; ++i) {
-        for (uint j = 0; j < Site::neighborhoodLength; ++j) {
-            for (uint k = 0; k < Site::neighborhoodLength; ++k) {
+
+    double rPower = 1;
+    for (uint i = 0; i < Site::neighborhoodLength; ++i)
+    {
+
+        for (uint j = 0; j < Site::neighborhoodLength; ++j)
+        {
+
+            for (uint k = 0; k < Site::neighborhoodLength; ++k)
+            {
+
+                if (i == Site::nNeighborsLimit && j == Site::nNeighborsLimit && k == nNeighborLimit)
+                {
+                    continue;
+                }
 
                 Site::levelMatrix(i, j, k) = Site::getLevel(std::abs((int)i - (int)Site::nNeighborsLimit),
                                                             std::abs((int)j - (int)Site::nNeighborsLimit),
                                                             std::abs((int)k - (int)Site::nNeighborsLimit));
+
+                DiffusionReaction::weights(i, j, k) = 1.0/pow(pow((int)i - (int)Site::nNeighborsLimit, 2)
+                                                               + pow((int)j - (int)Site::nNeighborsLimit, 2)
+                                                               + pow((int)k - (int)Site::nNeighborsLimit, 2), rPower/2);
             }
         }
     }
+
+    double EScale = 1.0;
+
+    DiffusionReaction::weights *= EScale;
 
     sites = new Site***[NX];
 
@@ -126,9 +147,10 @@ void KMCSolver::dumpXYZ()
 
 void KMCSolver::dumpOutput()
 {
-    cout << (double)cycle/nCycles*100
+    cout << setw(4) << right
+         << (double)cycle/nCycles*100
          << "%   "
-         << outputCounter
+         << cycle
          << endl;
 }
 
@@ -188,10 +210,12 @@ void KMCSolver::setDiffusionReactions()
 void KMCSolver::initialize()
 {
 
+    double saturation = 0.05;
+
     for (uint i = 0; i < NX; ++i) {
         for (uint j = 0; j < NY; ++j) {
             for (uint k = 0; k < NZ; ++k) {
-                if (KMC_RNG_UNIFORM() > 0.98) {
+                if (KMC_RNG_UNIFORM() > 1 - saturation) {
 
                     sites[i][j][k]->activate();
 
@@ -201,7 +225,8 @@ void KMCSolver::initialize()
     }
 
 
-    int D = NX/5;
+    int D = 0;//NX/3;
+
     for (uint i = NX/2 - D; i < NX/2 + D; ++i) {
         for (uint j = NY/2 - D; j < NY/2 + D; ++j) {
             for (uint k = NZ/2 - D; k < NZ/2 + D; ++k) {

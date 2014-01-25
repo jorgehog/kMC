@@ -47,7 +47,7 @@ void DiffusionReaction::calcRate()
 
     double Esp = nns*EspN + nns*EspNN;
 
-    m_rate = mu*exp(-(reactionSite->E-Esp)/temperature);
+    m_rate = mu*exp(-beta*(reactionSite->getEnergy()-Esp));
 }
 
 bool DiffusionReaction::isActive()
@@ -62,3 +62,7 @@ void DiffusionReaction::execute()
     reactionSite->deactivate();
     destination->activate();
 }
+
+cube DiffusionReaction::weights = zeros<cube>(Site::neighborhoodLength,
+                                     Site::neighborhoodLength,
+                                     Site::neighborhoodLength);

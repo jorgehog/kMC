@@ -6,14 +6,18 @@
 class DiffusionReaction : public Reaction
 {
 public:
+
+    static cube weights;
+
     DiffusionReaction(Site *destination);
 
 private:
 
-    double EspN = 1.5;
-    double EspNN = 0.5;
-    double temperature = 2;
+    double EspN = 2;
+    double EspNN = 1;
+    double beta = 4.0;
     double mu = 1;
+
 
     Site* destination;
 

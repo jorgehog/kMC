@@ -32,11 +32,13 @@ public:
     void calculateRates();
 
 
-    uint nNeighbors(uint level = 0) {
+    uint nNeighbors(uint level = 0)
+    {
         return m_nNeighbors(level);
     }
 
-    void activate() {
+    void activate()
+    {
 
         assert(m_active == false && "activating active site.");
 
@@ -51,7 +53,8 @@ public:
 
     }
 
-    void deactivate() {
+    void deactivate()
+    {
 
         assert(m_active == true && "deactivating deactive site.");
 
@@ -66,7 +69,10 @@ public:
 
     }
 
-    bool active() {
+    void updateEnergy(Site *changedSite, int change);
+
+    bool active()
+    {
         return m_active;
     }
 
@@ -85,12 +91,19 @@ public:
         return m_z;
     }
 
-    const std::vector<Reaction*> & activeReactions() {
+    const std::vector<Reaction*> & activeReactions()
+    {
         return m_activeReactions;
     }
 
-    Site**** getNeighborhood() {
+    Site**** getNeighborhood()
+    {
         return neighborHood;
+    }
+
+    double getEnergy()
+    {
+        return E;
     }
 
     void introduceNeighborhood();
@@ -99,10 +112,6 @@ public:
 
     void countNeighbors();
 
-    //TEMPORARY SOLUTIONS
-    double E;
-    double En = 3;
-    double Enn = 1;
 
 private:
 
@@ -111,6 +120,8 @@ private:
     uvec m_nNeighbors;
 
     Site**** neighborHood;
+
+    double E;
 
     uint m_x;
     uint m_y;

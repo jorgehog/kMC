@@ -1,9 +1,11 @@
 #include "site.h"
 #include "reactions/reaction.h"
+#include "reactions/diffusion/diffusionreaction.h"
 #include "kmcsolver.h"
 
 Site::Site(uint _x, uint _y, uint _z, KMCSolver *solver) :
     mainSolver(solver),
+    E(0),
     m_x(_x),
     m_y(_y),
     m_z(_z)
@@ -44,8 +46,6 @@ void Site::updateReactions()
         return;
     }
 
-    //? If a disabled site gets active, does it activate the events?
-    //? If a disables site gets active, does neighbours activate this event?
     for (Reaction* reaction : m_siteReactions) {
         if (reaction->isActive()) {
             m_activeReactions.push_back(reaction);
@@ -57,11 +57,21 @@ void Site::updateReactions()
 void Site::calculateRates()
 {
 
-    E = En*nNeighbors() + Enn*nNeighbors(1);
+//    E = En*nNeighbors() + Enn*nNeighbors(1);
 
     for (Reaction* reaction : m_activeReactions) {
         reaction->calcRate();
     }
+}
+
+void Site::updateEnergy(Site *changedSite, int change)
+{
+    uint xScaled = Site::nNeighborsLimit + abs((int)m_x - (int)changedSite->x());
+    uint yScaled = Site::nNeighborsLimit + abs((int)m_y - (int)changedSite->y());
+    uint zScaled = Site::nNeighborsLimit + abs((int)m_z - (int)changedSite->z());
+
+    E += change*DiffusionReaction::weights(xScaled, yScaled, zScaled);
+
 }
 
 
@@ -109,6 +119,8 @@ void Site::informNeighborhoodOnChange(int change)
                 level = levelMatrix(i, j, k);
                 neighbor->m_nNeighbors(level)+=change;
 
+                neighbor->updateEnergy(this, change);
+
                 neighbor->updateReactions();
                 neighbor->calculateRates();
 
@@ -143,6 +155,9 @@ void Site::countNeighbors()
 
                     level = levelMatrix(i, j, k);
                     m_nNeighbors(level)++;
+
+                    E += DiffusionReaction::weights(i, j, k);
+
                 }
 
             }
