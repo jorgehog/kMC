@@ -66,9 +66,9 @@ void Site::calculateRates()
 
 void Site::updateEnergy(Site *changedSite, int change)
 {
-    uint xScaled = Site::nNeighborsLimit + abs((int)m_x - (int)changedSite->x());
-    uint yScaled = Site::nNeighborsLimit + abs((int)m_y - (int)changedSite->y());
-    uint zScaled = Site::nNeighborsLimit + abs((int)m_z - (int)changedSite->z());
+    uint xScaled = (Site::nNeighborsLimit + abs((int)m_x - (int)changedSite->x()))%mainSolver->NX;
+    uint yScaled = (Site::nNeighborsLimit + abs((int)m_y - (int)changedSite->y()))%mainSolver->NY;
+    uint zScaled = (Site::nNeighborsLimit + abs((int)m_z - (int)changedSite->z()))%mainSolver->NZ;
 
     E += change*DiffusionReaction::weights(xScaled, yScaled, zScaled);
 
@@ -80,15 +80,15 @@ void Site::introduceNeighborhood()
     uint xTrans, yTrans, zTrans;
     for (uint i = 0; i < neighborhoodLength; ++i) {
 
-        xTrans = (m_x + (i - nNeighborsLimit) + mainSolver->NX)%mainSolver->NX;
+        xTrans = (m_x + originTransformVector(i) + mainSolver->NX)%mainSolver->NX;
 
         for (uint j = 0; j < neighborhoodLength; ++j) {
 
-            yTrans = (m_y + (j - nNeighborsLimit) + mainSolver->NY)%mainSolver->NY;
+            yTrans = (m_y + originTransformVector(j) + mainSolver->NY)%mainSolver->NY;
 
             for (uint k = 0; k < neighborhoodLength; ++k) {
 
-                zTrans = (m_z + (k - nNeighborsLimit) + mainSolver->NZ)%mainSolver->NZ;
+                zTrans = (m_z + originTransformVector(k) + mainSolver->NZ)%mainSolver->NZ;
 
                 neighborHood[i][j][k] = mainSolver->getSites()[xTrans][yTrans][zTrans];
 
@@ -183,5 +183,6 @@ uint Site::getLevel(uint i, uint j, uint k)
 const uint Site::neighborhoodLength = 2*Site::nNeighborsLimit + 1;
 
 ucube Site::levelMatrix = zeros<ucube>(Site::neighborhoodLength, Site::neighborhoodLength, Site::neighborhoodLength);
+ivec Site::originTransformVector = linspace<ivec>(-(int)Site::nNeighborsLimit, Site::nNeighborsLimit, Site::neighborhoodLength);
 
 uint Site::totalActiveSites = 0;

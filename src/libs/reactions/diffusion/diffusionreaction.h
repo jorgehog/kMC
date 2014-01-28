@@ -15,7 +15,7 @@ private:
 
     double EspN = 2;
     double EspNN = 1;
-    double beta = 4.0;
+    double beta = 1.0;
     double mu = 1;
 
 

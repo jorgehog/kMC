@@ -24,16 +24,6 @@ TEST(RNG_CHECK) {
 }
 
 
-TEST(NEIGHBOURUPDATE_CHECK) {
-
-    testBed test;
-
-    test.testNeighborsUpdating();
-
-
-
-}
-
 TEST(NEIGHBOUR_CHECK) {
 
     testBed test;

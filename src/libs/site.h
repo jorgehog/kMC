@@ -17,7 +17,9 @@ public:
 
     static const uint nNeighborsLimit = 2;
     static const uint neighborhoodLength;
+
     static ucube levelMatrix;
+    static ivec originTransformVector;
 
     static uint totalActiveSites;
 
@@ -111,6 +113,8 @@ public:
     void informNeighborhoodOnChange(int change);
 
     void countNeighbors();
+
+    friend class testBed;
 
 
 private:

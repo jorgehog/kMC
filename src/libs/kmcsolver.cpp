@@ -24,8 +24,8 @@ KMCSolver::KMCSolver(uint NX, uint NY, uint NZ) :
 
     KMC_INIT_RNG(time(NULL));
 
+    double rPower = 0.5;
 
-    double rPower = 1;
     for (uint i = 0; i < Site::neighborhoodLength; ++i)
     {
 
@@ -40,18 +40,18 @@ KMCSolver::KMCSolver(uint NX, uint NY, uint NZ) :
                     continue;
                 }
 
-                Site::levelMatrix(i, j, k) = Site::getLevel(std::abs((int)i - (int)Site::nNeighborsLimit),
-                                                            std::abs((int)j - (int)Site::nNeighborsLimit),
-                                                            std::abs((int)k - (int)Site::nNeighborsLimit));
+                Site::levelMatrix(i, j, k) = Site::getLevel(std::abs(Site::originTransformVector(i)),
+                                                            std::abs(Site::originTransformVector(j)),
+                                                            std::abs(Site::originTransformVector(k)));
 
-                DiffusionReaction::weights(i, j, k) = 1.0/pow(pow((int)i - (int)Site::nNeighborsLimit, 2)
-                                                               + pow((int)j - (int)Site::nNeighborsLimit, 2)
-                                                               + pow((int)k - (int)Site::nNeighborsLimit, 2), rPower/2);
+                DiffusionReaction::weights(i, j, k) = 1.0/pow(pow(Site::originTransformVector(i), 2)
+                                                               + pow(Site::originTransformVector(j), 2)
+                                                               + pow(Site::originTransformVector(k), 2), rPower/2);
             }
         }
     }
 
-    double EScale = 1.0;
+    double EScale = 2.0;
 
     DiffusionReaction::weights *= EScale;
 
@@ -210,7 +210,7 @@ void KMCSolver::setDiffusionReactions()
 void KMCSolver::initialize()
 {
 
-    double saturation = 0.05;
+    double saturation = 0.15;
 
     for (uint i = 0; i < NX; ++i) {
         for (uint j = 0; j < NY; ++j) {

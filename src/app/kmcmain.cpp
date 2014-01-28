@@ -19,9 +19,9 @@ int main()
 //    uint ny = getSetting<uint>(root, {"System", "NY"});
 //    uint nz = getSetting<uint>(root, {"System", "NZ"});kmc
 
-    uint nx = 20;
-    uint ny = 20;
-    uint nz = 20;
+    uint nx = 33;
+    uint ny = 33;
+    uint nz = 33;
 
     KMCSolver* solver = new KMCSolver(nx, ny, nz);
     solver->run();

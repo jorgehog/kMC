@@ -3,76 +3,66 @@
 #include <unittest++/UnitTest++.h>
 #include <kMC>
 
+#include <iostream>
+
 testBed::testBed()
 {
 }
 
-void testBed::testNeighborsUpdating()
+void testBed::testNeighbors()
 {
+    using namespace std;
 
-    uint NX = 10;
-    uint NY = 10;
-    uint NZ = 10;
-    KMCSolver solver(NX, NY, NZ);
+    uint NX = 20;
+    uint NY = 20;
+    uint NZ = 20;
+
+    KMCSolver* solver = new KMCSolver(NX, NY, NZ);
+
+    Site* site;
+    int a;
+    reset();
+
+    for (uint x = 0; x < NX; ++x) {
+        for (uint y = 0; y < NY; ++y) {
+            for (uint z = 0; z < NZ; ++z) {
+
+                site = solver->sites[x][y][z];
+                for(uint i = 0; i < Site::neighborhoodLength; ++i) {
+                    for (uint j = 0; j < Site::neighborhoodLength; ++j) {
+                        for (uint k = 0; k < Site::neighborhoodLength; ++k) {
 
 
-    solver.initialize();
+                            if (i == Site::nNeighborsLimit && j == Site::nNeighborsLimit && k == Site::nNeighborsLimit) {
+                                CHECK_EQUAL(site->neighborHood[i][j][k], site);
+                                continue;
+                            }
 
-    solver.getAllNeighbors();
+                            nTrials++;
+                            int delta = (int)(site->x()) - (int)(site->neighborHood[i][j][k]->x());
 
-    solver.getRateVariables();
+                            if ((delta + Site::originTransformVector(i) + NX)%NX != 0) {
 
-    solver.allReactions[(uint)(KMC_RNG_UNIFORM()*solver.allReactions.size())]->execute();
+                                cout << "fail detected:" << endl;
+                                cout << i << "  "<< x << "  " << site->neighborHood[i][j][k]->x() << endl;
+                                cout << delta << "  " << Site::originTransformVector(i) << "  " << NX << endl;
+                                cout << "------" << endl;
 
-//    field<field<umat>> optneigh = solver.neighbors;
+                                 cin >> a;
+                                failCount++;
+                            } else {
+                                winCount++;
+                            }
 
-    solver.getAllNeighbors();
-
-    uint failSize = 0;
-    uint failVal = 0;
-    for (uint i = 0; i < NX; ++i) {
-        for (uint j = 0; j < NY; ++j) {
-            for (uint k = 0; k < NZ; ++k) {
-
-                //Check if we have the same number of neighbors, if not, failSize is incremented.
-//                if (solver.neighbors(i, j)(k).n_rows != optneigh(i, j)(k).n_rows) {
-//                    failSize++;
-//                }
-
-//                for (uint l = 0; l < solver.neighbors(i, j)(k).n_rows; ++l) {
-//                    for (int m = 0; m < 3; ++m) {
-
-//                        if (solver.neighbors(i, j)(k)(l, m) != optneigh(i, j)(k)(l, m)) {asd
-//                            failVal++;
-//                        }
-
-//                    }
-//                }
+                        }
+                    }
+                }
             }
         }
     }
 
-    CHECK_EQUAL(0,
-                0);
-
-}
-
-void testBed::testNeighbors()
-{
-    uint NX = 5;
-    uint NY = 5;
-    uint NZ = 5;
-    KMCSolver solver(NX, NY, NZ);
-
-    solver.sites[2][2][2]->activate();
-
-    solver.sites[3][3][3]->activate();
-    solver.sites[1][1][1]->activate();
-    solver.sites[1][3][1]->activate();
-
-    solver.getAllNeighbors();
-
-    uint n = 0;
+    CHECK_EQUAL(nTrials, winCount);
+    CHECK_EQUAL(0, failCount);
 
 }
 
