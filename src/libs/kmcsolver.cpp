@@ -123,7 +123,7 @@ void KMCSolver::dumpXYZ()
 
     ofstream o;
     o.open("outfiles/" + s.str());
-    o << Site::totalActiveSites << "\n - ";
+    o << Site::totalActiveSites() << "\n - ";
 
     for (uint i = 0; i < NX; ++i) {
         for (uint j = 0; j < NY; ++j) {
