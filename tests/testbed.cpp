@@ -3,7 +3,10 @@
 #include <unittest++/UnitTest++.h>
 #include <kMC>
 
+#include <libconfig.h++>
 #include <iostream>
+
+using namespace libconfig;
 
 testBed::testBed()
 {
@@ -11,13 +14,21 @@ testBed::testBed()
 
 void testBed::testNeighbors()
 {
+
     using namespace std;
 
-    uint NX = 20;
-    uint NY = 20;
-    uint NZ = 20;
+    Config cfg;
 
-    KMCSolver* solver = new KMCSolver(0, NX, NY, NZ);
+    cfg.readFile("infiles/config.cfg");
+
+    const Setting & root = cfg.getRoot();
+
+    uint NX = getSetting<uint>(root, {"System", "NX"});
+    uint NY = getSetting<uint>(root, {"System", "NY"});
+    uint NZ = getSetting<uint>(root, {"System", "NZ"});
+
+
+    KMCSolver* solver = new KMCSolver(root);
 
     Site* site;
     int a;
@@ -28,12 +39,12 @@ void testBed::testNeighbors()
             for (uint z = 0; z < NZ; ++z) {
 
                 site = solver->sites[x][y][z];
-                for(uint i = 0; i < Site::neighborhoodLength; ++i) {
-                    for (uint j = 0; j < Site::neighborhoodLength; ++j) {
-                        for (uint k = 0; k < Site::neighborhoodLength; ++k) {
+                for(uint i = 0; i < Site::neighborhoodLength(); ++i) {
+                    for (uint j = 0; j < Site::neighborhoodLength(); ++j) {
+                        for (uint k = 0; k < Site::neighborhoodLength(); ++k) {
 
 
-                            if (i == Site::nNeighborsLimit && j == Site::nNeighborsLimit && k == Site::nNeighborsLimit) {
+                            if (i == Site::nNeighborsLimit() && j == Site::nNeighborsLimit() && k == Site::nNeighborsLimit()) {
                                 CHECK_EQUAL(site->neighborHood[i][j][k], site);
                                 continue;
                             }
@@ -41,11 +52,11 @@ void testBed::testNeighbors()
                             nTrials++;
                             int delta = (int)(site->x()) - (int)(site->neighborHood[i][j][k]->x());
 
-                            if ((delta + Site::originTransformVector(i) + NX)%NX != 0) {
+                            if ((delta + Site::originTransformVector()(i) + NX)%NX != 0) {
 
                                 cout << "fail detected:" << endl;
                                 cout << i << "  "<< x << "  " << site->neighborHood[i][j][k]->x() << endl;
-                                cout << delta << "  " << Site::originTransformVector(i) << "  " << NX << endl;
+                                cout << delta << "  " << Site::originTransformVector()(i) << "  " << NX << endl;
                                 cout << "------" << endl;
 
                                  cin >> a;

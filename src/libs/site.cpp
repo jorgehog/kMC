@@ -3,25 +3,48 @@
 #include "reactions/diffusion/diffusionreaction.h"
 #include "kmcsolver.h"
 
-Site::Site(uint _x, uint _y, uint _z, KMCSolver *solver) :
-    mainSolver(solver),
+
+const uint &Site::nNeighborsLimit()
+{
+    return m_nNeighborsLimit;
+}
+
+const uint & Site::neighborhoodLength()
+{
+    return m_neighborhoodLength;
+}
+
+
+const ucube &Site::levelMatrix()
+{
+    return m_levelMatrix;
+}
+
+
+const ivec &Site::originTransformVector()
+{
+    return m_originTransformVector;
+}
+
+
+Site::Site(uint _x, uint _y, uint _z) :
     E(0),
     m_x(_x),
     m_y(_y),
     m_z(_z)
 {
 
-    m_nNeighbors.set_size(nNeighborsLimit);
+    m_nNeighbors.set_size(m_nNeighborsLimit);
 
-    neighborHood = new Site***[neighborhoodLength];
+    neighborHood = new Site***[m_neighborhoodLength];
 
-    for (uint i = 0; i < neighborhoodLength; ++i) {
+    for (uint i = 0; i < m_neighborhoodLength; ++i) {
 
-        neighborHood[i] = new Site**[neighborhoodLength];
+        neighborHood[i] = new Site**[m_neighborhoodLength];
 
-        for (uint j = 0; j < neighborhoodLength; ++j) {
+        for (uint j = 0; j < m_neighborhoodLength; ++j) {
 
-            neighborHood[i][j] = new Site*[neighborhoodLength];
+            neighborHood[i][j] = new Site*[m_neighborhoodLength];
 
         }
     }
@@ -29,10 +52,43 @@ Site::Site(uint _x, uint _y, uint _z, KMCSolver *solver) :
 
 }
 
+void Site::loadNeighborLimit(const Setting &setting)
+{
+    const uint  &limit = getSurfaceSetting<uint>(setting, "nNeighborsLimit");
+
+    m_nNeighborsLimit = limit;
+    m_neighborhoodLength = 2*m_nNeighborsLimit + 1;
+
+    m_levelMatrix = zeros<ucube>(m_neighborhoodLength, m_neighborhoodLength, m_neighborhoodLength);
+
+    m_originTransformVector = linspace<ivec>(-(int)m_nNeighborsLimit, m_nNeighborsLimit, m_neighborhoodLength);
+
+    for (uint i = 0; i < m_neighborhoodLength; ++i)
+    {
+
+        for (uint j = 0; j < m_neighborhoodLength; ++j)
+        {
+
+            for (uint k = 0; k < m_neighborhoodLength; ++k)
+            {
+
+                if (i == m_nNeighborsLimit && j == m_nNeighborsLimit && k == m_nNeighborsLimit)
+                {
+                    continue;
+                }
+
+                m_levelMatrix(i, j, k) = getLevel(std::abs(m_originTransformVector(i)),
+                                                  std::abs(m_originTransformVector(j)),
+                                                  std::abs(m_originTransformVector(k)));
+            }
+        }
+    }
+
+}
+
 void Site::addReaction(Reaction *reaction)
 {
     reaction->setSite(this);
-    reaction->setMainsolver(mainSolver);
 
     m_siteReactions.push_back(reaction);
 }
@@ -57,20 +113,29 @@ void Site::updateReactions()
 void Site::calculateRates()
 {
 
-//    E = En*nNeighbors() + Enn*nNeighbors(1);
+    //    E = En*nNeighbors() + Enn*nNeighbors(1);
 
     for (Reaction* reaction : m_activeReactions) {
         reaction->calcRate();
     }
 }
 
+void Site::setSolverPtr(KMCSolver *solver)
+{
+    NX = solver->getNX();
+    NY = solver->getNY();
+    NZ = solver->getNZ();
+
+    mainSolver = solver;
+}
+
 void Site::updateEnergy(Site *changedSite, int change)
 {
-    uint xScaled = (Site::nNeighborsLimit + abs((int)m_x - (int)changedSite->x()))%mainSolver->NX;
-    uint yScaled = (Site::nNeighborsLimit + abs((int)m_y - (int)changedSite->y()))%mainSolver->NY;
-    uint zScaled = (Site::nNeighborsLimit + abs((int)m_z - (int)changedSite->z()))%mainSolver->NZ;
+    uint xScaled = (m_nNeighborsLimit + abs((int)m_x - (int)changedSite->x()))%NX;
+    uint yScaled = (m_nNeighborsLimit + abs((int)m_y - (int)changedSite->y()))%NY;
+    uint zScaled = (m_nNeighborsLimit + abs((int)m_z - (int)changedSite->z()))%NZ;
 
-    E += change*DiffusionReaction::weights(xScaled, yScaled, zScaled);
+    E += change*DiffusionReaction::potential()(xScaled, yScaled, zScaled);
 
 }
 
@@ -78,17 +143,17 @@ void Site::updateEnergy(Site *changedSite, int change)
 void Site::introduceNeighborhood()
 {
     uint xTrans, yTrans, zTrans;
-    for (uint i = 0; i < neighborhoodLength; ++i) {
+    for (uint i = 0; i < m_neighborhoodLength; ++i) {
 
-        xTrans = (m_x + originTransformVector(i) + mainSolver->NX)%mainSolver->NX;
+        xTrans = (m_x + m_originTransformVector(i) + NX)%NX;
 
-        for (uint j = 0; j < neighborhoodLength; ++j) {
+        for (uint j = 0; j < m_neighborhoodLength; ++j) {
 
-            yTrans = (m_y + originTransformVector(j) + mainSolver->NY)%mainSolver->NY;
+            yTrans = (m_y + m_originTransformVector(j) + NY)%NY;
 
-            for (uint k = 0; k < neighborhoodLength; ++k) {
+            for (uint k = 0; k < m_neighborhoodLength; ++k) {
 
-                zTrans = (m_z + originTransformVector(k) + mainSolver->NZ)%mainSolver->NZ;
+                zTrans = (m_z + m_originTransformVector(k) + NZ)%NZ;
 
                 neighborHood[i][j][k] = mainSolver->getSites()[xTrans][yTrans][zTrans];
 
@@ -103,11 +168,11 @@ void Site::informNeighborhoodOnChange(int change)
     Site *neighbor;
     uint level;
 
-    for (uint i = 0; i < neighborhoodLength; ++i) {
+    for (uint i = 0; i < m_neighborhoodLength; ++i) {
 
-        for (uint j = 0; j < neighborhoodLength; ++j) {
+        for (uint j = 0; j < m_neighborhoodLength; ++j) {
 
-            for (uint k = 0; k < neighborhoodLength; ++k) {
+            for (uint k = 0; k < m_neighborhoodLength; ++k) {
 
 
                 neighbor = neighborHood[i][j][k];
@@ -116,7 +181,7 @@ void Site::informNeighborhoodOnChange(int change)
                     continue;
                 }
 
-                level = levelMatrix(i, j, k);
+                level = m_levelMatrix(i, j, k);
                 neighbor->m_nNeighbors(level)+=change;
 
                 neighbor->updateEnergy(this, change);
@@ -138,11 +203,11 @@ void Site::countNeighbors()
     Site *neighbor;
     uint level;
 
-    for (uint i = 0; i < neighborhoodLength; ++i) {
+    for (uint i = 0; i < m_neighborhoodLength; ++i) {
 
-        for (uint j = 0; j < neighborhoodLength; ++j) {
+        for (uint j = 0; j < m_neighborhoodLength; ++j) {
 
-            for (uint k = 0; k < neighborhoodLength; ++k) {
+            for (uint k = 0; k < m_neighborhoodLength; ++k) {
 
                 neighbor = neighborHood[i][j][k];
 
@@ -153,10 +218,10 @@ void Site::countNeighbors()
 
                 if (neighbor->active()) {
 
-                    level = levelMatrix(i, j, k);
+                    level = m_levelMatrix(i, j, k);
                     m_nNeighbors(level)++;
 
-                    E += DiffusionReaction::weights(i, j, k);
+                    E += DiffusionReaction::potential()(i, j, k);
 
                 }
 
@@ -180,9 +245,20 @@ uint Site::getLevel(uint i, uint j, uint k)
     return m - 1;
 }
 
-const uint Site::neighborhoodLength = 2*Site::nNeighborsLimit + 1;
 
-ucube Site::levelMatrix = zeros<ucube>(Site::neighborhoodLength, Site::neighborhoodLength, Site::neighborhoodLength);
-ivec Site::originTransformVector = linspace<ivec>(-(int)Site::nNeighborsLimit, Site::nNeighborsLimit, Site::neighborhoodLength);
+KMCSolver *Site::mainSolver;
+
+uint Site::NX;
+uint Site::NY;
+uint Site::NZ;
+
+uint Site::m_nNeighborsLimit;
+
+uint Site::m_neighborhoodLength;
+
+ucube Site::m_levelMatrix;
+ivec Site::m_originTransformVector;
 
 uint Site::totalActiveSites = 0;
+
+

@@ -16,45 +16,38 @@ using namespace arma;
 
 using namespace std;
 
-KMCSolver::KMCSolver(uint nCycles, uint NX, uint NY, uint NZ) :
-    NX(NX),
-    NY(NY),
-    NZ(NZ),
-    nCycles(nCycles)
+KMCSolver::KMCSolver(const Setting & root)
 {
 
+    const Setting & SystemSettings = getSurfaceSetting(root, "System");
+    const Setting & SolverSettings = getSurfaceSetting(root, "Solver");
+    const Setting & InitializationSettings = getSurfaceSetting(root, "Initialization");
+
+    const Setting & BoxSize = getSurfaceSetting(SystemSettings, "BoxSize");
+
+
+    NX = BoxSize[0];
+    NY = BoxSize[1];
+    NZ = BoxSize[2];
+
+    nCycles = getSurfaceSetting<uint>(SolverSettings, "nCycles");
+    cyclesPerOutput = getSurfaceSetting<uint>(SolverSettings, "cyclesPerOutput");
+
+    saturation = getSurfaceSetting<double>(InitializationSettings, "SaturationLevel");
+    RelativeSeedSize = getSurfaceSetting<double>(InitializationSettings, "RelativeSeedSize");
+    assert(RelativeSeedSize < 1.0 && "The seed size cannot exceed the box size.");
+
+    Site::loadNeighborLimit(SystemSettings);
+    Site::setSolverPtr(this);
+
+    Reaction::loadTemperature(getSurfaceSetting(root, "Reactions"));
+    Reaction::setSolverPtr(this);
+
+    DiffusionReaction::loadPotential(getSetting(root, {"Reactions", "Diffusion"}));
+
+
+
     KMC_INIT_RNG(time(NULL));
-
-    double rPower = 0.5;
-
-    for (uint i = 0; i < Site::neighborhoodLength; ++i)
-    {
-
-        for (uint j = 0; j < Site::neighborhoodLength; ++j)
-        {
-
-            for (uint k = 0; k < Site::neighborhoodLength; ++k)
-            {
-
-                if (i == Site::nNeighborsLimit && j == Site::nNeighborsLimit && k == nNeighborLimit)
-                {
-                    continue;
-                }
-
-                Site::levelMatrix(i, j, k) = Site::getLevel(std::abs(Site::originTransformVector(i)),
-                                                            std::abs(Site::originTransformVector(j)),
-                                                            std::abs(Site::originTransformVector(k)));
-
-                DiffusionReaction::weights(i, j, k) = 1.0/pow(pow(Site::originTransformVector(i), 2)
-                                                              + pow(Site::originTransformVector(j), 2)
-                                                              + pow(Site::originTransformVector(k), 2), rPower/2);
-            }
-        }
-    }
-
-    double EScale = 2.0;
-
-    DiffusionReaction::weights *= EScale;
 
     sites = new Site***[NX];
 
@@ -67,7 +60,7 @@ KMCSolver::KMCSolver(uint nCycles, uint NX, uint NY, uint NZ) :
 
             for (uint z = 0; z < NZ; ++z) {
 
-                sites[x][y][z] = new Site(x, y, z, this);
+                sites[x][y][z] = new Site(x, y, z);
             }
         }
     }
@@ -148,9 +141,8 @@ void KMCSolver::dumpXYZ()
 
 void KMCSolver::dumpOutput()
 {
-    cout << setw(4) << right
-         << (double)cycle/nCycles*100
-         << "%   "
+    cout << setw(5) << right << setprecision(1) << fixed
+         << (double)cycle/nCycles*100 << "%   "
          << cycle
          << endl;
 }
@@ -211,8 +203,6 @@ void KMCSolver::setDiffusionReactions()
 void KMCSolver::initialize()
 {
 
-    double saturation = 0.15;
-
     for (uint i = 0; i < NX; ++i) {
         for (uint j = 0; j < NY; ++j) {
             for (uint k = 0; k < NZ; ++k) {
@@ -226,7 +216,7 @@ void KMCSolver::initialize()
     }
 
 
-    int D = 0;//NX/3;
+    int D = NX*RelativeSeedSize/2;
 
     for (uint i = NX/2 - D; i < NX/2 + D; ++i) {
         for (uint j = NY/2 - D; j < NY/2 + D; ++j) {

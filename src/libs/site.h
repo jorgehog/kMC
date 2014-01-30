@@ -6,6 +6,8 @@
 #include <armadillo>
 #include <assert.h>
 
+#include <libconfig_utils/libconfig_utils.h>
+
 using namespace arma;
 
 class KMCSolver;
@@ -15,15 +17,18 @@ class Site
 {
 public:
 
-    static const uint nNeighborsLimit = 2;
-    static const uint neighborhoodLength;
 
-    static ucube levelMatrix;
-    static ivec originTransformVector;
+    static uint m_nNeighborsLimit;
+    static uint m_neighborhoodLength;
+
+    static ucube m_levelMatrix;
+    static ivec m_originTransformVector;
 
     static uint totalActiveSites;
 
-    Site(uint _x, uint _y, uint _z, KMCSolver* solver);
+    Site(uint _x, uint _y, uint _z);
+
+    static void loadNeighborLimit(const Setting & setting);
 
     static uint getLevel(uint i, uint j, uint k);
 
@@ -32,6 +37,8 @@ public:
     void updateReactions();
 
     void calculateRates();
+
+    static void setSolverPtr(KMCSolver* solver);
 
 
     uint nNeighbors(uint level = 0)
@@ -73,22 +80,22 @@ public:
 
     void updateEnergy(Site *changedSite, int change);
 
-    bool active()
+    const bool & active()
     {
         return m_active;
     }
 
-    uint x()
+    const uint & x()
     {
         return m_x;
     }
 
-    uint y()
+    const uint & y()
     {
         return m_y;
     }
 
-    uint z()
+    const uint & z()
     {
         return m_z;
     }
@@ -117,9 +124,22 @@ public:
     friend class testBed;
 
 
+    static const uint &nNeighborsLimit();
+
+    static const uint &neighborhoodLength();
+
+    static const ucube &levelMatrix();
+
+    static const ivec &originTransformVector();
+
+
 private:
 
-    KMCSolver* mainSolver;
+    static uint NX;
+    static uint NY;
+    static uint NZ;
+
+    static KMCSolver* mainSolver;
 
     uvec m_nNeighbors;
 

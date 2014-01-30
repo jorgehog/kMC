@@ -4,6 +4,8 @@
 #include <sys/types.h>
 #include <armadillo>
 
+#include <libconfig_utils/libconfig_utils.h>
+
 #include "site.h"
 
 using namespace arma;
@@ -14,12 +16,8 @@ class KMCSolver
 {
 public:
 
-    const uint NX;
-    const uint NY;
-    const uint NZ;
 
-
-    KMCSolver(uint nCycles, uint NX, uint NY, uint NZ);
+    KMCSolver(const Setting & root);
 
 
     void run();
@@ -43,13 +41,26 @@ public:
         return sites;
     }
 
+    uint getNX () {
+        return NX;
+    }
+
+    uint getNY () {
+        return NY;
+    }
+
+    uint getNZ () {
+        return NZ;
+    }
+
     friend class testBed;
 
 
 private:
 
-    const uint nNeighborLimit = 2;
-
+    uint NX;
+    uint NY;
+    uint NZ;
 
     Site**** sites;
 
@@ -65,9 +76,11 @@ private:
     uint nCycles;
     uint cycle   = 0;
 
-    uint cyclesPerOutput = 100;
+    uint cyclesPerOutput;
     uint outputCounter   = 0;
 
+    double saturation;
+    double RelativeSeedSize;
 
     void initialize();
 

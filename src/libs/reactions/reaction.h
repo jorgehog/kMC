@@ -4,6 +4,7 @@
 #include "../site.h"
 #include <sys/types.h>
 
+#include <libconfig_utils/libconfig_utils.h>
 
 class Site;
 class KMCSolver;
@@ -11,6 +12,7 @@ class KMCSolver;
 class Reaction
 {
 public:
+
     Reaction();
 
     virtual void calcRate() = 0;
@@ -21,22 +23,27 @@ public:
         reactionSite = site;
     }
 
-    void setMainsolver(KMCSolver* solver);
 
-    uint ID() {
+    const uint & ID() {
         return m_ID;
     }
 
-    double rate() {
+    const double &  rate() {
         return m_rate;
     }
+
+    static void setSolverPtr(KMCSolver * solver);
+
+    static void loadTemperature(const Setting & setting);
 
 
 protected:
 
-    uint NX;
-    uint NY;
-    uint NZ;
+    static uint NX;
+    static uint NY;
+    static uint NZ;
+
+    static double beta;
 
     uint m_ID;
     static uint IDcount;
@@ -46,22 +53,22 @@ protected:
     double m_rate;
 
 
-    uint x()
+    const uint & x()
     {
         return reactionSite->x();
     }
 
-    uint y()
+    const uint & y()
     {
         return reactionSite->y();
     }
 
-    uint z()
+    const uint & z()
     {
         return reactionSite->z();
     }
 
-    KMCSolver* mainSolver;
+    static KMCSolver* mainSolver;
 
 };
 

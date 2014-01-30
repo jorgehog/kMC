@@ -8,6 +8,39 @@ DiffusionReaction::DiffusionReaction(Site *destination) :
 
 }
 
+void DiffusionReaction::loadPotential(const Setting &setting)
+{
+    double rPower = getSurfaceSetting<double>(setting, "rPower");
+    double scale  = getSurfaceSetting<double>(setting, "scale");
+
+    m_potential.set_size(Site::neighborhoodLength(),
+                         Site::neighborhoodLength(),
+                         Site::neighborhoodLength());
+
+    for (uint i = 0; i < Site::neighborhoodLength(); ++i)
+    {
+
+        for (uint j = 0; j < Site::neighborhoodLength(); ++j)
+        {
+
+            for (uint k = 0; k < Site::neighborhoodLength(); ++k)
+            {
+
+                if (i == Site::nNeighborsLimit() && j == Site::nNeighborsLimit() && k == Site::nNeighborsLimit())
+                {
+                    continue;
+                }
+
+                m_potential(i, j, k) = 1.0/pow(pow(Site::originTransformVector()(i), 2)
+                                               + pow(Site::originTransformVector()(j), 2)
+                                               + pow(Site::originTransformVector()(k), 2), rPower/2);
+            }
+        }
+    }
+
+    m_potential *= scale;
+}
+
 void DiffusionReaction::calcRate()
 {
     uint ns = 0;
@@ -63,6 +96,4 @@ void DiffusionReaction::execute()
     destination->activate();
 }
 
-cube DiffusionReaction::weights = zeros<cube>(Site::neighborhoodLength,
-                                     Site::neighborhoodLength,
-                                     Site::neighborhoodLength);
+cube DiffusionReaction::m_potential;

@@ -3,13 +3,20 @@
 
 #include "../reaction.h"
 
+#include <libconfig_utils/libconfig_utils.h>
+
 class DiffusionReaction : public Reaction
 {
 public:
 
-    static cube weights;
 
     DiffusionReaction(Site *destination);
+
+    static void loadPotential(const Setting & setting);
+
+    static const cube & potential() {
+        return m_potential;
+    }
 
 private:
 
@@ -18,19 +25,20 @@ private:
     double beta = 1.0;
     double mu = 1;
 
+    static cube m_potential;
 
     Site* destination;
 
-    uint x1 () {
+    const uint & x1 () {
         return destination->x();
     }
 
 
-    uint y1 () {
+    const uint & y1 () {
         return destination->y();
     }
 
-    uint z1 () {
+    const uint & z1 () {
         return destination->z();
     }
 
