@@ -108,6 +108,12 @@ public:
         return E;
     }
 
+    void reset() {
+        m_nNeighbors.zeros();
+        m_totalEnergy -= E;
+        E = 0;
+    }
+
     void introduceNeighborhood();
 
     void informNeighborhoodOnChange(int change);
@@ -129,6 +135,10 @@ public:
         return m_totalActiveSites;
     }
 
+    static const double & totalEnergy() {
+        return m_totalEnergy;
+    }
+
 
 private:
 
@@ -143,6 +153,8 @@ private:
     static uint NX;
     static uint NY;
     static uint NZ;
+
+    static double m_totalEnergy;
 
     static KMCSolver* mainSolver;
 

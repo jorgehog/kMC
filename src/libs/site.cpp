@@ -113,8 +113,6 @@ void Site::updateReactions()
 void Site::calculateRates()
 {
 
-    //    E = En*nNeighbors() + Enn*nNeighbors(1);
-
     for (Reaction* reaction : m_activeReactions) {
         reaction->calcRate();
     }
@@ -135,7 +133,11 @@ void Site::updateEnergy(Site *changedSite, int change)
     uint yScaled = (m_nNeighborsLimit + abs((int)m_y - (int)changedSite->y()))%NY;
     uint zScaled = (m_nNeighborsLimit + abs((int)m_z - (int)changedSite->z()))%NZ;
 
-    E += change*DiffusionReaction::potential()(xScaled, yScaled, zScaled);
+    double dE = change*DiffusionReaction::potential()(xScaled, yScaled, zScaled);
+
+    E += dE;
+
+    m_totalEnergy += dE;
 
 }
 
@@ -178,6 +180,7 @@ void Site::informNeighborhoodOnChange(int change)
                 neighbor = neighborHood[i][j][k];
 
                 if (neighbor == this) {
+                    assert(i == j && j == k && k == m_nNeighborsLimit);
                     continue;
                 }
 
@@ -212,6 +215,7 @@ void Site::countNeighbors()
                 neighbor = neighborHood[i][j][k];
 
                 if (neighbor == this) {
+                    assert(i == m_nNeighborsLimit && j == m_nNeighborsLimit && k == m_nNeighborsLimit);
                     continue;
                 }
 
@@ -222,6 +226,7 @@ void Site::countNeighbors()
                     m_nNeighbors(level)++;
 
                     E += DiffusionReaction::potential()(i, j, k);
+                    m_totalEnergy += DiffusionReaction::potential()(i, j, k);
 
                 }
 
@@ -261,4 +266,4 @@ ivec Site::m_originTransformVector;
 
 uint Site::m_totalActiveSites = 0;
 
-
+double Site::m_totalEnergy = 0;

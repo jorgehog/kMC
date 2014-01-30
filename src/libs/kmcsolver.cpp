@@ -163,6 +163,7 @@ void KMCSolver::setDiffusionReactions()
 {
 
     Site* currentSite;
+    Site* destination;
 
     //Loop over all sites
     for (uint x = 0; x < NX; ++x) {
@@ -176,13 +177,16 @@ void KMCSolver::setDiffusionReactions()
                     for (uint j = 0; j < 3; ++j) {
                         for (uint k = 0; k < 3; ++k) {
 
+                            destination = currentSite->getNeighborhood()[Site::nNeighborsLimit() + i - 1][Site::nNeighborsLimit() + j - 1][Site::nNeighborsLimit() + k - 1];
+
                             //This menas we are at the current site.
-                            if((i == 1) && (j == 1) && (k == 1)) {
+                            if(destination == currentSite) {
+                                assert((i == 1) && (j == 1) && (k == 1));
                                 continue;
                             }
 
                             //And add diffusion reactions
-                            currentSite->addReaction(new DiffusionReaction(currentSite->getNeighborhood()[i][j][k]));
+                            currentSite->addReaction(new DiffusionReaction(destination));
 
                         }
                     }
@@ -228,8 +232,42 @@ void KMCSolver::initialize()
         }
     }
 
+//    double E0 = Site::totalEnergy();
+//    ucube alln(NX, NY, NZ);
+//    ucube alln2(NX, NY, NZ);
 
-    getAllNeighbors();
+//    for (uint i = 0; i < NX; ++i) {
+//        for (uint j = 0; j < NY; ++j) {
+//            for (uint k = 0; k < NZ; ++k) {
+//                alln(i, j, k) = sites[i][j][k]->nNeighbors();
+//                alln2(i, j, k) = sites[i][j][k]->nNeighbors(1);
+
+//                sites[i][j][k]->reset();
+
+
+//            }
+//        }
+//    }
+
+//    double isZero = Site::totalEnergy();
+
+//    getAllNeighbors();
+
+//    for (uint i = 0; i < NX; ++i) {
+//        for (uint j = 0; j < NY; ++j) {
+//            for (uint k = 0; k < NZ; ++k) {
+//                assert(alln(i, j, k) == sites[i][j][k]->nNeighbors());
+//                assert(alln2(i, j, k) == sites[i][j][k]->nNeighbors(1));
+
+
+//            }
+//        }
+//    }
+
+//    double E1 = Site::totalEnergy();
+
+//    cout << E0 << "  " << E1 << "  " << isZero << endl;
+//    assert(fabs(E0 - E1) < 1E-3);
 
     cout << "Initialized "
          << Site::totalActiveSites()
