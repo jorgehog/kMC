@@ -9,21 +9,26 @@ using namespace libconfig;
 int main()
 {
 
-//    Config cfg;
+    Config cfg;
 
-//    cfg.readFile("infiles/config.cfg");
+    cfg.readFile("infiles/config.cfg");
 
-//    const Setting & root = cfg.getRoot();
+    const Setting & root = cfg.getRoot();
 
-//    uint nx = getSetting<uint>(root, {"System", "NX"});
-//    uint ny = getSetting<uint>(root, {"System", "NY"});
-//    uint nz = getSetting<uint>(root, {"System", "NZ"});kmc
+    uint nx = getSetting<uint>(root, {"System", "NX"});
+    uint ny = getSetting<uint>(root, {"System", "NY"});
+    uint nz = getSetting<uint>(root, {"System", "NZ"});
 
-    uint nx = 33;
-    uint ny = 33;
-    uint nz = 33;
+    uint nCycles = getSetting<uint>(root, {"Solver", "nCycles"});
 
-    KMCSolver* solver = new KMCSolver(nx, ny, nz);
+    double beta = getSetting<double>(root, {"System", "beta"});
+    double rPower = getSetting<double>(root, {"System", "rPower"});
+
+    double saturationLevel = getSetting<double>(root, {"Initialization", "SaturationLevel"});
+    int seedSize = getSetting<int>(root, {"Initialization", "SeedSize"});
+
+    KMCSolver* solver = new KMCSolver(nCycles, nx, ny, nz);
+
     solver->run();
 
 

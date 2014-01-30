@@ -16,10 +16,11 @@ using namespace arma;
 
 using namespace std;
 
-KMCSolver::KMCSolver(uint NX, uint NY, uint NZ) :
+KMCSolver::KMCSolver(uint nCycles, uint NX, uint NY, uint NZ) :
     NX(NX),
     NY(NY),
-    NZ(NZ)
+    NZ(NZ),
+    nCycles(nCycles)
 {
 
     KMC_INIT_RNG(time(NULL));
@@ -45,8 +46,8 @@ KMCSolver::KMCSolver(uint NX, uint NY, uint NZ) :
                                                             std::abs(Site::originTransformVector(k)));
 
                 DiffusionReaction::weights(i, j, k) = 1.0/pow(pow(Site::originTransformVector(i), 2)
-                                                               + pow(Site::originTransformVector(j), 2)
-                                                               + pow(Site::originTransformVector(k), 2), rPower/2);
+                                                              + pow(Site::originTransformVector(j), 2)
+                                                              + pow(Site::originTransformVector(k), 2), rPower/2);
             }
         }
     }

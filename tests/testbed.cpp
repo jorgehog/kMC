@@ -17,7 +17,7 @@ void testBed::testNeighbors()
     uint NY = 20;
     uint NZ = 20;
 
-    KMCSolver* solver = new KMCSolver(NX, NY, NZ);
+    KMCSolver* solver = new KMCSolver(0, NX, NY, NZ);
 
     Site* site;
     int a;

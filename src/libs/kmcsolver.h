@@ -19,7 +19,7 @@ public:
     const uint NZ;
 
 
-    KMCSolver(uint NX, uint NY, uint NZ);
+    KMCSolver(uint nCycles, uint NX, uint NY, uint NZ);
 
 
     void run();
@@ -62,7 +62,7 @@ private:
     double kTot;
     double totalTime = 0;
 
-    uint nCycles = 100000;
+    uint nCycles;
     uint cycle   = 0;
 
     uint cyclesPerOutput = 100;
