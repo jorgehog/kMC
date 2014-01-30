@@ -259,6 +259,6 @@ uint Site::m_neighborhoodLength;
 ucube Site::m_levelMatrix;
 ivec Site::m_originTransformVector;
 
-uint Site::totalActiveSites = 0;
+uint Site::m_totalActiveSites = 0;
 
 

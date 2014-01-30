@@ -18,13 +18,6 @@ class Site
 public:
 
 
-    static uint m_nNeighborsLimit;
-    static uint m_neighborhoodLength;
-
-    static ucube m_levelMatrix;
-    static ivec m_originTransformVector;
-
-    static uint totalActiveSites;
 
     Site(uint _x, uint _y, uint _z);
 
@@ -58,7 +51,7 @@ public:
 
         informNeighborhoodOnChange(+1);
 
-        totalActiveSites++;
+        m_totalActiveSites++;
 
     }
 
@@ -74,7 +67,7 @@ public:
 
         informNeighborhoodOnChange(-1);
 
-        totalActiveSites--;
+        m_totalActiveSites--;
 
     }
 
@@ -132,8 +125,20 @@ public:
 
     static const ivec &originTransformVector();
 
+    static const uint & totalActiveSites() {
+        return m_totalActiveSites;
+    }
+
 
 private:
+
+    static uint m_nNeighborsLimit;
+    static uint m_neighborhoodLength;
+
+    static ucube m_levelMatrix;
+    static ivec m_originTransformVector;
+
+    static uint m_totalActiveSites;
 
     static uint NX;
     static uint NY;

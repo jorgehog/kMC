@@ -232,7 +232,7 @@ void KMCSolver::initialize()
     getAllNeighbors();
 
     cout << "Initialized "
-         << Site::totalActiveSites
+         << Site::totalActiveSites()
          << " active sites."
          << endl;
 
