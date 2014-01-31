@@ -322,31 +322,6 @@ void KMCSolver::getRateVariables()
 }
 
 
-Reaction* KMCSolver::getChosenReaction(uint choice)
-{
-    uint K = 0;
-
-    for (uint x = 0; x < NX; ++x) {
-        for (uint y = 0; y < NY; ++y) {
-            for (uint z = 0; z < NZ; ++z) {
-
-                for (Reaction* reaction : sites[x][y][z]->activeReactions()) {
-
-                    if (K == choice) {
-                        return reaction;
-                    }
-
-                    K++;
-                }
-
-            }
-        }
-    }
-
-    cout << "FAIL AT CHOOSING REACTION" << endl;
-    exit(1);
-}
-
 uint KMCSolver::getReactionChoice(double R)
 {
 
