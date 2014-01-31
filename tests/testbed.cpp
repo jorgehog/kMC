@@ -143,6 +143,8 @@ void testBed::testBinarySearchChoise(uint LIM)
             secondChoice++;
         }
 
+        secondChoice--;
+
         if (secondChoice == choice) {
             winCount++;
         } else {
@@ -153,6 +155,79 @@ void testBed::testBinarySearchChoise(uint LIM)
         }
 
         nTrials++;
+
+    }
+
+    CHECK_EQUAL(nTrials, winCount);
+
+}
+
+void testBed::testReactionChoise(uint LIM)
+{
+    uint choice;
+    int old_count = -1;
+    double kTot = 0;
+    Reaction* reaction;
+
+    solver->initialize();
+
+    reset();
+
+    solver->getRateVariables();
+
+    while(nTrials < LIM)
+    {
+
+        for (double R : solver->accuAllRates) {
+
+            choice = solver->getReactionChoice(R);
+
+            kTot = 0;
+            uint count = 0;
+            for (uint i = 0; i < NX; ++i) {
+                for (uint j = 0; j < NY; ++j) {
+                    for (uint k = 0; k < NZ; ++k) {
+                        for (Reaction* r : solver->sites[i][j][k]->activeReactions()) {
+
+                            assert(r == solver->allReactions.at(count));
+
+                            kTot += r->rate();
+
+                            assert(kTot == solver->accuAllRates.at(count));
+
+                            //if by adding this reaction we surpass the limit, we
+                            //are done searching.
+                            if (kTot >= R) {
+                                reaction = r;
+                                i = NX;
+                                j = NY;
+                                k = NZ;
+                                break;
+                            }
+
+                            count++;
+                        }
+                    }
+                }
+            }
+
+            if (!(choice == count)) {
+                cout << "fail" << endl;
+                cout << choice << " " << count << " " << (int)choice - (int)count << endl;
+            }
+            if (!(count == old_count + 1)) {
+                cout << count << " " << solver->accuAllRates.size() << endl;
+            }
+
+            if (solver->allReactions[choice] == reaction) {
+                winCount++;
+            } else {
+                failCount++;
+            }
+
+            nTrials++;
+            old_count = count;
+        }
 
     }
 

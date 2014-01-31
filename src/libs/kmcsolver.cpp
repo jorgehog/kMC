@@ -326,6 +326,7 @@ uint KMCSolver::getReactionChoice(double R)
 {
 
     uint imax = accuAllRates.size() - 1;
+    uint MAX = imax;
     uint imin = 0;
     uint imid = 1;
 
@@ -335,27 +336,48 @@ uint KMCSolver::getReactionChoice(double R)
         // calculate the midpoint for roughly equal partition
         imid = imin + (imax - imin)/2;
 
-        if (accuAllRates.at(imid) > R)
+        //Is the upper limit above mid?
+        if (R >= accuAllRates.at(imid))
         {
-            if (accuAllRates.at(imid - 1) < R)
+
+            if (imid == MAX)
             {
+                return MAX;
+            }
+
+            //Are we just infront of the limit?
+            if (R < accuAllRates.at(imid + 1))
+            {
+                //yes we were! Returning current mid.
+
                 return imid;
             }
 
+            //No we're not there yet, so we search above us.
             else
             {
-                imax = imid - 1;
+
+
+                imin = imid + 1;
             }
         }
 
+        //No it's not. Starting new search below mid!
         else
         {
-            imin = imid + 1;
+
+            if (imid == 0)
+            {
+                return 0;
+            }
+
+            imax = imid - 1;
         }
 
 
     }
 
+    cerr << imid << "  " << imin << "  " << imax << endl;
     assert(false && "LOCATING RATE FAILED");
     return 0;
 

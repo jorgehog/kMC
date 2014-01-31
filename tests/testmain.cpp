@@ -36,6 +36,13 @@ TEST(BINARYSEARCH) {
 
 }
 
+TEST(REACTIONCHOISE) {
+
+    testBed test;
+
+    test.testReactionChoise(10000);
+}
+
 
 int main()
 {

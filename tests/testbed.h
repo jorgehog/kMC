@@ -16,6 +16,9 @@ public:
 
     void testBinarySearchChoise(uint LIM);
 
+
+    void testReactionChoise(uint LIM);
+
     uint failCount;
     uint winCount;
     uint nTrials;
