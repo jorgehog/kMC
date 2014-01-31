@@ -92,7 +92,7 @@ private:
 
     uint getReactionChoice(double R);
 
-    Reaction *getChosenReaction(uint choice);
+
 
     void dumpXYZ();
 
