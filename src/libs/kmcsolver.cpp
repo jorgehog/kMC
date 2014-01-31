@@ -30,12 +30,7 @@ KMCSolver::KMCSolver(const Setting & root)
     NY = BoxSize[1];
     NZ = BoxSize[2];
 
-    nCycles = getSurfaceSetting<uint>(SolverSettings, "nCycles");
-    cyclesPerOutput = getSurfaceSetting<uint>(SolverSettings, "cyclesPerOutput");
 
-    saturation = getSurfaceSetting<double>(InitializationSettings, "SaturationLevel");
-    RelativeSeedSize = getSurfaceSetting<double>(InitializationSettings, "RelativeSeedSize");
-    assert(RelativeSeedSize < 1.0 && "The seed size cannot exceed the box size.");
 
     Site::loadNeighborLimit(SystemSettings);
     Site::setSolverPtr(this);
@@ -46,8 +41,33 @@ KMCSolver::KMCSolver(const Setting & root)
     DiffusionReaction::loadPotential(getSetting(root, {"Reactions", "Diffusion"}));
 
 
+    nCycles = getSurfaceSetting<uint>(SolverSettings, "nCycles");
 
-    KMC_INIT_RNG(time(NULL));
+    cyclesPerOutput = getSurfaceSetting<uint>(SolverSettings, "cyclesPerOutput");
+
+
+    Seed::SeedType seedType = static_cast<Seed::SeedType>(getSurfaceSetting<uint>(SolverSettings, "seedType"));
+
+    int seed;
+    switch (seedType) {
+    case Seed::specific:
+        seed = getSurfaceSetting<int>(SolverSettings, "specificSeed");
+        break;
+    case Seed::fromTime:
+        seed = time(NULL);
+        break;
+    default:
+        assert(0 == 1 && "SEED NOT SPECIFIED.");
+        break;
+    }
+
+    KMC_INIT_RNG(seed);
+
+
+    saturation = getSurfaceSetting<double>(InitializationSettings, "SaturationLevel");
+    RelativeSeedSize = getSurfaceSetting<double>(InitializationSettings, "RelativeSeedSize");
+    assert(RelativeSeedSize < 1.0 && "The seed size cannot exceed the box size.");
+
 
     sites = new Site***[NX];
 
@@ -92,13 +112,11 @@ void KMCSolver::run(){
 
         getRateVariables();
 
-
         R = kTot*KMC_RNG_UNIFORM();
 
         choice = getReactionChoice(R);
 
         allReactions[choice]->execute();
-
 
         if (cycle%cyclesPerOutput == 0)
         {
@@ -143,7 +161,7 @@ void KMCSolver::dumpOutput()
 {
     cout << setw(5) << right << setprecision(1) << fixed
          << (double)cycle/nCycles*100 << "%   "
-         << cycle
+         << outputCounter
          << endl;
 }
 
@@ -332,7 +350,7 @@ Reaction* KMCSolver::getChosenReaction(uint choice)
 uint KMCSolver::getReactionChoice(double R)
 {
 
-    uint imax = accuAllRates.size();
+    uint imax = accuAllRates.size() - 1;
     uint imin = 0;
     uint imid = 1;
 
@@ -342,28 +360,28 @@ uint KMCSolver::getReactionChoice(double R)
         // calculate the midpoint for roughly equal partition
         imid = imin + (imax - imin)/2;
 
-        if (imid == imin) {
-            return imid;
+        if (accuAllRates.at(imid) > R)
+        {
+            if (accuAllRates.at(imid - 1) < R)
+            {
+                return imid;
+            }
+
+            else
+            {
+                imax = imid - 1;
+            }
         }
 
-        //perform two tests due to integer division
-        else if (accuAllRates.at(imid - 1) < R && accuAllRates.at(imid) > R) {
-            return imid-1;
-        }
-        else if (accuAllRates.at(imid) < R && accuAllRates.at(imid + 1) > R) {
-            return imid;
-        }
-
-        else if (accuAllRates.at(imid) < R) {
+        else
+        {
             imin = imid + 1;
-        } else {
-            imax = imid - 1;
         }
 
 
     }
 
-    cout << "LOCATING RATE FAILED" << endl;
+    assert(false && "LOCATING RATE FAILED");
     return 0;
 
 }

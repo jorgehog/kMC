@@ -19,4 +19,11 @@
 
 #endif
 
+struct Seed {
+    enum SeedType {
+        fromTime,
+        specific
+    };
+};
+
 #endif //KMCRNG_H

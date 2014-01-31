@@ -10,25 +10,25 @@ using namespace libconfig;
 
 testBed::testBed()
 {
-}
-
-void testBed::testNeighbors()
-{
-
-    using namespace std;
-
     Config cfg;
 
     cfg.readFile("infiles/config.cfg");
 
     const Setting & root = cfg.getRoot();
 
-    uint NX = getSetting<uint>(root, {"System", "NX"});
-    uint NY = getSetting<uint>(root, {"System", "NY"});
-    uint NZ = getSetting<uint>(root, {"System", "NZ"});
+    solver = new KMCSolver(root);
+
+    NX = solver->NX;
+    NY = solver->NY;
+    NZ = solver->NZ;
 
 
-    KMCSolver* solver = new KMCSolver(root);
+}
+
+void testBed::testNeighbors()
+{
+
+    using namespace std;
 
     Site* site;
     int a;
@@ -59,7 +59,7 @@ void testBed::testNeighbors()
                                 cout << delta << "  " << Site::originTransformVector()(i) << "  " << NX << endl;
                                 cout << "------" << endl;
 
-                                 cin >> a;
+                                cin >> a;
                                 failCount++;
                             } else {
                                 winCount++;
@@ -79,7 +79,6 @@ void testBed::testNeighbors()
 
 void testBed::testRNG()
 {
-    KMC_INIT_RNG(time(NULL));
 
     double U  = 0;
     double U2 = 0;
@@ -113,12 +112,50 @@ void testBed::testRNG()
     stdU = sqrt(U2 - U*U);
     stdN = sqrt(N2 - N*N);
 
-    //    cout << U << "  " << N << endl;
-    //    cout << stdU << "  " << stdN << endl;
 
     CHECK_CLOSE(0.5, U, 0.01);
     CHECK_CLOSE(1.0/sqrt(12), stdU, 0.01);
 
     CHECK_CLOSE(0, N, 0.01);
     CHECK_CLOSE(1, stdN, 0.01);
+}
+
+void testBed::testBinarySearchChoise(uint LIM)
+{
+    uint choice;
+    uint secondChoice;
+    double R;
+
+    solver->initialize();
+
+    reset();
+
+    solver->getRateVariables();
+
+    while(nTrials < LIM)
+    {
+
+        R = solver->kTot*KMC_RNG_UNIFORM();
+
+        choice = solver->getReactionChoice(R);
+        secondChoice = 0;
+        while (solver->accuAllRates.at(secondChoice) <= R) {
+            secondChoice++;
+        }
+
+        if (secondChoice == choice) {
+            winCount++;
+        } else {
+            cout << choice << "  " << secondChoice << "  " << (int)choice - (int)secondChoice << endl;
+            cout << solver->accuAllRates.at(choice) << "  " << solver->accuAllRates.at(secondChoice) << "  " << R << endl;
+            cout << "--------" << endl;
+            failCount++;
+        }
+
+        nTrials++;
+
+    }
+
+    CHECK_EQUAL(nTrials, winCount);
+
 }

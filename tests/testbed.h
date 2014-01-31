@@ -3,6 +3,8 @@
 
 #include <sys/types.h>
 
+class KMCSolver;
+
 class testBed
 {
 public:
@@ -11,6 +13,8 @@ public:
     void testNeighbors();
 
     void testRNG();
+
+    void testBinarySearchChoise(uint LIM);
 
     uint failCount;
     uint winCount;
@@ -22,6 +26,12 @@ public:
         winCount = 0;
         nTrials = 0;
     }
+
+    uint NX;
+    uint NY;
+    uint NZ;
+
+    KMCSolver* solver;
 };
 
 #endif // TESTBED_H
