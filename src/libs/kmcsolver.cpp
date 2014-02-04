@@ -404,7 +404,7 @@ uint KMCSolver::getReactionChoice(double R)
 
     cout << "binary: " << imid << "  " << imin << "  " << imax << endl;
 //    assert(imax == imid + 1 && "LOCATING RATE FAILED");
-    return 0;
+    return imid + 1;
 
 }
 
