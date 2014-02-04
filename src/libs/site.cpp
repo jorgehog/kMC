@@ -59,6 +59,37 @@ Site::~Site()
     m_siteReactions.clear();
 }
 
+void Site::setAsSeed()
+{
+
+    m_particleState = states::bound;
+    m_occupancyState     = states::blocked;
+
+    Site *nextNeighbor;
+
+    for (uint i = 0; i < 3; ++i) {
+
+        for (uint j = 0; j < 3; ++j) {
+
+            for (uint k = 0; k < 3; ++k) {
+
+
+                nextNeighbor = neighborHood[i + Site::nNeighborsLimit() - 1]
+                                       [j + Site::nNeighborsLimit() - 1]
+                                       [k + Site::nNeighborsLimit() - 1];
+
+                if (nextNeighbor == this) {
+                    assert(i == j && j == k && k == 1);
+                    continue;
+                }
+
+                nextNeighbor->setOccupancyState(states::surface);
+
+            }
+        }
+    }
+}
+
 void Site::loadNeighborLimit(const Setting &setting)
 {
     const uint  &limit = getSurfaceSetting<uint>(setting, "nNeighborsLimit");

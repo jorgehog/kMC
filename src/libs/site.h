@@ -13,15 +13,41 @@ using namespace arma;
 class KMCSolver;
 class Reaction;
 
+struct states {
+    enum particleState {
+        empty,
+        free,
+        bound
+    };
+    enum occupancyState {
+        surface,
+        blocked,
+        open
+    };
+};
+
 class Site
 {
 public:
 
-
-
     Site(uint _x, uint _y, uint _z);
 
     ~Site();
+
+    int particleState() {
+        return m_particleState;
+    }
+
+    void setParticleState(states::particleState state) {
+        //update reactions?
+        m_particleState = state;
+    }
+
+    void setOccupancyState(states::occupancyState state) {
+        m_occupancyState = state;
+    }
+
+    void setAsSeed();
 
     static void loadNeighborLimit(const Setting & setting);
 
@@ -47,8 +73,29 @@ public:
     {
 
         assert(m_active == false && "activating active site.");
+        assert(m_particleState == states::empty && "activating active site");
+        assert(m_occupancyState != states::blocked && "This reaction should never occur.");
+
+        switch (m_occupancyState) {
+        case states::surface:
+
+            m_particleState = states::bound;
+            //propagateSurface();
+
+            break;
+        case states::open:
+
+            m_particleState = states::free;
+            //propagateStuff();
+
+            break;
+
+        default:
+            break;
+        }
 
         m_active = true;
+        m_occupancyState = states::blocked;
 
         updateReactions();
         calculateRates();
@@ -63,8 +110,11 @@ public:
     {
 
         assert(m_active == true && "deactivating deactive site.");
+        assert(m_particleState != states::empty && "deactivating deactive site.");
 
         m_active = false;
+        m_particleState = states::empty;
+        m_occupancyState = states::open;
 
         updateReactions();
         calculateRates();
@@ -149,6 +199,9 @@ public:
     static const double & totalEnergy() {
         return m_totalEnergy;
     }
+
+    states::particleState m_particleState = states::empty;
+    states::occupancyState  m_occupancyState  = states::open;
 
 
 private:

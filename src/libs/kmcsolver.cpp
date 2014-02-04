@@ -157,6 +157,7 @@ void KMCSolver::run(){
 
 
 
+
 void KMCSolver::dumpXYZ()
 {
     stringstream s;
@@ -252,8 +253,8 @@ void KMCSolver::initialize()
         for (uint j = 0; j < NY; ++j) {
             for (uint k = 0; k < NZ; ++k) {
                 if (KMC_RNG_UNIFORM() > 1 - saturation) {
-
                     sites[i][j][k]->activate();
+                    sites[i][j][k]->setParticleState(states::bound);
 
                 }
             }
