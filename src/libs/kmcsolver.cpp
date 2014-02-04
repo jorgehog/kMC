@@ -123,6 +123,8 @@ KMCSolver::~KMCSolver()
 
 void KMCSolver::run(){
 
+
+    //test
     uint choice;
     double R;
 
