@@ -163,7 +163,7 @@ void testBed::testBinarySearchChoise(uint LIM)
 
 void testBed::testReactionChoise(uint LIM)
 {
-    return;
+
     uint choice;
     double kTot;
     double r_pre;
@@ -241,7 +241,7 @@ void testBed::testReactionChoise(uint LIM)
 void testBed::testRateCalculation () {
 
     reset();
-    return;
+
     solver->initialize();
     solver->getRateVariables();
 
@@ -254,15 +254,15 @@ void testBed::testRateCalculation () {
                     r->calcRate();
                     CHECK_EQUAL(r->rate(), RATE);
 
-                    if (r->rate() < 1E-8 || r->rate() > 1) {
+                    if (r->rate() < 1E-6 || r->rate() > 1000) {
                         double ESP = ((DiffusionReaction*)r)->getSaddleEnergy();
                         double E = solver->sites[i][j][k]->getEnergy();
                         cout << "RATE MESSED UP: "
-                             << solver->sites[i][j][k]->getEnergy()
+                             << E
                              << "  "
                              << ESP
                              << "  "
-                             << r->rate() << "  " << exp(ESP - E)
+                             << r->rate()
                              << endl;
                         failCount++;
                     }
@@ -280,7 +280,6 @@ void testBed::testEnergyAndNeighborSetup()
     reset();
 
     solver->initialize();
-
 
     const Site* thisSite;
     const Site* otherSite;

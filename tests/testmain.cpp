@@ -51,7 +51,7 @@ TEST(REACTIONCHOISE) {
 
     testBed test;
 
-    test.testReactionChoise(1);
+    test.testReactionChoise(5);
 }
 
 int main()
