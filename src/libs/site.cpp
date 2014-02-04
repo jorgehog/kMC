@@ -53,6 +53,12 @@ Site::Site(uint _x, uint _y, uint _z) :
 
 }
 
+Site::~Site()
+{
+    m_activeReactions.clear();
+    m_siteReactions.clear();
+}
+
 void Site::loadNeighborLimit(const Setting &setting)
 {
     const uint  &limit = getSurfaceSetting<uint>(setting, "nNeighborsLimit");

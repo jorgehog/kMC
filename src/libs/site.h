@@ -21,6 +21,8 @@ public:
 
     Site(uint _x, uint _y, uint _z);
 
+    ~Site();
+
     static void loadNeighborLimit(const Setting & setting);
 
     static uint getLevel(uint i, uint j, uint k);
@@ -114,6 +116,13 @@ public:
         m_nNeighbors.zeros();
         m_totalEnergy -= E;
         E = 0;
+    }
+
+    static void resetAll() {
+        m_totalActiveSites = 0;
+        m_totalEnergy = 0;
+        m_levelMatrix.reset();
+        m_originTransformVector.reset();
     }
 
     void introduceNeighborhood();

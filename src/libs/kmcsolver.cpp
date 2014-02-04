@@ -98,6 +98,27 @@ KMCSolver::KMCSolver(const Setting & root)
 
 }
 
+KMCSolver::~KMCSolver()
+{
+    for (uint i = 0; i < NX; ++i) {
+        for (uint j = 0; j < NY; ++j) {
+            for (uint k = 0; k < NZ; ++k) {
+
+                delete sites[i][j][k];
+            }
+
+            delete [] sites[i][j];
+        }
+
+        delete [] sites[i];
+    }
+
+    delete [] sites;
+
+    Site::resetAll();
+
+}
+
 
 
 void KMCSolver::run(){

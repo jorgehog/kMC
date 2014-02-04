@@ -10,6 +10,8 @@ class testBed
 public:
     testBed();
 
+    ~testBed();
+
     void testNeighbors();
 
     void testRNG();
@@ -22,6 +24,8 @@ public:
     void testRateCalculation();
 
     void testEnergyAndNeighborSetup();
+
+    void testUpdateNeigbors();
 
 
 

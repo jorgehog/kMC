@@ -19,6 +19,7 @@ public:
 
     KMCSolver(const Setting & root);
 
+    ~KMCSolver();
 
     void run();
 

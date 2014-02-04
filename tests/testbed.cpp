@@ -25,6 +25,11 @@ testBed::testBed()
 
 }
 
+testBed::~testBed()
+{
+    delete solver;
+}
+
 void testBed::testNeighbors()
 {
 
@@ -304,7 +309,7 @@ void testBed::testEnergyAndNeighborSetup()
 
                             thisSite->distanceTo(otherSite, dx, dy, dz);
                             ldx = abs(dx);
-//                            cout << i << " " << j << " " << k << endl << is << " " << js << " " << ks << endl << dx << " " << dy << " " << dz << endl << "------" << endl;
+                            //                            cout << i << " " << j << " " << k << endl << is << " " << js << " " << ks << endl << dx << " " << dy << " " << dz << endl << "------" << endl;
 
                             if (ldx <= Site::nNeighborsLimit()) {
                                 ldy = abs(dy);
@@ -322,12 +327,12 @@ void testBed::testEnergyAndNeighborSetup()
                                         }
 
                                         if (otherSite != thisSite->getNeighborhood()[Site::nNeighborsLimit() + dx][Site::nNeighborsLimit() + dy][Site::nNeighborsLimit() + dz]) {
-//                                            cout << "fail neighbor" << endl;
+                                            //                                            cout << "fail neighbor" << endl;
                                             failCount++;
                                         }
 
                                         if (thisSite != otherSite->getNeighborhood()[Site::nNeighborsLimit() - dx][Site::nNeighborsLimit() - dy][Site::nNeighborsLimit() - dz]) {
-//                                            cout << "fail neighbor" << endl;
+                                            //                                            cout << "fail neighbor" << endl;
                                             failCount++;
                                         }
                                     }
@@ -352,3 +357,65 @@ void testBed::testEnergyAndNeighborSetup()
     }
     CHECK_EQUAL(0, failCount);
 }
+
+void testBed::testUpdateNeigbors()
+{
+    CHECK_EQUAL(0, Site::totalEnergy());
+    CHECK_EQUAL(0, Site::totalActiveSites());
+
+    for (uint i = 0; i < NX; ++i) {
+        for (uint j = 0; j < NY; ++j) {
+            for (uint k = 0; k < NZ; ++k) {
+                solver->sites[i][j][k]->activate();
+            }
+        }
+    }
+
+    double eMax = accu(DiffusionReaction::potential());
+
+    for (uint i = 0; i < NX; ++i) {
+        for (uint j = 0; j < NY; ++j) {
+            for (uint k = 0; k < NZ; ++k) {
+
+                for (uint K = 0; K < Site::nNeighborsLimit(); ++K) {
+                    CHECK_EQUAL(2*(12*(K+1)*(K+1) + 1), solver->sites[i][j][k]->nNeighbors(K));
+                }
+
+                CHECK_CLOSE(eMax, solver->sites[i][j][k]->getEnergy(), 0.00001);
+
+            }
+        }
+    }
+
+    CHECK_EQUAL(NX*NY*NZ, Site::totalActiveSites());
+    CHECK_CLOSE(NX*NY*NZ*eMax, Site::totalEnergy(), 0.00001);
+
+    for (uint i = 0; i < NX; ++i) {
+        for (uint j = 0; j < NY; ++j) {
+            for (uint k = 0; k < NZ; ++k) {
+                solver->sites[i][j][k]->deactivate();
+            }
+        }
+    }
+
+    for (uint i = 0; i < NX; ++i) {
+        for (uint j = 0; j < NY; ++j) {
+            for (uint k = 0; k < NZ; ++k) {
+
+                for (uint K = 0; K < Site::nNeighborsLimit(); ++K) {
+                    CHECK_EQUAL(0, solver->sites[i][j][k]->nNeighbors(K));
+                }
+
+                CHECK_CLOSE(0, solver->sites[i][j][k]->getEnergy(), 0.00001);
+
+            }
+        }
+    }
+
+    CHECK_EQUAL(0, Site::totalActiveSites());
+    CHECK_CLOSE(0, Site::totalEnergy(), 0.00001);
+
+}
+
+
+

@@ -40,7 +40,10 @@ TEST(BINARYSEARCH) {
 
 }
 
-
+TEST(UPDATE_NEIGHBORS) {
+    testBed test;
+    test.testUpdateNeigbors();
+}
 
 TEST(RATECALC) {
     testBed test;
@@ -51,7 +54,7 @@ TEST(REACTIONCHOISE) {
 
     testBed test;
 
-    test.testReactionChoise(5);
+    test.testReactionChoise(1);
 }
 
 int main()
