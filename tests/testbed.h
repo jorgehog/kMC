@@ -19,6 +19,12 @@ public:
 
     void testReactionChoise(uint LIM);
 
+    void testRateCalculation();
+
+    void testEnergyAndNeighborSetup();
+
+
+
     uint failCount;
     uint winCount;
     uint nTrials;

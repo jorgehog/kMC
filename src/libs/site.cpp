@@ -35,6 +35,7 @@ Site::Site(uint _x, uint _y, uint _z) :
 {
 
     m_nNeighbors.set_size(m_nNeighborsLimit);
+    m_nNeighbors.zeros();
 
     neighborHood = new Site***[m_neighborhoodLength];
 
@@ -127,11 +128,45 @@ void Site::setSolverPtr(KMCSolver *solver)
     mainSolver = solver;
 }
 
+void Site::distanceTo(const Site *other, int &dx, int &dy, int &dz, bool absolutes) const
+{
+
+
+    dx = (other->x() + NX - m_x)%NX;
+    dy = (other->y() + NY - m_y)%NY;
+    dz = (other->z() + NZ - m_z)%NZ;
+
+    if ((uint)abs(dx) > NX/2) {
+        dx = -(int)(NX - dx);
+    }
+
+    if ((uint)abs(dy) > NY/2) {
+        dy = -(int)(NY - dy);
+    }
+
+    if ((uint)abs(dz) > NZ/2) {
+        dz = -(int)(NZ - dz);
+    }
+
+    if (absolutes) {
+        dx = abs(dx);
+        dy = abs(dy);
+        dz = abs(dz);
+    }
+
+}
+
 void Site::updateEnergy(Site *changedSite, int change)
 {
-    uint xScaled = (m_nNeighborsLimit + abs((int)m_x - (int)changedSite->x()))%NX;
-    uint yScaled = (m_nNeighborsLimit + abs((int)m_y - (int)changedSite->y()))%NY;
-    uint zScaled = (m_nNeighborsLimit + abs((int)m_z - (int)changedSite->z()))%NZ;
+    int xScaled;
+    int yScaled;
+    int zScaled;
+
+    distanceTo(changedSite, xScaled, yScaled, zScaled, true);
+
+    xScaled += Site::nNeighborsLimit();
+    yScaled += Site::nNeighborsLimit();
+    zScaled += Site::nNeighborsLimit();
 
     double dE = change*DiffusionReaction::potential()(xScaled, yScaled, zScaled);
 

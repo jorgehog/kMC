@@ -33,8 +33,10 @@ public:
 
     static void setSolverPtr(KMCSolver* solver);
 
+    void distanceTo(const Site * other, int &dx, int &dy, int &dz, bool absolutes = false) const;
 
-    uint nNeighbors(uint level = 0)
+
+    uint nNeighbors(uint level = 0) const
     {
         return m_nNeighbors(level);
     }
@@ -73,22 +75,22 @@ public:
 
     void updateEnergy(Site *changedSite, int change);
 
-    const bool & active()
+    const bool & active() const
     {
         return m_active;
     }
 
-    const uint & x()
+    const uint & x() const
     {
         return m_x;
     }
 
-    const uint & y()
+    const uint & y() const
     {
         return m_y;
     }
 
-    const uint & z()
+    const uint & z() const
     {
         return m_z;
     }
@@ -98,12 +100,12 @@ public:
         return m_activeReactions;
     }
 
-    Site**** getNeighborhood()
+    Site**** getNeighborhood() const
     {
         return neighborHood;
     }
 
-    double getEnergy()
+    double getEnergy() const
     {
         return E;
     }

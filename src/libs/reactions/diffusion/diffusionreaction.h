@@ -20,12 +20,13 @@ public:
 
 private:
 
-    double EspN = 2;
-    double EspNN = 1;
-    double beta = 1.0;
-    double mu = 1;
+    static double rPower;
+    static double scale;
+
+    static uint saddleCutoff;
 
     static cube m_potential;
+    static ivec m_saddleTransformVector;
 
     Site* destination;
 
@@ -42,12 +43,16 @@ private:
         return destination->z();
     }
 
+    double getSaddleEnergy();
+
 
     // Reaction interface
 public:
     void calcRate();
     bool isActive();
     void execute();
+
+    friend class testBed;
 };
 
 #endif // DIFFUSIONREACTION_H

@@ -35,7 +35,7 @@ KMCSolver::KMCSolver(const Setting & root)
     Site::loadNeighborLimit(SystemSettings);
     Site::setSolverPtr(this);
 
-    Reaction::loadTemperature(getSurfaceSetting(root, "Reactions"));
+    Reaction::loadReactionSettings(getSurfaceSetting(root, "Reactions"));
     Reaction::setSolverPtr(this);
 
     DiffusionReaction::loadPotential(getSetting(root, {"Reactions", "Diffusion"}));
@@ -125,7 +125,7 @@ void KMCSolver::run(){
         }
 
 
-        totalTime += 1.0/kTot;
+        totalTime += Reaction::getScale()/kTot;
         cycle++;
 
     }
@@ -333,31 +333,35 @@ uint KMCSolver::getReactionChoice(double R)
     // continue searching while imax != imin + 1
     while (imid != imin)
     {
+        if (imin > imax) {
+            cout << "caught: " << imin << " " << imid << " " << imax << endl;
+            return imin;
+        }
+
         // calculate the midpoint for roughly equal partition
         imid = imin + (imax - imin)/2;
 
         //Is the upper limit above mid?
-        if (R >= accuAllRates.at(imid))
+        if (R > accuAllRates.at(imid))
         {
 
-            if (imid == MAX)
-            {
+            if (imid == MAX) {
                 return MAX;
             }
 
             //Are we just infront of the limit?
-            if (R < accuAllRates.at(imid + 1))
+            else if (R < accuAllRates.at(imid + 1))
             {
-                //yes we were! Returning current mid.
+                //yes we were! Returning current mid + 1.
+                //If item i in accuAllrates > R, then reaction i is selected.
+                //This because there is no zero at the start of accuAllrates.
 
-                return imid;
+                return imid + 1;
             }
 
             //No we're not there yet, so we search above us.
             else
             {
-
-
                 imin = imid + 1;
             }
         }
@@ -371,14 +375,14 @@ uint KMCSolver::getReactionChoice(double R)
                 return 0;
             }
 
-            imax = imid - 1;
+            imax = imid;
         }
 
 
     }
 
-    cerr << imid << "  " << imin << "  " << imax << endl;
-    assert(false && "LOCATING RATE FAILED");
+    cout << "binary: " << imid << "  " << imin << "  " << imax << endl;
+//    assert(imax == imid + 1 && "LOCATING RATE FAILED");
     return 0;
 
 }

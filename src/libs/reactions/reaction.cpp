@@ -17,13 +17,15 @@ void Reaction::setSolverPtr(KMCSolver *solver)
     mainSolver = solver;
 }
 
-void Reaction::loadTemperature(const Setting &setting)
+void Reaction::loadReactionSettings(const Setting &setting)
 {
     beta = getSurfaceSetting<double>(setting, "beta");
+    mu   = getSurfaceSetting<double>(setting, "scale");
 }
 
 KMCSolver *Reaction::mainSolver;
 double Reaction::beta;
+double Reaction::mu;
 
 uint Reaction::NX;
 uint Reaction::NY;

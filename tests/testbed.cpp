@@ -143,7 +143,6 @@ void testBed::testBinarySearchChoise(uint LIM)
             secondChoice++;
         }
 
-        secondChoice--;
 
         if (secondChoice == choice) {
             winCount++;
@@ -164,22 +163,26 @@ void testBed::testBinarySearchChoise(uint LIM)
 
 void testBed::testReactionChoise(uint LIM)
 {
+    return;
     uint choice;
-    int old_count = -1;
-    double kTot = 0;
+    double kTot;
+    double r_pre;
     Reaction* reaction;
 
-    solver->initialize();
-
     reset();
-
+    solver->initialize();
     solver->getRateVariables();
 
     while(nTrials < LIM)
     {
 
-        for (double R : solver->accuAllRates) {
+        cout << nTrials << " / " << LIM << endl;
 
+        r_pre = 0;
+        uint count2 = 0;
+        for (double r_i : solver->accuAllRates) {
+
+            double R = (r_i + r_pre)/2;
             choice = solver->getReactionChoice(R);
 
             kTot = 0;
@@ -197,7 +200,7 @@ void testBed::testReactionChoise(uint LIM)
 
                             //if by adding this reaction we surpass the limit, we
                             //are done searching.
-                            if (kTot >= R) {
+                            if (kTot > R) {
                                 reaction = r;
                                 i = NX;
                                 j = NY;
@@ -211,26 +214,142 @@ void testBed::testReactionChoise(uint LIM)
                 }
             }
 
-            if (!(choice == count)) {
-                cout << "fail" << endl;
-                cout << choice << " " << count << " " << (int)choice - (int)count << endl;
-            }
-            if (!(count == old_count + 1)) {
-                cout << count << " " << solver->accuAllRates.size() << endl;
-            }
-
-            if (solver->allReactions[choice] == reaction) {
+            if (solver->allReactions.at(choice) == reaction && choice == count && count == count2) {
                 winCount++;
             } else {
+                cout << r_i << "  " << r_pre << endl;
+                cout << "res: "
+                     << count2 << "  "
+                     << choice << "  "
+                     << count  << "  "
+                     << solver->allReactions.size() - 1 << endl;
+                return;
                 failCount++;
             }
 
-            nTrials++;
-            old_count = count;
+            count2++;
+            r_pre = r_i;
         }
 
+        nTrials++;
+        CHECK_EQUAL(0, failCount);
+    }
+    cout << failCount << endl;
+    cout << LIM << endl;
+}
+
+void testBed::testRateCalculation () {
+
+    reset();
+    return;
+    solver->initialize();
+    solver->getRateVariables();
+
+    for (uint i = 0; i < NX; ++i) {
+        for (uint j = 0; j < NY; ++j) {
+            for (uint k = 0; k < NZ; ++k) {
+                for (Reaction* r : solver->sites[i][j][k]->activeReactions()) {
+
+                    double RATE = r->rate();
+                    r->calcRate();
+                    CHECK_EQUAL(r->rate(), RATE);
+
+                    if (r->rate() < 1E-8 || r->rate() > 1) {
+                        double ESP = ((DiffusionReaction*)r)->getSaddleEnergy();
+                        double E = solver->sites[i][j][k]->getEnergy();
+                        cout << "RATE MESSED UP: "
+                             << solver->sites[i][j][k]->getEnergy()
+                             << "  "
+                             << ESP
+                             << "  "
+                             << r->rate() << "  " << exp(ESP - E)
+                             << endl;
+                        failCount++;
+                    }
+
+                }
+            }
+        }
     }
 
-    CHECK_EQUAL(nTrials, winCount);
+    CHECK_EQUAL(0, failCount);
+}
 
+void testBed::testEnergyAndNeighborSetup()
+{
+    reset();
+
+    solver->initialize();
+
+
+    const Site* thisSite;
+    const Site* otherSite;
+    uvec nn(Site::nNeighborsLimit());
+
+    int dx, dy, dz;
+    uint ldx, ldy, ldz;
+    for (uint i = 0; i < NX; ++i) {
+        for (uint j = 0; j < NY; ++j) {
+            for (uint k = 0; k < NZ; ++k) {
+
+                thisSite = solver->sites[i][j][k];
+                double E = 0;
+                nn.zeros();
+                uint C = 0;
+
+                for (uint is = 0; is < NX; ++is) {
+                    for (uint js = 0; js < NY; ++js) {
+                        for (uint ks = 0; ks < NZ; ++ks) {
+
+                            otherSite = solver->sites[is][js][ks];
+
+                            thisSite->distanceTo(otherSite, dx, dy, dz);
+                            ldx = abs(dx);
+//                            cout << i << " " << j << " " << k << endl << is << " " << js << " " << ks << endl << dx << " " << dy << " " << dz << endl << "------" << endl;
+
+                            if (ldx <= Site::nNeighborsLimit()) {
+                                ldy = abs(dy);
+                                if (ldy <= Site::nNeighborsLimit()) {
+                                    ldz = abs(dz);
+
+                                    if (ldz <= Site::nNeighborsLimit()) {
+
+                                        if (thisSite != otherSite) {
+                                            if (otherSite->active()) {
+                                                nn(Site::getLevel(ldx, ldy, ldz))++;
+                                                E += DiffusionReaction::potential()(Site::nNeighborsLimit() + ldx, Site::nNeighborsLimit() + ldy, Site::nNeighborsLimit() + ldz);
+                                            }
+                                            C++;
+                                        }
+
+                                        if (otherSite != thisSite->getNeighborhood()[Site::nNeighborsLimit() + dx][Site::nNeighborsLimit() + dy][Site::nNeighborsLimit() + dz]) {
+//                                            cout << "fail neighbor" << endl;
+                                            failCount++;
+                                        }
+
+                                        if (thisSite != otherSite->getNeighborhood()[Site::nNeighborsLimit() - dx][Site::nNeighborsLimit() - dy][Site::nNeighborsLimit() - dz]) {
+//                                            cout << "fail neighbor" << endl;
+                                            failCount++;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                CHECK_EQUAL(pow(Site::neighborhoodLength(), 3) - 1, C);
+
+
+                for (uint K = 0; K < Site::nNeighborsLimit(); ++K) {
+                    CHECK_EQUAL(nn(K), thisSite->nNeighbors(K));
+                }
+
+                CHECK_CLOSE(E, thisSite->getEnergy(), 0.00001);
+
+            }
+
+        }
+    }
+    CHECK_EQUAL(0, failCount);
 }

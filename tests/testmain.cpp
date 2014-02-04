@@ -19,6 +19,10 @@ TEST(RNG_CHECK) {
 
 }
 
+TEST(NEIGHBORS_SETUP) {
+    testBed test;
+    test.testEnergyAndNeighborSetup();
+}
 
 TEST(NEIGHBOUR_CHECK) {
 
@@ -36,13 +40,19 @@ TEST(BINARYSEARCH) {
 
 }
 
+
+
+TEST(RATECALC) {
+    testBed test;
+    test.testRateCalculation();
+}
+
 TEST(REACTIONCHOISE) {
 
     testBed test;
 
-    test.testReactionChoise(10000);
+    test.testReactionChoise(1);
 }
-
 
 int main()
 {

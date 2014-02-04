@@ -32,9 +32,13 @@ public:
         return m_rate;
     }
 
+    const static double & getScale() {
+        return mu;
+    }
+
     static void setSolverPtr(KMCSolver * solver);
 
-    static void loadTemperature(const Setting & setting);
+    static void loadReactionSettings(const Setting & setting);
 
 
 protected:
@@ -44,6 +48,7 @@ protected:
     static uint NZ;
 
     static double beta;
+    static double mu;
 
     uint m_ID;
     static uint IDcount;
