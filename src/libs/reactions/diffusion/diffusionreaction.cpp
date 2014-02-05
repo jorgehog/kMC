@@ -112,8 +112,8 @@ void DiffusionReaction::calcRate()
 bool DiffusionReaction::isActive()
 {
 
-    //Diffusion is active if the destination is empty
-    return !destination->active();
+    //if diffusion leads to increased potential energy we decline.
+    return !destination->isBlocked() || destination->isSurface();
 }
 
 void DiffusionReaction::execute()

@@ -131,7 +131,7 @@ void testBed::testBinarySearchChoise(uint LIM)
     uint secondChoice;
     double R;
 
-    solver->initialize();
+    solver->initializeCrystal();
 
     reset();
 
@@ -175,13 +175,11 @@ void testBed::testReactionChoise(uint LIM)
     Reaction* reaction;
 
     reset();
-    solver->initialize();
+    solver->initializeCrystal();
     solver->getRateVariables();
 
     while(nTrials < LIM)
     {
-
-        cout << nTrials << " / " << LIM << endl;
 
         r_pre = 0;
         uint count2 = 0;
@@ -239,15 +237,13 @@ void testBed::testReactionChoise(uint LIM)
         nTrials++;
         CHECK_EQUAL(0, failCount);
     }
-    cout << failCount << endl;
-    cout << LIM << endl;
 }
 
 void testBed::testRateCalculation () {
 
     reset();
 
-    solver->initialize();
+    solver->initializeCrystal();
     solver->getRateVariables();
 
     for (uint i = 0; i < NX; ++i) {
@@ -259,18 +255,18 @@ void testBed::testRateCalculation () {
                     r->calcRate();
                     CHECK_EQUAL(r->rate(), RATE);
 
-                    if (r->rate() < 1E-6 || r->rate() > 1000) {
-                        double ESP = ((DiffusionReaction*)r)->getSaddleEnergy();
-                        double E = solver->sites[i][j][k]->getEnergy();
-                        cout << "RATE MESSED UP: "
-                             << E
-                             << "  "
-                             << ESP
-                             << "  "
-                             << r->rate()
-                             << endl;
-                        failCount++;
-                    }
+                    //                    if (r->rate() < 1E-6 || r->rate() > 1000) {
+                    //                        double ESP = ((DiffusionReaction*)r)->getSaddleEnergy();
+                    //                        double E = solver->sites[i][j][k]->getEnergy();
+                    //                        cout << "RATE MESSED UP: "
+                    //                             << E
+                    //                             << "  "
+                    //                             << ESP
+                    //                             << "  "
+                    //                             << r->rate()
+                    //                             << endl;
+                    //                        failCount++;
+                    //                    }
 
                 }
             }
@@ -284,7 +280,7 @@ void testBed::testEnergyAndNeighborSetup()
 {
     reset();
 
-    solver->initialize();
+    solver->initializeCrystal();
 
     const Site* thisSite;
     const Site* otherSite;
@@ -414,6 +410,153 @@ void testBed::testUpdateNeigbors()
 
     CHECK_EQUAL(0, Site::totalActiveSites());
     CHECK_CLOSE(0, Site::totalEnergy(), 0.00001);
+
+}
+
+void testBed::testHasCrystalNeighbor()
+{
+
+    //Spawn a seed in the middle of the box.
+    solver->spawnCrystalSeed();
+    Site* initCrystal = solver->sites[NX/2][NY/2][NZ/2];
+
+    Site *neighbor;
+    uint level;
+
+    //First we build a shell around the seed a distance 3 away which is all filled with particles.
+    for (int i = -3; i < 4; ++i) {
+
+        for (int j = -3; j < 4; ++j) {
+
+            for (int k = -3; k < 4; ++k) {
+
+                if (Site::getLevel(abs(i), abs(j), abs(k)) == 2)
+                {
+                    solver->sites[NX/2 + i][NY/2 + j][NZ/2 + k]->activate();
+                    CHECK_EQUAL(particleState::solution, solver->sites[NX/2 + i][NY/2 + j][NZ/2 + k]->getParticleState());
+                }
+
+            }
+
+        }
+
+    }
+
+    for (uint i = 0; i < Site::m_neighborhoodLength; ++i) {
+
+        for (uint j = 0; j < Site::m_neighborhoodLength; ++j) {
+
+            for (uint k = 0; k < Site::m_neighborhoodLength; ++k) {
+
+
+                neighbor = initCrystal->neighborHood[i][j][k];
+
+                //Then we check weather the middle is actually a crystal
+                if (neighbor == initCrystal) {
+                    assert(i == j && j == k && k == Site::m_nNeighborsLimit);
+
+                    CHECK_EQUAL(particleState::crystal, neighbor->getParticleState());
+
+                    //it should not have any crystal neighbors
+                    CHECK_EQUAL(false, neighbor->hasCrystalNeighbor());
+                    continue;
+                }
+
+                level = Site::m_levelMatrix(i, j, k);
+
+                //The first layer should now be a surface, which should be unblocked with a crystal neighbor.
+                if (level == 0) {
+                    CHECK_EQUAL(particleState::surface, neighbor->getParticleState());
+                    CHECK_EQUAL(false, neighbor->isBlocked());
+                    CHECK_EQUAL(true, neighbor->hasCrystalNeighbor());
+                }
+
+                //The second layer should be blocked because of the shell at distance 3, should be standard solution particles
+                //without a crystal neighbor.
+                else if (level == 1) {
+                    CHECK_EQUAL(particleState::solution, neighbor->getParticleState());
+                    CHECK_EQUAL(true, neighbor->isBlocked());
+                    CHECK_EQUAL(false, neighbor->hasCrystalNeighbor());
+                }
+
+            }
+        }
+    }
+
+    //deactivating the seed should bring everything to solutions except init seed which is surface.
+    initCrystal->deactivate();
+
+    //we now activate all neighbors. This should not make anything crystals.
+    for (uint i = 0; i < 3; ++i) {
+
+        for (uint j = 0; j < 3; ++j) {
+
+            for (uint k = 0; k < 3; ++k) {
+                neighbor = initCrystal->neighborHood[Site::nNeighborsLimit() - 1 + i][Site::nNeighborsLimit() - 1 + j][Site::nNeighborsLimit() - 1 + k];
+
+                if (neighbor != initCrystal) {
+                    neighbor->activate();
+                }
+
+            }
+
+        }
+
+    }
+
+    for (uint i = 0; i < 3; ++i) {
+
+        for (uint j = 0; j < 3; ++j) {
+
+            for (uint k = 0; k < 3; ++k) {
+                neighbor = initCrystal->neighborHood[Site::nNeighborsLimit() - 1 + i][Site::nNeighborsLimit() - 1 + j][Site::nNeighborsLimit() - 1 + k];
+
+                if (neighbor == initCrystal) {
+                    CHECK_EQUAL(particleState::surface, neighbor->getParticleState());
+                }
+                else
+                {
+                    CHECK_EQUAL(particleState::solution, neighbor->getParticleState());
+                }
+            }
+
+        }
+
+    }
+
+    //activating the seed. Should make closest neighbors crystals.
+    cout << "---------------\n\n\n\n\n\n\n\n\n\n\n\n----------" << endl;
+    initCrystal->activate();
+
+    uint nActives = 0;
+    for (int i = -3; i < 4; ++i) {
+
+        for (int j = -3; j < 4; ++j) {
+
+            for (int k = -3; k < 4; ++k) {
+
+                if (Site::getLevel(abs(i), abs(j), abs(k)) == 0)
+                {
+                    CHECK_EQUAL(particleState::crystal, solver->sites[NX/2 + i][NY/2 + j][NZ/2 + k]->getParticleState());
+                }
+                else if (Site::getLevel(abs(i), abs(j), abs(k)) == 1)
+                {
+                    CHECK_EQUAL(particleState::surface, solver->sites[NX/2 + i][NY/2 + j][NZ/2 + k]->getParticleState());
+                }
+                else if (Site::getLevel(abs(i), abs(j), abs(k)) == 2)
+                {
+                    CHECK_EQUAL(particleState::solution, solver->sites[NX/2 + i][NY/2 + j][NZ/2 + k]->getParticleState());
+                    nActives += solver->sites[NX/2 + i][NY/2 + j][NZ/2 + k]->activeReactions().size();
+                }
+
+            }
+
+        }
+
+    }
+
+    //The number of possible reactions on the level=2 rim should be 1310
+    CHECK_EQUAL(1310, nActives);
 
 }
 

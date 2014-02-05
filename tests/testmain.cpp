@@ -57,6 +57,11 @@ TEST(REACTIONCHOISE) {
     test.testReactionChoise(1);
 }
 
+TEST(CRYSTALSTUFF1) {
+    testBed test;
+    test.testHasCrystalNeighbor();
+}
+
 int main()
 {
     return UnitTest::RunAllTests();

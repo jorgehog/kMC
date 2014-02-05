@@ -59,35 +59,144 @@ Site::~Site()
     m_siteReactions.clear();
 }
 
-void Site::setAsSeed()
+void Site::setParticleState(int state)
 {
 
-    m_particleState = states::bound;
-    m_occupancyState     = states::blocked;
+    //If we try to propagate a surface onto an existing active site
+    //The site is crystallized, which propagates the surface furhter.
+    switch (state) {
+    case particleState::surface:
 
-    Site *nextNeighbor;
+        switch (m_particleState) {
 
-    for (uint i = 0; i < 3; ++i) {
+        //solution->surface
+        case particleState::solution:
 
-        for (uint j = 0; j < 3; ++j) {
-
-            for (uint k = 0; k < 3; ++k) {
-
-
-                nextNeighbor = neighborHood[i + Site::nNeighborsLimit() - 1]
-                                       [j + Site::nNeighborsLimit() - 1]
-                                       [k + Site::nNeighborsLimit() - 1];
-
-                if (nextNeighbor == this) {
-                    assert(i == j && j == k && k == 1);
-                    continue;
-                }
-
-                nextNeighbor->setOccupancyState(states::surface);
-
+            //if a particle is present, we crystallize it immidiately.
+            if (m_active) {
+                cout << "I was active and asked to surface" << endl;
+                crystallize();
             }
+
+            else
+            {
+                cout << "I became surface" << endl;
+                m_particleState = particleState::surface;
+                informNeighborhoodOnChange(0);
+            }
+
+            break;
+
+        //crystal->surface
+        case particleState::crystal:
+            cout << "NONONONO" << endl;
+            m_particleState = particleState::surface;
+            propagateToNeighbors(particleState::surface, particleState::solution);
+            informNeighborhoodOnChange(0);
+
+            break;
+
+        case particleState::surface:
+            //Nothing to do here.
+            break;
+
+        default:
+            cout << "invalid transition" << m_particleState << "->" << state << endl;
+            exit(1);
+            break;
         }
+
+        break;
+
+    case particleState::crystal:
+
+        switch (m_particleState) {
+
+        //surface -> crystal
+        case particleState::surface:
+            crystallize();
+            break;
+
+        default:
+            cout << "invalid transition" << m_particleState << "->" << state << endl;
+            exit(1);
+            break;
+        }
+
+        break;
+
+
+    case particleState::solution:
+
+        switch (m_particleState) {
+
+        //surface -> solution
+        case particleState::surface:
+
+            if (!hasCrystalNeighbor()) {
+                m_particleState = particleState::solution;
+                informNeighborhoodOnChange(0);
+            }
+
+            break;
+        default:
+            cout << "invalid transition" << m_particleState << "->" << state << endl;
+            exit(1);
+            break;
+        }
+        break;
+
+
+    default:
+        cout << "invalid transition" << m_particleState << "->" << state << endl;
+        exit(1);
+        break;
     }
+
+    m_particleState = state;
+}
+
+bool Site::allowsTransitionTo(int state)
+{
+
+    bool allowed = true;
+
+    switch (state) {
+    case particleState::surface:
+
+        allowed = m_particleState != particleState::crystal;
+
+        break;
+
+    case particleState::solution:
+
+        //A crystal cannot go directly to solution.
+        if (m_particleState == particleState::crystal) {
+            allowed = false;
+        }
+
+        //Anything else can go directly to solution unless it should be a surface.
+        else
+        {
+            allowed = !hasCrystalNeighbor();
+        }
+
+        break;
+
+    default:
+        allowed = true;
+        break;
+    }
+
+    return allowed;
+}
+
+void Site::crystallize()
+{
+    cout << "I crystallize" << endl;
+    m_particleState  = particleState::crystal;
+    propagateToNeighbors(particleState::solution, particleState::surface);
+
 }
 
 void Site::loadNeighborLimit(const Setting &setting)
@@ -193,6 +302,37 @@ void Site::distanceTo(const Site *other, int &dx, int &dy, int &dz, bool absolut
 
 }
 
+bool Site::hasCrystalNeighbor()
+{
+    Site *nextNeighbor;
+
+    for (uint i = 0; i < 3; ++i) {
+
+        for (uint j = 0; j < 3; ++j) {
+
+            for (uint k = 0; k < 3; ++k) {
+
+                if (i == 1 && j == 1 && k == 1)
+                {
+                    continue;
+                }
+
+                nextNeighbor = neighborHood[i + Site::nNeighborsLimit() - 1]
+                        [j + Site::nNeighborsLimit() - 1]
+                        [k + Site::nNeighborsLimit() - 1];
+
+                if (nextNeighbor->getParticleState() == particleState::crystal) {
+                    return true;
+                }
+
+            }
+        }
+    }
+
+    return false;
+
+}
+
 void Site::updateEnergy(Site *changedSite, int change)
 {
     int xScaled;
@@ -230,6 +370,39 @@ void Site::introduceNeighborhood()
                 zTrans = (m_z + m_originTransformVector(k) + NZ)%NZ;
 
                 neighborHood[i][j][k] = mainSolver->getSites()[xTrans][yTrans][zTrans];
+
+            }
+        }
+    }
+}
+
+void Site::propagateToNeighbors(int reqOldState, int newState)
+{
+
+
+    Site *nextNeighbor;
+
+    for (uint i = 0; i < 3; ++i) {
+
+        for (uint j = 0; j < 3; ++j) {
+
+            for (uint k = 0; k < 3; ++k) {
+
+
+                nextNeighbor = neighborHood[i + Site::nNeighborsLimit() - 1]
+                        [j + Site::nNeighborsLimit() - 1]
+                        [k + Site::nNeighborsLimit() - 1];
+
+                assert(!(newState == particleState::solution && nextNeighbor->getParticleState() == particleState::solution));
+                if (nextNeighbor == this) {
+                    assert(i == j && j == k && k == 1);
+                    continue;
+                }
+
+                if (nextNeighbor->getParticleState() == reqOldState || reqOldState == particleState::any) {
+                    cout << "telling this neighbor to update!" << i << " " <<j << " " <<k << endl;
+                    nextNeighbor->setParticleState(newState);
+                }
 
             }
         }

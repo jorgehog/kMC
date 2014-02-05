@@ -13,16 +13,12 @@ using namespace arma;
 class KMCSolver;
 class Reaction;
 
-struct states {
-    enum particleState {
-        empty,
-        free,
-        bound
-    };
-    enum occupancyState {
+struct particleState {
+    enum {
+        crystal,
+        solution,
         surface,
-        blocked,
-        open
+        any
     };
 };
 
@@ -34,20 +30,48 @@ public:
 
     ~Site();
 
-    int particleState() {
+    int getParticleState() {
         return m_particleState;
     }
 
-    void setParticleState(states::particleState state) {
-        //update reactions?
-        m_particleState = state;
+    void setParticleState(int state);
+
+    string getName() {
+
+        string name;
+        switch (m_particleState) {
+        case particleState::crystal:
+            name = "C";
+            break;
+        case particleState::solution:
+            name = "P";
+            break;
+        case particleState::surface:
+            name = "S";
+            break;
+        default:
+            name = "X";
+            break;
+        }
+
+        return name;
     }
 
-    void setOccupancyState(states::occupancyState state) {
-        m_occupancyState = state;
+    bool allowsTransitionTo(int state);
+
+    bool isBlocked(){
+        return nNeighbors(0) > 1;
     }
 
-    void setAsSeed();
+    bool isCrystal() {
+        return m_particleState == particleState::crystal;
+    }
+
+    bool isSurface() {
+        return m_particleState == particleState::surface;
+    }
+
+    void crystallize();
 
     static void loadNeighborLimit(const Setting & setting);
 
@@ -69,33 +93,20 @@ public:
         return m_nNeighbors(level);
     }
 
+    bool hasCrystalNeighbor();
+
     void activate()
     {
 
         assert(m_active == false && "activating active site.");
-        assert(m_particleState == states::empty && "activating active site");
-        assert(m_occupancyState != states::blocked && "This reaction should never occur.");
-
-        switch (m_occupancyState) {
-        case states::surface:
-
-            m_particleState = states::bound;
-            //propagateSurface();
-
-            break;
-        case states::open:
-
-            m_particleState = states::free;
-            //propagateStuff();
-
-            break;
-
-        default:
-            break;
-        }
+        assert(!isCrystal() && "A crystal should always be active");
 
         m_active = true;
-        m_occupancyState = states::blocked;
+
+        if (isSurface()) {
+            cout << "I is surface" << endl;
+            setParticleState(particleState::crystal);
+        }
 
         updateReactions();
         calculateRates();
@@ -110,11 +121,18 @@ public:
     {
 
         assert(m_active == true && "deactivating deactive site.");
-        assert(m_particleState != states::empty && "deactivating deactive site.");
+        assert(!isSurface() && "A surface should never be active");
 
         m_active = false;
-        m_particleState = states::empty;
-        m_occupancyState = states::open;
+
+        //if we deactivate a crystal site, we have to potentially
+        //reduce the surface by adding more sites as solution sites.
+        //Site will change only if it is not surrounded by any crystals.
+        if (isCrystal())
+        {
+            setParticleState(particleState::surface);
+        }
+
 
         updateReactions();
         calculateRates();
@@ -177,6 +195,8 @@ public:
 
     void introduceNeighborhood();
 
+    void propagateToNeighbors(int reqOldState, int newState);
+
     void informNeighborhoodOnChange(int change);
 
     void countNeighbors();
@@ -200,8 +220,7 @@ public:
         return m_totalEnergy;
     }
 
-    states::particleState m_particleState = states::empty;
-    states::occupancyState  m_occupancyState  = states::open;
+    int m_particleState   = particleState::solution;
 
 
 private:
@@ -236,7 +255,6 @@ private:
 
     std::vector<Reaction*> m_activeReactions;
     std::vector<Reaction*> m_siteReactions;
-
 
 };
 

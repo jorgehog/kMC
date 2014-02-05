@@ -83,9 +83,9 @@ private:
     double saturation;
     double RelativeSeedSize;
 
-    void spawnCrystalSeed(uint x, uint y, uint z);
+    void initializeCrystal();
 
-    void initialize();
+    void spawnCrystalSeed();
 
     void getAllNeighbors();
 

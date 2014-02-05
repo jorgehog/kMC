@@ -128,7 +128,7 @@ void KMCSolver::run(){
     uint choice;
     double R;
 
-    initialize();
+    initializeCrystal();
 
     while(cycle < nCycles)
     {
@@ -171,7 +171,7 @@ void KMCSolver::dumpXYZ()
         for (uint j = 0; j < NY; ++j) {
             for (uint k = 0; k < NZ; ++k) {
                 if (sites[i][j][k]->active()) {
-                    o << "\nC " << i << " " << j << " " << k << " " << sites[i][j][k]->nNeighbors();
+                    o << "\n" << sites[i][j][k]->getName() << " " << i << " " << j << " " << k << " " << sites[i][j][k]->nNeighbors();
                 }
             }
         }
@@ -246,70 +246,66 @@ void KMCSolver::setDiffusionReactions()
 }
 
 
-void KMCSolver::initialize()
+void KMCSolver::initializeCrystal()
 {
 
-    for (uint i = 0; i < NX; ++i) {
-        for (uint j = 0; j < NY; ++j) {
-            for (uint k = 0; k < NZ; ++k) {
-                if (KMC_RNG_UNIFORM() > 1 - saturation) {
-                    sites[i][j][k]->activate();
-                    sites[i][j][k]->setParticleState(states::bound);
+    spawnCrystalSeed();
 
+    uint halfCrystalSizeX = NX*RelativeSeedSize/2;
+    uint halfCrystalSizeY = NY*RelativeSeedSize/2;
+    uint halfCrystalSizeZ = NZ*RelativeSeedSize/2;
+
+    uint crystalStartX = NX/2 - halfCrystalSizeX;
+    uint crystalStartY = NY/2 - halfCrystalSizeY;
+    uint crystalStartZ = NZ/2 - halfCrystalSizeZ;
+
+    uint crystalEndX = NX/2 + halfCrystalSizeX;
+    uint crystalEndY = NY/2 + halfCrystalSizeY;
+    uint crystalEndZ = NZ/2 + halfCrystalSizeZ;
+
+    uint solutionEndX = crystalStartX - Site::nNeighborsLimit();
+    uint solutionEndY = crystalStartY - Site::nNeighborsLimit();
+    uint solutionEndZ = crystalStartZ - Site::nNeighborsLimit();
+
+    uint solutionStartX = crystalEndX + Site::nNeighborsLimit();
+    uint solutionStartY = crystalEndY + Site::nNeighborsLimit();
+    uint solutionStartZ = crystalEndZ + Site::nNeighborsLimit();
+
+
+    for (uint i = 0; i < NX; ++i)
+    {
+        for (uint j = 0; j < NY; ++j)
+        {
+            for (uint k = 0; k < NZ; ++k)
+            {
+
+                if (i >= crystalStartX && i < crystalEndX)
+                {
+                    if (j >= crystalStartY && j < crystalEndY)
+                    {
+                        if (k >= crystalStartZ && k < crystalEndZ)
+                        {
+                            if (!((i == NX/2 && j == NY/2 && k == NZ/2)))
+                            {
+                                sites[i][j][k]->activate();
+                            }
+
+                            continue;
+
+                        }
+                    }
                 }
+
+                if (i < solutionEndX || i >= solutionStartX || j < solutionEndY || j >= solutionStartY || k < solutionEndZ || k >= solutionStartZ)
+                {
+                    if (KMC_RNG_UNIFORM() < saturation) {
+                        sites[i][j][k]->activate();
+                    }
+                }
+
             }
         }
     }
-
-
-    int D = NX*RelativeSeedSize/2;
-
-    for (uint i = NX/2 - D; i < NX/2 + D; ++i) {
-        for (uint j = NY/2 - D; j < NY/2 + D; ++j) {
-            for (uint k = NZ/2 - D; k < NZ/2 + D; ++k) {
-                if (!sites[i][j][k]->active()){
-                    sites[i][j][k]->activate();
-                }
-            }
-        }
-    }
-
-//    double E0 = Site::totalEnergy();
-//    ucube alln(NX, NY, NZ);
-//    ucube alln2(NX, NY, NZ);
-
-//    for (uint i = 0; i < NX; ++i) {
-//        for (uint j = 0; j < NY; ++j) {
-//            for (uint k = 0; k < NZ; ++k) {
-//                alln(i, j, k) = sites[i][j][k]->nNeighbors();
-//                alln2(i, j, k) = sites[i][j][k]->nNeighbors(1);
-
-//                sites[i][j][k]->reset();
-
-
-//            }
-//        }
-//    }
-
-//    double isZero = Site::totalEnergy();
-
-//    getAllNeighbors();
-
-//    for (uint i = 0; i < NX; ++i) {
-//        for (uint j = 0; j < NY; ++j) {
-//            for (uint k = 0; k < NZ; ++k) {
-//                assert(alln(i, j, k) == sites[i][j][k]->nNeighbors());
-//                assert(alln2(i, j, k) == sites[i][j][k]->nNeighbors(1));
-
-
-//            }
-//        }
-//    }
-
-//    double E1 = Site::totalEnergy();
-
-//    cout << E0 << "  " << E1 << "  " << isZero << endl;
-//    assert(fabs(E0 - E1) < 1E-3);
 
     cout << "Initialized "
          << Site::totalActiveSites()
@@ -320,6 +316,12 @@ void KMCSolver::initialize()
 
     setDiffusionReactions();
 
+}
+
+void KMCSolver::spawnCrystalSeed()
+{
+    sites[NX/2][NY/2][NZ/2]->setParticleState(particleState::surface);
+    sites[NX/2][NY/2][NZ/2]->activate();
 }
 
 
@@ -406,7 +408,7 @@ uint KMCSolver::getReactionChoice(double R)
     }
 
     cout << "binary: " << imid << "  " << imin << "  " << imax << endl;
-//    assert(imax == imid + 1 && "LOCATING RATE FAILED");
+    //    assert(imax == imid + 1 && "LOCATING RATE FAILED");
     return imid + 1;
 
 }

@@ -28,6 +28,9 @@ public:
     void testUpdateNeigbors();
 
 
+    void testHasCrystalNeighbor();
+
+
 
     uint failCount;
     uint winCount;
