@@ -20,6 +20,7 @@ struct particleState {
         surface,
         any
     };
+    const static vector<string> names;
 };
 
 class Site
@@ -104,7 +105,6 @@ public:
         m_active = true;
 
         if (isSurface()) {
-            cout << "I is surface" << endl;
             setParticleState(particleState::crystal);
         }
 

@@ -16,7 +16,9 @@ using namespace arma;
 
 using namespace std;
 
-KMCSolver::KMCSolver(const Setting & root)
+KMCSolver::KMCSolver(const Setting & root) :
+cycle(0),
+outputCounter(0)
 {
 
     const Setting & SystemSettings = getSurfaceSetting(root, "System");
@@ -116,6 +118,8 @@ KMCSolver::~KMCSolver()
     delete [] sites;
 
     Site::resetAll();
+    Reaction::resetAll();
+    DiffusionReaction::resetAll();
 
 }
 
@@ -407,7 +411,7 @@ uint KMCSolver::getReactionChoice(double R)
 
     }
 
-    cout << "binary: " << imid << "  " << imin << "  " << imax << endl;
+//    cout << "binary: " << imid << "  " << imin << "  " << imax << endl;
     //    assert(imax == imid + 1 && "LOCATING RATE FAILED");
     return imid + 1;
 

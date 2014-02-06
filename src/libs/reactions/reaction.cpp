@@ -8,6 +8,12 @@ Reaction::Reaction():
 
 }
 
+Reaction::~Reaction()
+{
+
+}
+
+
 void Reaction::setSolverPtr(KMCSolver *solver)
 {
     NX = solver->getNX();

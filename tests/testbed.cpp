@@ -220,7 +220,7 @@ void testBed::testReactionChoise(uint LIM)
             if (solver->allReactions.at(choice) == reaction && choice == count && count == count2) {
                 winCount++;
             } else {
-                cout << r_i << "  " << r_pre << endl;
+                cout << setprecision(16) << scientific << r_i - r_pre << endl;
                 cout << "res: "
                      << count2 << "  "
                      << choice << "  "
@@ -442,6 +442,26 @@ void testBed::testHasCrystalNeighbor()
 
     }
 
+    uint nReactions = 8;
+    for (int i = -2; i < 3; ++i) {
+
+        for (int j = -2; j < 3; ++j) {
+
+            for (int k = -2; k < 3; ++k) {
+
+                uint level = Site::getLevel(abs(i), abs(j), abs(k));
+                if (level == 1)
+                {
+                    nReactions += solver->sites[NX/2 + i][NY/2 + j][NZ/2 + k]->nNeighbors();
+                }
+
+            }
+
+        }
+
+    }
+
+
     for (uint i = 0; i < Site::m_neighborhoodLength; ++i) {
 
         for (uint j = 0; j < Site::m_neighborhoodLength; ++j) {
@@ -525,8 +545,8 @@ void testBed::testHasCrystalNeighbor()
     }
 
     //activating the seed. Should make closest neighbors crystals.
-    cout << "---------------\n\n\n\n\n\n\n\n\n\n\n\n----------" << endl;
     initCrystal->activate();
+    solver->setDiffusionReactions();
 
     uint nActives = 0;
     for (int i = -3; i < 4; ++i) {
@@ -556,8 +576,9 @@ void testBed::testHasCrystalNeighbor()
     }
 
     //The number of possible reactions on the level=2 rim should be 1310
-    CHECK_EQUAL(1310, nActives);
+    CHECK_EQUAL(nReactions, nActives);
 
+    solver->dumpXYZ();
 }
 
 

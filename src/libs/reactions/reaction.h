@@ -15,6 +15,8 @@ public:
 
     Reaction();
 
+    virtual ~Reaction();
+
     virtual void calcRate() = 0;
     virtual bool isActive() = 0;
     virtual void execute() = 0;
@@ -23,6 +25,9 @@ public:
         reactionSite = site;
     }
 
+    static void resetAll() {
+        IDcount = 0;
+    }
 
     const uint & ID() {
         return m_ID;

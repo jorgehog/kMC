@@ -55,6 +55,11 @@ Site::Site(uint _x, uint _y, uint _z) :
 
 Site::~Site()
 {
+    for (Reaction* reaction : m_siteReactions)
+    {
+        delete reaction;
+    }
+
     m_activeReactions.clear();
     m_siteReactions.clear();
 }
@@ -74,13 +79,11 @@ void Site::setParticleState(int state)
 
             //if a particle is present, we crystallize it immidiately.
             if (m_active) {
-                cout << "I was active and asked to surface" << endl;
                 crystallize();
             }
 
             else
             {
-                cout << "I became surface" << endl;
                 m_particleState = particleState::surface;
                 informNeighborhoodOnChange(0);
             }
@@ -89,13 +92,13 @@ void Site::setParticleState(int state)
 
         //crystal->surface
         case particleState::crystal:
-            cout << "NONONONO" << endl;
             m_particleState = particleState::surface;
             propagateToNeighbors(particleState::surface, particleState::solution);
             informNeighborhoodOnChange(0);
 
             break;
 
+        //surface -> surface
         case particleState::surface:
             //Nothing to do here.
             break;
@@ -153,7 +156,6 @@ void Site::setParticleState(int state)
         break;
     }
 
-    m_particleState = state;
 }
 
 bool Site::allowsTransitionTo(int state)
@@ -193,7 +195,6 @@ bool Site::allowsTransitionTo(int state)
 
 void Site::crystallize()
 {
-    cout << "I crystallize" << endl;
     m_particleState  = particleState::crystal;
     propagateToNeighbors(particleState::solution, particleState::surface);
 
@@ -400,7 +401,6 @@ void Site::propagateToNeighbors(int reqOldState, int newState)
                 }
 
                 if (nextNeighbor->getParticleState() == reqOldState || reqOldState == particleState::any) {
-                    cout << "telling this neighbor to update!" << i << " " <<j << " " <<k << endl;
                     nextNeighbor->setParticleState(newState);
                 }
 
@@ -512,3 +512,5 @@ ivec Site::m_originTransformVector;
 uint Site::m_totalActiveSites = 0;
 
 double Site::m_totalEnergy = 0;
+
+const vector<string> particleState::names = {"crystal", "solution", "surface", "any"};

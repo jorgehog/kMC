@@ -12,6 +12,13 @@ public:
 
     DiffusionReaction(Site *destination);
 
+    static void resetAll() {
+
+        m_saddleTransformVector.reset();
+        m_potential.reset();
+
+    }
+
     static void loadPotential(const Setting & setting);
 
     static const cube & potential() {

@@ -75,10 +75,10 @@ private:
     double totalTime = 0;
 
     uint nCycles;
-    uint cycle   = 0;
+    uint cycle;
 
     uint cyclesPerOutput;
-    uint outputCounter   = 0;
+    uint outputCounter;
 
     double saturation;
     double RelativeSeedSize;
