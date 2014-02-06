@@ -61,42 +61,24 @@ double DiffusionReaction::getSaddleEnergy()
 
     double Esp = 0;
 
-    int X, Y, Z;
-    int X1, Y1, Z1;
-    int d = (int)Site::nNeighborsLimit();
-
     for (Site* targetSite : neighborSet) {
-
-        targetSite->distanceTo(reactionSite, X, Y, Z, true);
-        targetSite->distanceTo(destination, X1, Y1, Z1, true);
-
-        if ((X > d  && X1 > d)
-                || (Y > d && Y1 > d)
-                || (Z > d && Z1 > d))
-        {
-            cout << X << " " << Y << " " << Z << endl;
-            cout << targetSite->x() << " is too far away from " << x() << "?" << endl;
-            cout << targetSite->y() << " is too far away from " << y() << "?" << endl;
-            cout << targetSite->z() << " is too far away from " << z() << "?" << endl;
-            cout << "--------------------------------------" << endl;
-            exit(1);
-        }
 
         if (targetSite != reactionSite) {
             if (targetSite->active()) {
+
                 double dx = fabs(xs - targetSite->x());
                 double dy = fabs(ys - targetSite->y());
                 double dz = fabs(zs - targetSite->z());
 
-                if (dx > 3*Site::nNeighborsLimit()/2) {
+                if (dx > Site::nNeighborsLimit()) {
                     dx = NX - dx;
                 }
 
-                if (dy > 3*Site::nNeighborsLimit()/2) {
+                if (dy > Site::nNeighborsLimit()) {
                     dy = NY - dy;
                 }
 
-                if (dz > 3*Site::nNeighborsLimit()/2) {
+                if (dz > Site::nNeighborsLimit()) {
                     dz = NZ - dz;
                 }
 
