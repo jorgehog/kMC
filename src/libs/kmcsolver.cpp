@@ -17,8 +17,8 @@ using namespace arma;
 using namespace std;
 
 KMCSolver::KMCSolver(const Setting & root) :
-cycle(0),
-outputCounter(0)
+    cycle(0),
+    outputCounter(0)
 {
 
     const Setting & SystemSettings = getSurfaceSetting(root, "System");
@@ -70,32 +70,9 @@ outputCounter(0)
     RelativeSeedSize = getSurfaceSetting<double>(InitializationSettings, "RelativeSeedSize");
     assert(RelativeSeedSize < 1.0 && "The seed size cannot exceed the box size.");
 
+    initializeSites();
 
-    sites = new Site***[NX];
-
-    for (uint x = 0; x < NX; ++x) {
-
-        sites[x] = new Site**[NY];
-        for (uint y = 0; y < NY; ++y) {
-
-            sites[x][y] = new Site*[NZ];
-
-            for (uint z = 0; z < NZ; ++z) {
-
-                sites[x][y][z] = new Site(x, y, z);
-            }
-        }
-    }
-
-
-    for (uint x = 0; x < NX; ++x) {
-        for (uint y = 0; y < NY; ++y) {
-            for (uint z = 0; z < NZ; ++z) {
-                sites[x][y][z]->introduceNeighborhood();
-            }
-        }
-    }
-
+    initializeDiffusionReactions();
 
 
 }
@@ -193,19 +170,8 @@ void KMCSolver::dumpOutput()
          << endl;
 }
 
-void KMCSolver::getAllNeighbors()
-{
-    for (uint i = 0; i < NX; ++i) {
-        for (uint j = 0; j < NY; ++j) {
-            for (uint k = 0; k < NZ; ++k) {
-                sites[i][j][k]->countNeighbors();
-            }
-        }
-    }
-}
 
-
-void KMCSolver::setDiffusionReactions()
+void KMCSolver::initializeDiffusionReactions()
 {
 
     Site* currentSite;
@@ -237,13 +203,34 @@ void KMCSolver::setDiffusionReactions()
                         }
                     }
                 }
+            }
+        }
+    }
+}
 
-                //Then we update the site reactions based on the current setup
-                currentSite->updateReactions();
+void KMCSolver::initializeSites()
+{
+    sites = new Site***[NX];
 
-                //And calculate the process rates (only dependent on other sites, not reactions)
-                currentSite->calculateRates();
+    for (uint x = 0; x < NX; ++x) {
 
+        sites[x] = new Site**[NY];
+        for (uint y = 0; y < NY; ++y) {
+
+            sites[x][y] = new Site*[NZ];
+
+            for (uint z = 0; z < NZ; ++z) {
+
+                sites[x][y][z] = new Site(x, y, z);
+            }
+        }
+    }
+
+
+    for (uint x = 0; x < NX; ++x) {
+        for (uint y = 0; y < NY; ++y) {
+            for (uint z = 0; z < NZ; ++z) {
+                sites[x][y][z]->introduceNeighborhood();
             }
         }
     }
@@ -317,8 +304,6 @@ void KMCSolver::initializeCrystal()
          << endl;
 
     dumpXYZ();
-
-    setDiffusionReactions();
 
 }
 
@@ -411,7 +396,7 @@ uint KMCSolver::getReactionChoice(double R)
 
     }
 
-//    cout << "binary: " << imid << "  " << imin << "  " << imax << endl;
+    //    cout << "binary: " << imid << "  " << imin << "  " << imax << endl;
     //    assert(imax == imid + 1 && "LOCATING RATE FAILED");
     return imid + 1;
 

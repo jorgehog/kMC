@@ -30,6 +30,114 @@ testBed::~testBed()
     delete solver;
 }
 
+void testBed::testDistanceTo()
+{
+    int dx, dy, dz;
+    uint adx, ady, adz;
+
+    int dx2, dy2, dz2;
+
+    Site* start;
+    Site* end;
+
+    bool v = false;
+
+    ivec deltax(NX);
+    ivec deltay(NY);
+    ivec deltaz(NZ);
+    for(uint i = 0; i < NX; ++i)
+    {
+        deltax(i) = i;
+        if (i > NX/2)
+        {
+            deltax(i) = -(int)(NX - i);
+        }
+    }
+    for(uint i = 0; i < NY; ++i)
+    {
+        deltay(i) = i;
+        if (i > NY/2)
+        {
+            deltay(i) = -(int)(NY - i);
+        }
+    }
+    for(uint i = 0; i < NZ; ++i)
+    {
+        deltaz(i) = i;
+        if (i > NZ/2)
+        {
+            deltaz(i) = -(int)(NZ - i);
+        }
+    }
+
+    for (uint startx = 0; startx < NX; ++startx) {
+        for (uint starty = 0; starty < NY; ++starty) {
+            for (uint startz = 0; startz < NZ; ++startz) {
+
+                start = solver->sites[startx][starty][startz];
+
+                for (uint endx = 0; endx < NX; ++endx) {
+                    for (uint endy = 0; endy < NY; ++endy) {
+                        for (uint endz = 0; endz < NZ; ++endz) {
+
+
+                            end = solver->sites[endx][endy][endz];
+
+                            end->distanceTo(start, dx, dy, dz, true, v);
+
+                            adx = dx;
+                            ady = dy;
+                            adz = dz;
+
+                            end->distanceTo(start, dx, dy, dz, false, v);
+
+                            CHECK_EQUAL(adx, abs(dx));
+                            CHECK_EQUAL(ady, abs(dy));
+                            CHECK_EQUAL(adz, abs(dz));
+
+                            start->distanceTo(end, dx2, dy2, dz2, false, v);
+
+                            if ((uint)abs(dx) != NX/2)
+                            {
+                                CHECK_EQUAL(dx, -dx2);
+                            }
+                            else
+                            {
+                                CHECK_EQUAL(abs(dx), abs(dx2));
+                            }
+                            if ((uint)abs(dy) != NY/2)
+                            {
+                                CHECK_EQUAL(dy, -dy2);
+                            }
+                            else
+                            {
+                                CHECK_EQUAL(abs(dy), abs(dy2));
+                            }
+                            if ((uint)abs(dz) != NZ/2)
+                            {
+                                CHECK_EQUAL(dz, -dz2);
+                            }
+                            else
+                            {
+                                CHECK_EQUAL(abs(dz), abs(dz2));
+                            }
+
+                            CHECK_EQUAL(dx2, deltax(((int)endx - (int)startx + NX)%NX));
+
+                            CHECK_EQUAL(dy2, deltay(((int)endy - (int)starty + NY)%NY));
+
+                            CHECK_EQUAL(dz2, deltaz(((int)endz - (int)startz + NZ)%NZ));
+
+                        }
+                     }
+                }
+
+            }
+        }
+    }
+
+}
+
 void testBed::testNeighbors()
 {
 
@@ -249,31 +357,24 @@ void testBed::testRateCalculation () {
     for (uint i = 0; i < NX; ++i) {
         for (uint j = 0; j < NY; ++j) {
             for (uint k = 0; k < NZ; ++k) {
+
                 for (Reaction* r : solver->sites[i][j][k]->activeReactions()) {
 
-                    double RATE = r->rate();
+//                    double RATE = r->rate();
+                    double E = ((DiffusionReaction*)r)->lastUsedE;
+                    double Esp = ((DiffusionReaction*)r)->lastUsedEsp;
                     r->calcRate();
-                    CHECK_EQUAL(r->rate(), RATE);
 
-                    //                    if (r->rate() < 1E-6 || r->rate() > 1000) {
-                    //                        double ESP = ((DiffusionReaction*)r)->getSaddleEnergy();
-                    //                        double E = solver->sites[i][j][k]->getEnergy();
-                    //                        cout << "RATE MESSED UP: "
-                    //                             << E
-                    //                             << "  "
-                    //                             << ESP
-                    //                             << "  "
-                    //                             << r->rate()
-                    //                             << endl;
-                    //                        failCount++;
-                    //                    }
+                    CHECK_EQUAL(E, ((DiffusionReaction*)r)->lastUsedE);
+
+                    CHECK_EQUAL(Esp, ((DiffusionReaction*)r)->lastUsedEsp);
+
+                    //                    CHECK_EQUAL(r->rate(), RATE);
 
                 }
             }
         }
     }
-
-    CHECK_EQUAL(0, failCount);
 }
 
 void testBed::testEnergyAndNeighborSetup()
@@ -546,7 +647,7 @@ void testBed::testHasCrystalNeighbor()
 
     //activating the seed. Should make closest neighbors crystals.
     initCrystal->activate();
-    solver->setDiffusionReactions();
+    solver->initializeDiffusionReactions();
 
     uint nActives = 0;
     for (int i = -3; i < 4; ++i) {

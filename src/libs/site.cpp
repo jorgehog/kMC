@@ -90,7 +90,7 @@ void Site::setParticleState(int state)
 
             break;
 
-        //crystal->surface
+            //crystal->surface
         case particleState::crystal:
             m_particleState = particleState::surface;
             propagateToNeighbors(particleState::surface, particleState::solution);
@@ -98,7 +98,7 @@ void Site::setParticleState(int state)
 
             break;
 
-        //surface -> surface
+            //surface -> surface
         case particleState::surface:
             //Nothing to do here.
             break;
@@ -156,41 +156,6 @@ void Site::setParticleState(int state)
         break;
     }
 
-}
-
-bool Site::allowsTransitionTo(int state)
-{
-
-    bool allowed = true;
-
-    switch (state) {
-    case particleState::surface:
-
-        allowed = m_particleState != particleState::crystal;
-
-        break;
-
-    case particleState::solution:
-
-        //A crystal cannot go directly to solution.
-        if (m_particleState == particleState::crystal) {
-            allowed = false;
-        }
-
-        //Anything else can go directly to solution unless it should be a surface.
-        else
-        {
-            allowed = !hasCrystalNeighbor();
-        }
-
-        break;
-
-    default:
-        allowed = true;
-        break;
-    }
-
-    return allowed;
 }
 
 void Site::crystallize()
@@ -260,7 +225,6 @@ void Site::updateReactions()
 
 void Site::calculateRates()
 {
-
     for (Reaction* reaction : m_activeReactions) {
         reaction->calcRate();
     }
@@ -275,13 +239,22 @@ void Site::setSolverPtr(KMCSolver *solver)
     mainSolver = solver;
 }
 
-void Site::distanceTo(const Site *other, int &dx, int &dy, int &dz, bool absolutes) const
+void Site::distanceTo(const Site *other, int &dx, int &dy, int &dz, bool absolutes, bool verbose) const
 {
 
 
     dx = (other->x() + NX - m_x)%NX;
     dy = (other->y() + NY - m_y)%NY;
     dz = (other->z() + NZ - m_z)%NZ;
+
+    if (verbose)
+    {
+        cout << m_x << " " << m_y << " " << m_z << endl;
+        cout << other->x() << " " << other->y() << " " << other->z() << endl;
+        cout << "----" << endl;
+        cout << dx << " " << dy << " " << dz << endl;
+
+    }
 
     if ((uint)abs(dx) > NX/2) {
         dx = -(int)(NX - dx);
@@ -299,6 +272,11 @@ void Site::distanceTo(const Site *other, int &dx, int &dy, int &dz, bool absolut
         dx = abs(dx);
         dy = abs(dy);
         dz = abs(dz);
+    }
+
+    if (verbose) {
+        cout << dx << " " << dy << " " << dz << endl;
+        cout << "------------" << endl;
     }
 
 }
@@ -358,6 +336,9 @@ void Site::updateEnergy(Site *changedSite, int change)
 void Site::introduceNeighborhood()
 {
     uint xTrans, yTrans, zTrans;
+
+    allneighbors.clear();
+
     for (uint i = 0; i < m_neighborhoodLength; ++i) {
 
         xTrans = (m_x + m_originTransformVector(i) + NX)%NX;
@@ -371,6 +352,7 @@ void Site::introduceNeighborhood()
                 zTrans = (m_z + m_originTransformVector(k) + NZ)%NZ;
 
                 neighborHood[i][j][k] = mainSolver->getSites()[xTrans][yTrans][zTrans];
+                allneighbors.push_back(neighborHood[i][j][k]);
 
             }
         }
@@ -441,43 +423,6 @@ void Site::informNeighborhoodOnChange(int change)
         }
     }
 
-}
-
-void Site::countNeighbors()
-{
-
-    m_nNeighbors.zeros();
-
-    Site *neighbor;
-    uint level;
-
-    for (uint i = 0; i < m_neighborhoodLength; ++i) {
-
-        for (uint j = 0; j < m_neighborhoodLength; ++j) {
-
-            for (uint k = 0; k < m_neighborhoodLength; ++k) {
-
-                neighbor = neighborHood[i][j][k];
-
-                if (neighbor == this) {
-                    assert(i == m_nNeighborsLimit && j == m_nNeighborsLimit && k == m_nNeighborsLimit);
-                    continue;
-                }
-
-
-                if (neighbor->active()) {
-
-                    level = m_levelMatrix(i, j, k);
-                    m_nNeighbors(level)++;
-
-                    E += DiffusionReaction::potential()(i, j, k);
-                    m_totalEnergy += DiffusionReaction::potential()(i, j, k);
-
-                }
-
-            }
-        }
-    }
 }
 
 uint Site::getLevel(uint i, uint j, uint k)

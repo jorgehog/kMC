@@ -32,6 +32,13 @@ TEST(NEIGHBOUR_CHECK) {
 
 }
 
+TEST(DISTANCE_TO) {
+    testBed test;
+
+    test.testDistanceTo();
+
+}
+
 TEST(BINARYSEARCH) {
 
     testBed test;

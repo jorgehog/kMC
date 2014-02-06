@@ -87,9 +87,9 @@ private:
 
     void spawnCrystalSeed();
 
-    void getAllNeighbors();
+    void initializeDiffusionReactions();
 
-    void setDiffusionReactions();
+    void initializeSites();
 
     void getRateVariables();
 

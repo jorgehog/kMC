@@ -25,6 +25,9 @@ public:
         return m_potential;
     }
 
+    double lastUsedE = 0;
+    double lastUsedEsp = 0;
+
 private:
 
     static double rPower;

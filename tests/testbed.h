@@ -3,6 +3,8 @@
 
 #include <sys/types.h>
 
+#define MIN(x, y) x < y ? x : y
+
 class KMCSolver;
 
 class testBed
@@ -11,6 +13,8 @@ public:
     testBed();
 
     ~testBed();
+
+    void testDistanceTo();
 
     void testNeighbors();
 
