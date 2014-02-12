@@ -10,7 +10,6 @@
 using namespace std;
 
 
-
 TEST(RNG_CHECK) {
 
     testBed test;
@@ -67,6 +66,17 @@ TEST(REACTIONCHOISE) {
 TEST(CRYSTALSTUFF1) {
     testBed test;
     test.testHasCrystalNeighbor();
+}
+
+TEST(INITCRYSTAL) {
+    testBed test;
+    test.testInitializationOfCrystal();
+}
+
+TEST(INITREACTIONS)
+{
+    testBed test;
+    test.testInitialReactionSetup();
 }
 
 int main()

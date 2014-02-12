@@ -48,21 +48,23 @@ KMCSolver::KMCSolver(const Setting & root) :
     cyclesPerOutput = getSurfaceSetting<uint>(SolverSettings, "cyclesPerOutput");
 
 
-    Seed::SeedType seedType = static_cast<Seed::SeedType>(getSurfaceSetting<uint>(SolverSettings, "seedType"));
+    Seed::SeedState seedState = static_cast<Seed::SeedState>(getSurfaceSetting<uint>(SolverSettings, "seedType"));
 
-    int seed;
-    switch (seedType) {
+    seed_type seed = -1;
+    switch (seedState) {
     case Seed::specific:
-        seed = getSurfaceSetting<int>(SolverSettings, "specificSeed");
+        seed = getSurfaceSetting<seed_type>(SolverSettings, "specificSeed");
         break;
     case Seed::fromTime:
-        seed = time(NULL);
+        seed = static_cast<seed_type>(time(NULL));
         break;
     default:
-        assert(0 == 1 && "SEED NOT SPECIFIED.");
+        cout << "SEED NOT SPECIFIED." << endl;
+        throw Seed::seedNotSetException;
         break;
     }
 
+    cout << "initializing seed : " << seed << endl;
     KMC_INIT_RNG(seed);
 
 
@@ -104,8 +106,6 @@ KMCSolver::~KMCSolver()
 
 void KMCSolver::run(){
 
-
-    //test
     uint choice;
     double R;
 
@@ -242,17 +242,17 @@ void KMCSolver::initializeCrystal()
 
     spawnCrystalSeed();
 
-    uint halfCrystalSizeX = NX*RelativeSeedSize/2;
-    uint halfCrystalSizeY = NY*RelativeSeedSize/2;
-    uint halfCrystalSizeZ = NZ*RelativeSeedSize/2;
+    uint crystalSizeX = round(NX*RelativeSeedSize);
+    uint crystalSizeY = round(NY*RelativeSeedSize);
+    uint crystalSizeZ = round(NZ*RelativeSeedSize);
 
-    uint crystalStartX = NX/2 - halfCrystalSizeX;
-    uint crystalStartY = NY/2 - halfCrystalSizeY;
-    uint crystalStartZ = NZ/2 - halfCrystalSizeZ;
+    uint crystalStartX = NX/2 - crystalSizeX/2;
+    uint crystalStartY = NY/2 - crystalSizeY/2;
+    uint crystalStartZ = NZ/2 - crystalSizeZ/2;
 
-    uint crystalEndX = NX/2 + halfCrystalSizeX;
-    uint crystalEndY = NY/2 + halfCrystalSizeY;
-    uint crystalEndZ = NZ/2 + halfCrystalSizeZ;
+    uint crystalEndX = crystalStartX + crystalSizeX;
+    uint crystalEndY = crystalStartY + crystalSizeY;
+    uint crystalEndZ = crystalStartZ + crystalSizeZ;
 
     uint solutionEndX = crystalStartX - Site::nNeighborsLimit();
     uint solutionEndY = crystalStartY - Site::nNeighborsLimit();
@@ -290,7 +290,10 @@ void KMCSolver::initializeCrystal()
                 if (i < solutionEndX || i >= solutionStartX || j < solutionEndY || j >= solutionStartY || k < solutionEndZ || k >= solutionStartZ)
                 {
                     if (KMC_RNG_UNIFORM() < saturation) {
-                        sites[i][j][k]->activate();
+                        if(sites[i][j][k]->isLegalToSpawn())
+                        {
+                            sites[i][j][k]->activate();
+                        }
                     }
                 }
 

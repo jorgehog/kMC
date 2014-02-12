@@ -55,8 +55,8 @@ double DiffusionReaction::getSaddleEnergy()
     vector<Site*> neighborSet;
 
     std::set_intersection(reactionSite->allneighbors.begin(), reactionSite->allneighbors.end(),
-                   destination->allneighbors.begin(), destination->allneighbors.end(),
-                   std::back_inserter(neighborSet));
+                          destination->allneighbors.begin(), destination->allneighbors.end(),
+                          std::back_inserter(neighborSet));
 
 
     double Esp = 0;
@@ -82,30 +82,27 @@ double DiffusionReaction::getSaddleEnergy()
             exit(1);
         }
 
-        if (targetSite != reactionSite) {
-            if (targetSite->active()) {
-                double dx = fabs(xs - targetSite->x());
-                double dy = fabs(ys - targetSite->y());
-                double dz = fabs(zs - targetSite->z());
+        if (targetSite->active()) {
+            double dx = fabs(xs - targetSite->x());
+            double dy = fabs(ys - targetSite->y());
+            double dz = fabs(zs - targetSite->z());
 
-                if (dx > 3*Site::nNeighborsLimit()/2) {
-                    dx = NX - dx;
-                }
-
-                if (dy > 3*Site::nNeighborsLimit()/2) {
-                    dy = NY - dy;
-                }
-
-                if (dz > 3*Site::nNeighborsLimit()/2) {
-                    dz = NZ - dz;
-                }
-
-                double r = sqrt(dx*dx + dy*dy + dz*dz);
-
-                assert(r >= 1/2. && "Saddle point is atleast this distance from another site.");
-                Esp += scale/pow(r, rPower);
-
+            if (dx > 3*Site::nNeighborsLimit()/2) {
+                dx = NX - dx;
             }
+
+            if (dy > 3*Site::nNeighborsLimit()/2) {
+                dy = NY - dy;
+            }
+
+            if (dz > 3*Site::nNeighborsLimit()/2) {
+                dz = NZ - dz;
+            }
+
+            double r = sqrt(dx*dx + dy*dy + dz*dz);
+
+            assert(r >= 1/2. && "Saddle point is atleast this distance from another site.");
+            Esp += scale/pow(r, rPower);
         }
     }
 
@@ -123,7 +120,6 @@ void DiffusionReaction::calcRate()
 
 bool DiffusionReaction::isActive()
 {
-
     //if diffusion leads to increased potential energy we decline.
     return !destination->isBlocked() || destination->isSurface();
 }
@@ -132,6 +128,29 @@ void DiffusionReaction::execute()
 {
     reactionSite->deactivate();
     destination->activate();
+}
+
+void DiffusionReaction::dumpInfo(int xr, int yr, int zr)
+{
+
+    (void) xr;
+    (void) yr;
+    (void) zr;
+
+    int X, Y, Z;
+    reactionSite->distanceTo(destination, X, Y, Z);
+
+    assert((x() + NX + X)%NX == destination->x());
+    assert((y() + NY + Y)%NY == destination->y());
+    assert((z() + NZ + Z)%NZ == destination->z());
+
+    Reaction::dumpInfo(X, Y, Z);
+
+    cout << "Path: " << X << " " << Y << " " << Z << endl;
+    cout << "Reaction initiates diffusion to " << endl;
+    cout << "{\n";
+    destination->dumpInfo(-X, -Y, -Z);
+    cout << "\n}" << endl;
 }
 
 double DiffusionReaction::rPower;

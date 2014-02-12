@@ -129,7 +129,7 @@ void testBed::testDistanceTo()
                             CHECK_EQUAL(dz2, deltaz(((int)endz - (int)startz + NZ)%NZ));
 
                         }
-                     }
+                    }
                 }
 
             }
@@ -163,13 +163,36 @@ void testBed::testNeighbors()
                             }
 
                             nTrials++;
-                            int delta = (int)(site->x()) - (int)(site->neighborHood[i][j][k]->x());
+                            int deltax = (int)(site->x()) - (int)(site->neighborHood[i][j][k]->x());
+                            int deltay = (int)(site->y()) - (int)(site->neighborHood[i][j][k]->y());
+                            int deltaz = (int)(site->z()) - (int)(site->neighborHood[i][j][k]->z());
 
-                            if ((delta + Site::originTransformVector()(i) + NX)%NX != 0) {
+                            if ((deltax + Site::originTransformVector()(i) + NX)%NX != 0) {
 
-                                cout << "fail detected:" << endl;
+                                cout << "fail detected x:" << endl;
                                 cout << i << "  "<< x << "  " << site->neighborHood[i][j][k]->x() << endl;
-                                cout << delta << "  " << Site::originTransformVector()(i) << "  " << NX << endl;
+                                cout << deltax << "  " << Site::originTransformVector()(i) << "  " << NX << endl;
+                                cout << "------" << endl;
+
+                                cin >> a;
+                                failCount++;
+                            }
+                            else if ((deltay + Site::originTransformVector()(j) + NY)%NY != 0) {
+
+                                cout << "fail detected y:" << endl;
+                                cout << j << "  "<< y << "  " << site->neighborHood[i][j][k]->y() << endl;
+                                cout << deltay << "  " << Site::originTransformVector()(j) << "  " << NY << endl;
+                                cout << "------" << endl;
+
+                                cin >> a;
+                                failCount++;
+
+                            }
+                            else if ((deltaz + Site::originTransformVector()(k) + NZ)%NZ != 0) {
+
+                                cout << "fail detected z:" << endl;
+                                cout << k << "  "<< z << "  " << site->neighborHood[i][j][k]->z() << endl;
+                                cout << deltaz << "  " << Site::originTransformVector()(k) << "  " << NZ << endl;
                                 cout << "------" << endl;
 
                                 cin >> a;
@@ -280,7 +303,7 @@ void testBed::testReactionChoise(uint LIM)
     uint choice;
     double kTot;
     double r_pre;
-    Reaction* reaction;
+    Reaction* reaction = NULL;
 
     reset();
     solver->initializeCrystal();
@@ -360,7 +383,7 @@ void testBed::testRateCalculation () {
 
                 for (Reaction* r : solver->sites[i][j][k]->activeReactions()) {
 
-//                    double RATE = r->rate();
+                    //                    double RATE = r->rate();
                     double E = ((DiffusionReaction*)r)->lastUsedE;
                     double Esp = ((DiffusionReaction*)r)->lastUsedEsp;
                     r->calcRate();
@@ -511,6 +534,27 @@ void testBed::testUpdateNeigbors()
 
     CHECK_EQUAL(0, Site::totalActiveSites());
     CHECK_CLOSE(0, Site::totalEnergy(), 0.00001);
+
+}
+
+void testBed::testNeighborConsistency()
+{
+
+    solver->initializeCrystal();
+
+    Site* currentSite;
+    for (uint i = 0; i < NX; ++i) {
+        for (uint j = 0; j < NY; ++j) {
+            for (uint k = 0; k < NZ; ++k) {
+                currentSite = solver->sites[i][j][k];
+
+                for (Site* neighbor : currentSite->allneighbors)
+                {
+
+                }
+            }
+        }
+    }
 
 }
 
@@ -680,6 +724,137 @@ void testBed::testHasCrystalNeighbor()
     CHECK_EQUAL(nReactions, nActives);
 
     solver->dumpXYZ();
+}
+
+void testBed::testInitializationOfCrystal()
+{
+    solver->initializeCrystal();
+
+    Site* currentSite;
+    for (uint i = 0; i < NX; ++i) {
+        for (uint j = 0; j < NY; ++j) {
+            for (uint k = 0; k < NZ; ++k) {
+
+                currentSite = solver->sites[i][j][k];
+
+                switch (currentSite->getParticleState()) {
+                case particleState::solution:
+
+                    //After initialization, a solution particle should not be blocked in any direction.
+                    if (currentSite->active())
+                    {
+                        CHECK_EQUAL(0, currentSite->nNeighbors());
+                    }
+
+                    break;
+
+                case particleState::surface:
+
+                    CHECK_EQUAL(true, !currentSite->active());
+                    CHECK_EQUAL(true, currentSite->hasCrystalNeighbor());
+                    CHECK_EQUAL(true, currentSite->nNeighbors() > 0);
+
+                    break;
+
+                case particleState::crystal:
+
+                    CHECK_EQUAL(true, currentSite->active());
+
+                default:
+                    break;
+                }
+
+            }
+        }
+    }
+
+}
+
+void testBed::testInitialReactionSetup()
+{
+    solver->initializeCrystal();
+
+    std::vector<Reaction*> oldReactions;
+    double totRate1 = 0;
+
+    for (uint i = 0; i < NX; ++i) {
+        for (uint j = 0; j < NY; ++j) {
+            for (uint k = 0; k < NZ; ++k) {
+
+                for (Reaction* r : solver->sites[i][j][k]->activeReactions())
+                {
+                    if (!solver->sites[i][j][k]->active())
+                    {
+                        cout << "DEACTIVE SITE SHOULD HAVE NO REACTIONS" << endl;
+                        solver->sites[i][j][k]->dumpInfo();
+                        exit(1);
+                    }
+
+                    if (!r->isActive())
+                    {
+                        cout << "REACTION NOT DEACTIVATED PROPERLY:" << endl;
+                        r->dumpInfo();
+
+                        exit(1);
+                    }
+                    oldReactions.push_back(r);
+                    totRate1 += r->rate();
+                }
+            }
+        }
+    }
+
+
+
+    Site* currentSite;
+    for (uint i = 0; i < NX; ++i) {
+        for (uint j = 0; j < NY; ++j) {
+            for (uint k = 0; k < NZ; ++k) {
+
+                currentSite = solver->sites[i][j][k];
+
+                currentSite->updateReactions();
+                currentSite->calculateRates();
+
+            }
+        }
+    }
+
+
+    std::vector<Reaction*> reactions;
+    double totRate2 = 0;
+
+    for (uint i = 0; i < NX; ++i) {
+        for (uint j = 0; j < NY; ++j) {
+            for (uint k = 0; k < NZ; ++k) {
+
+                for (Reaction* r : solver->sites[i][j][k]->activeReactions())
+                {
+                    reactions.push_back(r);
+                    totRate2 += r->rate();
+                }
+            }
+        }
+    }
+
+    CHECK_CLOSE(totRate1, totRate2, 0.000000001);
+    CHECK_EQUAL(oldReactions.size(), reactions.size());
+
+    for (uint i = 0; i < oldReactions.size(); ++i)
+    {
+        uint id1 = reactions.at(i)->ID();
+        uint id2 = oldReactions.at(i)->ID();
+        CHECK_EQUAL(id1, id2);
+
+        if (id1 != id2)
+        {
+            cout << "reaction " << id2 << " mismatched: " << endl;
+            oldReactions.at(i)->dumpInfo();
+            exit(1);
+        }
+    }
+
+
 }
 
 

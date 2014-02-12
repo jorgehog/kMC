@@ -61,6 +61,7 @@ public:
     void calcRate();
     bool isActive();
     void execute();
+    void dumpInfo(int xr = 0, int yr = 0, int zr = 0);
 
     friend class testBed;
 };

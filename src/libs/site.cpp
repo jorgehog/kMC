@@ -26,6 +26,97 @@ const ivec &Site::originTransformVector()
     return m_originTransformVector;
 }
 
+void Site::dumpInfo(int xr, int yr, int zr)
+{
+
+    cout << "Site   " << m_x << " " << m_y << " " << m_z << endl;
+    cout << "in Box " << NX << " " << NY << " " << NZ << endl;
+    cout << "nNeighbors : " << m_nNeighbors.t();
+    cout << "type: " << particleState::names.at(m_particleState) << endl;
+
+    ucube nN;
+    nN.copy_size(m_levelMatrix);
+    nN.zeros();
+
+    for (uint i = 0; i < m_neighborhoodLength; ++i)
+    {
+
+        for (uint j = 0; j < m_neighborhoodLength; ++j)
+        {
+
+            for (uint k = 0; k < m_neighborhoodLength; ++k)
+            {
+
+                if (i == j && j == k && k == Site::nNeighborsLimit())
+                {
+                    nN(i, j, k) = 3;
+                }
+                else if ((i == Site::nNeighborsLimit() + xr) && (j == Site::nNeighborsLimit() + yr) && (k == Site::nNeighborsLimit() + zr))
+                {
+                    nN(i, j, k) = 2;
+                }
+
+                else if (neighborHood[i][j][k]->active())
+                {
+                    nN(i, j, k) = 1;
+                }
+
+            }
+
+        }
+
+    }
+
+    umat A;
+    stringstream ss;
+    for(int i = nN.n_slices - 1; i >= 0; --i)
+    {
+        A = nN.slice(i).t();
+
+        for (int j = A.n_rows - 1; j >= 0; --j)
+        {
+            ss << A.row(j);
+        }
+
+        ss << endl;
+
+    }
+
+
+    string s = ss.str();
+
+    int position = s.find("0");
+    while (position != (int)string::npos)
+    {
+        s.replace(position, 1, ".");
+        position = s.find("0", position + 1);
+    }
+
+    position = s.find("1");
+    while (position != (int)string::npos)
+    {
+        s.replace(position, 1, "X");
+        position = s.find("1", position + 1);
+    }
+
+    position = s.find("2");
+    while (position != (int)string::npos)
+    {
+        s.replace(position, 1, "O");
+        position = s.find("2", position + 1);
+    }
+
+    position = s.find("3");
+    while (position != (int)string::npos)
+    {
+        s.replace(position, 1, "#");
+        position = s.find("3", position + 1);
+    }
+
+    cout << s << endl;
+
+}
+
 
 Site::Site(uint _x, uint _y, uint _z) :
     E(0),
@@ -312,6 +403,77 @@ bool Site::hasCrystalNeighbor()
 
 }
 
+void Site::activate()
+{
+
+#ifndef NDEBUG
+    if (m_active == true)
+    {
+        cout << "Activating active site. " << endl;
+        dumpInfo();
+        exit(1);
+    }
+    else if (isCrystal())
+    {
+        cout << "Activating a crystal. (should always be active)";
+        dumpInfo();
+        exit(1);
+    }
+#endif
+
+    m_active = true;
+
+    if (isSurface()) {
+        setParticleState(particleState::crystal);
+    }
+
+    updateReactions();
+    calculateRates();
+
+    informNeighborhoodOnChange(+1);
+
+    m_totalActiveSites++;
+
+}
+
+void Site::deactivate()
+{
+
+#ifndef NDEBUG
+    if (m_active == false)
+    {
+        cout << "deactivating deactive site. " << endl;
+        dumpInfo();
+        exit(1);
+    }
+    else if (isSurface())
+    {
+        cout << "deactivating a surface. (should always be deactive)";
+        dumpInfo();
+        exit(1);
+    }
+#endif
+
+    m_active = false;
+
+    //if we deactivate a crystal site, we have to potentially
+    //reduce the surface by adding more sites as solution sites.
+    //Site will change only if it is not surrounded by any crystals.
+    if (isCrystal())
+    {
+        setParticleState(particleState::surface);
+    }
+
+
+    updateReactions();
+    calculateRates();
+
+    informNeighborhoodOnChange(-1);
+
+    m_totalActiveSites--;
+
+}
+
 void Site::updateEnergy(Site *changedSite, int change)
 {
     int xScaled;
@@ -352,8 +514,11 @@ void Site::introduceNeighborhood()
                 zTrans = (m_z + m_originTransformVector(k) + NZ)%NZ;
 
                 neighborHood[i][j][k] = mainSolver->getSites()[xTrans][yTrans][zTrans];
-                allneighbors.push_back(neighborHood[i][j][k]);
 
+                if (neighborHood[i][j][k] != this)
+                {
+                    allneighbors.push_back(neighborHood[i][j][k]);
+                }
             }
         }
     }

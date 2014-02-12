@@ -13,6 +13,14 @@ Reaction::~Reaction()
 
 }
 
+void Reaction::dumpInfo(int xr, int yr, int zr)
+{
+    cout << "[Reaction " << m_ID << "/" << IDcount << "]:" << endl;
+    cout << "@{" << endl;
+    reactionSite->dumpInfo(xr, yr, zr);
+    cout << "\n}" << endl;
+}
+
 
 void Reaction::setSolverPtr(KMCSolver *solver)
 {

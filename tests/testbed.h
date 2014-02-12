@@ -31,10 +31,13 @@ public:
 
     void testUpdateNeigbors();
 
+    void testNeighborConsistency();
 
     void testHasCrystalNeighbor();
 
+    void testInitializationOfCrystal();
 
+    void testInitialReactionSetup();
 
     uint failCount;
     uint winCount;

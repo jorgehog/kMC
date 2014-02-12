@@ -59,7 +59,12 @@ public:
     }
 
     bool isBlocked(){
-        return nNeighbors(0) > 1;
+        return (nNeighbors(0) > 1);
+    }
+
+    bool isLegalToSpawn()
+    {
+        return (!m_active && nNeighbors() == 0);
     }
 
     bool isCrystal() {
@@ -94,52 +99,10 @@ public:
 
     bool hasCrystalNeighbor();
 
-    void activate()
-    {
+    void activate();
 
-        assert(m_active == false && "activating active site.");
-        assert(!isCrystal() && "A crystal should always be active");
+    void deactivate();
 
-        m_active = true;
-
-        if (isSurface()) {
-            setParticleState(particleState::crystal);
-        }
-
-        updateReactions();
-        calculateRates();
-
-        informNeighborhoodOnChange(+1);
-
-        m_totalActiveSites++;
-
-    }
-
-    void deactivate()
-    {
-
-        assert(m_active == true && "deactivating deactive site.");
-        assert(!isSurface() && "A surface should never be active");
-
-        m_active = false;
-
-        //if we deactivate a crystal site, we have to potentially
-        //reduce the surface by adding more sites as solution sites.
-        //Site will change only if it is not surrounded by any crystals.
-        if (isCrystal())
-        {
-            setParticleState(particleState::surface);
-        }
-
-
-        updateReactions();
-        calculateRates();
-
-        informNeighborhoodOnChange(-1);
-
-        m_totalActiveSites--;
-
-    }
 
     void updateEnergy(Site *changedSite, int change);
 
@@ -212,6 +175,8 @@ public:
     static const double & totalEnergy() {
         return m_totalEnergy;
     }
+
+    void dumpInfo(int xr = 0, int yr = 0, int zr = 0);
 
     vector<Site*> allneighbors;
 

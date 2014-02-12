@@ -20,6 +20,7 @@ public:
     virtual void calcRate() = 0;
     virtual bool isActive() = 0;
     virtual void execute() = 0;
+    virtual void dumpInfo(int xr = 0, int yr = 0, int zr = 0);
 
     void setSite(Site* site) {
         reactionSite = site;
