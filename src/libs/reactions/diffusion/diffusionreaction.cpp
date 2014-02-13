@@ -40,9 +40,6 @@ void DiffusionReaction::loadPotential(const Setting &setting)
 
     m_potential *= scale;
 
-    saddleCutoff = 2*Site::nNeighborsLimit();
-
-    m_saddleTransformVector = linspace<ivec>(-Site::nNeighborsLimit() + 1, Site::nNeighborsLimit(), saddleCutoff);
 
 }
 
@@ -54,8 +51,8 @@ double DiffusionReaction::getSaddleEnergy()
 
     vector<Site*> neighborSet;
 
-    std::set_intersection(reactionSite->allneighbors.begin(), reactionSite->allneighbors.end(),
-                          destination->allneighbors.begin(), destination->allneighbors.end(),
+    std::set_intersection(reactionSite->allNeighbors().begin(), reactionSite->allNeighbors().end(),
+                          destination->allNeighbors().begin(), destination->allNeighbors().end(),
                           std::back_inserter(neighborSet));
 
 
@@ -101,10 +98,11 @@ void DiffusionReaction::calcRate()
     m_rate = mu*exp(-beta*(reactionSite->getEnergy()-getSaddleEnergy()));
 }
 
-bool DiffusionReaction::isActive()
+bool DiffusionReaction::isNotBlocked()
 {
-    //if diffusion leads to increased potential energy we decline.
-    return !destination->isBlocked() || destination->isSurface();
+
+    return !destination->active() && (destination->isSurface() || (destination->nNeighbors() == 1));
+
 }
 
 void DiffusionReaction::execute()
@@ -136,10 +134,26 @@ void DiffusionReaction::dumpInfo(int xr, int yr, int zr)
     cout << "\n}" << endl;
 }
 
+bool DiffusionReaction::allowedAtSite()
+{
+    //Diffusion reactions may occur to surfaces
+    if (destination->isSurface())
+    {
+        return true;
+    }
+
+    //if were not on a surface, we check if te destination is close to other particles.
+    else
+    {
+        return destination->nNeighbors() == 0;
+    }
+
+    return true;
+
+
+}
+
 double DiffusionReaction::rPower;
 double DiffusionReaction::scale;
 
-uint DiffusionReaction::saddleCutoff;
-
 cube DiffusionReaction::m_potential;
-ivec DiffusionReaction::m_saddleTransformVector;

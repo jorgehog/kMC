@@ -1,3 +1,4 @@
+
 #ifndef SITE_H
 #define SITE_H
 
@@ -58,14 +59,7 @@ public:
         return name;
     }
 
-    bool isBlocked(){
-        return (nNeighbors(0) > 1);
-    }
-
-    bool isLegalToSpawn()
-    {
-        return (!m_active && nNeighbors() == 0);
-    }
+    bool isLegalToSpawn();
 
     bool isCrystal() {
         return m_particleState == particleState::crystal;
@@ -73,6 +67,10 @@ public:
 
     bool isSurface() {
         return m_particleState == particleState::surface;
+    }
+
+    void linkSiteDependency(const Site * site) {
+        m_siteDependencies.push_back(site);
     }
 
     void crystallize();
@@ -92,12 +90,12 @@ public:
     void distanceTo(const Site * other, int &dx, int &dy, int &dz, bool absolutes = false, bool verbose = false) const;
 
 
-    uint nNeighbors(uint level = 0) const
+    const uint & nNeighbors(uint level = 0) const
     {
         return m_nNeighbors(level);
     }
 
-    bool hasCrystalNeighbor();
+    bool hasNeighboring(int state);
 
     void activate();
 
@@ -105,6 +103,7 @@ public:
 
 
     void updateEnergy(Site *changedSite, int change);
+
 
     const bool & active() const
     {
@@ -126,14 +125,29 @@ public:
         return m_z;
     }
 
-    const std::vector<Reaction*> & activeReactions()
+    const vector<const Site*> & siteDependencies()  const
+    {
+        return m_siteDependencies;
+    }
+
+    const vector<Reaction*> & activeReactions() const
     {
         return m_activeReactions;
     }
 
-    Site**** getNeighborhood() const
+    const vector<Reaction*> & siteReactions() const
     {
-        return neighborHood;
+        return m_siteReactions;
+    }
+
+    const vector<Site*> & allNeighbors() const
+    {
+        return m_allNeighbors;
+    }
+
+    Site**** neighborHood() const
+    {
+        return m_neighborHood;
     }
 
     double getEnergy() const
@@ -142,6 +156,7 @@ public:
     }
 
     void reset() {
+        m_siteDependencies.clear();
         m_nNeighbors.zeros();
         m_totalEnergy -= E;
         E = 0;
@@ -159,6 +174,8 @@ public:
     void propagateToNeighbors(int reqOldState, int newState);
 
     void informNeighborhoodOnChange(int change);
+
+    void updateNeighborReactions();
 
     static const uint &nNeighborsLimit();
 
@@ -178,9 +195,7 @@ public:
 
     void dumpInfo(int xr = 0, int yr = 0, int zr = 0);
 
-    vector<Site*> allneighbors;
 
-    int m_particleState   = particleState::solution;
 
     friend class testBed;
 
@@ -204,7 +219,7 @@ private:
 
     uvec m_nNeighbors;
 
-    Site**** neighborHood;
+    Site**** m_neighborHood;
 
     double E;
 
@@ -214,8 +229,13 @@ private:
 
     bool m_active = false;
 
-    std::vector<Reaction*> m_activeReactions;
-    std::vector<Reaction*> m_siteReactions;
+    int m_particleState = particleState::solution;
+
+    vector<Reaction*> m_activeReactions;
+    vector<Reaction*> m_siteReactions;
+
+    vector<Site*> m_allNeighbors;
+    vector<const Site*> m_siteDependencies;
 
 };
 

@@ -14,15 +14,27 @@ public:
 
     static void resetAll() {
 
-        m_saddleTransformVector.reset();
         m_potential.reset();
 
     }
 
     static void loadPotential(const Setting & setting);
 
-    static const cube & potential() {
+    static const cube & potential()
+    {
         return m_potential;
+    }
+
+    const uint & x1 () {
+        return destination->x();
+    }
+
+    const uint & y1 () {
+        return destination->y();
+    }
+
+    const uint & z1 () {
+        return destination->z();
     }
 
     double lastUsedE = 0;
@@ -33,25 +45,9 @@ private:
     static double rPower;
     static double scale;
 
-    static uint saddleCutoff;
-
     static cube m_potential;
-    static ivec m_saddleTransformVector;
 
     Site* destination;
-
-    const uint & x1 () {
-        return destination->x();
-    }
-
-
-    const uint & y1 () {
-        return destination->y();
-    }
-
-    const uint & z1 () {
-        return destination->z();
-    }
 
     double getSaddleEnergy();
 
@@ -59,9 +55,18 @@ private:
     // Reaction interface
 public:
     void calcRate();
-    bool isActive();
+
+    bool isNotBlocked();
+
     void execute();
+
     void dumpInfo(int xr = 0, int yr = 0, int zr = 0);
+
+    void setupSiteDependencies() {
+        destination->linkSiteDependency(reactionSite);
+    }
+
+    bool allowedAtSite();
 
     friend class testBed;
 };

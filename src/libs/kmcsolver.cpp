@@ -139,6 +139,7 @@ void KMCSolver::run(){
 
 
 
+
 void KMCSolver::dumpXYZ()
 {
     stringstream s;
@@ -184,21 +185,24 @@ void KMCSolver::initializeDiffusionReactions()
 
                 currentSite = sites[x][y][z];
 
+                assert(currentSite->siteReactions().size() == 0 && "Sitereactions are already set");
+
                 //For each site, loop over all neightbours
                 for (uint i = 0; i < 3; ++i) {
                     for (uint j = 0; j < 3; ++j) {
                         for (uint k = 0; k < 3; ++k) {
 
-                            destination = currentSite->getNeighborhood()[Site::nNeighborsLimit() + i - 1][Site::nNeighborsLimit() + j - 1][Site::nNeighborsLimit() + k - 1];
+                            destination = currentSite->neighborHood()[Site::nNeighborsLimit() -1 + i][Site::nNeighborsLimit() - 1 + j][Site::nNeighborsLimit() - 1 + k];
 
-                            //This menas we are at the current site.
-                            if(destination == currentSite) {
-                                assert((i == 1) && (j == 1) && (k == 1));
-                                continue;
+                            //This menas we are not at the current site.
+                            if(destination != currentSite) {
+                                currentSite->addReaction(new DiffusionReaction(destination));
                             }
 
-                            //And add diffusion reactions
-                            currentSite->addReaction(new DiffusionReaction(destination));
+                            else
+                            {
+                                assert((i == 1) && (j == 1) && (k == 1));
+                            }
 
                         }
                     }
@@ -262,7 +266,6 @@ void KMCSolver::initializeCrystal()
     uint solutionStartY = crystalEndY + Site::nNeighborsLimit();
     uint solutionStartZ = crystalEndZ + Site::nNeighborsLimit();
 
-
     for (uint i = 0; i < NX; ++i)
     {
         for (uint j = 0; j < NY; ++j)
@@ -287,16 +290,20 @@ void KMCSolver::initializeCrystal()
                     }
                 }
 
-                if (i < solutionEndX || i >= solutionStartX || j < solutionEndY || j >= solutionStartY || k < solutionEndZ || k >= solutionStartZ)
+                if ((i < solutionEndX) || (i > solutionStartX) || (j < solutionEndY) || (j > solutionStartY) || (k < solutionEndZ) || (k > solutionStartZ))
                 {
                     if (KMC_RNG_UNIFORM() < saturation) {
                         if(sites[i][j][k]->isLegalToSpawn())
                         {
+
                             sites[i][j][k]->activate();
+
                         }
                     }
                 }
 
+                outputCounter = 0;
+                dumpXYZ();
             }
         }
     }
@@ -306,7 +313,6 @@ void KMCSolver::initializeCrystal()
          << " active sites."
          << endl;
 
-    dumpXYZ();
 
 }
 
@@ -329,6 +335,14 @@ void KMCSolver::getRateVariables()
         for (uint y = 0; y < NY; ++y) {
             for (uint z = 0; z < NZ; ++z) {
                 for (Reaction* reaction : sites[x][y][z]->activeReactions()) {
+
+                    if (!reaction->isNotBlocked())
+                    {
+                        cout << "This reaction should always be allowed." << endl;
+                        reaction->dumpInfo();
+                        exit(1);
+                    }
+
                     kTot += reaction->rate();
                     accuAllRates.push_back(kTot);
                     allReactions.push_back(reaction);

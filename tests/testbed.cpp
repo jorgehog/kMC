@@ -158,19 +158,19 @@ void testBed::testNeighbors()
 
 
                             if (i == Site::nNeighborsLimit() && j == Site::nNeighborsLimit() && k == Site::nNeighborsLimit()) {
-                                CHECK_EQUAL(site->neighborHood[i][j][k], site);
+                                CHECK_EQUAL(site->m_neighborHood[i][j][k], site);
                                 continue;
                             }
 
                             nTrials++;
-                            int deltax = (int)(site->x()) - (int)(site->neighborHood[i][j][k]->x());
-                            int deltay = (int)(site->y()) - (int)(site->neighborHood[i][j][k]->y());
-                            int deltaz = (int)(site->z()) - (int)(site->neighborHood[i][j][k]->z());
+                            int deltax = (int)(site->x()) - (int)(site->m_neighborHood[i][j][k]->x());
+                            int deltay = (int)(site->y()) - (int)(site->m_neighborHood[i][j][k]->y());
+                            int deltaz = (int)(site->z()) - (int)(site->m_neighborHood[i][j][k]->z());
 
                             if ((deltax + Site::originTransformVector()(i) + NX)%NX != 0) {
 
                                 cout << "fail detected x:" << endl;
-                                cout << i << "  "<< x << "  " << site->neighborHood[i][j][k]->x() << endl;
+                                cout << i << "  "<< x << "  " << site->m_neighborHood[i][j][k]->x() << endl;
                                 cout << deltax << "  " << Site::originTransformVector()(i) << "  " << NX << endl;
                                 cout << "------" << endl;
 
@@ -180,7 +180,7 @@ void testBed::testNeighbors()
                             else if ((deltay + Site::originTransformVector()(j) + NY)%NY != 0) {
 
                                 cout << "fail detected y:" << endl;
-                                cout << j << "  "<< y << "  " << site->neighborHood[i][j][k]->y() << endl;
+                                cout << j << "  "<< y << "  " << site->m_neighborHood[i][j][k]->y() << endl;
                                 cout << deltay << "  " << Site::originTransformVector()(j) << "  " << NY << endl;
                                 cout << "------" << endl;
 
@@ -191,7 +191,7 @@ void testBed::testNeighbors()
                             else if ((deltaz + Site::originTransformVector()(k) + NZ)%NZ != 0) {
 
                                 cout << "fail detected z:" << endl;
-                                cout << k << "  "<< z << "  " << site->neighborHood[i][j][k]->z() << endl;
+                                cout << k << "  "<< z << "  " << site->m_neighborHood[i][j][k]->z() << endl;
                                 cout << deltaz << "  " << Site::originTransformVector()(k) << "  " << NZ << endl;
                                 cout << "------" << endl;
 
@@ -446,12 +446,12 @@ void testBed::testEnergyAndNeighborSetup()
                                             C++;
                                         }
 
-                                        if (otherSite != thisSite->getNeighborhood()[Site::nNeighborsLimit() + dx][Site::nNeighborsLimit() + dy][Site::nNeighborsLimit() + dz]) {
+                                        if (otherSite != thisSite->neighborHood()[Site::nNeighborsLimit() + dx][Site::nNeighborsLimit() + dy][Site::nNeighborsLimit() + dz]) {
                                             //                                            cout << "fail neighbor" << endl;
                                             failCount++;
                                         }
 
-                                        if (thisSite != otherSite->getNeighborhood()[Site::nNeighborsLimit() - dx][Site::nNeighborsLimit() - dy][Site::nNeighborsLimit() - dz]) {
+                                        if (thisSite != otherSite->neighborHood()[Site::nNeighborsLimit() - dx][Site::nNeighborsLimit() - dy][Site::nNeighborsLimit() - dz]) {
                                             //                                            cout << "fail neighbor" << endl;
                                             failCount++;
                                         }
@@ -548,7 +548,7 @@ void testBed::testNeighborConsistency()
             for (uint k = 0; k < NZ; ++k) {
                 currentSite = solver->sites[i][j][k];
 
-                for (Site* neighbor : currentSite->allneighbors)
+                for (Site* neighbor : currentSite->allNeighbors())
                 {
 
                 }
@@ -587,7 +587,7 @@ void testBed::testHasCrystalNeighbor()
 
     }
 
-    uint nReactions = 8;
+    uint nReactions = 8; //eight corners are free to move.
     for (int i = -2; i < 3; ++i) {
 
         for (int j = -2; j < 3; ++j) {
@@ -614,7 +614,7 @@ void testBed::testHasCrystalNeighbor()
             for (uint k = 0; k < Site::m_neighborhoodLength; ++k) {
 
 
-                neighbor = initCrystal->neighborHood[i][j][k];
+                neighbor = initCrystal->m_neighborHood[i][j][k];
 
                 //Then we check weather the middle is actually a crystal
                 if (neighbor == initCrystal) {
@@ -623,7 +623,7 @@ void testBed::testHasCrystalNeighbor()
                     CHECK_EQUAL(particleState::crystal, neighbor->getParticleState());
 
                     //it should not have any crystal neighbors
-                    CHECK_EQUAL(false, neighbor->hasCrystalNeighbor());
+                    CHECK_EQUAL(false, neighbor->hasNeighboring(particleState::crystal));
                     continue;
                 }
 
@@ -632,16 +632,14 @@ void testBed::testHasCrystalNeighbor()
                 //The first layer should now be a surface, which should be unblocked with a crystal neighbor.
                 if (level == 0) {
                     CHECK_EQUAL(particleState::surface, neighbor->getParticleState());
-                    CHECK_EQUAL(false, neighbor->isBlocked());
-                    CHECK_EQUAL(true, neighbor->hasCrystalNeighbor());
+                    CHECK_EQUAL(true, neighbor->hasNeighboring(particleState::crystal));
                 }
 
                 //The second layer should be blocked because of the shell at distance 3, should be standard solution particles
                 //without a crystal neighbor.
                 else if (level == 1) {
                     CHECK_EQUAL(particleState::solution, neighbor->getParticleState());
-                    CHECK_EQUAL(true, neighbor->isBlocked());
-                    CHECK_EQUAL(false, neighbor->hasCrystalNeighbor());
+                    CHECK_EQUAL(false, neighbor->hasNeighboring(particleState::crystal));
                 }
 
             }
@@ -657,7 +655,7 @@ void testBed::testHasCrystalNeighbor()
         for (uint j = 0; j < 3; ++j) {
 
             for (uint k = 0; k < 3; ++k) {
-                neighbor = initCrystal->neighborHood[Site::nNeighborsLimit() - 1 + i][Site::nNeighborsLimit() - 1 + j][Site::nNeighborsLimit() - 1 + k];
+                neighbor = initCrystal->m_neighborHood[Site::nNeighborsLimit() - 1 + i][Site::nNeighborsLimit() - 1 + j][Site::nNeighborsLimit() - 1 + k];
 
                 if (neighbor != initCrystal) {
                     neighbor->activate();
@@ -674,7 +672,7 @@ void testBed::testHasCrystalNeighbor()
         for (uint j = 0; j < 3; ++j) {
 
             for (uint k = 0; k < 3; ++k) {
-                neighbor = initCrystal->neighborHood[Site::nNeighborsLimit() - 1 + i][Site::nNeighborsLimit() - 1 + j][Site::nNeighborsLimit() - 1 + k];
+                neighbor = initCrystal->m_neighborHood[Site::nNeighborsLimit() - 1 + i][Site::nNeighborsLimit() - 1 + j][Site::nNeighborsLimit() - 1 + k];
 
                 if (neighbor == initCrystal) {
                     CHECK_EQUAL(particleState::surface, neighbor->getParticleState());
@@ -691,7 +689,6 @@ void testBed::testHasCrystalNeighbor()
 
     //activating the seed. Should make closest neighbors crystals.
     initCrystal->activate();
-    solver->initializeDiffusionReactions();
 
     uint nActives = 0;
     for (int i = -3; i < 4; ++i) {
@@ -751,7 +748,7 @@ void testBed::testInitializationOfCrystal()
                 case particleState::surface:
 
                     CHECK_EQUAL(true, !currentSite->active());
-                    CHECK_EQUAL(true, currentSite->hasCrystalNeighbor());
+                    CHECK_EQUAL(true, currentSite->hasNeighboring(particleState::crystal));
                     CHECK_EQUAL(true, currentSite->nNeighbors() > 0);
 
                     break;
@@ -772,6 +769,17 @@ void testBed::testInitializationOfCrystal()
 
 void testBed::testInitialReactionSetup()
 {
+
+    for (uint i = 0; i < NX; ++i) {
+        for (uint j = 0; j < NY; ++j) {
+            for (uint k = 0; k < NZ; ++k) {
+
+                CHECK_EQUAL(solver->sites[i][j][k]->siteReactions().size(), 26);
+
+            }
+        }
+    }
+
     solver->initializeCrystal();
 
     std::vector<Reaction*> oldReactions;
@@ -790,7 +798,7 @@ void testBed::testInitialReactionSetup()
                         exit(1);
                     }
 
-                    if (!r->isActive())
+                    if (!r->isNotBlocked())
                     {
                         cout << "REACTION NOT DEACTIVATED PROPERLY:" << endl;
                         r->dumpInfo();

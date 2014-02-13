@@ -18,9 +18,17 @@ public:
     virtual ~Reaction();
 
     virtual void calcRate() = 0;
-    virtual bool isActive() = 0;
+    virtual bool isNotBlocked() = 0;
+
+    virtual bool allowedAtSite()
+    {
+        return true;
+    }
+
     virtual void execute() = 0;
     virtual void dumpInfo(int xr = 0, int yr = 0, int zr = 0);
+    virtual void setupSiteDependencies() {}
+
 
     void setSite(Site* site) {
         reactionSite = site;
