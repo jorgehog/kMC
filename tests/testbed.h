@@ -31,8 +31,6 @@ public:
 
     void testUpdateNeigbors();
 
-    void testNeighborConsistency();
-
     void testHasCrystalNeighbor();
 
     void testInitializationOfCrystal();

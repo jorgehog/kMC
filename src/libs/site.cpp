@@ -459,7 +459,6 @@ void Site::activate()
     m_active = true;
 
     if (isSurface()) {
-        cout << "making " << x() << " "<< y() << " " << z() << "into crystal "<<endl;
         setParticleState(particleState::crystal);
     }
 
@@ -636,28 +635,28 @@ void Site::updateNeighborReactions()
         _neighbor->calculateRates();
     }
 
-    for (uint i = 0; i < NX; ++i) {
+//    for (uint i = 0; i < NX; ++i) {
 
-        for (uint j = 0; j < NY; ++j) {
+//        for (uint j = 0; j < NY; ++j) {
 
-            for (uint k = 0; k < NZ; ++k) {
+//            for (uint k = 0; k < NZ; ++k) {
 
-                for(Reaction * r : mainSolver->getSites()[i][j][k]->activeReactions())
-                {
-                    if (!r->isNotBlocked())
-                    {
-                        r->dumpInfo();
-                        cout << x() << " " << y() << " " << z() << endl;
+//                for(Reaction * r : mainSolver->getSites()[i][j][k]->activeReactions())
+//                {
+//                    if (!r->isNotBlocked())
+//                    {
+//                        r->dumpInfo();
+//                        cout << x() << " " << y() << " " << z() << endl;
 
 
-                        cout << "error" << endl;
-                        exit(1);
-                    }
-                }
+//                        cout << "error" << endl;
+//                        exit(1);
+//                    }
+//                }
 
-            }
-        }
-    }
+//            }
+//        }
+//    }
 
 }
 

@@ -90,7 +90,7 @@ public:
     void distanceTo(const Site * other, int &dx, int &dy, int &dz, bool absolutes = false, bool verbose = false) const;
 
 
-    const uint & nNeighbors(uint level = 0) const
+    uint nNeighbors(uint level = 0) const
     {
         return m_nNeighbors(level);
     }

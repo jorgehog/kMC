@@ -147,18 +147,24 @@ void KMCSolver::dumpXYZ()
 
     ofstream o;
     o.open("outfiles/" + s.str());
-    o << Site::totalActiveSites() << "\n - ";
+
+    s.str("");
+    s.clear();
+
+    uint nLines = 0;
 
     for (uint i = 0; i < NX; ++i) {
         for (uint j = 0; j < NY; ++j) {
             for (uint k = 0; k < NZ; ++k) {
-                if (sites[i][j][k]->active()) {
-                    o << "\n" << sites[i][j][k]->getName() << " " << i << " " << j << " " << k << " " << sites[i][j][k]->nNeighbors();
+                if (sites[i][j][k]->active() || sites[i][j][k]->isSurface()) {
+                    s << "\n" << sites[i][j][k]->getName() << " " << i << " " << j << " " << k << " " << sites[i][j][k]->nNeighbors();
+                    nLines++;
                 }
             }
         }
     }
 
+    o << nLines << "\n - " << s.str();
     o.close();
 
 }
@@ -290,7 +296,7 @@ void KMCSolver::initializeCrystal()
                     }
                 }
 
-                if ((i < solutionEndX) || (i > solutionStartX) || (j < solutionEndY) || (j > solutionStartY) || (k < solutionEndZ) || (k > solutionStartZ))
+                if ((i < solutionEndX) || (i >= solutionStartX) || (j < solutionEndY) || (j >= solutionStartY) || (k < solutionEndZ) || (k >= solutionStartZ))
                 {
                     if (KMC_RNG_UNIFORM() < saturation) {
                         if(sites[i][j][k]->isLegalToSpawn())
@@ -336,12 +342,12 @@ void KMCSolver::getRateVariables()
             for (uint z = 0; z < NZ; ++z) {
                 for (Reaction* reaction : sites[x][y][z]->activeReactions()) {
 
-                    if (!reaction->isNotBlocked())
-                    {
-                        cout << "This reaction should always be allowed." << endl;
-                        reaction->dumpInfo();
-                        exit(1);
-                    }
+//                    if (!reaction->isNotBlocked())
+//                    {
+//                        cout << "This reaction should always be allowed." << endl;
+//                        reaction->dumpInfo();
+//                        exit(1);
+//                    }
 
                     kTot += reaction->rate();
                     accuAllRates.push_back(kTot);
