@@ -499,26 +499,6 @@ void Site::deactivate()
 
 }
 
-void Site::updateEnergy(Site *changedSite, int change)
-{
-    int xScaled;
-    int yScaled;
-    int zScaled;
-
-    distanceTo(changedSite, xScaled, yScaled, zScaled, true);
-
-    xScaled += Site::nNeighborsLimit();
-    yScaled += Site::nNeighborsLimit();
-    zScaled += Site::nNeighborsLimit();
-
-    double dE = change*DiffusionReaction::potential()(xScaled, yScaled, zScaled);
-
-    E += dE;
-
-    m_totalEnergy += dE;
-
-}
-
 
 void Site::introduceNeighborhood()
 {
@@ -586,6 +566,7 @@ void Site::informNeighborhoodOnChange(int change)
 
     Site *neighbor;
     uint level;
+    double dE;
 
     for (uint i = 0; i < m_neighborhoodLength; ++i) {
 
@@ -604,7 +585,13 @@ void Site::informNeighborhoodOnChange(int change)
                 level = m_levelMatrix(i, j, k);
                 neighbor->m_nNeighbors(level)+=change;
 
-                neighbor->updateEnergy(this, change);
+
+                dE = change*DiffusionReaction::potential()(i, j, k);
+
+                neighbor->E += dE;
+
+                m_totalEnergy += dE;
+
 
 
             }

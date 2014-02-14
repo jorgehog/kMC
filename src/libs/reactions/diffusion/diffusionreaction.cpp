@@ -28,6 +28,7 @@ void DiffusionReaction::loadPotential(const Setting &setting)
 
                 if (i == Site::nNeighborsLimit() && j == Site::nNeighborsLimit() && k == Site::nNeighborsLimit())
                 {
+                    m_potential(i, j, k) = 0;
                     continue;
                 }
 

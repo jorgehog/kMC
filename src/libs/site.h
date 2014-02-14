@@ -101,10 +101,6 @@ public:
 
     void deactivate();
 
-
-    void updateEnergy(Site *changedSite, int change);
-
-
     const bool & active() const
     {
         return m_active;
