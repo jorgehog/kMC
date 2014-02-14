@@ -365,22 +365,13 @@ void Site::setSolverPtr(KMCSolver *solver)
     mainSolver = solver;
 }
 
-void Site::distanceTo(const Site *other, int &dx, int &dy, int &dz, bool absolutes, bool verbose) const
+void Site::distanceTo(const Site *other, int &dx, int &dy, int &dz, bool absolutes) const
 {
 
 
     dx = (other->x() + NX - m_x)%NX;
     dy = (other->y() + NY - m_y)%NY;
     dz = (other->z() + NZ - m_z)%NZ;
-
-    if (verbose)
-    {
-        cout << m_x << " " << m_y << " " << m_z << endl;
-        cout << other->x() << " " << other->y() << " " << other->z() << endl;
-        cout << "----" << endl;
-        cout << dx << " " << dy << " " << dz << endl;
-
-    }
 
     if ((uint)abs(dx) > NX/2) {
         dx = -(int)(NX - dx);
@@ -398,11 +389,6 @@ void Site::distanceTo(const Site *other, int &dx, int &dy, int &dz, bool absolut
         dx = abs(dx);
         dy = abs(dy);
         dz = abs(dz);
-    }
-
-    if (verbose) {
-        cout << dx << " " << dy << " " << dz << endl;
-        cout << "------------" << endl;
     }
 
 }
@@ -635,29 +621,6 @@ void Site::updateNeighborReactions()
         _neighbor->calculateRates();
     }
 
-//    for (uint i = 0; i < NX; ++i) {
-
-//        for (uint j = 0; j < NY; ++j) {
-
-//            for (uint k = 0; k < NZ; ++k) {
-
-//                for(Reaction * r : mainSolver->getSites()[i][j][k]->activeReactions())
-//                {
-//                    if (!r->isNotBlocked())
-//                    {
-//                        r->dumpInfo();
-//                        cout << x() << " " << y() << " " << z() << endl;
-
-
-//                        cout << "error" << endl;
-//                        exit(1);
-//                    }
-//                }
-
-//            }
-//        }
-//    }
-
 }
 
 uint Site::getLevel(uint i, uint j, uint k)
@@ -694,3 +657,5 @@ uint Site::m_totalActiveSites = 0;
 double Site::m_totalEnergy = 0;
 
 const vector<string> particleState::names = {"crystal", "solution", "surface", "any"};
+vector<Site*> Site::affectedSites;
+

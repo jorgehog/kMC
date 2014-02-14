@@ -32,12 +32,6 @@ public:
         return sites[x][y][z]->nNeighbors(1);
     }
 
-
-    void addReaction(Reaction* reaction) {
-        allReactions.push_back(reaction);
-    }
-
-
     Site**** getSites() {
         return sites;
     }

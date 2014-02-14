@@ -148,23 +148,51 @@ void KMCSolver::dumpXYZ()
     ofstream o;
     o.open("outfiles/" + s.str());
 
-    s.str("");
-    s.clear();
+
+
+    stringstream surface;
+    stringstream crystal;
+    stringstream solution;
 
     uint nLines = 0;
+    s.str(string());
+
+    Site* currentSite;
 
     for (uint i = 0; i < NX; ++i) {
         for (uint j = 0; j < NY; ++j) {
             for (uint k = 0; k < NZ; ++k) {
-                if (sites[i][j][k]->active() || sites[i][j][k]->isSurface()) {
+
+                currentSite = sites[i][j][k];
+
+                bool isSurface = currentSite->isSurface();
+
+                if (currentSite->active() || isSurface){
                     s << "\n" << sites[i][j][k]->getName() << " " << i << " " << j << " " << k << " " << sites[i][j][k]->nNeighbors();
+
+                    if (isSurface)
+                    {
+                        surface << s.str();
+                    }
+
+                    else if (currentSite->isCrystal())
+                    {
+                        crystal << s.str();
+                    }
+
+                    else
+                    {
+                        solution << s.str();
+                    }
+
+                    s.str(string());
                     nLines++;
                 }
             }
         }
     }
 
-    o << nLines << "\n - " << s.str();
+    o << nLines << "\n - " << surface.str() << crystal.str() << solution.str();
     o.close();
 
 }
@@ -307,9 +335,6 @@ void KMCSolver::initializeCrystal()
                         }
                     }
                 }
-
-                outputCounter = 0;
-                dumpXYZ();
             }
         }
     }
@@ -319,6 +344,7 @@ void KMCSolver::initializeCrystal()
          << " active sites."
          << endl;
 
+    dumpXYZ();
 
 }
 
@@ -342,13 +368,6 @@ void KMCSolver::getRateVariables()
             for (uint z = 0; z < NZ; ++z) {
                 for (Reaction* reaction : sites[x][y][z]->activeReactions()) {
 
-//                    if (!reaction->isNotBlocked())
-//                    {
-//                        cout << "This reaction should always be allowed." << endl;
-//                        reaction->dumpInfo();
-//                        exit(1);
-//                    }
-
                     kTot += reaction->rate();
                     accuAllRates.push_back(kTot);
                     allReactions.push_back(reaction);
@@ -371,10 +390,6 @@ uint KMCSolver::getReactionChoice(double R)
     // continue searching while imax != imin + 1
     while (imid != imin)
     {
-        if (imin > imax) {
-            cout << "caught: " << imin << " " << imid << " " << imax << endl;
-            return imin;
-        }
 
         // calculate the midpoint for roughly equal partition
         imid = imin + (imax - imin)/2;
@@ -419,8 +434,6 @@ uint KMCSolver::getReactionChoice(double R)
 
     }
 
-    //    cout << "binary: " << imid << "  " << imin << "  " << imax << endl;
-    //    assert(imax == imid + 1 && "LOCATING RATE FAILED");
     return imid + 1;
 
 }

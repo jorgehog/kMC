@@ -40,8 +40,6 @@ void testBed::testDistanceTo()
     Site* start;
     Site* end;
 
-    bool v = false;
-
     ivec deltax(NX);
     ivec deltay(NY);
     ivec deltaz(NZ);
@@ -83,19 +81,19 @@ void testBed::testDistanceTo()
 
                             end = solver->sites[endx][endy][endz];
 
-                            end->distanceTo(start, dx, dy, dz, true, v);
+                            end->distanceTo(start, dx, dy, dz, true);
 
                             adx = dx;
                             ady = dy;
                             adz = dz;
 
-                            end->distanceTo(start, dx, dy, dz, false, v);
+                            end->distanceTo(start, dx, dy, dz);
 
                             CHECK_EQUAL(adx, abs(dx));
                             CHECK_EQUAL(ady, abs(dy));
                             CHECK_EQUAL(adz, abs(dz));
 
-                            start->distanceTo(end, dx2, dy2, dz2, false, v);
+                            start->distanceTo(end, dx2, dy2, dz2);
 
                             if ((uint)abs(dx) != NX/2)
                             {

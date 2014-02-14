@@ -87,7 +87,7 @@ public:
 
     static void setSolverPtr(KMCSolver* solver);
 
-    void distanceTo(const Site * other, int &dx, int &dy, int &dz, bool absolutes = false, bool verbose = false) const;
+    void distanceTo(const Site * other, int &dx, int &dy, int &dz, bool absolutes = false) const;
 
 
     uint nNeighbors(uint level = 0) const
@@ -214,6 +214,8 @@ private:
     static uint NZ;
 
     static double m_totalEnergy;
+
+    static vector<Site*> affectedSites;
 
     static KMCSolver* mainSolver;
 
