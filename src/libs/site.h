@@ -3,6 +3,7 @@
 #define SITE_H
 
 #include <vector>
+#include <set>
 #include <sys/types.h>
 #include <armadillo>
 #include <assert.h>
@@ -82,6 +83,8 @@ public:
     void addReaction(Reaction* reaction);
 
     void updateReactions();
+
+    void spawnAsCrystal();
 
     void calculateRates();
 
@@ -171,7 +174,7 @@ public:
 
     void informNeighborhoodOnChange(int change);
 
-    void updateNeighborReactions();
+    void queueAffectedSites();
 
     static const uint &nNeighborsLimit();
 
@@ -211,7 +214,7 @@ private:
 
     static double m_totalEnergy;
 
-    static vector<Site*> affectedSites;
+    static set<Site*> affectedSites;
 
     static KMCSolver* mainSolver;
 
@@ -234,6 +237,8 @@ private:
 
     vector<Site*> m_allNeighbors;
     vector<const Site*> m_siteDependencies;
+
+    void updateAffectedSites();
 
 };
 

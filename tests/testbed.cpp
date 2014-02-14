@@ -540,7 +540,7 @@ void testBed::testHasCrystalNeighbor()
 {
 
     //Spawn a seed in the middle of the box.
-    solver->spawnCrystalSeed();
+    solver->sites[NX/2][NY/2][NZ/2]->spawnAsCrystal();
     Site* initCrystal = solver->sites[NX/2][NY/2][NZ/2];
 
     Site *neighbor;
@@ -866,18 +866,25 @@ void testBed::testKnownCase()
     o.open("stuff.txt");
     string line;
     stringstream s;
+
+    reset();
+
     for (uint i = 0; i < NX; ++i) {
         for (uint j = 0; j < NY; ++j) {
             for (uint k = 0; k < NZ; ++k) {
                 getline(o,line);
                 s << solver->sites[i][j][k]->active();
-                CHECK_EQUAL(s.str(), line);
+                if(s.str().compare(line) == 0)
+                {
+                    winCount++;
+                }
                 s.str(string());
             }
         }
     }
     o.close();
 
+    CHECK_EQUAL(NX*NY*NZ, winCount);
 
 
 }

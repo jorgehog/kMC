@@ -79,8 +79,6 @@ private:
 
     void initializeCrystal();
 
-    void spawnCrystalSeed();
-
     void initializeDiffusionReactions();
 
     void initializeSites();

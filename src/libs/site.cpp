@@ -128,6 +128,19 @@ void Site::dumpInfo(int xr, int yr, int zr)
 
 }
 
+void Site::updateAffectedSites()
+{
+
+    for (Site* site : affectedSites)
+    {
+        site->updateReactions();
+        site->calculateRates();
+    }
+
+    affectedSites.clear();
+
+}
+
 
 Site::Site(uint _x, uint _y, uint _z) :
     E(0),
@@ -187,7 +200,7 @@ void Site::setParticleState(int state)
             else
             {
                 m_particleState = particleState::surface;
-                updateNeighborReactions();
+                queueAffectedSites();
             }
 
             break;
@@ -196,7 +209,7 @@ void Site::setParticleState(int state)
         case particleState::crystal:
             m_particleState = particleState::surface;
             propagateToNeighbors(particleState::surface, particleState::solution);
-            updateNeighborReactions();
+            queueAffectedSites();
 
             break;
 
@@ -240,7 +253,7 @@ void Site::setParticleState(int state)
 
             if (!hasNeighboring(particleState::crystal)) {
                 m_particleState = particleState::solution;
-                updateNeighborReactions();
+                queueAffectedSites();
             }
 
             break;
@@ -349,6 +362,12 @@ void Site::updateReactions()
 
 }
 
+void Site::spawnAsCrystal()
+{
+    m_particleState = particleState::surface;
+    activate();
+}
+
 void Site::calculateRates()
 {
     for (Reaction* reaction : m_activeReactions) {
@@ -428,6 +447,15 @@ void Site::activate()
 {
 
 #ifndef NDEBUG
+
+    if (affectedSites.size() != 0)
+    {
+        cout << "affectedsites not cleared." << endl;
+        cout << affectedSites.size() << " != " << 0 << endl;
+
+        exit(1);
+    }
+
     if (m_active == true)
     {
         cout << "Activating active site. " << endl;
@@ -448,13 +476,12 @@ void Site::activate()
         setParticleState(particleState::crystal);
     }
 
+    affectedSites.insert(this);
 
     informNeighborhoodOnChange(+1);
-    updateNeighborReactions();
+    queueAffectedSites();
 
-    updateReactions();
-    calculateRates();
-
+    updateAffectedSites();
 
     m_totalActiveSites++;
 
@@ -464,6 +491,9 @@ void Site::deactivate()
 {
 
 #ifndef NDEBUG
+
+    assert(affectedSites.size() == 0);
+
     if (m_active == false)
     {
         cout << "deactivating deactive site. " << endl;
@@ -488,12 +518,10 @@ void Site::deactivate()
         setParticleState(particleState::surface);
     }
 
-
-    updateReactions();
-    calculateRates();
-
     informNeighborhoodOnChange(-1);
-    updateNeighborReactions();
+    queueAffectedSites();
+
+    updateAffectedSites();
 
     m_totalActiveSites--;
 
@@ -592,22 +620,16 @@ void Site::informNeighborhoodOnChange(int change)
 
                 m_totalEnergy += dE;
 
-
-
             }
         }
     }
 
 }
 
-void Site::updateNeighborReactions()
+void Site::queueAffectedSites()
 {
-    for (Site* _neighbor : allNeighbors())
-    {
-        _neighbor->updateReactions();
-        _neighbor->calculateRates();
-    }
-
+    affectedSites.insert(allNeighbors().begin(), allNeighbors().end());
+    affectedSites.insert(this);
 }
 
 uint Site::getLevel(uint i, uint j, uint k)
@@ -644,5 +666,5 @@ uint Site::m_totalActiveSites = 0;
 double Site::m_totalEnergy = 0;
 
 const vector<string> particleState::names = {"crystal", "solution", "surface", "any"};
-vector<Site*> Site::affectedSites;
+set<Site*> Site::affectedSites;
 

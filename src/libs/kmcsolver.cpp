@@ -278,7 +278,7 @@ void KMCSolver::initializeSites()
 void KMCSolver::initializeCrystal()
 {
 
-    spawnCrystalSeed();
+    sites[NX/2][NY/2][NZ/2]->spawnAsCrystal();
 
     uint crystalSizeX = round(NX*RelativeSeedSize);
     uint crystalSizeY = round(NY*RelativeSeedSize);
@@ -348,11 +348,6 @@ void KMCSolver::initializeCrystal()
 
 }
 
-void KMCSolver::spawnCrystalSeed()
-{
-    sites[NX/2][NY/2][NZ/2]->setParticleState(particleState::surface);
-    sites[NX/2][NY/2][NZ/2]->activate();
-}
 
 
 
