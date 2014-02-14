@@ -15,6 +15,7 @@
 typedef int seed_type;
 
 #define KMC_INIT_RNG(seed)                  \
+    Seed::initialSeed = seed;               \
     int inseed = static_cast<int>(seed);    \
     int cseed = 100;                        \
     int seed2 = inseed * 3;                 \
@@ -27,6 +28,8 @@ typedef int seed_type;
 
 namespace Seed
 {
+
+seed_type initialSeed;
 
 class SeedNotSetException : public std::exception
 {

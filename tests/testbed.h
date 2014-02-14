@@ -37,6 +37,8 @@ public:
 
     void testInitialReactionSetup();
 
+    void testKnownCase();
+
     uint failCount;
     uint winCount;
     uint nTrials;

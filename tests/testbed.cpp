@@ -499,14 +499,14 @@ void testBed::testUpdateNeigbors()
                     CHECK_EQUAL(2*(12*(K+1)*(K+1) + 1), solver->sites[i][j][k]->nNeighbors(K));
                 }
 
-                CHECK_CLOSE(eMax, solver->sites[i][j][k]->getEnergy(), 0.00001);
+                CHECK_CLOSE(eMax, solver->sites[i][j][k]->getEnergy(), 0.001);
 
             }
         }
     }
 
     CHECK_EQUAL(NX*NY*NZ, Site::totalActiveSites());
-    CHECK_CLOSE(NX*NY*NZ*eMax, Site::totalEnergy(), 0.00001);
+    CHECK_CLOSE(NX*NY*NZ*eMax, Site::totalEnergy(), 0.001);
 
     for (uint i = 0; i < NX; ++i) {
         for (uint j = 0; j < NY; ++j) {
@@ -524,14 +524,14 @@ void testBed::testUpdateNeigbors()
                     CHECK_EQUAL(0, solver->sites[i][j][k]->nNeighbors(K));
                 }
 
-                CHECK_CLOSE(0, solver->sites[i][j][k]->getEnergy(), 0.00001);
+                CHECK_CLOSE(0, solver->sites[i][j][k]->getEnergy(), 0.001);
 
             }
         }
     }
 
     CHECK_EQUAL(0, Site::totalActiveSites());
-    CHECK_CLOSE(0, Site::totalEnergy(), 0.00001);
+    CHECK_CLOSE(0, Site::totalEnergy(), 0.001);
 
 }
 
@@ -839,6 +839,45 @@ void testBed::testInitialReactionSetup()
             exit(1);
         }
     }
+
+
+}
+
+void testBed::testKnownCase()
+{
+
+    CHECK_EQUAL(30, NX);
+    CHECK_EQUAL(30, NY);
+    CHECK_EQUAL(30, NZ);
+    CHECK_EQUAL(2, Site::nNeighborsLimit());
+    CHECK_EQUAL(5.0, Reaction::beta);
+    CHECK_EQUAL(1.0, Reaction::mu);
+    CHECK_EQUAL(0.5, DiffusionReaction::rPower);
+    CHECK_EQUAL(1.0, DiffusionReaction::scale);
+    CHECK_EQUAL(0.3, solver->saturation);
+    CHECK_EQUAL(0.3, solver->RelativeSeedSize);
+    CHECK_EQUAL(10000, solver->nCycles);
+    CHECK_EQUAL(1000, solver->cyclesPerOutput);
+    CHECK_EQUAL(1392202630, Seed::initialSeed);
+
+    solver->run();
+
+    ifstream o;
+    o.open("stuff.txt");
+    string line;
+    stringstream s;
+    for (uint i = 0; i < NX; ++i) {
+        for (uint j = 0; j < NY; ++j) {
+            for (uint k = 0; k < NZ; ++k) {
+                getline(o,line);
+                s << solver->sites[i][j][k]->active();
+                CHECK_EQUAL(s.str(), line);
+                s.str(string());
+            }
+        }
+    }
+    o.close();
+
 
 
 }

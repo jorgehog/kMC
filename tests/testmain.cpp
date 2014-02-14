@@ -79,6 +79,13 @@ TEST(INITREACTIONS)
     test.testInitialReactionSetup();
 }
 
+
+TEST(KnownCase)
+{
+    testBed test;
+    test.testKnownCase();
+}
+
 int main()
 {
     return UnitTest::RunAllTests();
