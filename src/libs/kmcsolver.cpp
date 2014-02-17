@@ -129,7 +129,9 @@ void KMCSolver::run()
 
         getRateVariables();
 
-        R = kTot*KMC_RNG_UNIFORM();
+        double r = KMC_RNG_UNIFORM();
+
+        R = kTot*r;
 
         choice = getReactionChoice(R);
 
@@ -399,6 +401,7 @@ void KMCSolver::getRateVariables()
             {
                 for (Reaction* reaction : sites[x][y][z]->activeReactions())
                 {
+                    assert(reaction->rate() != 0);
                     kTot += reaction->rate();
                     accuAllRates.push_back(kTot);
                     allReactions.push_back(reaction);

@@ -3,7 +3,8 @@
 
 
 Reaction::Reaction():
-    m_ID(IDcount++)
+    m_ID(IDcount++),
+    m_rate(0)
 {
 
 }

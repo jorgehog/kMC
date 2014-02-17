@@ -8,15 +8,12 @@
 
 using namespace std;
 
-/*
 TEST(RNG_CHECK) {
-
     testBed test;
-
     test.testRNG();
-
 }
 
+/*
 TEST(NEIGHBORS_SETUP) {
     testBed test;
     test.testEnergyAndNeighborSetup();
@@ -80,11 +77,17 @@ TEST(INITREACTIONS)
 
 */
 
-TEST(KnownCase)
+TEST(sequential)
 {
     testBed test;
-    test.testKnownCase();
+    test.testSequential();
 }
+
+//TEST(KnownCase)
+//{
+//    testBed test;
+//    test.testKnownCase();
+//}
 
 int main()
 {

@@ -22,7 +22,9 @@ typedef int seed_type;
     RanSetSeed_MWC8222(&seed2, cseed);      \
     RanNormalSetSeedZig32(&inseed, 5)
 
-
+#define KMC_RESET_RNG() \
+    RanSetSeed_MWC8222(&seed2, cseed);      \
+    RanNormalSetSeedZig32(&inseed, 5)
 
 #endif
 

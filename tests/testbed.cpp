@@ -1,14 +1,27 @@
 #include "testbed.h"
 
-#include <unittest++/UnitTest++.h>
+#include "snapshot.h"
+
 #include <kMC>
 
-#include <libconfig.h++>
+#include <unittest++/UnitTest++.h>
+
 #include <iostream>
 
-using namespace libconfig;
 
 testBed::testBed()
+{
+
+    solver = makeSolver();
+
+    NX = solver->NX;
+    NY = solver->NY;
+    NZ = solver->NZ;
+
+
+}
+
+KMCSolver *testBed::makeSolver()
 {
     Config cfg;
 
@@ -16,12 +29,7 @@ testBed::testBed()
 
     const Setting & root = cfg.getRoot();
 
-    solver = new KMCSolver(root);
-
-    NX = solver->NX;
-    NY = solver->NY;
-    NZ = solver->NZ;
-
+    return new KMCSolver(root);
 
 }
 
@@ -252,6 +260,26 @@ void testBed::testRNG()
 
     CHECK_CLOSE(0, N, 0.01);
     CHECK_CLOSE(1, stdN, 0.01);
+
+    vector<double> setn;
+    vector<double> setu;
+
+    KMC_INIT_RNG(Seed::initialSeed);
+
+    for (uint i = 0; i < 1000000; ++i)
+    {
+        setu.push_back(KMC_RNG_UNIFORM());
+        setn.push_back(KMC_RNG_NORMAL());
+    }
+
+    KMC_RESET_RNG();
+
+    for (uint i = 0; i < 1000000; ++i)
+    {
+        CHECK_EQUAL(KMC_RNG_UNIFORM(), setu.at(i));
+        CHECK_EQUAL(KMC_RNG_NORMAL(), setn.at(i));
+    }
+
 }
 
 void testBed::testBinarySearchChoise(uint LIM)
@@ -843,6 +871,23 @@ void testBed::testInitialReactionSetup()
 
 }
 
+void testBed::testSequential()
+{
+    solver->nCycles = 10;
+    solver->run();
+    SnapShot s1(solver);
+
+    delete solver;
+    solver = makeSolver();
+
+    solver->nCycles = 10;
+    solver->run();
+    SnapShot s2(solver);
+
+    CHECK_EQUAL(s1, s2);
+
+}
+
 void testBed::testKnownCase()
 {
 
@@ -860,6 +905,7 @@ void testBed::testKnownCase()
     CHECK_EQUAL(1000, solver->cyclesPerOutput);
     CHECK_EQUAL(1392202630, Seed::initialSeed);
 
+    solver->nCycles = 4;
     solver->run();
 
     ifstream o;

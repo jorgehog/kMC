@@ -164,7 +164,7 @@ bool DiffusionReaction::allowedAtSite()
 }
 
 
-double DiffusionReaction::rPower;
-double DiffusionReaction::scale;
+double DiffusionReaction::rPower = 0;
+double DiffusionReaction::scale = 0;
 
 cube   DiffusionReaction::m_potential;

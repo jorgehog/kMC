@@ -43,6 +43,8 @@ Site::~Site()
     m_activeReactions.clear();
     m_siteReactions.clear();
 
+    m_energy = 0;
+
 }
 
 

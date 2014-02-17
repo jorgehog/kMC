@@ -5,12 +5,18 @@
 
 #define MIN(x, y) x < y ? x : y
 
+#include <libconfig.h++>
+
+using namespace libconfig;
+
 class KMCSolver;
 
 class testBed
 {
 public:
     testBed();
+
+    KMCSolver * makeSolver();
 
     ~testBed();
 
@@ -37,6 +43,8 @@ public:
 
     void testInitialReactionSetup();
 
+    void testSequential();
+
     void testKnownCase();
 
     uint failCount;
@@ -55,6 +63,7 @@ public:
     uint NZ;
 
     KMCSolver* solver;
+    Setting* root;
 };
 
 #endif // TESTBED_H
