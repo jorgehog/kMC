@@ -323,7 +323,7 @@ bool Site::hasNeighboring(int state)
                         [j + Site::nNeighborsLimit() - 1]
                         [k + Site::nNeighborsLimit() - 1];
 
-                if (nextNeighbor->getParticleState() == state) {
+                if (nextNeighbor->particleState() == state) {
                     return true;
                 }
 
@@ -466,13 +466,13 @@ void Site::propagateToNeighbors(int reqOldState, int newState)
                         [j + Site::nNeighborsLimit() - 1]
                         [k + Site::nNeighborsLimit() - 1];
 
-                assert(!(newState == particleState::solution && nextNeighbor->getParticleState() == particleState::solution));
+                assert(!(newState == particleState::solution && nextNeighbor->particleState() == particleState::solution));
                 if (nextNeighbor == this) {
                     assert(i == j && j == k && k == 1);
                     continue;
                 }
 
-                if (nextNeighbor->getParticleState() == reqOldState || reqOldState == particleState::any) {
+                if (nextNeighbor->particleState() == reqOldState || reqOldState == particleState::any) {
                     nextNeighbor->setParticleState(newState);
                 }
 
@@ -580,7 +580,7 @@ void Site::dumpInfo(int xr, int yr, int zr)
                     nN(i, j, k) = 2;
                 }
 
-                else if (m_neighborHood[i][j][k]->active())
+                else if (m_neighborHood[i][j][k]->isActive())
                 {
                     nN(i, j, k) = 1;
                 }
@@ -659,6 +659,8 @@ uint Site::m_totalActiveSites = 0;
 
 double Site::m_totalEnergy = 0;
 
-const vector<string> particleState::names = {"crystal", "solution", "surface", "any"};
 set<Site*> Site::affectedSites;
 
+
+const vector<string> particleState::names = {"crystal", "solution", "surface", "any"};
+const vector<string> particleState::shortNames = {"C", "P", "S", "X"};

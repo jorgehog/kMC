@@ -61,7 +61,7 @@ double DiffusionReaction::getSaddleEnergy()
 
     for (Site* targetSite : neighborSet) {
 
-        if (targetSite->active()) {
+        if (targetSite->isActive()) {
 
             double dx = fabs(xs - targetSite->x());
             double dy = fabs(ys - targetSite->y());
@@ -102,7 +102,7 @@ void DiffusionReaction::calcRate()
 bool DiffusionReaction::isNotBlocked()
 {
 
-    return !destination->active() && (destination->isSurface() || (destination->nNeighbors() == 1));
+    return !destination->isActive() && (destination->isSurface() || (destination->nNeighbors() == 1));
 
 }
 

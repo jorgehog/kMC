@@ -22,7 +22,10 @@ struct particleState {
         surface,
         any
     };
+
     const static vector<string> names;
+    const static vector<string> shortNames;
+
 };
 
 class Site
@@ -32,6 +35,80 @@ public:
     Site(uint _x, uint _y, uint _z);
 
     ~Site();
+
+    /*
+     * Static non-trivial functions
+     */
+
+    static void setSolverPtr(KMCSolver* solver);
+
+    static void loadConfig(const Setting & setting);
+
+    static uint findLevel(uint i, uint j, uint k);
+
+    static void resetAll()
+    {
+        m_totalActiveSites = 0;
+        m_totalEnergy = 0;
+        m_levelMatrix.reset();
+        m_originTransformVector.reset();
+    }
+
+    /*
+     * Non-trivial functions
+     */
+
+    void setParticleState(int state);
+
+
+    bool isLegalToSpawn();
+
+    void spawnAsCrystal();
+
+    void crystallize();
+
+
+    void activate();
+
+    void deactivate();
+
+
+    void addReaction(Reaction* reaction);
+
+    void updateReactions();
+
+    void calculateRates();
+
+
+    void introduceNeighborhood();
+
+    bool hasNeighboring(int state);
+
+    void propagateToNeighbors(int reqOldState, int newState);
+
+    void informNeighborhoodOnChange(int change);
+
+
+    void distanceTo(const Site * other, int &dx, int &dy, int &dz, bool absolutes = false) const;
+
+    void queueAffectedSites();
+
+
+    void reset()
+    {
+        m_nNeighbors.zeros();
+        m_totalEnergy -= m_energy;
+        m_energy = 0;
+    }
+
+
+    void dumpInfo(int xr = 0, int yr = 0, int zr = 0);
+
+
+    /*
+     * Misc. trivial functions
+     */
+
 
     static const uint &nNeighborsLimit()
     {
@@ -63,78 +140,33 @@ public:
         return m_totalEnergy;
     }
 
-    int getParticleState()
+
+    const int & particleState()
     {
         return m_particleState;
     }
-
-    void setParticleState(int state);
-
-    string getName() {
-
-        string name;
-        switch (m_particleState) {
-        case particleState::crystal:
-            name = "C";
-            break;
-        case particleState::solution:
-            name = "P";
-            break;
-        case particleState::surface:
-            name = "S";
-            break;
-        default:
-            name = "X";
-            break;
-        }
-
-        return name;
-    }
-
-    bool isLegalToSpawn();
-
-    bool isCrystal() {
-        return m_particleState == particleState::crystal;
-    }
-
-    bool isSurface() {
-        return m_particleState == particleState::surface;
-    }
-
-    void crystallize();
-
-    static void loadNeighborLimit(const Setting & setting);
-
-    static uint getLevel(uint i, uint j, uint k);
-
-    void addReaction(Reaction* reaction);
-
-    void updateReactions();
-
-    void spawnAsCrystal();
-
-    void calculateRates();
-
-    static void setSolverPtr(KMCSolver* solver);
-
-    void distanceTo(const Site * other, int &dx, int &dy, int &dz, bool absolutes = false) const;
-
 
     uint nNeighbors(uint level = 0) const
     {
         return m_nNeighbors(level);
     }
 
-    bool hasNeighboring(int state);
 
-    void activate();
+    bool isCrystal()
+    {
+        return m_particleState == particleState::crystal;
+    }
 
-    void deactivate();
+    bool isSurface()
+    {
+        return m_particleState == particleState::surface;
+    }
 
-    const bool & active() const
+    const bool & isActive() const
     {
         return m_active;
     }
+
 
     const uint & x() const
     {
@@ -150,6 +182,7 @@ public:
     {
         return m_z;
     }
+
 
     const vector<Reaction*> & activeReactions() const
     {
@@ -175,32 +208,6 @@ public:
     {
         return m_energy;
     }
-
-    void reset() {
-        m_nNeighbors.zeros();
-        m_totalEnergy -= m_energy;
-        m_energy = 0;
-    }
-
-    static void resetAll() {
-        m_totalActiveSites = 0;
-        m_totalEnergy = 0;
-        m_levelMatrix.reset();
-        m_originTransformVector.reset();
-    }
-
-    void introduceNeighborhood();
-
-    void propagateToNeighbors(int reqOldState, int newState);
-
-    void informNeighborhoodOnChange(int change);
-
-    void queueAffectedSites();
-
-
-
-    void dumpInfo(int xr = 0, int yr = 0, int zr = 0);
-
 
 
     friend class testBed;

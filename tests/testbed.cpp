@@ -437,8 +437,8 @@ void testBed::testEnergyAndNeighborSetup()
                                     if (ldz <= Site::nNeighborsLimit()) {
 
                                         if (thisSite != otherSite) {
-                                            if (otherSite->active()) {
-                                                nn(Site::getLevel(ldx, ldy, ldz))++;
+                                            if (otherSite->isActive()) {
+                                                nn(Site::findLevel(ldx, ldy, ldz))++;
                                                 E += DiffusionReaction::potential()(Site::nNeighborsLimit() + ldx, Site::nNeighborsLimit() + ldy, Site::nNeighborsLimit() + ldz);
                                             }
                                             C++;
@@ -553,10 +553,10 @@ void testBed::testHasCrystalNeighbor()
 
             for (int k = -3; k < 4; ++k) {
 
-                if (Site::getLevel(abs(i), abs(j), abs(k)) == 2)
+                if (Site::findLevel(abs(i), abs(j), abs(k)) == 2)
                 {
                     solver->sites[NX/2 + i][NY/2 + j][NZ/2 + k]->activate();
-                    CHECK_EQUAL(particleState::solution, solver->sites[NX/2 + i][NY/2 + j][NZ/2 + k]->getParticleState());
+                    CHECK_EQUAL(particleState::solution, solver->sites[NX/2 + i][NY/2 + j][NZ/2 + k]->particleState());
                 }
 
             }
@@ -572,7 +572,7 @@ void testBed::testHasCrystalNeighbor()
 
             for (int k = -2; k < 3; ++k) {
 
-                uint level = Site::getLevel(abs(i), abs(j), abs(k));
+                uint level = Site::findLevel(abs(i), abs(j), abs(k));
                 if (level == 1)
                 {
                     nReactions += solver->sites[NX/2 + i][NY/2 + j][NZ/2 + k]->nNeighbors();
@@ -598,7 +598,7 @@ void testBed::testHasCrystalNeighbor()
                 if (neighbor == initCrystal) {
                     assert(i == j && j == k && k == Site::m_nNeighborsLimit);
 
-                    CHECK_EQUAL(particleState::crystal, neighbor->getParticleState());
+                    CHECK_EQUAL(particleState::crystal, neighbor->particleState());
 
                     //it should not have any crystal neighbors
                     CHECK_EQUAL(false, neighbor->hasNeighboring(particleState::crystal));
@@ -609,14 +609,14 @@ void testBed::testHasCrystalNeighbor()
 
                 //The first layer should now be a surface, which should be unblocked with a crystal neighbor.
                 if (level == 0) {
-                    CHECK_EQUAL(particleState::surface, neighbor->getParticleState());
+                    CHECK_EQUAL(particleState::surface, neighbor->particleState());
                     CHECK_EQUAL(true, neighbor->hasNeighboring(particleState::crystal));
                 }
 
                 //The second layer should be blocked because of the shell at distance 3, should be standard solution particles
                 //without a crystal neighbor.
                 else if (level == 1) {
-                    CHECK_EQUAL(particleState::solution, neighbor->getParticleState());
+                    CHECK_EQUAL(particleState::solution, neighbor->particleState());
                     CHECK_EQUAL(false, neighbor->hasNeighboring(particleState::crystal));
                 }
 
@@ -653,11 +653,11 @@ void testBed::testHasCrystalNeighbor()
                 neighbor = initCrystal->m_neighborHood[Site::nNeighborsLimit() - 1 + i][Site::nNeighborsLimit() - 1 + j][Site::nNeighborsLimit() - 1 + k];
 
                 if (neighbor == initCrystal) {
-                    CHECK_EQUAL(particleState::surface, neighbor->getParticleState());
+                    CHECK_EQUAL(particleState::surface, neighbor->particleState());
                 }
                 else
                 {
-                    CHECK_EQUAL(particleState::solution, neighbor->getParticleState());
+                    CHECK_EQUAL(particleState::solution, neighbor->particleState());
                 }
             }
 
@@ -675,17 +675,17 @@ void testBed::testHasCrystalNeighbor()
 
             for (int k = -3; k < 4; ++k) {
 
-                if (Site::getLevel(abs(i), abs(j), abs(k)) == 0)
+                if (Site::findLevel(abs(i), abs(j), abs(k)) == 0)
                 {
-                    CHECK_EQUAL(particleState::crystal, solver->sites[NX/2 + i][NY/2 + j][NZ/2 + k]->getParticleState());
+                    CHECK_EQUAL(particleState::crystal, solver->sites[NX/2 + i][NY/2 + j][NZ/2 + k]->particleState());
                 }
-                else if (Site::getLevel(abs(i), abs(j), abs(k)) == 1)
+                else if (Site::findLevel(abs(i), abs(j), abs(k)) == 1)
                 {
-                    CHECK_EQUAL(particleState::surface, solver->sites[NX/2 + i][NY/2 + j][NZ/2 + k]->getParticleState());
+                    CHECK_EQUAL(particleState::surface, solver->sites[NX/2 + i][NY/2 + j][NZ/2 + k]->particleState());
                 }
-                else if (Site::getLevel(abs(i), abs(j), abs(k)) == 2)
+                else if (Site::findLevel(abs(i), abs(j), abs(k)) == 2)
                 {
-                    CHECK_EQUAL(particleState::solution, solver->sites[NX/2 + i][NY/2 + j][NZ/2 + k]->getParticleState());
+                    CHECK_EQUAL(particleState::solution, solver->sites[NX/2 + i][NY/2 + j][NZ/2 + k]->particleState());
                     nActives += solver->sites[NX/2 + i][NY/2 + j][NZ/2 + k]->activeReactions().size();
                 }
 
@@ -712,11 +712,11 @@ void testBed::testInitializationOfCrystal()
 
                 currentSite = solver->sites[i][j][k];
 
-                switch (currentSite->getParticleState()) {
+                switch (currentSite->particleState()) {
                 case particleState::solution:
 
                     //After initialization, a solution particle should not be blocked in any direction.
-                    if (currentSite->active())
+                    if (currentSite->isActive())
                     {
                         CHECK_EQUAL(0, currentSite->nNeighbors());
                     }
@@ -725,7 +725,7 @@ void testBed::testInitializationOfCrystal()
 
                 case particleState::surface:
 
-                    CHECK_EQUAL(true, !currentSite->active());
+                    CHECK_EQUAL(true, !currentSite->isActive());
                     CHECK_EQUAL(true, currentSite->hasNeighboring(particleState::crystal));
                     CHECK_EQUAL(true, currentSite->nNeighbors() > 0);
 
@@ -733,7 +733,7 @@ void testBed::testInitializationOfCrystal()
 
                 case particleState::crystal:
 
-                    CHECK_EQUAL(true, currentSite->active());
+                    CHECK_EQUAL(true, currentSite->isActive());
 
                 default:
                     break;
@@ -769,7 +769,7 @@ void testBed::testInitialReactionSetup()
 
                 for (Reaction* r : solver->sites[i][j][k]->activeReactions())
                 {
-                    if (!solver->sites[i][j][k]->active())
+                    if (!solver->sites[i][j][k]->isActive())
                     {
                         cout << "DEACTIVE SITE SHOULD HAVE NO REACTIONS" << endl;
                         solver->sites[i][j][k]->dumpInfo();
@@ -873,7 +873,7 @@ void testBed::testKnownCase()
         for (uint j = 0; j < NY; ++j) {
             for (uint k = 0; k < NZ; ++k) {
                 getline(o,line);
-                s << solver->sites[i][j][k]->active();
+                s << solver->sites[i][j][k]->isActive();
                 if(s.str().compare(line) == 0)
                 {
                     winCount++;

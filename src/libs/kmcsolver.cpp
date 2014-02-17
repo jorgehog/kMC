@@ -169,8 +169,8 @@ void KMCSolver::dumpXYZ()
 
                 bool isSurface = currentSite->isSurface();
 
-                if (currentSite->active() || isSurface){
-                    s << "\n" << sites[i][j][k]->getName() << " " << i << " " << j << " " << k << " " << sites[i][j][k]->nNeighbors();
+                if (currentSite->isActive() || isSurface){
+                    s << "\n" << particleState::shortNames.at(sites[i][j][k]->particleState()) << " " << i << " " << j << " " << k << " " << sites[i][j][k]->nNeighbors();
 
                     if (isSurface)
                     {
