@@ -9,7 +9,7 @@
 
 using namespace std;
 
-
+/*
 TEST(RNG_CHECK) {
 
     testBed test;
@@ -79,6 +79,7 @@ TEST(INITREACTIONS)
     test.testInitialReactionSetup();
 }
 
+*/
 
 TEST(KnownCase)
 {

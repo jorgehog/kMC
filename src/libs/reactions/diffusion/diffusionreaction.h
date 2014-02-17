@@ -62,10 +62,6 @@ public:
 
     void dumpInfo(int xr = 0, int yr = 0, int zr = 0);
 
-    void setupSiteDependencies() {
-        destination->linkSiteDependency(reactionSite);
-    }
-
     bool allowedAtSite();
 
     friend class testBed;

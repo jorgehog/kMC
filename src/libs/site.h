@@ -33,7 +33,38 @@ public:
 
     ~Site();
 
-    int getParticleState() {
+    static const uint &nNeighborsLimit()
+    {
+        return m_nNeighborsLimit;
+    }
+
+    static const uint &neighborhoodLength()
+    {
+        return m_neighborhoodLength;
+    }
+
+    static const ucube &levelMatrix()
+    {
+        return m_levelMatrix;
+    }
+
+    static const ivec &originTransformVector()
+    {
+        return m_originTransformVector;
+    }
+
+    static const uint & totalActiveSites()
+    {
+        return m_totalActiveSites;
+    }
+
+    static const double & totalEnergy()
+    {
+        return m_totalEnergy;
+    }
+
+    int getParticleState()
+    {
         return m_particleState;
     }
 
@@ -68,10 +99,6 @@ public:
 
     bool isSurface() {
         return m_particleState == particleState::surface;
-    }
-
-    void linkSiteDependency(const Site * site) {
-        m_siteDependencies.push_back(site);
     }
 
     void crystallize();
@@ -124,11 +151,6 @@ public:
         return m_z;
     }
 
-    const vector<const Site*> & siteDependencies()  const
-    {
-        return m_siteDependencies;
-    }
-
     const vector<Reaction*> & activeReactions() const
     {
         return m_activeReactions;
@@ -149,16 +171,15 @@ public:
         return m_neighborHood;
     }
 
-    double getEnergy() const
+    double energy() const
     {
-        return E;
+        return m_energy;
     }
 
     void reset() {
-        m_siteDependencies.clear();
         m_nNeighbors.zeros();
-        m_totalEnergy -= E;
-        E = 0;
+        m_totalEnergy -= m_energy;
+        m_energy = 0;
     }
 
     static void resetAll() {
@@ -176,21 +197,7 @@ public:
 
     void queueAffectedSites();
 
-    static const uint &nNeighborsLimit();
 
-    static const uint &neighborhoodLength();
-
-    static const ucube &levelMatrix();
-
-    static const ivec &originTransformVector();
-
-    static const uint & totalActiveSites() {
-        return m_totalActiveSites;
-    }
-
-    static const double & totalEnergy() {
-        return m_totalEnergy;
-    }
 
     void dumpInfo(int xr = 0, int yr = 0, int zr = 0);
 
@@ -215,30 +222,27 @@ private:
     static double m_totalEnergy;
 
     static set<Site*> affectedSites;
+    static void updateAffectedSites();
 
     static KMCSolver* mainSolver;
 
+    Site**** m_neighborHood;
+    vector<Site*> m_allNeighbors;
     uvec m_nNeighbors;
 
-    Site**** m_neighborHood;
-
-    double E;
+    bool m_active;
 
     uint m_x;
     uint m_y;
     uint m_z;
 
-    bool m_active = false;
+    double m_energy;
 
     int m_particleState = particleState::solution;
 
-    vector<Reaction*> m_activeReactions;
     vector<Reaction*> m_siteReactions;
 
-    vector<Site*> m_allNeighbors;
-    vector<const Site*> m_siteDependencies;
-
-    void updateAffectedSites();
+    vector<Reaction*> m_activeReactions;
 
 };
 

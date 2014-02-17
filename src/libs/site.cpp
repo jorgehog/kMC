@@ -4,149 +4,14 @@
 #include "kmcsolver.h"
 
 
-const uint &Site::nNeighborsLimit()
-{
-    return m_nNeighborsLimit;
-}
-
-const uint & Site::neighborhoodLength()
-{
-    return m_neighborhoodLength;
-}
-
-
-const ucube &Site::levelMatrix()
-{
-    return m_levelMatrix;
-}
-
-
-const ivec &Site::originTransformVector()
-{
-    return m_originTransformVector;
-}
-
-void Site::dumpInfo(int xr, int yr, int zr)
-{
-
-    cout << "Site   " << m_x << " " << m_y << " " << m_z << endl;
-    cout << "in Box " << NX << " " << NY << " " << NZ << endl;
-    cout << "nNeighbors : " << m_nNeighbors.t();
-    cout << "type: " << particleState::names.at(m_particleState) << endl;
-    if (m_active)
-    {
-        cout << "ACTIVE";
-    }
-
-    else
-    {
-        cout << "DEACTIVE";
-    }
-
-    cout << endl;
-
-    ucube nN;
-    nN.copy_size(m_levelMatrix);
-    nN.zeros();
-
-    for (uint i = 0; i < m_neighborhoodLength; ++i)
-    {
-
-        for (uint j = 0; j < m_neighborhoodLength; ++j)
-        {
-
-            for (uint k = 0; k < m_neighborhoodLength; ++k)
-            {
-
-                if (i == j && j == k && k == Site::nNeighborsLimit())
-                {
-                    nN(i, j, k) = 3;
-                }
-                else if ((i == Site::nNeighborsLimit() + xr) && (j == Site::nNeighborsLimit() + yr) && (k == Site::nNeighborsLimit() + zr))
-                {
-                    nN(i, j, k) = 2;
-                }
-
-                else if (m_neighborHood[i][j][k]->active())
-                {
-                    nN(i, j, k) = 1;
-                }
-
-            }
-
-        }
-
-    }
-
-    umat A;
-    stringstream ss;
-    for(int i = nN.n_slices - 1; i >= 0; --i)
-    {
-        A = nN.slice(i).t();
-
-        for (int j = A.n_rows - 1; j >= 0; --j)
-        {
-            ss << A.row(j);
-        }
-
-        ss << endl;
-
-    }
-
-
-    string s = ss.str();
-
-    int position = s.find("0");
-    while (position != (int)string::npos)
-    {
-        s.replace(position, 1, ".");
-        position = s.find("0", position + 1);
-    }
-
-    position = s.find("1");
-    while (position != (int)string::npos)
-    {
-        s.replace(position, 1, "X");
-        position = s.find("1", position + 1);
-    }
-
-    position = s.find("2");
-    while (position != (int)string::npos)
-    {
-        s.replace(position, 1, "O");
-        position = s.find("2", position + 1);
-    }
-
-    position = s.find("3");
-    while (position != (int)string::npos)
-    {
-        s.replace(position, 1, "#");
-        position = s.find("3", position + 1);
-    }
-
-    cout << s << endl;
-
-}
-
-void Site::updateAffectedSites()
-{
-
-    for (Site* site : affectedSites)
-    {
-        site->updateReactions();
-        site->calculateRates();
-    }
-
-    affectedSites.clear();
-
-}
-
 
 Site::Site(uint _x, uint _y, uint _z) :
-    E(0),
+    m_active(false),
     m_x(_x),
     m_y(_y),
-    m_z(_z)
+    m_z(_z),
+    m_energy(0),
+    m_particleState(particleState::solution)
 {
 
     m_nNeighbors.set_size(m_nNeighborsLimit);
@@ -168,6 +33,7 @@ Site::Site(uint _x, uint _y, uint _z) :
 
 }
 
+
 Site::~Site()
 {
     for (Reaction* reaction : m_siteReactions)
@@ -178,6 +44,23 @@ Site::~Site()
     m_activeReactions.clear();
     m_siteReactions.clear();
 }
+
+
+
+
+void Site::updateAffectedSites()
+{
+
+    for (Site* site : affectedSites)
+    {
+        site->updateReactions();
+        site->calculateRates();
+    }
+
+    affectedSites.clear();
+
+}
+
 
 void Site::setParticleState(int state)
 {
@@ -273,6 +156,7 @@ void Site::setParticleState(int state)
 
 }
 
+
 //All reactions must be legal if site is allowed to spawn.
 bool Site::isLegalToSpawn()
 {
@@ -292,12 +176,14 @@ bool Site::isLegalToSpawn()
     return true;
 }
 
+
 void Site::crystallize()
 {
     m_particleState  = particleState::crystal;
     propagateToNeighbors(particleState::solution, particleState::surface);
 
 }
+
 
 void Site::loadNeighborLimit(const Setting &setting)
 {
@@ -333,6 +219,7 @@ void Site::loadNeighborLimit(const Setting &setting)
 
 }
 
+
 void Site::addReaction(Reaction *reaction)
 {
     reaction->setSite(this);
@@ -341,6 +228,7 @@ void Site::addReaction(Reaction *reaction)
 
     m_siteReactions.push_back(reaction);
 }
+
 
 void Site::updateReactions()
 {
@@ -362,11 +250,13 @@ void Site::updateReactions()
 
 }
 
+
 void Site::spawnAsCrystal()
 {
     m_particleState = particleState::surface;
     activate();
 }
+
 
 void Site::calculateRates()
 {
@@ -374,6 +264,7 @@ void Site::calculateRates()
         reaction->calcRate();
     }
 }
+
 
 void Site::setSolverPtr(KMCSolver *solver)
 {
@@ -383,6 +274,7 @@ void Site::setSolverPtr(KMCSolver *solver)
 
     mainSolver = solver;
 }
+
 
 void Site::distanceTo(const Site *other, int &dx, int &dy, int &dz, bool absolutes) const
 {
@@ -616,7 +508,7 @@ void Site::informNeighborhoodOnChange(int change)
 
                 dE = change*DiffusionReaction::potential()(i, j, k);
 
-                neighbor->E += dE;
+                neighbor->m_energy += dE;
 
                 m_totalEnergy += dE;
 
@@ -629,7 +521,6 @@ void Site::informNeighborhoodOnChange(int change)
 void Site::queueAffectedSites()
 {
     affectedSites.insert(allNeighbors().begin(), allNeighbors().end());
-    affectedSites.insert(this);
 }
 
 uint Site::getLevel(uint i, uint j, uint k)
@@ -645,6 +536,109 @@ uint Site::getLevel(uint i, uint j, uint k)
     }
 
     return m - 1;
+}
+
+
+void Site::dumpInfo(int xr, int yr, int zr)
+{
+
+    cout << "Site   " << m_x << " " << m_y << " " << m_z << endl;
+    cout << "in Box " << NX << " " << NY << " " << NZ << endl;
+    cout << "nNeighbors : " << m_nNeighbors.t();
+    cout << "type: " << particleState::names.at(m_particleState) << endl;
+    if (m_active)
+    {
+        cout << "ACTIVE";
+    }
+
+    else
+    {
+        cout << "DEACTIVE";
+    }
+
+    cout << endl;
+
+    ucube nN;
+    nN.copy_size(m_levelMatrix);
+    nN.zeros();
+
+    for (uint i = 0; i < m_neighborhoodLength; ++i)
+    {
+
+        for (uint j = 0; j < m_neighborhoodLength; ++j)
+        {
+
+            for (uint k = 0; k < m_neighborhoodLength; ++k)
+            {
+
+                if (i == j && j == k && k == Site::nNeighborsLimit())
+                {
+                    nN(i, j, k) = 3;
+                }
+                else if ((i == Site::nNeighborsLimit() + xr) && (j == Site::nNeighborsLimit() + yr) && (k == Site::nNeighborsLimit() + zr))
+                {
+                    nN(i, j, k) = 2;
+                }
+
+                else if (m_neighborHood[i][j][k]->active())
+                {
+                    nN(i, j, k) = 1;
+                }
+
+            }
+
+        }
+
+    }
+
+    umat A;
+    stringstream ss;
+    for(int i = nN.n_slices - 1; i >= 0; --i)
+    {
+        A = nN.slice(i).t();
+
+        for (int j = A.n_rows - 1; j >= 0; --j)
+        {
+            ss << A.row(j);
+        }
+
+        ss << endl;
+
+    }
+
+
+    string s = ss.str();
+
+    int position = s.find("0");
+    while (position != (int)string::npos)
+    {
+        s.replace(position, 1, ".");
+        position = s.find("0", position + 1);
+    }
+
+    position = s.find("1");
+    while (position != (int)string::npos)
+    {
+        s.replace(position, 1, "X");
+        position = s.find("1", position + 1);
+    }
+
+    position = s.find("2");
+    while (position != (int)string::npos)
+    {
+        s.replace(position, 1, "O");
+        position = s.find("2", position + 1);
+    }
+
+    position = s.find("3");
+    while (position != (int)string::npos)
+    {
+        s.replace(position, 1, "#");
+        position = s.find("3", position + 1);
+    }
+
+    cout << s << endl;
+
 }
 
 

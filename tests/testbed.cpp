@@ -467,7 +467,7 @@ void testBed::testEnergyAndNeighborSetup()
                     CHECK_EQUAL(nn(K), thisSite->nNeighbors(K));
                 }
 
-                CHECK_CLOSE(E, thisSite->getEnergy(), 0.00001);
+                CHECK_CLOSE(E, thisSite->energy(), 0.00001);
 
             }
 
@@ -499,7 +499,7 @@ void testBed::testUpdateNeigbors()
                     CHECK_EQUAL(2*(12*(K+1)*(K+1) + 1), solver->sites[i][j][k]->nNeighbors(K));
                 }
 
-                CHECK_CLOSE(eMax, solver->sites[i][j][k]->getEnergy(), 0.001);
+                CHECK_CLOSE(eMax, solver->sites[i][j][k]->energy(), 0.001);
 
             }
         }
@@ -524,7 +524,7 @@ void testBed::testUpdateNeigbors()
                     CHECK_EQUAL(0, solver->sites[i][j][k]->nNeighbors(K));
                 }
 
-                CHECK_CLOSE(0, solver->sites[i][j][k]->getEnergy(), 0.001);
+                CHECK_CLOSE(0, solver->sites[i][j][k]->energy(), 0.001);
 
             }
         }

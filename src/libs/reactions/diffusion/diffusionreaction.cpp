@@ -95,8 +95,8 @@ double DiffusionReaction::getSaddleEnergy()
 
 void DiffusionReaction::calcRate()
 {
-    lastUsedE = reactionSite->getEnergy();
-    m_rate = mu*exp(-beta*(reactionSite->getEnergy()-getSaddleEnergy()));
+    lastUsedE = reactionSite->energy();
+    m_rate = mu*exp(-beta*(reactionSite->energy()-getSaddleEnergy()));
 }
 
 bool DiffusionReaction::isNotBlocked()
