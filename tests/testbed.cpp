@@ -851,7 +851,7 @@ void testBed::testKnownCase()
     CHECK_EQUAL(30, NZ);
     CHECK_EQUAL(2, Site::nNeighborsLimit());
     CHECK_EQUAL(5.0, Reaction::beta);
-    CHECK_EQUAL(1.0, Reaction::mu);
+    CHECK_EQUAL(1.0, Reaction::m_linearRateScale);
     CHECK_EQUAL(0.5, DiffusionReaction::rPower);
     CHECK_EQUAL(1.0, DiffusionReaction::scale);
     CHECK_EQUAL(0.3, solver->saturation);

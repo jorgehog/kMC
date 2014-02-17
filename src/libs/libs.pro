@@ -13,7 +13,8 @@ SOURCES += \
     reactions/reaction.cpp \
     kmcsolver.cpp \
     site.cpp \
-    reactions/diffusion/diffusionreaction.cpp
+    reactions/diffusion/diffusionreaction.cpp \
+    RNG/kMCRNG.cpp
 
 RNG_ZIG {
 

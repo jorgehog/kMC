@@ -10,7 +10,9 @@ CONFIG -= qt
 LIBS += -lunittest++ -L$$TOP_OUT_PWD/src/libs -lkMC
 
 SOURCES = testmain.cpp \
-    testbed.cpp
+    testbed.cpp \
+    snapshot.cpp
 
 HEADERS += \
-    testbed.h
+    testbed.h \
+    snapshot.h

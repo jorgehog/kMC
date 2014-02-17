@@ -1,9 +1,10 @@
-#ifndef DIFFUSIONREACTION_H
-#define DIFFUSIONREACTION_H
+#pragma once
+
 
 #include "../reaction.h"
 
 #include <libconfig_utils/libconfig_utils.h>
+
 
 class DiffusionReaction : public Reaction
 {
@@ -12,33 +13,42 @@ public:
 
     DiffusionReaction(Site *destination);
 
-    static void resetAll() {
+    double getSaddleEnergy();
 
+    static void loadConfig(const Setting & setting);
+
+    static void resetAll()
+    {
         m_potential.reset();
-
     }
 
-    static void loadPotential(const Setting & setting);
 
     static const cube & potential()
     {
         return m_potential;
     }
 
-    const uint & x1 () {
+    const uint & xD ()
+    {
         return destination->x();
     }
 
-    const uint & y1 () {
+    const uint & yD ()
+    {
         return destination->y();
     }
 
-    const uint & z1 () {
+    const uint & zD ()
+    {
         return destination->z();
     }
 
+    //tmp
     double lastUsedE = 0;
     double lastUsedEsp = 0;
+
+
+    friend class testBed;
 
 private:
 
@@ -48,8 +58,6 @@ private:
     static cube m_potential;
 
     Site* destination;
-
-    double getSaddleEnergy();
 
 
     // Reaction interface
@@ -64,7 +72,4 @@ public:
 
     bool allowedAtSite();
 
-    friend class testBed;
 };
-
-#endif // DIFFUSIONREACTION_H

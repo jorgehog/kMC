@@ -1,6 +1,4 @@
-
-#ifndef SITE_H
-#define SITE_H
+#pragma once
 
 #include <vector>
 #include <set>
@@ -15,8 +13,10 @@ using namespace arma;
 class KMCSolver;
 class Reaction;
 
-struct particleState {
-    enum {
+struct particleState
+{
+    enum
+    {
         crystal,
         solution,
         surface,
@@ -252,5 +252,3 @@ private:
     vector<Reaction*> m_activeReactions;
 
 };
-
-#endif // SITE_H

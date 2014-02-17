@@ -1,5 +1,5 @@
-#ifndef KMCRNG_H
-#define KMCRNG_H
+#pragma once
+
 
 #include <exception>
 
@@ -26,26 +26,27 @@ typedef int seed_type;
 
 #endif
 
-namespace Seed
+struct Seed
 {
 
-seed_type initialSeed;
-
-class SeedNotSetException : public std::exception
-{
-public:
-    virtual const char* what() const throw()
+    enum SeedState
     {
-        return "Seed not set.";
-    }
-} seedNotSetException;
+        fromTime,
+        specific
+    };
 
-enum SeedState {
-    fromTime,
-    specific
+
+    static seed_type initialSeed;
+
+
+    class SeedNotSetException : public std::exception
+    {
+    public:
+        virtual const char* what() const throw()
+        {
+            return "Seed not set.";
+        }
+    } static seedNotSetException;
+
+
 };
-
-
-} //End of namespace Seed.
-
-#endif //KMCRNG_H

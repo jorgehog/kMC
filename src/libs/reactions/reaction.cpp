@@ -15,34 +15,40 @@ Reaction::~Reaction()
 
 void Reaction::dumpInfo(int xr, int yr, int zr)
 {
+
     cout << "[Reaction " << m_ID << "/" << IDcount << "]:" << endl;
     cout << "@{" << endl;
-    reactionSite->dumpInfo(xr, yr, zr);
+    m_reactionSite->dumpInfo(xr, yr, zr);
     cout << "\n}" << endl;
+
 }
 
 
 void Reaction::setSolverPtr(KMCSolver *solver)
 {
+
     NX = solver->getNX();
     NY = solver->getNY();
     NZ = solver->getNZ();
 
     mainSolver = solver;
+
 }
 
-void Reaction::loadReactionSettings(const Setting &setting)
+void Reaction::loadConfig(const Setting &setting)
 {
+
     beta = getSurfaceSetting<double>(setting, "beta");
-    mu   = getSurfaceSetting<double>(setting, "scale");
+    m_linearRateScale   = getSurfaceSetting<double>(setting, "scale");
+
 }
 
-KMCSolver *Reaction::mainSolver;
-double Reaction::beta;
-double Reaction::mu;
+KMCSolver* Reaction::mainSolver;
+double     Reaction::beta;
+double     Reaction::m_linearRateScale;
 
-uint Reaction::NX;
-uint Reaction::NY;
-uint Reaction::NZ;
+uint       Reaction::NX;
+uint       Reaction::NY;
+uint       Reaction::NZ;
 
-uint Reaction::IDcount = 0;
+uint       Reaction::IDcount = 0;

@@ -19,23 +19,22 @@ Site::Site(uint _x, uint _y, uint _z) :
 
     m_neighborHood = new Site***[m_neighborhoodLength];
 
-    for (uint i = 0; i < m_neighborhoodLength; ++i) {
-
+    for (uint i = 0; i < m_neighborhoodLength; ++i)
+    {
         m_neighborHood[i] = new Site**[m_neighborhoodLength];
 
-        for (uint j = 0; j < m_neighborhoodLength; ++j) {
-
+        for (uint j = 0; j < m_neighborhoodLength; ++j)
+        {
             m_neighborHood[i][j] = new Site*[m_neighborhoodLength];
-
         }
     }
-
 
 }
 
 
 Site::~Site()
 {
+
     for (Reaction* reaction : m_siteReactions)
     {
         delete reaction;
@@ -43,6 +42,7 @@ Site::~Site()
 
     m_activeReactions.clear();
     m_siteReactions.clear();
+
 }
 
 
@@ -67,16 +67,19 @@ void Site::setParticleState(int state)
 
     //If we try to propagate a surface onto an existing active site
     //The site is crystallized, which propagates the surface furhter.
-    switch (state) {
+    switch (state)
+    {
     case particleState::surface:
 
-        switch (m_particleState) {
+        switch (m_particleState)
+        {
 
         //solution->surface
         case particleState::solution:
 
             //if a particle is present, we crystallize it immidiately.
-            if (m_active) {
+            if (m_active)
+            {
                 crystallize();
             }
 
@@ -111,7 +114,8 @@ void Site::setParticleState(int state)
 
     case particleState::crystal:
 
-        switch (m_particleState) {
+        switch (m_particleState)
+        {
 
         //surface -> crystal
         case particleState::surface:
@@ -129,12 +133,14 @@ void Site::setParticleState(int state)
 
     case particleState::solution:
 
-        switch (m_particleState) {
+        switch (m_particleState)
+        {
 
         //surface -> solution
         case particleState::surface:
 
-            if (!hasNeighboring(particleState::crystal)) {
+            if (!hasNeighboring(particleState::crystal))
+            {
                 m_particleState = particleState::solution;
                 queueAffectedSites();
             }
@@ -160,6 +166,7 @@ void Site::setParticleState(int state)
 //All reactions must be legal if site is allowed to spawn.
 bool Site::isLegalToSpawn()
 {
+
     if (m_active)
     {
         return false;
@@ -167,13 +174,15 @@ bool Site::isLegalToSpawn()
 
     for (Reaction * r : m_siteReactions)
     {
-        if (!r->allowedAtSite()) {
+        if (!r->allowedAtSite())
+        {
             return false;
         }
     }
 
 
     return true;
+
 }
 
 
@@ -185,8 +194,9 @@ void Site::crystallize()
 }
 
 
-void Site::loadNeighborLimit(const Setting &setting)
+void Site::loadConfig(const Setting &setting)
 {
+
     const uint  &limit = getSurfaceSetting<uint>(setting, "nNeighborsLimit");
 
     m_nNeighborsLimit = limit;
@@ -198,19 +208,16 @@ void Site::loadNeighborLimit(const Setting &setting)
 
     for (uint i = 0; i < m_neighborhoodLength; ++i)
     {
-
         for (uint j = 0; j < m_neighborhoodLength; ++j)
         {
-
             for (uint k = 0; k < m_neighborhoodLength; ++k)
             {
-
                 if (i == m_nNeighborsLimit && j == m_nNeighborsLimit && k == m_nNeighborsLimit)
                 {
                     continue;
                 }
 
-                m_levelMatrix(i, j, k) = getLevel(std::abs(m_originTransformVector(i)),
+                m_levelMatrix(i, j, k) = findLevel(std::abs(m_originTransformVector(i)),
                                                   std::abs(m_originTransformVector(j)),
                                                   std::abs(m_originTransformVector(k)));
             }
@@ -223,8 +230,6 @@ void Site::loadNeighborLimit(const Setting &setting)
 void Site::addReaction(Reaction *reaction)
 {
     reaction->setSite(this);
-
-    reaction->setupSiteDependencies();
 
     m_siteReactions.push_back(reaction);
 }
@@ -260,7 +265,8 @@ void Site::spawnAsCrystal()
 
 void Site::calculateRates()
 {
-    for (Reaction* reaction : m_activeReactions) {
+    for (Reaction* reaction : m_activeReactions)
+    {
         reaction->calcRate();
     }
 }
@@ -268,21 +274,23 @@ void Site::calculateRates()
 
 void Site::setSolverPtr(KMCSolver *solver)
 {
+
     NX = solver->getNX();
     NY = solver->getNY();
     NZ = solver->getNZ();
 
     mainSolver = solver;
+
 }
 
 
 void Site::distanceTo(const Site *other, int &dx, int &dy, int &dz, bool absolutes) const
 {
 
-
     dx = (other->x() + NX - m_x)%NX;
     dy = (other->y() + NY - m_y)%NY;
     dz = (other->z() + NZ - m_z)%NZ;
+
 
     if ((uint)abs(dx) > NX/2) {
         dx = -(int)(NX - dx);
@@ -296,6 +304,7 @@ void Site::distanceTo(const Site *other, int &dx, int &dy, int &dz, bool absolut
         dz = -(int)(NZ - dz);
     }
 
+
     if (absolutes) {
         dx = abs(dx);
         dy = abs(dy);
@@ -306,14 +315,15 @@ void Site::distanceTo(const Site *other, int &dx, int &dy, int &dz, bool absolut
 
 bool Site::hasNeighboring(int state)
 {
+
     Site *nextNeighbor;
 
-    for (uint i = 0; i < 3; ++i) {
-
-        for (uint j = 0; j < 3; ++j) {
-
-            for (uint k = 0; k < 3; ++k) {
-
+    for (uint i = 0; i < 3; ++i)
+    {
+        for (uint j = 0; j < 3; ++j)
+        {
+            for (uint k = 0; k < 3; ++k)
+            {
                 if (i == 1 && j == 1 && k == 1)
                 {
                     continue;
@@ -323,7 +333,8 @@ bool Site::hasNeighboring(int state)
                         [j + Site::nNeighborsLimit() - 1]
                         [k + Site::nNeighborsLimit() - 1];
 
-                if (nextNeighbor->particleState() == state) {
+                if (nextNeighbor->particleState() == state)
+                {
                     return true;
                 }
 
@@ -354,17 +365,20 @@ void Site::activate()
         dumpInfo();
         exit(1);
     }
+
     else if (isCrystal())
     {
         cout << "Activating a crystal. (should always be active)";
         dumpInfo();
         exit(1);
     }
+
 #endif
 
     m_active = true;
 
-    if (isSurface()) {
+    if (isSurface())
+    {
         setParticleState(particleState::crystal);
     }
 
@@ -426,16 +440,16 @@ void Site::introduceNeighborhood()
 
     m_allNeighbors.clear();
 
-    for (uint i = 0; i < m_neighborhoodLength; ++i) {
-
+    for (uint i = 0; i < m_neighborhoodLength; ++i)
+    {
         xTrans = (m_x + m_originTransformVector(i) + NX)%NX;
 
-        for (uint j = 0; j < m_neighborhoodLength; ++j) {
-
+        for (uint j = 0; j < m_neighborhoodLength; ++j)
+        {
             yTrans = (m_y + m_originTransformVector(j) + NY)%NY;
 
-            for (uint k = 0; k < m_neighborhoodLength; ++k) {
-
+            for (uint k = 0; k < m_neighborhoodLength; ++k)
+            {
                 zTrans = (m_z + m_originTransformVector(k) + NZ)%NZ;
 
                 m_neighborHood[i][j][k] = mainSolver->getSites()[xTrans][yTrans][zTrans];
@@ -447,38 +461,41 @@ void Site::introduceNeighborhood()
             }
         }
     }
+
 }
 
 void Site::propagateToNeighbors(int reqOldState, int newState)
 {
 
-
     Site *nextNeighbor;
 
-    for (uint i = 0; i < 3; ++i) {
-
-        for (uint j = 0; j < 3; ++j) {
-
-            for (uint k = 0; k < 3; ++k) {
-
+    for (uint i = 0; i < 3; ++i)
+    {
+        for (uint j = 0; j < 3; ++j)
+        {
+            for (uint k = 0; k < 3; ++k)
+            {
 
                 nextNeighbor = m_neighborHood[i + Site::nNeighborsLimit() - 1]
                         [j + Site::nNeighborsLimit() - 1]
                         [k + Site::nNeighborsLimit() - 1];
 
                 assert(!(newState == particleState::solution && nextNeighbor->particleState() == particleState::solution));
-                if (nextNeighbor == this) {
+                if (nextNeighbor == this)
+                {
                     assert(i == j && j == k && k == 1);
                     continue;
                 }
 
-                if (nextNeighbor->particleState() == reqOldState || reqOldState == particleState::any) {
+                if (nextNeighbor->particleState() == reqOldState || reqOldState == particleState::any)
+                {
                     nextNeighbor->setParticleState(newState);
                 }
 
             }
         }
     }
+
 }
 
 void Site::informNeighborhoodOnChange(int change)
@@ -488,12 +505,12 @@ void Site::informNeighborhoodOnChange(int change)
     uint level;
     double dE;
 
-    for (uint i = 0; i < m_neighborhoodLength; ++i) {
-
-        for (uint j = 0; j < m_neighborhoodLength; ++j) {
-
-            for (uint k = 0; k < m_neighborhoodLength; ++k) {
-
+    for (uint i = 0; i < m_neighborhoodLength; ++i)
+    {
+        for (uint j = 0; j < m_neighborhoodLength; ++j)
+        {
+            for (uint k = 0; k < m_neighborhoodLength; ++k)
+            {
 
                 neighbor = m_neighborHood[i][j][k];
 
@@ -523,19 +540,23 @@ void Site::queueAffectedSites()
     affectedSites.insert(allNeighbors().begin(), allNeighbors().end());
 }
 
-uint Site::getLevel(uint i, uint j, uint k)
+uint Site::findLevel(uint i, uint j, uint k)
 {
+
     uint m = i;
 
-    if (j > i) {
+    if (j > i)
+    {
         m =  j;
     }
 
-    if (k > m) {
+    if (k > m)
+    {
         m = k;
     }
 
     return m - 1;
+
 }
 
 
@@ -546,6 +567,7 @@ void Site::dumpInfo(int xr, int yr, int zr)
     cout << "in Box " << NX << " " << NY << " " << NZ << endl;
     cout << "nNeighbors : " << m_nNeighbors.t();
     cout << "type: " << particleState::names.at(m_particleState) << endl;
+
     if (m_active)
     {
         cout << "ACTIVE";
@@ -564,10 +586,8 @@ void Site::dumpInfo(int xr, int yr, int zr)
 
     for (uint i = 0; i < m_neighborhoodLength; ++i)
     {
-
         for (uint j = 0; j < m_neighborhoodLength; ++j)
         {
-
             for (uint k = 0; k < m_neighborhoodLength; ++k)
             {
 
@@ -575,6 +595,7 @@ void Site::dumpInfo(int xr, int yr, int zr)
                 {
                     nN(i, j, k) = 3;
                 }
+
                 else if ((i == Site::nNeighborsLimit() + xr) && (j == Site::nNeighborsLimit() + yr) && (k == Site::nNeighborsLimit() + zr))
                 {
                     nN(i, j, k) = 2;
@@ -642,22 +663,22 @@ void Site::dumpInfo(int xr, int yr, int zr)
 }
 
 
-KMCSolver *Site::mainSolver;
+KMCSolver* Site::mainSolver;
 
-uint Site::NX;
-uint Site::NY;
-uint Site::NZ;
+uint       Site::NX;
+uint       Site::NY;
+uint       Site::NZ;
 
-uint Site::m_nNeighborsLimit;
+uint       Site::m_nNeighborsLimit;
 
-uint Site::m_neighborhoodLength;
+uint       Site::m_neighborhoodLength;
 
-ucube Site::m_levelMatrix;
-ivec Site::m_originTransformVector;
+ucube      Site::m_levelMatrix;
+ivec       Site::m_originTransformVector;
 
-uint Site::m_totalActiveSites = 0;
+uint       Site::m_totalActiveSites = 0;
 
-double Site::m_totalEnergy = 0;
+double     Site::m_totalEnergy = 0;
 
 set<Site*> Site::affectedSites;
 
