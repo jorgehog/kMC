@@ -27,6 +27,8 @@ KMCSolver::KMCSolver(const Setting & root) :
     outputCounter(0)
 {
 
+    cout << "solver constructor called" << endl;
+
     const Setting & SystemSettings = getSurfaceSetting(root, "System");
     const Setting & SolverSettings = getSurfaceSetting(root, "Solver");
     const Setting & InitializationSettings = getSurfaceSetting(root, "Initialization");
@@ -37,7 +39,6 @@ KMCSolver::KMCSolver(const Setting & root) :
     NX = BoxSize[0];
     NY = BoxSize[1];
     NZ = BoxSize[2];
-
 
 
     Site::loadConfig(SystemSettings);
@@ -77,26 +78,35 @@ KMCSolver::KMCSolver(const Setting & root) :
 
     saturation = getSurfaceSetting<double>(InitializationSettings, "SaturationLevel");
     RelativeSeedSize = getSurfaceSetting<double>(InitializationSettings, "RelativeSeedSize");
+
     assert(RelativeSeedSize < 1.0 && "The seed size cannot exceed the box size.");
+
 
     initializeSites();
 
     initializeDiffusionReactions();
+
+    ptrCount++;
 
 }
 
 KMCSolver::~KMCSolver()
 {
 
-    allReactions.clear();
+    if (ptrCount > 1)
+    {
+        cout << "WARNING: Several solver objects alive when freeing.";
+        cout << "Static member variables of objects IN USE by living solver WILL BE FREED." << endl;
+    }
 
-    for (uint i = 0; i < NX; ++i)
+    cout << "Solver deleting..." << endl;
+
+    for (uint i = 0; i < 5; ++i)
     {
         for (uint j = 0; j < NY; ++j)
         {
             for (uint k = 0; k < NZ; ++k)
             {
-
                 delete sites[i][j][k];
             }
 
@@ -108,9 +118,13 @@ KMCSolver::~KMCSolver()
 
     delete [] sites;
 
+    allReactions.clear();
+
     Site::resetAll();
     Reaction::resetAll();
     DiffusionReaction::resetAll();
+
+    ptrCount--;
 
 }
 
@@ -474,3 +488,4 @@ uint KMCSolver::getReactionChoice(double R)
 }
 
 
+uint KMCSolver::ptrCount = 0;

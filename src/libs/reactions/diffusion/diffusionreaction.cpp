@@ -8,6 +8,7 @@ DiffusionReaction::DiffusionReaction(Site *destination) :
 
 }
 
+
 void DiffusionReaction::loadConfig(const Setting &setting)
 {
 
@@ -56,6 +57,12 @@ double DiffusionReaction::getSaddleEnergy()
                           std::back_inserter(neighborSet));
 
 
+    if (neighborSet.size() == 0)
+    {
+        cout << "THIS SHOULD NEVER OCCUR" << endl;
+        dumpInfo();
+        exit(1);
+    }
     double Esp = 0;
 
     for (Site* targetSite : neighborSet)

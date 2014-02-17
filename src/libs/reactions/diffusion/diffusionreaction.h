@@ -13,6 +13,8 @@ public:
 
     DiffusionReaction(Site *destination);
 
+    ~DiffusionReaction() {}
+
     double getSaddleEnergy();
 
     static void loadConfig(const Setting & setting);

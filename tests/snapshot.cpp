@@ -23,7 +23,10 @@ SnapShot::SnapShot(KMCSolver *solver)
                 for (Reaction * r : currentSite->siteReactions())
                 {
                     allRates.push_back(r->rate());
-                    allreactions.push_back({r->x(), r->y(), r->z()});
+                    allreactions.push_back({r->x(), r->y(), r->z(),
+                                            ((DiffusionReaction*)r)->xD(),
+                                           ((DiffusionReaction*)r)->yD(),
+                                           ((DiffusionReaction*)r)->zD()});
                 }
 
             }

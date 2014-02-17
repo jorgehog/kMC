@@ -23,6 +23,7 @@ testBed::testBed()
 
 KMCSolver *testBed::makeSolver()
 {
+    cout << "making solver" << endl;
     Config cfg;
 
     cfg.readFile("infiles/config.cfg");
@@ -873,18 +874,23 @@ void testBed::testInitialReactionSetup()
 
 void testBed::testSequential()
 {
-    solver->nCycles = 10;
+
+    solver->nCycles = 0;
     solver->run();
     SnapShot s1(solver);
 
     delete solver;
-    solver = makeSolver();
 
-    solver->nCycles = 10;
-    solver->run();
-    SnapShot s2(solver);
+    KMCSolver* newSolver = makeSolver();
+
+    newSolver->nCycles = 0;
+    newSolver->run();
+    SnapShot s2(newSolver);
+
 
     CHECK_EQUAL(s1, s2);
+
+    solver = newSolver;
 
 }
 

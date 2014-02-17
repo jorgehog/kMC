@@ -8,12 +8,12 @@
 
 using namespace std;
 
+/*
 TEST(RNG_CHECK) {
     testBed test;
     test.testRNG();
 }
 
-/*
 TEST(NEIGHBORS_SETUP) {
     testBed test;
     test.testEnergyAndNeighborSetup();

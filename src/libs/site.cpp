@@ -14,26 +14,24 @@ Site::Site(uint _x, uint _y, uint _z) :
     m_particleState(particleState::solution)
 {
 
-    m_nNeighbors.set_size(m_nNeighborsLimit);
-    m_nNeighbors.zeros();
-
-    m_neighborHood = new Site***[m_neighborhoodLength];
-
-    for (uint i = 0; i < m_neighborhoodLength; ++i)
-    {
-        m_neighborHood[i] = new Site**[m_neighborhoodLength];
-
-        for (uint j = 0; j < m_neighborhoodLength; ++j)
-        {
-            m_neighborHood[i][j] = new Site*[m_neighborhoodLength];
-        }
-    }
 
 }
 
 
 Site::~Site()
 {
+    for (uint i = 0; i < neighborhoodLength(); ++i)
+    {
+        for (uint j = 0; j < neighborhoodLength(); ++j)
+        {
+            delete [] m_neighborHood[i][j];
+        }
+
+        delete [] m_neighborHood[i];
+    }
+
+    delete m_neighborHood;
+
 
     for (Reaction* reaction : m_siteReactions)
     {
@@ -41,7 +39,12 @@ Site::~Site()
     }
 
     m_activeReactions.clear();
+
     m_siteReactions.clear();
+
+    m_allNeighbors.clear();
+
+    m_nNeighbors.reset();
 
     m_energy = 0;
 
@@ -204,7 +207,7 @@ void Site::loadConfig(const Setting &setting)
     m_nNeighborsLimit = limit;
     m_neighborhoodLength = 2*m_nNeighborsLimit + 1;
 
-    m_levelMatrix = zeros<ucube>(m_neighborhoodLength, m_neighborhoodLength, m_neighborhoodLength);
+    m_levelMatrix.set_size(m_neighborhoodLength, m_neighborhoodLength, m_neighborhoodLength);
 
     m_originTransformVector = linspace<ivec>(-(int)m_nNeighborsLimit, m_nNeighborsLimit, m_neighborhoodLength);
 
@@ -216,6 +219,7 @@ void Site::loadConfig(const Setting &setting)
             {
                 if (i == m_nNeighborsLimit && j == m_nNeighborsLimit && k == m_nNeighborsLimit)
                 {
+                    m_levelMatrix(i, j, k) = m_nNeighborsLimit + 1;
                     continue;
                 }
 
@@ -438,17 +442,27 @@ void Site::deactivate()
 
 void Site::introduceNeighborhood()
 {
+
+    assert(m_nNeighborsLimit != 0);
+
     uint xTrans, yTrans, zTrans;
 
-    m_allNeighbors.clear();
+    m_nNeighbors.set_size(m_nNeighborsLimit);
+    m_nNeighbors.zeros();
+
+    m_neighborHood = new Site***[m_neighborhoodLength];
 
     for (uint i = 0; i < m_neighborhoodLength; ++i)
     {
         xTrans = (m_x + m_originTransformVector(i) + NX)%NX;
 
+        m_neighborHood[i] = new Site**[m_neighborhoodLength];
+
         for (uint j = 0; j < m_neighborhoodLength; ++j)
         {
             yTrans = (m_y + m_originTransformVector(j) + NY)%NY;
+
+            m_neighborHood[i][j] = new Site*[m_neighborhoodLength];
 
             for (uint k = 0; k < m_neighborhoodLength; ++k)
             {
