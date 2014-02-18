@@ -569,7 +569,7 @@ void testBed::testHasCrystalNeighbor()
 {
 
     //Spawn a seed in the middle of the box.
-    solver->sites[NX/2][NY/2][NZ/2]->spawnAsCrystal();
+    solver->sites[NX/2][NY/2][NZ/2]->spawnAsFixedCrystal();
     Site* initCrystal = solver->sites[NX/2][NY/2][NZ/2];
 
     Site *neighbor;
@@ -585,7 +585,7 @@ void testBed::testHasCrystalNeighbor()
                 if (Site::findLevel(abs(i), abs(j), abs(k)) == 2)
                 {
                     solver->sites[NX/2 + i][NY/2 + j][NZ/2 + k]->activate();
-                    CHECK_EQUAL(particleState::solution, solver->sites[NX/2 + i][NY/2 + j][NZ/2 + k]->particleState());
+                    CHECK_EQUAL(ParticleStates::solution, solver->sites[NX/2 + i][NY/2 + j][NZ/2 + k]->particleState());
                 }
 
             }
@@ -627,10 +627,10 @@ void testBed::testHasCrystalNeighbor()
                 if (neighbor == initCrystal) {
                     assert(i == j && j == k && k == Site::m_nNeighborsLimit);
 
-                    CHECK_EQUAL(particleState::crystal, neighbor->particleState());
+                    CHECK_EQUAL(ParticleStates::crystal, neighbor->particleState());
 
                     //it should not have any crystal neighbors
-                    CHECK_EQUAL(false, neighbor->hasNeighboring(particleState::crystal));
+                    CHECK_EQUAL(false, neighbor->hasNeighboring(ParticleStates::crystal));
                     continue;
                 }
 
@@ -638,15 +638,15 @@ void testBed::testHasCrystalNeighbor()
 
                 //The first layer should now be a surface, which should be unblocked with a crystal neighbor.
                 if (level == 0) {
-                    CHECK_EQUAL(particleState::surface, neighbor->particleState());
-                    CHECK_EQUAL(true, neighbor->hasNeighboring(particleState::crystal));
+                    CHECK_EQUAL(ParticleStates::surface, neighbor->particleState());
+                    CHECK_EQUAL(true, neighbor->hasNeighboring(ParticleStates::crystal));
                 }
 
                 //The second layer should be blocked because of the shell at distance 3, should be standard solution particles
                 //without a crystal neighbor.
                 else if (level == 1) {
-                    CHECK_EQUAL(particleState::solution, neighbor->particleState());
-                    CHECK_EQUAL(false, neighbor->hasNeighboring(particleState::crystal));
+                    CHECK_EQUAL(ParticleStates::solution, neighbor->particleState());
+                    CHECK_EQUAL(false, neighbor->hasNeighboring(ParticleStates::crystal));
                 }
 
             }
@@ -682,11 +682,11 @@ void testBed::testHasCrystalNeighbor()
                 neighbor = initCrystal->m_neighborHood[Site::nNeighborsLimit() - 1 + i][Site::nNeighborsLimit() - 1 + j][Site::nNeighborsLimit() - 1 + k];
 
                 if (neighbor == initCrystal) {
-                    CHECK_EQUAL(particleState::surface, neighbor->particleState());
+                    CHECK_EQUAL(ParticleStates::surface, neighbor->particleState());
                 }
                 else
                 {
-                    CHECK_EQUAL(particleState::solution, neighbor->particleState());
+                    CHECK_EQUAL(ParticleStates::solution, neighbor->particleState());
                 }
             }
 
@@ -706,15 +706,15 @@ void testBed::testHasCrystalNeighbor()
 
                 if (Site::findLevel(abs(i), abs(j), abs(k)) == 0)
                 {
-                    CHECK_EQUAL(particleState::crystal, solver->sites[NX/2 + i][NY/2 + j][NZ/2 + k]->particleState());
+                    CHECK_EQUAL(ParticleStates::crystal, solver->sites[NX/2 + i][NY/2 + j][NZ/2 + k]->particleState());
                 }
                 else if (Site::findLevel(abs(i), abs(j), abs(k)) == 1)
                 {
-                    CHECK_EQUAL(particleState::surface, solver->sites[NX/2 + i][NY/2 + j][NZ/2 + k]->particleState());
+                    CHECK_EQUAL(ParticleStates::surface, solver->sites[NX/2 + i][NY/2 + j][NZ/2 + k]->particleState());
                 }
                 else if (Site::findLevel(abs(i), abs(j), abs(k)) == 2)
                 {
-                    CHECK_EQUAL(particleState::solution, solver->sites[NX/2 + i][NY/2 + j][NZ/2 + k]->particleState());
+                    CHECK_EQUAL(ParticleStates::solution, solver->sites[NX/2 + i][NY/2 + j][NZ/2 + k]->particleState());
                     nActives += solver->sites[NX/2 + i][NY/2 + j][NZ/2 + k]->activeReactions().size();
                 }
 
@@ -742,7 +742,7 @@ void testBed::testInitializationOfCrystal()
                 currentSite = solver->sites[i][j][k];
 
                 switch (currentSite->particleState()) {
-                case particleState::solution:
+                case ParticleStates::solution:
 
                     //After initialization, a solution particle should not be blocked in any direction.
                     if (currentSite->isActive())
@@ -752,15 +752,15 @@ void testBed::testInitializationOfCrystal()
 
                     break;
 
-                case particleState::surface:
+                case ParticleStates::surface:
 
                     CHECK_EQUAL(true, !currentSite->isActive());
-                    CHECK_EQUAL(true, currentSite->hasNeighboring(particleState::crystal));
+                    CHECK_EQUAL(true, currentSite->hasNeighboring(ParticleStates::crystal));
                     CHECK_EQUAL(true, currentSite->nNeighbors() > 0);
 
                     break;
 
-                case particleState::crystal:
+                case ParticleStates::crystal:
 
                     CHECK_EQUAL(true, currentSite->isActive());
 
@@ -879,9 +879,12 @@ void testBed::testSequential()
     solver->run();
     SnapShot s1(solver);
 
+    seed_type seed = Seed::initialSeed;
+
     delete solver;
 
     KMCSolver* newSolver = makeSolver();
+    KMC_INIT_RNG(seed);
 
     newSolver->nCycles = 0;
     newSolver->run();
@@ -897,23 +900,28 @@ void testBed::testSequential()
 void testBed::testKnownCase()
 {
 
-    CHECK_EQUAL(30, NX);
-    CHECK_EQUAL(30, NY);
-    CHECK_EQUAL(30, NZ);
-    CHECK_EQUAL(2, Site::nNeighborsLimit());
-    CHECK_EQUAL(5.0, Reaction::beta);
-    CHECK_EQUAL(1.0, Reaction::m_linearRateScale);
-    CHECK_EQUAL(0.5, DiffusionReaction::rPower);
-    CHECK_EQUAL(1.0, DiffusionReaction::scale);
-    CHECK_EQUAL(0.3, solver->saturation);
-    CHECK_EQUAL(0.3, solver->RelativeSeedSize);
-    CHECK_EQUAL(10000, solver->nCycles);
-    CHECK_EQUAL(1000, solver->cyclesPerOutput);
-    CHECK_EQUAL(1392202630, Seed::initialSeed);
+    if ((30 != NX)
+            || (30 != NY)
+            || (30 != NZ)
+            || (2 != Site::nNeighborsLimit())
+            || (5.0 != Reaction::beta)
+            || (1.0 != Reaction::m_linearRateScale)
+            || (0.5 != DiffusionReaction::rPower)
+            || (1.0 != DiffusionReaction::scale)
+            || (0.3 != solver->saturation)
+            || (0.3 != solver->RelativeSeedSize)
+            || (10000 != solver->nCycles)
+            || (1000 != solver->cyclesPerOutput)
+            || (1392202630 != Seed::initialSeed))
+    {
+        cout << "Config not set up for testing known case." << endl;
+        return;
+    }
 
     solver->run();
 
     ifstream o;
+
     o.open("stuff.txt");
     string line;
     stringstream s;

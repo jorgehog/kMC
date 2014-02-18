@@ -198,7 +198,7 @@ void KMCSolver::dumpXYZ()
 
                 if (currentSite->isActive() || isSurface)
                 {
-                    s << "\n" << particleState::shortNames.at(sites[i][j][k]->particleState()) << " " << i << " " << j << " " << k << " " << sites[i][j][k]->nNeighbors();
+                    s << "\n" << ParticleStates::shortNames.at(sites[i][j][k]->particleState()) << " " << i << " " << j << " " << k << " " << sites[i][j][k]->nNeighbors();
 
                     if (isSurface)
                     {
@@ -324,7 +324,7 @@ void KMCSolver::initializeSites()
 void KMCSolver::initializeCrystal()
 {
 
-    sites[NX/2][NY/2][NZ/2]->spawnAsCrystal();
+    sites[NX/2][NY/2][NZ/2]->spawnAsFixedCrystal();
 
     uint crystalSizeX = round(NX*RelativeSeedSize);
     uint crystalSizeY = round(NY*RelativeSeedSize);
@@ -411,7 +411,7 @@ void KMCSolver::getRateVariables()
             {
                 for (Reaction* reaction : sites[x][y][z]->activeReactions())
                 {
-                    assert(reaction->rate() != 0);
+                    assert(reaction->rate() != Reaction::UNSET_RATE);
                     kTot += reaction->rate();
                     accuAllRates.push_back(kTot);
                     allReactions.push_back(reaction);

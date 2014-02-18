@@ -7,11 +7,12 @@
 
 Site::Site(uint _x, uint _y, uint _z) :
     m_active(false),
+    isFixedCrystalSeed(false),
     m_x(_x),
     m_y(_y),
     m_z(_z),
     m_energy(0),
-    m_particleState(particleState::solution)
+    m_particleState(ParticleStates::solution)
 {
 
 
@@ -74,13 +75,13 @@ void Site::setParticleState(int state)
     //The site is crystallized, which propagates the surface furhter.
     switch (state)
     {
-    case particleState::surface:
+    case ParticleStates::surface:
 
         switch (m_particleState)
         {
 
         //solution->surface
-        case particleState::solution:
+        case ParticleStates::solution:
 
             //if a particle is present, we crystallize it immidiately.
             if (m_active)
@@ -90,45 +91,70 @@ void Site::setParticleState(int state)
 
             else
             {
-                m_particleState = particleState::surface;
+                m_particleState = ParticleStates::surface;
                 queueAffectedSites();
             }
 
             break;
 
-            //crystal->surface
-        case particleState::crystal:
-            m_particleState = particleState::surface;
-            propagateToNeighbors(particleState::surface, particleState::solution);
+        //Crystal -> surface
+        case ParticleStates::crystal:
+
+            if (isFixedCrystalSeed)
+            {
+                m_particleState = ParticleStates::surface;
+            }
+
+            else if (hasNeighboring(ParticleStates::crystal))
+            {
+                m_particleState = ParticleStates::surface;
+            }
+
+            else
+            {
+                m_particleState = ParticleStates::solution;
+            }
+
+            propagateToNeighbors(ParticleStates::surface, ParticleStates::solution);
             queueAffectedSites();
 
             break;
 
             //surface -> surface
-        case particleState::surface:
+        case ParticleStates::surface:
             //Nothing to do here.
             break;
 
         default:
-            cout << "invalid transition" << m_particleState << "->" << state << endl;
+            cout << "invalid transition"
+                 << ParticleStates::names.at(m_particleState)
+                 << "->"
+                 << ParticleStates::names.at(state) << endl;
             exit(1);
             break;
         }
 
         break;
 
-    case particleState::crystal:
+    case ParticleStates::crystal:
 
         switch (m_particleState)
         {
 
         //surface -> crystal
-        case particleState::surface:
+        case ParticleStates::surface:
+
+            //No need to test if it has neigh crystals because
+            //diffusion reactions deactivates old spot before activating new spot.
+            //Which will remove access surface.
             crystallize();
             break;
 
         default:
-            cout << "invalid transition" << m_particleState << "->" << state << endl;
+            cout << "invalid transition "
+                 << ParticleStates::names.at(m_particleState)
+                 << "->"
+                 << ParticleStates::names.at(state) << endl;
             exit(1);
             break;
         }
@@ -136,23 +162,27 @@ void Site::setParticleState(int state)
         break;
 
 
-    case particleState::solution:
+    case ParticleStates::solution:
 
         switch (m_particleState)
         {
 
         //surface -> solution
-        case particleState::surface:
+        case ParticleStates::surface:
 
-            if (!hasNeighboring(particleState::crystal))
+            if (!(hasNeighboring(ParticleStates::crystal) || isFixedCrystalSeed))
             {
-                m_particleState = particleState::solution;
+                m_particleState = ParticleStates::solution;
                 queueAffectedSites();
             }
 
             break;
+
         default:
-            cout << "invalid transition" << m_particleState << "->" << state << endl;
+            cout << "invalid transition "
+                 << ParticleStates::names.at(m_particleState)
+                 << "->"
+                 << ParticleStates::names.at(state) << endl;
             exit(1);
             break;
         }
@@ -160,7 +190,10 @@ void Site::setParticleState(int state)
 
 
     default:
-        cout << "invalid transition" << m_particleState << "->" << state << endl;
+        cout << "invalid transition "
+             << ParticleStates::names.at(m_particleState)
+             << "->"
+             << ParticleStates::names.at(state) << endl;
         exit(1);
         break;
     }
@@ -193,8 +226,8 @@ bool Site::isLegalToSpawn()
 
 void Site::crystallize()
 {
-    m_particleState  = particleState::crystal;
-    propagateToNeighbors(particleState::solution, particleState::surface);
+    m_particleState  = ParticleStates::crystal;
+    propagateToNeighbors(ParticleStates::solution, ParticleStates::surface);
 
 }
 
@@ -224,8 +257,8 @@ void Site::loadConfig(const Setting &setting)
                 }
 
                 m_levelMatrix(i, j, k) = findLevel(std::abs(m_originTransformVector(i)),
-                                                  std::abs(m_originTransformVector(j)),
-                                                  std::abs(m_originTransformVector(k)));
+                                                   std::abs(m_originTransformVector(j)),
+                                                   std::abs(m_originTransformVector(k)));
             }
         }
     }
@@ -262,9 +295,10 @@ void Site::updateReactions()
 }
 
 
-void Site::spawnAsCrystal()
+void Site::spawnAsFixedCrystal()
 {
-    m_particleState = particleState::surface;
+    m_particleState = ParticleStates::surface;
+    isFixedCrystalSeed = true;
     activate();
 }
 
@@ -385,7 +419,7 @@ void Site::activate()
 
     if (isSurface())
     {
-        setParticleState(particleState::crystal);
+        setParticleState(ParticleStates::crystal);
     }
 
     affectedSites.insert(this);
@@ -427,7 +461,7 @@ void Site::deactivate()
     //Site will change only if it is not surrounded by any crystals.
     if (isCrystal())
     {
-        setParticleState(particleState::surface);
+        setParticleState(ParticleStates::surface);
     }
 
     informNeighborhoodOnChange(-1);
@@ -496,14 +530,14 @@ void Site::propagateToNeighbors(int reqOldState, int newState)
                         [j + Site::nNeighborsLimit() - 1]
                         [k + Site::nNeighborsLimit() - 1];
 
-                assert(!(newState == particleState::solution && nextNeighbor->particleState() == particleState::solution));
                 if (nextNeighbor == this)
                 {
                     assert(i == j && j == k && k == 1);
                     continue;
                 }
 
-                if (nextNeighbor->particleState() == reqOldState || reqOldState == particleState::any)
+                assert(!(newState == ParticleStates::solution && nextNeighbor->particleState() == ParticleStates::solution));
+                if (nextNeighbor->particleState() == reqOldState || reqOldState == ParticleStates::any)
                 {
                     nextNeighbor->setParticleState(newState);
                 }
@@ -582,7 +616,7 @@ void Site::dumpInfo(int xr, int yr, int zr)
     cout << "Site   " << m_x << " " << m_y << " " << m_z << endl;
     cout << "in Box " << NX << " " << NY << " " << NZ << endl;
     cout << "nNeighbors : " << m_nNeighbors.t();
-    cout << "type: " << particleState::names.at(m_particleState) << endl;
+    cout << "type: " << ParticleStates::names.at(m_particleState) << endl;
 
     if (m_active)
     {
@@ -699,5 +733,5 @@ double     Site::m_totalEnergy = 0;
 set<Site*> Site::affectedSites;
 
 
-const vector<string> particleState::names = {"crystal", "solution", "surface", "any"};
-const vector<string> particleState::shortNames = {"C", "P", "S", "X"};
+const vector<string> ParticleStates::names = {"crystal", "solution", "surface", "any"};
+const vector<string> ParticleStates::shortNames = {"C", "P", "S", "X"};

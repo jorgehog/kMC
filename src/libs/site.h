@@ -13,7 +13,7 @@ using namespace arma;
 class KMCSolver;
 class Reaction;
 
-struct particleState
+struct ParticleStates
 {
     enum
     {
@@ -63,7 +63,7 @@ public:
 
     bool isLegalToSpawn();
 
-    void spawnAsCrystal();
+    void spawnAsFixedCrystal();
 
     void crystallize();
 
@@ -154,12 +154,12 @@ public:
 
     bool isCrystal()
     {
-        return m_particleState == particleState::crystal;
+        return m_particleState == ParticleStates::crystal;
     }
 
     bool isSurface()
     {
-        return m_particleState == particleState::surface;
+        return m_particleState == ParticleStates::surface;
     }
 
     const bool & isActive() const
@@ -239,13 +239,15 @@ private:
 
     bool m_active;
 
+    bool isFixedCrystalSeed;
+
     uint m_x;
     uint m_y;
     uint m_z;
 
     double m_energy;
 
-    int m_particleState = particleState::solution;
+    int m_particleState = ParticleStates::solution;
 
     vector<Reaction*> m_siteReactions;
 

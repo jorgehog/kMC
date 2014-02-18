@@ -4,7 +4,7 @@
 
 Reaction::Reaction():
     m_ID(IDcount++),
-    m_rate(0)
+    m_rate(UNSET_RATE)
 {
 
 }
@@ -44,12 +44,15 @@ void Reaction::loadConfig(const Setting &setting)
 
 }
 
-KMCSolver* Reaction::mainSolver;
-double     Reaction::beta;
-double     Reaction::m_linearRateScale;
+const double Reaction::UNSET_RATE = -1;
 
-uint       Reaction::NX;
-uint       Reaction::NY;
-uint       Reaction::NZ;
+KMCSolver*   Reaction::mainSolver;
 
-uint       Reaction::IDcount = 0;
+double       Reaction::beta;
+double       Reaction::m_linearRateScale;
+
+uint         Reaction::NX;
+uint         Reaction::NY;
+uint         Reaction::NZ;
+
+uint         Reaction::IDcount = 0;

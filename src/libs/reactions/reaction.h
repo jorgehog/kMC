@@ -78,6 +78,8 @@ public:
         return m_reactionSite;
     }
 
+    const static double UNSET_RATE;
+
 
 
 protected:

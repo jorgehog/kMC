@@ -8,7 +8,6 @@
 
 using namespace std;
 
-/*
 TEST(RNG_CHECK) {
     testBed test;
     test.testRNG();
@@ -81,7 +80,6 @@ TEST(sequential)
     test.testSequential();
 }
 
-*/
 TEST(KnownCase)
 {
     testBed test;
