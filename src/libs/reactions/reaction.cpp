@@ -18,6 +18,7 @@ void Reaction::dumpInfo(int xr, int yr, int zr)
 {
 
     cout << "[Reaction " << m_ID << "/" << IDcount << "]:" << endl;
+    cout << "rate: " << m_rate << endl;
     cout << "@{" << endl;
     m_reactionSite->dumpInfo(xr, yr, zr);
     cout << "\n}" << endl;
@@ -39,8 +40,8 @@ void Reaction::setSolverPtr(KMCSolver *solver)
 void Reaction::loadConfig(const Setting &setting)
 {
 
-    beta = getSurfaceSetting<double>(setting, "beta");
-    m_linearRateScale   = getSurfaceSetting<double>(setting, "scale");
+    beta              = getSurfaceSetting<double>(setting, "beta");
+    m_linearRateScale = getSurfaceSetting<double>(setting, "scale");
 
 }
 

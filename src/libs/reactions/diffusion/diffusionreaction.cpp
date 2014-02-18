@@ -39,6 +39,9 @@ void DiffusionReaction::loadConfig(const Setting &setting)
         }
     }
 
+    //rescale the potential to avoid exploding rates for some choices of parameters.
+//    scale = 1.0/accu(m_potential);
+
     m_potential *= scale;
 
 }
@@ -167,6 +170,15 @@ void DiffusionReaction::calcRate()
 
     lastUsedE = m_reactionSite->energy();
     m_rate = m_linearRateScale*exp(-beta*(m_reactionSite->energy()-getSaddleEnergy()));
+
+#ifndef NDEBUG
+    if (m_rate < 0.01 || m_rate > 1.1)
+    {
+        cout << "unnormalized rate of reaction " << endl;
+        cout << m_rate << endl;
+    }
+
+#endif
 
 }
 

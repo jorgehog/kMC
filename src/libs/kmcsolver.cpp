@@ -234,7 +234,7 @@ void KMCSolver::dumpOutput()
          << (double)cycle/nCycles*100 << "%   "
          << outputCounter
          << endl;
-
+    cout << setprecision(6);
 }
 
 
