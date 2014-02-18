@@ -87,11 +87,6 @@ public:
 
     void disableReaction(Reaction *reaction);
 
-    void updateReactions();
-
-    void calculateRates();
-
-
     void introduceNeighborhood();
 
     bool hasNeighboring(int state);

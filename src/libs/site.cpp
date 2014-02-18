@@ -283,41 +283,11 @@ void Site::disableReaction(Reaction * reaction)
 }
 
 
-void Site::updateReactions()
-{
-
-    m_activeReactions.clear();
-
-    if (!m_active)
-    {
-        return;
-    }
-
-    for (Reaction* reaction : m_siteReactions)
-    {
-        if (reaction->isNotBlocked())
-        {
-            m_activeReactions.push_back(reaction);
-        }
-    }
-
-}
-
-
 void Site::spawnAsFixedCrystal()
 {
     m_particleState = ParticleStates::surface;
     isFixedCrystalSeed = true;
     activate();
-}
-
-
-void Site::calculateRates()
-{
-    for (Reaction* reaction : m_activeReactions)
-    {
-        reaction->calcRate();
-    }
 }
 
 
@@ -430,16 +400,13 @@ void Site::activate()
     {
         setParticleState(ParticleStates::crystal);
     }
-    cout << " a" << endl;
+
     informNeighborhoodOnChange(+1);
 
-    cout << " b" << endl;
     queueAffectedReactions();
 
-    cout << " c" << endl;
     updateAffectedReactions();
 
-    cout << " d" << endl;
     m_totalActiveSites++;
 
 }

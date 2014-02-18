@@ -873,19 +873,19 @@ void testBed::testInitialReactionSetup()
 
 
 
-    Site* currentSite;
-    for (uint i = 0; i < NX; ++i) {
-        for (uint j = 0; j < NY; ++j) {
-            for (uint k = 0; k < NZ; ++k) {
+//    Site* currentSite;
+//    for (uint i = 0; i < NX; ++i) {
+//        for (uint j = 0; j < NY; ++j) {
+//            for (uint k = 0; k < NZ; ++k) {
 
-                currentSite = solver->sites[i][j][k];
+//                currentSite = solver->sites[i][j][k];
 
-                currentSite->updateReactions();
-                currentSite->calculateRates();
+//                currentSite->updateReactions();
+//                currentSite->calculateRates();
 
-            }
-        }
-    }
+//            }
+//        }
+//    }
 
 
     std::vector<Reaction*> reactions;

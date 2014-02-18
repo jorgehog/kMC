@@ -25,6 +25,11 @@ public:
 
     void update()
     {
+        if (!m_reactionSite->isActive())
+        {
+            return;
+        }
+
         if (isNotBlocked())
         {
             enable();
