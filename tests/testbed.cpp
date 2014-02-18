@@ -145,6 +145,19 @@ void testBed::testDistanceTo()
 
 }
 
+void testBed::testDiffusionSiteMatrixSetup()
+{
+
+    for (uint x = 0; x < NX; ++x) {
+        for (uint y = 0; y < NY; ++y) {
+            for (uint z = 0; z < NZ; ++z) {
+
+            }
+        }
+    }
+
+}
+
 void testBed::testNeighbors()
 {
 
@@ -900,29 +913,34 @@ void testBed::testSequential()
 void testBed::testKnownCase()
 {
 
-    if ((30 != NX)
-            || (30 != NY)
-            || (30 != NZ)
-            || (2 != Site::nNeighborsLimit())
-            || (5.0 != Reaction::beta)
-            || (1.0 != Reaction::m_linearRateScale)
-            || (0.5 != DiffusionReaction::rPower)
-            || (1.0 != DiffusionReaction::scale)
-            || (0.3 != solver->saturation)
-            || (0.3 != solver->RelativeSeedSize)
-            || (10000 != solver->nCycles)
-            || (1000 != solver->cyclesPerOutput)
-            || (1392202630 != Seed::initialSeed))
-    {
-        cout << "Config not set up for testing known case." << endl;
-        return;
-    }
+    delete solver;
+
+    Config cfg;
+
+    cfg.readFile("infiles/knowncase.cfg");
+
+    const Setting & root = cfg.getRoot();
+
+    solver = new KMCSolver(root);
 
     solver->run();
 
+    bool make = false;
+
     ifstream o;
 
-    o.open("stuff.txt");
+    ofstream o2;
+
+    if (make)
+    {
+        o2.open("knowncase.txt");
+    }
+
+    else
+    {
+        o.open("knowncase.txt");
+    }
+
     string line;
     stringstream s;
 
@@ -931,19 +949,40 @@ void testBed::testKnownCase()
     for (uint i = 0; i < NX; ++i) {
         for (uint j = 0; j < NY; ++j) {
             for (uint k = 0; k < NZ; ++k) {
-                getline(o,line);
-                s << solver->sites[i][j][k]->isActive();
-                if(s.str().compare(line) == 0)
+
+                if (make)
                 {
-                    winCount++;
+                    o2 << solver->sites[i][j][k]->isActive() << endl;
                 }
-                s.str(string());
+
+                else
+                {
+
+                    getline(o,line);
+                    s << solver->sites[i][j][k]->isActive();
+                    if(s.str().compare(line) == 0)
+                    {
+                        winCount++;
+                    }
+                    s.str(string());
+
+                }
             }
         }
     }
-    o.close();
 
-    CHECK_EQUAL(NX*NY*NZ, winCount);
+    if(make)
+    {
+        o2.close();
+        cout << "FILE MADE SUCCESSFULLY" << endl;
+    }
+
+    else
+    {
+        o.close();
+        CHECK_EQUAL(NX*NY*NZ, winCount);
+    }
+
 
 
 }

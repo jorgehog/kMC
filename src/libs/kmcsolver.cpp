@@ -158,6 +158,7 @@ void KMCSolver::run()
         cycle++;
 
     }
+    cout << DiffusionReaction::counter/(double)DiffusionReaction::total << endl;
 
 }
 

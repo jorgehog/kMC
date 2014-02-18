@@ -22,6 +22,8 @@ public:
 
     void testDistanceTo();
 
+    void testDiffusionSiteMatrixSetup();
+
     void testNeighbors();
 
     void testRNG();

@@ -16,3 +16,6 @@ SOURCES = testmain.cpp \
 HEADERS += \
     testbed.h \
     snapshot.h
+
+OTHER_FILES += \
+    ../infiles/knowncase.cfg

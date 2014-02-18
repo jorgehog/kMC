@@ -30,6 +30,17 @@ public:
         return m_potential;
     }
 
+    virtual void setSite(Site* site)
+    {
+        Reaction::setSite(site);
+
+        int xT, yT, zT;
+
+        site->distanceTo(destination, xT, yT, zT);
+
+        site->addDiffusionReaction(this, 1 + xT, 1 + yT, 1 + zT);
+    }
+
     const uint & xD ()
     {
         return destination->x();
@@ -48,9 +59,12 @@ public:
     //tmp
     double lastUsedE = 0;
     double lastUsedEsp = 0;
+    static uint counter;
+    static uint total;
 
 
     friend class testBed;
+
 
 private:
 

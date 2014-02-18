@@ -38,23 +38,28 @@ public:
     virtual void dumpInfo(int xr = 0, int yr = 0, int zr = 0);
 
 
-    void setSite(Site* site) {
+    virtual void setSite(Site* site)
+    {
         m_reactionSite = site;
     }
 
-    static void resetAll() {
+    static void resetAll()
+    {
         IDcount = 0;
     }
 
-    const uint & ID() {
+    const uint & ID()
+    {
         return m_ID;
     }
 
-    const double &  rate() {
+    const double &  rate()
+    {
         return m_rate;
     }
 
-    const static double & linearRateScale() {
+    const static double & linearRateScale()
+    {
         return m_linearRateScale;
     }
 
