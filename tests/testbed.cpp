@@ -148,7 +148,6 @@ void testBed::testDistanceTo()
 void testBed::testDiffusionSiteMatrixSetup()
 {
 
-    DiffusionReaction * currentDiffReaction;
 
     for (uint x = 0; x < NX; ++x)
     {
@@ -158,32 +157,36 @@ void testBed::testDiffusionSiteMatrixSetup()
             {
                 const Site & currentSite = *(solver->getSite(x, y, z));
 
-                for (uint i = 0; i < 3; ++i)
+                for (int i = -1; i < 2; ++i)
                 {
-                    for (uint j = 0; j < 3; ++j)
+                    for (int j = -1; j < 2; ++j)
                     {
-                        for (uint k = 0; k < 3; ++k)
+                        for (int k = -1; k < 2; ++k)
                         {
 
-                            if (i == j && j == k && k == 1)
+                            if (i == 0 && j == 0 && k == 0)
                             {
                                 continue;
                             }
 
-                            currentDiffReaction = currentSite.m_diffusionReactions[i][j][k];
+                            uint xt = (x + NX + i) % NX;
+                            uint yt = (y + NY + j) % NY;
+                            uint zt = (z + NZ + k) % NZ;
 
-                            const Site & site = *(currentDiffReaction->reactionSite());
+                            const Site & dest = *(solver->getSite(xt, yt, zt));
 
-                            CHECK_EQUAL(currentSite, site);
+                            bool isDependent = false;
 
-                            uint xt = (x + i + NX - 1) % NX;
-                            uint yt = (y + j + NY - 1) % NY;
-                            uint zt = (z + k + NZ - 1) % NZ;
+                            for (Reaction* reaction : currentSite.dependentReactions())
+                            {
+                                if (*(reaction->reactionSite()) == dest)
+                                {
+                                    isDependent = true;
+                                }
+                            }
 
-                            const Site & dest  = *(currentDiffReaction->destination);
-                            const Site & dest2 = *(solver->getSite(xt, yt, zt));
+                            CHECK_EQUAL(true, isDependent);
 
-                            CHECK_EQUAL(dest, dest2);
                         }
                     }
                 }
@@ -830,7 +833,7 @@ void testBed::testInitialReactionSetup()
         for (uint j = 0; j < NY; ++j) {
             for (uint k = 0; k < NZ; ++k) {
 
-                CHECK_EQUAL(solver->sites[i][j][k]->siteReactions().size(), 26);
+                CHECK_EQUAL(solver->getSite(i, j, k)->siteReactions().size(), 26);
 
             }
         }

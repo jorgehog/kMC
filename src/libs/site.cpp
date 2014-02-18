@@ -15,20 +15,6 @@ Site::Site(uint _x, uint _y, uint _z) :
     m_particleState(ParticleStates::solution)
 {
 
-    m_diffusionReactions = new DiffusionReaction***[3];
-
-    for (int i = 0; i < 3; ++i) {
-
-        m_diffusionReactions[i] = new DiffusionReaction**[3];
-        for (int j = 0; j < 3; ++j) {
-
-            m_diffusionReactions[i][j] = new DiffusionReaction*[3];
-
-        }
-    }
-
-    m_diffusionReactions[1][1][1] = NULL;
-
 }
 
 
@@ -46,19 +32,6 @@ Site::~Site()
 
     delete m_neighborHood;
 
-    for (uint i = 0; i < 3; ++i)
-    {
-        for (uint j = 0; j < 3; ++j)
-        {
-            delete [] m_diffusionReactions[i][j];
-        }
-
-        delete [] m_diffusionReactions[i];
-    }
-
-    delete [] m_diffusionReactions;
-
-
     for (Reaction* reaction : m_siteReactions)
     {
         delete reaction;
@@ -68,6 +41,8 @@ Site::~Site()
 
     m_siteReactions.clear();
 
+    m_dependentReactions.clear();
+
     m_allNeighbors.clear();
 
     m_nNeighbors.reset();
@@ -76,21 +51,6 @@ Site::~Site()
 
 }
 
-
-
-
-void Site::updateAffectedSites()
-{
-
-    for (Site* site : affectedSites)
-    {
-        site->updateReactions();
-        site->calculateRates();
-    }
-
-    affectedSites.clear();
-
-}
 
 
 void Site::setParticleState(int state)
@@ -117,7 +77,7 @@ void Site::setParticleState(int state)
             else
             {
                 m_particleState = ParticleStates::surface;
-                queueAffectedSites();
+                queueAffectedReactions();
             }
 
             break;
@@ -141,7 +101,7 @@ void Site::setParticleState(int state)
             }
 
             propagateToNeighbors(ParticleStates::surface, ParticleStates::solution);
-            queueAffectedSites();
+            queueAffectedReactions();
 
             break;
 
@@ -198,7 +158,7 @@ void Site::setParticleState(int state)
             if (!(hasNeighboring(ParticleStates::crystal) || isFixedCrystalSeed))
             {
                 m_particleState = ParticleStates::solution;
-                queueAffectedSites();
+                queueAffectedReactions();
             }
 
             break;
@@ -295,12 +255,31 @@ void Site::addReaction(Reaction *reaction)
 {
     reaction->setSite(this);
 
+    for (Site* neighbor : m_allNeighbors)
+    {
+        if (reaction->isAffectedByChangeIn(neighbor))
+        {
+            neighbor->addDependency(reaction);
+        }
+    }
+
     m_siteReactions.push_back(reaction);
 }
 
-void Site::setDiffusionReaction(DiffusionReaction *reaction, uint x, uint y, uint z)
+void Site::enableReaction(Reaction * reaction)
 {
-    m_diffusionReactions[x][y][z] = reaction;
+    reaction->setSiteReactionArrayIndex(m_activeReactions.size());
+    m_activeReactions.push_back(reaction);
+}
+
+void Site::disableReaction(Reaction * reaction)
+{
+    m_activeReactions.erase(m_activeReactions.begin() + reaction->siteReactionArrayIndex());
+
+    for (uint i = reaction->siteReactionArrayIndex(); i < m_activeReactions.size(); i++) {
+        m_activeReactions.at(i)->setSiteReactionArrayIndex(i);
+    }
+
 }
 
 
@@ -421,10 +400,10 @@ void Site::activate()
 
 #ifndef NDEBUG
 
-    if (affectedSites.size() != 0)
+    if (affectedReactions.size() != 0)
     {
         cout << "affectedsites not cleared." << endl;
-        cout << affectedSites.size() << " != " << 0 << endl;
+        cout << affectedReactions.size() << " != " << 0 << endl;
 
         exit(1);
     }
@@ -451,14 +430,16 @@ void Site::activate()
     {
         setParticleState(ParticleStates::crystal);
     }
-
-    affectedSites.insert(this);
-
+    cout << " a" << endl;
     informNeighborhoodOnChange(+1);
-    queueAffectedSites();
 
-    updateAffectedSites();
+    cout << " b" << endl;
+    queueAffectedReactions();
 
+    cout << " c" << endl;
+    updateAffectedReactions();
+
+    cout << " d" << endl;
     m_totalActiveSites++;
 
 }
@@ -468,7 +449,7 @@ void Site::deactivate()
 
 #ifndef NDEBUG
 
-    assert(affectedSites.size() == 0);
+    assert(affectedReactions.size() == 0);
 
     if (m_active == false)
     {
@@ -495,9 +476,9 @@ void Site::deactivate()
     }
 
     informNeighborhoodOnChange(-1);
-    queueAffectedSites();
+    queueAffectedReactions();
 
-    updateAffectedSites();
+    updateAffectedReactions();
 
     m_totalActiveSites--;
 
@@ -615,9 +596,24 @@ void Site::informNeighborhoodOnChange(int change)
 
 }
 
-void Site::queueAffectedSites()
+void Site::queueAffectedReactions()
 {
-    affectedSites.insert(allNeighbors().begin(), allNeighbors().end());
+
+    affectedReactions.insert(m_dependentReactions.begin(), m_dependentReactions.end());
+
+}
+
+
+void Site::updateAffectedReactions()
+{
+
+    for (Reaction* reaction : affectedReactions)
+    {
+        reaction->update();
+    }
+
+    affectedReactions.clear();
+
 }
 
 uint Site::findLevel(uint i, uint j, uint k)
@@ -743,24 +739,24 @@ void Site::dumpInfo(int xr, int yr, int zr)  const
 }
 
 
-KMCSolver* Site::mainSolver;
+KMCSolver*     Site::mainSolver;
 
-uint       Site::NX;
-uint       Site::NY;
-uint       Site::NZ;
+uint           Site::NX;
+uint           Site::NY;
+uint           Site::NZ;
 
-uint       Site::m_nNeighborsLimit;
+uint           Site::m_nNeighborsLimit;
 
-uint       Site::m_neighborhoodLength;
+uint           Site::m_neighborhoodLength;
 
-ucube      Site::m_levelMatrix;
-ivec       Site::m_originTransformVector;
+ucube          Site::m_levelMatrix;
+ivec           Site::m_originTransformVector;
 
-uint       Site::m_totalActiveSites = 0;
+uint           Site::m_totalActiveSites = 0;
 
-double     Site::m_totalEnergy = 0;
+double         Site::m_totalEnergy = 0;
 
-set<Site*> Site::affectedSites;
+set<Reaction*> Site::affectedReactions;
 
 
 const vector<string> ParticleStates::names = {"crystal", "solution", "surface", "any"};

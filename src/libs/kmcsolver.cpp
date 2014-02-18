@@ -255,7 +255,7 @@ void KMCSolver::initializeDiffusionReactions()
 
                 currentSite = sites[x][y][z];
 
-                assert(currentSite->siteReactions().size() == 0 && "Sitereactions are already set");
+//                assert(currentSite->siteReactions().size() == 0 && "Sitereactions are already set");
 
                 //For each site, loop over all neightbours
                 for (uint i = 0; i < 3; ++i)
@@ -284,6 +284,11 @@ void KMCSolver::initializeDiffusionReactions()
             }
         }
     }
+
+}
+
+void KMCSolver::setupReactionDependencies()
+{
 
 }
 

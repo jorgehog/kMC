@@ -30,17 +30,6 @@ public:
         return m_potential;
     }
 
-    virtual void setSite(Site* site)
-    {
-        Reaction::setSite(site);
-
-        int xT, yT, zT;
-
-        site->distanceTo(destination, xT, yT, zT);
-
-        site->setDiffusionReaction(this, 1 + xT, 1 + yT, 1 + zT);
-    }
-
     const uint & xD () const
     {
         return destination->x();
@@ -88,6 +77,8 @@ public:
     void dumpInfo(int xr = 0, int yr = 0, int zr = 0);
 
     bool allowedAtSite();
+
+    bool isAffectedByChangeIn(const Site *site) const;
 
     string getInfoSnippet() const
     {

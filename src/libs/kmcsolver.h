@@ -92,7 +92,10 @@ private:
 
     void initializeCrystal();
 
+
     void initializeDiffusionReactions();
+
+    void setupReactionDependencies();
 
     void initializeSites();
 

@@ -115,22 +115,11 @@ void DiffusionReaction::calcRate()
     lastUsedE = m_reactionSite->energy();
     m_rate = m_linearRateScale*exp(-beta*(m_reactionSite->energy()-getSaddleEnergy()));
 
-    //#ifndef NDEBUG
-    //    if (m_rate < 0.01 || m_rate > 1.1)
-    //    {
-    //        cout << "unnormalized rate of reaction " << endl;
-    //        cout << m_rate << endl;
-    //    }
-
-    //#endif
-
 }
 
 bool DiffusionReaction::isNotBlocked()
 {
-
     return !destination->isActive() && (destination->isSurface() || (destination->nNeighbors() == 1));
-
 }
 
 void DiffusionReaction::execute()
@@ -184,9 +173,14 @@ bool DiffusionReaction::allowedAtSite()
 
 }
 
+bool DiffusionReaction::isAffectedByChangeIn(const Site *site) const
+{
+    return site == destination;
+}
 
-double DiffusionReaction::rPower = 0;
-double DiffusionReaction::scale = 0;
+
+double DiffusionReaction::rPower;
+double DiffusionReaction::scale;
 
 cube   DiffusionReaction::m_potential;
 

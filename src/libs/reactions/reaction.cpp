@@ -5,6 +5,7 @@
 Reaction::Reaction(string name):
     name(name),
     m_ID(IDcount++),
+    m_siteReactionArrayIndex(UNSET_ARRAY_INDEX),
     m_rate(UNSET_RATE)
 {
 
@@ -46,7 +47,18 @@ void Reaction::loadConfig(const Setting &setting)
 
 }
 
+void Reaction::enable()
+{
+    m_reactionSite->enableReaction(this);
+}
+
+void Reaction::disable()
+{
+    m_reactionSite->disableReaction(this);
+}
+
 const double Reaction::UNSET_RATE = -1;
+const uint   Reaction::UNSET_ARRAY_INDEX = 27;
 
 KMCSolver*   Reaction::mainSolver;
 

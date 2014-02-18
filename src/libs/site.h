@@ -76,7 +76,16 @@ public:
 
     void addReaction(Reaction* reaction);
 
+    void addDependency(Reaction* reaction)
+    {
+        m_dependentReactions.push_back(reaction);
+    }
+
     void setDiffusionReaction(DiffusionReaction* reaction, uint x, uint y, uint z);
+
+    void enableReaction(Reaction *reaction);
+
+    void disableReaction(Reaction *reaction);
 
     void updateReactions();
 
@@ -94,7 +103,6 @@ public:
 
     void distanceTo(const Site * other, int &dx, int &dy, int &dz, bool absolutes = false) const;
 
-    void queueAffectedSites();
 
 
     void reset()
@@ -186,15 +194,19 @@ public:
         return m_z;
     }
 
+    const vector<Reaction*> & siteReactions() const
+    {
+        return m_siteReactions;
+    }
+
+    const vector<Reaction*> & dependentReactions() const
+    {
+        return m_dependentReactions;
+    }
 
     const vector<Reaction*> & activeReactions() const
     {
         return m_activeReactions;
-    }
-
-    const vector<Reaction*> & siteReactions() const
-    {
-        return m_siteReactions;
     }
 
     const vector<Site*> & allNeighbors() const
@@ -236,8 +248,11 @@ private:
 
     static double m_totalEnergy;
 
-    static set<Site*> affectedSites;
-    static void updateAffectedSites();
+    static void updateAffectedReactions();
+
+    static set<Reaction*> affectedReactions;
+
+    void queueAffectedReactions();
 
     static KMCSolver* mainSolver;
 
@@ -257,12 +272,11 @@ private:
 
     int m_particleState = ParticleStates::solution;
 
-
-    DiffusionReaction**** m_diffusionReactions;
-
     vector<Reaction*> m_siteReactions;
 
     vector<Reaction*> m_activeReactions;
+
+    vector<Reaction*> m_dependentReactions;
 
 };
 

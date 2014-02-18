@@ -23,6 +23,23 @@ public:
 
     static void loadConfig(const Setting & setting);
 
+    void update()
+    {
+        if (isNotBlocked())
+        {
+            enable();
+        }
+
+        else
+        {
+            disable();
+        }
+
+        calcRate();
+
+    }
+
+    virtual bool isAffectedByChangeIn(const Site* site) const = 0;
 
     virtual bool isNotBlocked() = 0;
 
@@ -39,7 +56,7 @@ public:
     virtual void dumpInfo(int xr = 0, int yr = 0, int zr = 0)  const;
 
 
-    virtual void setSite(Site* site)
+    void setSite(Site* site)
     {
         m_reactionSite = site;
     }
@@ -49,9 +66,19 @@ public:
         IDcount = 0;
     }
 
+    void setSiteReactionArrayIndex(uint index)
+    {
+        m_siteReactionArrayIndex = index;
+    }
+
     const uint & ID() const
     {
         return m_ID;
+    }
+
+    const uint & siteReactionArrayIndex()
+    {
+        return m_siteReactionArrayIndex;
     }
 
     const double &  rate() const
@@ -85,6 +112,7 @@ public:
     }
 
     const static double UNSET_RATE;
+    const static uint   UNSET_ARRAY_INDEX;
 
     virtual string getInfoSnippet() const
     {
@@ -113,8 +141,13 @@ protected:
     uint m_ID;
 
     Site* m_reactionSite;
+    uint m_siteReactionArrayIndex;
 
     double m_rate;
+
+    void enable();
+
+    void disable();
 
 };
 
