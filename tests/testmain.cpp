@@ -75,19 +75,18 @@ TEST(INITREACTIONS)
     test.testInitialReactionSetup();
 }
 
-*/
-
 TEST(sequential)
 {
     testBed test;
     test.testSequential();
 }
 
-//TEST(KnownCase)
-//{
-//    testBed test;
-//    test.testKnownCase();
-//}
+*/
+TEST(KnownCase)
+{
+    testBed test;
+    test.testKnownCase();
+}
 
 int main()
 {

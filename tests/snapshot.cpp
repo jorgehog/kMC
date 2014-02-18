@@ -81,7 +81,6 @@ bool SnapShot::operator==(const SnapShot &other) const
         }
     }
 
-    cout << "equal siteboxes" << endl;
     return equal;
 
 }

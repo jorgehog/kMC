@@ -27,8 +27,6 @@ KMCSolver::KMCSolver(const Setting & root) :
     outputCounter(0)
 {
 
-    cout << "solver constructor called" << endl;
-
     const Setting & SystemSettings = getSurfaceSetting(root, "System");
     const Setting & SolverSettings = getSurfaceSetting(root, "Solver");
     const Setting & InitializationSettings = getSurfaceSetting(root, "Initialization");
@@ -98,8 +96,6 @@ KMCSolver::~KMCSolver()
         cout << "WARNING: Several solver objects alive when freeing.";
         cout << "Static member variables of objects IN USE by living solver WILL BE FREED." << endl;
     }
-
-    cout << "Solver deleting..." << endl;
 
     for (uint i = 0; i < 5; ++i)
     {

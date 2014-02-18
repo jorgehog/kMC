@@ -23,7 +23,7 @@ testBed::testBed()
 
 KMCSolver *testBed::makeSolver()
 {
-    cout << "making solver" << endl;
+
     Config cfg;
 
     cfg.readFile("infiles/config.cfg");
@@ -911,7 +911,6 @@ void testBed::testKnownCase()
     CHECK_EQUAL(1000, solver->cyclesPerOutput);
     CHECK_EQUAL(1392202630, Seed::initialSeed);
 
-    solver->nCycles = 4;
     solver->run();
 
     ifstream o;

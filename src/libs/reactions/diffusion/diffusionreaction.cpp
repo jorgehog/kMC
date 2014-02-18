@@ -50,22 +50,80 @@ double DiffusionReaction::getSaddleEnergy()
     double ys = ((y() + yD())%NY)/2.0;
     double zs = ((z() + zD())%NZ)/2.0;
 
-    vector<Site*> neighborSet;
+    vector<const Site*> neighborSet;
 
-    std::set_intersection(m_reactionSite->allNeighbors().begin(), m_reactionSite->allNeighbors().end(),
-                          destination->allNeighbors().begin(), destination->allNeighbors().end(),
-                          std::back_inserter(neighborSet));
-
-
-    if (neighborSet.size() == 0)
+    for (const Site* site : m_reactionSite->allNeighbors())
     {
+        for (const Site* dSite : destination->allNeighbors())
+        {
+            if (site == dSite)
+            {
+                neighborSet.push_back(site);
+            }
+        }
+    }
+
+#ifndef NDEBUG
+
+    uint a = neighborSet.size();
+    bool b = a == 98 || a == 62 || a == 78;
+
+    if (!b)
+    {
+        set<Site*> nSet;
+        vector<Site*> lSet;
         cout << "THIS SHOULD NEVER OCCUR" << endl;
+        cout << destination->allNeighbors().size() << endl;
+        cout << m_reactionSite->allNeighbors().size() << endl;
+
+        uint C = 0;
+        uint K = 0;
+        for (Site* site : m_reactionSite->allNeighbors())
+        {
+            uint L = 0;
+            for (Site* siteD : destination->allNeighbors())
+            {
+                if (site == siteD)
+                {
+                    cout << "true " << site << " " << siteD << endl;
+                    C++;
+                    nSet.insert(site);
+                    lSet.push_back(site);
+                }
+
+                if (!(siteD == *(destination->allNeighbors().begin() + L)))
+                {
+                   cout << "fail" << endl;
+                   exit(1);
+                }
+                L++;
+            }
+
+            if (!(site == *(m_reactionSite->allNeighbors().begin() + K)))
+            {
+                cout << "fail" << endl;
+                exit(1);
+            }
+
+            K++;
+        }
+        std::set_intersection(m_reactionSite->allNeighbors().begin(), m_reactionSite->allNeighbors().end(),
+                              destination->allNeighbors().begin(), destination->allNeighbors().end(),
+                              std::inserter(neighborSet, neighborSet.end()));
+
+        cout << C << endl;
+
+
         dumpInfo();
+        cout << lSet.size() << " " << nSet.size() << endl;
         exit(1);
     }
+
+#endif
+
     double Esp = 0;
 
-    for (Site* targetSite : neighborSet)
+    for (const Site* targetSite : neighborSet)
     {
 
         if (targetSite->isActive())
