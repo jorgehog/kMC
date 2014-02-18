@@ -27,6 +27,8 @@ Site::Site(uint _x, uint _y, uint _z) :
         }
     }
 
+    m_diffusionReactions[1][1][1] = NULL;
+
 }
 
 
@@ -530,7 +532,7 @@ void Site::introduceNeighborhood()
             {
                 zTrans = (m_z + m_originTransformVector(k) + NZ)%NZ;
 
-                m_neighborHood[i][j][k] = mainSolver->getSites()[xTrans][yTrans][zTrans];
+                m_neighborHood[i][j][k] = mainSolver->getSite(xTrans, yTrans, zTrans);
 
                 if (m_neighborHood[i][j][k] != this)
                 {
@@ -638,7 +640,7 @@ uint Site::findLevel(uint i, uint j, uint k)
 }
 
 
-void Site::dumpInfo(int xr, int yr, int zr)
+void Site::dumpInfo(int xr, int yr, int zr)  const
 {
 
     cout << "Site   " << m_x << " " << m_y << " " << m_z << endl;
@@ -763,3 +765,10 @@ set<Site*> Site::affectedSites;
 
 const vector<string> ParticleStates::names = {"crystal", "solution", "surface", "any"};
 const vector<string> ParticleStates::shortNames = {"C", "P", "S", "X"};
+
+
+ostream & operator << (ostream& os, const Site& ss)
+{
+    os << "site@(" << ss.x() << "," << ss.y() << "," << ss.z() << ")";
+    return os;
+}

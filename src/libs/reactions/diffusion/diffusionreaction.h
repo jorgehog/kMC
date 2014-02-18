@@ -38,23 +38,24 @@ public:
 
         site->distanceTo(destination, xT, yT, zT);
 
-        site->addDiffusionReaction(this, 1 + xT, 1 + yT, 1 + zT);
+        site->setDiffusionReaction(this, 1 + xT, 1 + yT, 1 + zT);
     }
 
-    const uint & xD ()
+    const uint & xD () const
     {
         return destination->x();
     }
 
-    const uint & yD ()
+    const uint & yD () const
     {
         return destination->y();
     }
 
-    const uint & zD ()
+    const uint & zD () const
     {
         return destination->z();
     }
+
 
     //tmp
     double lastUsedE = 0;
@@ -87,5 +88,14 @@ public:
     void dumpInfo(int xr = 0, int yr = 0, int zr = 0);
 
     bool allowedAtSite();
+
+    string getInfoSnippet() const
+    {
+        stringstream s;
+
+        s << xD() << "," << yD() << "," << zD();
+
+        return s.str();
+    }
 
 };

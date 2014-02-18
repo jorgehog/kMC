@@ -17,7 +17,7 @@ SnapShot::SnapShot(KMCSolver *solver)
         {
             for (uint k = 0; k < siteBox.n_slices; ++k)
             {
-                currentSite = solver->getSites()[i][j][k];
+                currentSite = solver->getSite(i, j, k);
                 siteBox(i, j, k) = currentSite->isActive();
 
                 for (Reaction * r : currentSite->siteReactions())

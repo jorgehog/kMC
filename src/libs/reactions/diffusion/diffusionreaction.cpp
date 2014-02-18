@@ -2,7 +2,7 @@
 #include "../../kmcsolver.h"
 
 DiffusionReaction::DiffusionReaction(Site *destination) :
-    Reaction(),
+    Reaction("DiffusionReaction"),
     destination(destination)
 {
 

@@ -2,7 +2,8 @@
 #include "../kmcsolver.h"
 
 
-Reaction::Reaction():
+Reaction::Reaction(string name):
+    name(name),
     m_ID(IDcount++),
     m_rate(UNSET_RATE)
 {
@@ -14,7 +15,7 @@ Reaction::~Reaction()
 
 }
 
-void Reaction::dumpInfo(int xr, int yr, int zr)
+void Reaction::dumpInfo(int xr, int yr, int zr) const
 {
 
     cout << "[Reaction " << m_ID << "/" << IDcount << "]:" << endl;
@@ -57,3 +58,10 @@ uint         Reaction::NY;
 uint         Reaction::NZ;
 
 uint         Reaction::IDcount = 0;
+
+
+ostream & operator << (ostream& os, const Reaction& ss)
+{
+    os << ss.name << "@(" << ss.x() << "," << ss.y() << "," << ss.z() << ") [" << ss.getInfoSnippet() << "]";
+    return os;
+}

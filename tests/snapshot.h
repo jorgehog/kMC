@@ -1,5 +1,5 @@
-#ifndef SNAPSHOT_H
-#define SNAPSHOT_H
+#pragma once
+
 
 #include <kMC>
 #include <vector>
@@ -24,5 +24,3 @@ public:
 };
 
 ostream& operator<<(ostream& os, const SnapShot& ss);
-
-#endif // SNAPSHOT_H

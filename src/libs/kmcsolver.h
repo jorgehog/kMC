@@ -37,9 +37,9 @@ public:
         return sites[x][y][z]->nNeighbors(1);
     }
 
-    Site**** getSites()
+    Site* getSite(const uint & i, const uint & j, const uint & k) const
     {
-        return sites;
+        return sites[i][j][k];
     }
 
     const uint &getNX ()

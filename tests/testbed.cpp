@@ -148,9 +148,45 @@ void testBed::testDistanceTo()
 void testBed::testDiffusionSiteMatrixSetup()
 {
 
-    for (uint x = 0; x < NX; ++x) {
-        for (uint y = 0; y < NY; ++y) {
-            for (uint z = 0; z < NZ; ++z) {
+    DiffusionReaction * currentDiffReaction;
+
+    for (uint x = 0; x < NX; ++x)
+    {
+        for (uint y = 0; y < NY; ++y)
+        {
+            for (uint z = 0; z < NZ; ++z)
+            {
+                const Site & currentSite = *(solver->getSite(x, y, z));
+
+                for (uint i = 0; i < 3; ++i)
+                {
+                    for (uint j = 0; j < 3; ++j)
+                    {
+                        for (uint k = 0; k < 3; ++k)
+                        {
+
+                            if (i == j && j == k && k == 1)
+                            {
+                                continue;
+                            }
+
+                            currentDiffReaction = currentSite.m_diffusionReactions[i][j][k];
+
+                            const Site & site = *(currentDiffReaction->reactionSite());
+
+                            CHECK_EQUAL(currentSite, site);
+
+                            uint xt = (x + i + NX - 1) % NX;
+                            uint yt = (y + j + NY - 1) % NY;
+                            uint zt = (z + k + NZ - 1) % NZ;
+
+                            const Site & dest  = *(currentDiffReaction->destination);
+                            const Site & dest2 = *(solver->getSite(xt, yt, zt));
+
+                            CHECK_EQUAL(dest, dest2);
+                        }
+                    }
+                }
 
             }
         }

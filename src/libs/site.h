@@ -105,7 +105,7 @@ public:
     }
 
 
-    void dumpInfo(int xr = 0, int yr = 0, int zr = 0);
+    void dumpInfo(int xr = 0, int yr = 0, int zr = 0) const;
 
 
     /*
@@ -212,6 +212,11 @@ public:
         return m_energy;
     }
 
+    bool operator == (const Site & other) const
+    {
+        return this == &other;
+    }
+
 
     friend class testBed;
 
@@ -260,3 +265,7 @@ private:
     vector<Reaction*> m_activeReactions;
 
 };
+
+
+ostream& operator<<(ostream& os, const Site& ss);
+
