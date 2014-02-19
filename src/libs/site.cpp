@@ -30,7 +30,7 @@ Site::~Site()
         delete [] m_neighborHood[i];
     }
 
-    delete m_neighborHood;
+    delete [] m_neighborHood;
 
     for (Reaction* reaction : m_siteReactions)
     {
@@ -254,6 +254,7 @@ void Site::loadConfig(const Setting &setting)
 void Site::addReaction(Reaction *reaction)
 {
     reaction->setSite(this);
+    reaction->initialize();
 
     for (Site* neighbor : m_allNeighbors)
     {
@@ -268,17 +269,28 @@ void Site::addReaction(Reaction *reaction)
 
 void Site::enableReaction(Reaction * reaction)
 {
+    assert(reaction->siteReactionArrayIndex() == Reaction::UNSET_ARRAY_INDEX);
+
     reaction->setSiteReactionArrayIndex(m_activeReactions.size());
     m_activeReactions.push_back(reaction);
+
 }
 
 void Site::disableReaction(Reaction * reaction)
 {
+
+    assert(reaction->siteReactionArrayIndex() != Reaction::UNSET_ARRAY_INDEX);
+    assert(m_activeReactions.at(reaction->siteReactionArrayIndex()) == reaction);
+
     m_activeReactions.erase(m_activeReactions.begin() + reaction->siteReactionArrayIndex());
 
     for (uint i = reaction->siteReactionArrayIndex(); i < m_activeReactions.size(); i++) {
         m_activeReactions.at(i)->setSiteReactionArrayIndex(i);
     }
+
+#ifndef NDEBUG
+    reaction->setSiteReactionArrayIndex(Reaction::UNSET_ARRAY_INDEX);
+#endif
 
 }
 
@@ -443,9 +455,12 @@ void Site::deactivate()
     }
 
     informNeighborhoodOnChange(-1);
+
     queueAffectedReactions();
 
     updateAffectedReactions();
+
+    m_activeReactions.clear();
 
     m_totalActiveSites--;
 
@@ -566,6 +581,24 @@ void Site::informNeighborhoodOnChange(int change)
 void Site::queueAffectedReactions()
 {
 
+#ifndef NDEBUG
+
+    for (Reaction* r : m_siteReactions)
+    {
+        for (Reaction* r1 : m_dependentReactions)
+        {
+            if (r == r1)
+            {
+                cout << "a site's reaction dependencies should come from outsite reactions" << endl;
+                cout << *r << " " << *r1 << endl;
+                exit(1);
+            }
+        }
+    }
+
+#endif
+
+    affectedReactions.insert(m_siteReactions.begin(), m_siteReactions.end());
     affectedReactions.insert(m_dependentReactions.begin(), m_dependentReactions.end());
 
 }
@@ -732,6 +765,6 @@ const vector<string> ParticleStates::shortNames = {"C", "P", "S", "X"};
 
 ostream & operator << (ostream& os, const Site& ss)
 {
-    os << "site@(" << ss.x() << "," << ss.y() << "," << ss.z() << ")";
+    os << ss.str();
     return os;
 }

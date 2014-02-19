@@ -14,17 +14,18 @@ TEST(RNG_CHECK)
     test.testRNG();
 }
 
+TEST(DIFF_REACT_SETUP)
+{
+    testBed test;
+    test.testDiffusionSiteMatrixSetup();
+}
+/*
 TEST(NEIGHBORS_SETUP)
 {
     testBed test;
     test.testEnergyAndNeighborSetup();
 }
 
-TEST(DIFF_REACT_SETUP)
-{
-    testBed test;
-    test.testDiffusionSiteMatrixSetup();
-}
 
 TEST(NEIGHBOUR_CHECK)
 {
@@ -90,6 +91,7 @@ TEST(KnownCase)
     testBed test;
     test.testKnownCase();
 }
+*/
 
 int main()
 {

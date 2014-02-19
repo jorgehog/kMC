@@ -155,7 +155,11 @@ void testBed::testDiffusionSiteMatrixSetup()
         {
             for (uint z = 0; z < NZ; ++z)
             {
-                const Site & currentSite = *(solver->getSite(x, y, z));
+                Site & currentSite = *(solver->getSite(x, y, z));
+
+                uint C = 0;
+                CHECK_EQUAL(26 + 9*6 + 4*6*6 + 4*4*6 + 3*12 + 2*24 + 8, currentSite.dependentReactions().size());
+                currentSite.activate();
 
                 for (int i = -1; i < 2; ++i)
                 {
@@ -177,19 +181,36 @@ void testBed::testDiffusionSiteMatrixSetup()
 
                             bool isDependent = false;
 
-                            for (Reaction* reaction : currentSite.dependentReactions())
+
+                            CHECK_EQUAL(26 - C, currentSite.activeReactions().size());
+
+                            for (Reaction* reaction : currentSite.activeReactions())
                             {
-                                if (*(reaction->reactionSite()) == dest)
+                                if (*(((DiffusionReaction*)reaction)->destination) == dest)
                                 {
+                                    reaction->disable();
                                     isDependent = true;
                                 }
                             }
 
+                            C++;
                             CHECK_EQUAL(true, isDependent);
+
 
                         }
                     }
                 }
+
+                for (Reaction * r : currentSite.siteReactions())
+                {
+                    r->update();
+                }
+
+                CHECK_EQUAL(26, currentSite.activeReactions().size());
+
+                currentSite.deactivate();
+
+                CHECK_EQUAL(0, currentSite.activeReactions().size());
 
             }
         }
@@ -873,19 +894,19 @@ void testBed::testInitialReactionSetup()
 
 
 
-//    Site* currentSite;
-//    for (uint i = 0; i < NX; ++i) {
-//        for (uint j = 0; j < NY; ++j) {
-//            for (uint k = 0; k < NZ; ++k) {
+    //    Site* currentSite;
+    //    for (uint i = 0; i < NX; ++i) {
+    //        for (uint j = 0; j < NY; ++j) {
+    //            for (uint k = 0; k < NZ; ++k) {
 
-//                currentSite = solver->sites[i][j][k];
+    //                currentSite = solver->sites[i][j][k];
 
-//                currentSite->updateReactions();
-//                currentSite->calculateRates();
+    //                currentSite->updateReactions();
+    //                currentSite->calculateRates();
 
-//            }
-//        }
-//    }
+    //            }
+    //        }
+    //    }
 
 
     std::vector<Reaction*> reactions;

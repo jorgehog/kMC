@@ -224,6 +224,14 @@ public:
         return this == &other;
     }
 
+    string str() const
+    {
+        stringstream s;
+        s << "site@(" << x() << "," << y() << "," << z() << ")";
+
+        return s.str();
+    }
+
 
     friend class testBed;
 

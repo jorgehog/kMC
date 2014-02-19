@@ -23,26 +23,9 @@ public:
 
     static void loadConfig(const Setting & setting);
 
-    void update()
-    {
-        if (!m_reactionSite->isActive())
-        {
-            return;
-        }
+    void initialize();
 
-        if (isNotBlocked())
-        {
-            enable();
-        }
-
-        else
-        {
-            disable();
-        }
-
-        calcRate();
-
-    }
+    void update();
 
     virtual bool isAffectedByChangeIn(const Site* site) const = 0;
 
@@ -129,6 +112,17 @@ public:
         return this == &other;
     }
 
+    string str() const
+    {
+
+        stringstream s;
+        s << name << "@(" << x() << "," << y() << "," << z() << ") [" << getInfoSnippet() << "]";
+
+        return s.str();
+
+    }
+
+    friend class testBed;
 
 protected:
 

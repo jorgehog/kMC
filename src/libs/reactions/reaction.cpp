@@ -47,6 +47,38 @@ void Reaction::loadConfig(const Setting &setting)
 
 }
 
+void Reaction::initialize()
+{
+    if (m_reactionSite->isActive() && isNotBlocked())
+    {
+        cout << "enabled" << endl;
+        enable();
+    }
+}
+
+void Reaction::update()
+{
+
+    if (!m_reactionSite->isActive())
+    {
+        m_siteReactionArrayIndex = UNSET_ARRAY_INDEX;
+
+        return;
+    }
+
+    if (isNotBlocked())
+    {
+        enable();
+    }
+
+    else
+    {
+        disable();
+    }
+
+    calcRate();
+
+}
 void Reaction::enable()
 {
     m_reactionSite->enableReaction(this);
@@ -74,6 +106,6 @@ uint         Reaction::IDcount = 0;
 
 ostream & operator << (ostream& os, const Reaction& ss)
 {
-    os << ss.name << "@(" << ss.x() << "," << ss.y() << "," << ss.z() << ") [" << ss.getInfoSnippet() << "]";
+    os << ss.str();
     return os;
 }
