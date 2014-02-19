@@ -4,7 +4,8 @@
 DiffusionReaction::DiffusionReaction(Site *destination) :
     Reaction("DiffusionReaction"),
     destination(destination),
-    updateFlag(updateFull)
+    updateFlag(updateFull),
+    energyShift(0)
 {
 
 }
@@ -48,16 +49,27 @@ void DiffusionReaction::loadConfig(const Setting &setting)
 }
 
 
-void DiffusionReaction::setUpdateFlags(const Site *changedSite)
+void DiffusionReaction::setUpdateFlags(const Site *changedSite, uint i, uint j, uint k, uint level, double dE)
 {
 
-    if (destination->maxDistanceTo(changedSite) > Site::nNeighborsLimit())
+    (void) i;
+    (void) j;
+    (void) k;
+
+    if (level == 0 || m_rate == UNSET_RATE)
     {
+        updateFlag = updateFull;
+    }
+
+    else if (destination->maxDistanceTo(changedSite) > Site::nNeighborsLimit())
+    {
+        energyShift = dE;
         updateFlag = updateNoSaddle;
     }
 
     else
     {
+        assert(level == Site::nNeighborsLimit() - 1);
         updateFlag = updateFull;
     }
 
@@ -132,17 +144,28 @@ void DiffusionReaction::calcRate()
     if (updateFlag == updateNoSaddle)
     {
         assert(m_rate != UNSET_RATE);
+        assert(energyShift != 0);
 
-        m_rate *= exp(beta*(lastUsedE - reactionSite()->energy()));
+        m_rate *= exp(-beta*energyShift);
 
 #ifndef NDEBUG
 
+        if (fabs(lastUsedE - reactionSite()->energy() + energyShift) > 1E-15)
+        {
+            cout << "ENERGY SHIFT MISMATCH" << endl;
+            cout << lastUsedE - reactionSite()->energy() <<endl;
+            cout << -energyShift << endl;
+            cout << lastUsedE - reactionSite()->energy() + energyShift << endl;
+            exit(1);
+        }
         double newRate = m_rate;
+        updateFlag = updateFull;
         calcRate();
-        if (fabs(newRate - m_rate) < 0.00001)
+        if (fabs(newRate - m_rate) > 1E-15)
         {
             cout << "SOMETHING WENT WRONG IN UPDATEING ALG" << endl;
             cout << newRate << "  " << m_rate << endl;
+            cout << newRate - m_rate << endl;
             exit(1);
         }
 

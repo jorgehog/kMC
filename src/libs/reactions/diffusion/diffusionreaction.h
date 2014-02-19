@@ -84,11 +84,13 @@ private:
 
     int updateFlag;
 
+    double energyShift;
+
 
     // Reaction interface
 public:
 
-    void setUpdateFlags(const Site* changedSite);
+    void setUpdateFlags(const Site * changedSite, uint i, uint j, uint k, uint level, double dE);
 
     void calcRate();
 

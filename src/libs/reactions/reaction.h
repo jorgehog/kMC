@@ -23,7 +23,7 @@ public:
 
     static void loadConfig(const Setting & setting);
 
-    virtual void setUpdateFlags(const Site * changedSite) = 0;
+    virtual void setUpdateFlags(const Site * changedSite, uint i, uint j, uint k, uint level, double dE) = 0;
 
     virtual bool isNotBlocked() = 0;
 

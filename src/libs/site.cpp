@@ -122,7 +122,7 @@ void Site::setParticleState(int state)
 
             break;
 
-        //Crystal -> surface
+            //Crystal -> surface
         case ParticleStates::crystal:
 
             if (isFixedCrystalSeed)
@@ -465,9 +465,6 @@ void Site::activate()
     affectedSites.insert(this);
 
     informNeighborhoodOnChange(+1);
-    queueAffectedSites();
-
-    updateAffectedSites();
 
     m_totalActiveSites++;
 
@@ -505,9 +502,6 @@ void Site::deactivate()
     }
 
     informNeighborhoodOnChange(-1);
-    queueAffectedSites();
-
-    updateAffectedSites();
 
     m_totalActiveSites--;
 
@@ -619,9 +613,19 @@ void Site::informNeighborhoodOnChange(int change)
 
                 m_totalEnergy += dE;
 
+                //This approach assumes that recursive updating of non-neighboring sites
+                //WILL NOT ACTIVATE OR DEACTIVATE any sites, simply change their state,
+                //and thus not interfere with any flags set here, not require flags of their own.
+                for (Reaction * reaction : neighbor->siteReactions())
+                {
+                    reaction->setUpdateFlags(this, i, j, k, level, dE);
+                }
+
             }
         }
     }
+
+    updateAffectedSites();
 
 }
 
