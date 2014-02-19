@@ -3,7 +3,8 @@
 
 DiffusionReaction::DiffusionReaction(Site *destination) :
     Reaction("DiffusionReaction"),
-    destination(destination)
+    destination(destination),
+    updateFlag(updateFull)
 {
 
 }
@@ -43,6 +44,22 @@ void DiffusionReaction::loadConfig(const Setting &setting)
     //    scale = 1.0/accu(m_potential);
 
     m_potential *= scale;
+
+}
+
+
+void DiffusionReaction::setUpdateFlags(const Site *changedSite)
+{
+
+    if (destination->maxDistanceTo(changedSite) > Site::nNeighborsLimit())
+    {
+        updateFlag = updateNoSaddle;
+    }
+
+    else
+    {
+        updateFlag = updateFull;
+    }
 
 }
 
@@ -112,17 +129,33 @@ double DiffusionReaction::getSaddleEnergy()
 void DiffusionReaction::calcRate()
 {
 
+    if (updateFlag == updateNoSaddle)
+    {
+        assert(m_rate != UNSET_RATE);
+
+        m_rate *= exp(beta*(lastUsedE - reactionSite()->energy()));
+
+#ifndef NDEBUG
+
+        double newRate = m_rate;
+        calcRate();
+        if (fabs(newRate - m_rate) < 0.00001)
+        {
+            cout << "SOMETHING WENT WRONG IN UPDATEING ALG" << endl;
+            cout << newRate << "  " << m_rate << endl;
+            exit(1);
+        }
+
+#endif
+
+    }
+
+    else
+    {
+        m_rate = m_linearRateScale*exp(-beta*(m_reactionSite->energy()-getSaddleEnergy()));
+    }
+
     lastUsedE = m_reactionSite->energy();
-    m_rate = m_linearRateScale*exp(-beta*(m_reactionSite->energy()-getSaddleEnergy()));
-
-    //#ifndef NDEBUG
-    //    if (m_rate < 0.01 || m_rate > 1.1)
-    //    {
-    //        cout << "unnormalized rate of reaction " << endl;
-    //        cout << m_rate << endl;
-    //    }
-
-    //#endif
 
 }
 

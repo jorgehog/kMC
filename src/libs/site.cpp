@@ -383,6 +383,16 @@ void Site::distanceTo(const Site *other, int &dx, int &dy, int &dz, bool absolut
 
 }
 
+uint Site::maxDistanceTo(const Site *other)
+{
+    int X, Y, Z;
+
+    this->distanceTo(other, X, Y, Z, true);
+
+    return findLevel((uint)X, (uint)Y, (uint)Z) + 1;
+
+}
+
 bool Site::hasNeighboring(int state)
 {
 

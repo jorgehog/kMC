@@ -76,9 +76,20 @@ private:
 
     Site* destination;
 
+    enum
+    {
+        updateFull,
+        updateNoSaddle
+    };
+
+    int updateFlag;
+
 
     // Reaction interface
 public:
+
+    void setUpdateFlags(const Site* changedSite);
+
     void calcRate();
 
     bool isNotBlocked();

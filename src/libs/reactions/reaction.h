@@ -23,13 +23,11 @@ public:
 
     static void loadConfig(const Setting & setting);
 
+    virtual void setUpdateFlags(const Site * changedSite) = 0;
 
     virtual bool isNotBlocked() = 0;
 
-    virtual bool allowedAtSite()
-    {
-        return true;
-    }
+    virtual bool allowedAtSite() = 0;
 
     virtual void calcRate() = 0;
 

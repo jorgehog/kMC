@@ -94,6 +94,8 @@ public:
 
     void distanceTo(const Site * other, int &dx, int &dy, int &dz, bool absolutes = false) const;
 
+    uint maxDistanceTo(const Site * other);
+
     void queueAffectedSites();
 
 
