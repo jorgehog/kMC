@@ -175,18 +175,29 @@ bool DiffusionReaction::allowedAtSite()
 
 bool DiffusionReaction::isAffectedByChangeIn(const Site *site) const
 {
-    int X, Y, Z;
-    int XD, YD, ZD;
 
-    m_reactionSite->distanceTo(site, X, Y, Z, true);
+    for (Site* neighbor : reactionSite()->allNeighbors())
+    {
+        if (site == neighbor)
+        {
+            return true;
+        }
+    }
 
-    uint l = Site::findLevel((uint)X, (uint)Y, (uint)Z) + 1;
+    return false;
 
-    destination->distanceTo(site, XD, YD, ZD, true);
+//    int X, Y, Z;
+//    int XD, YD, ZD;
 
-    uint ld = Site::findLevel((uint)XD, (uint)YD, (uint)ZD);
+//    m_reactionSite->distanceTo(site, X, Y, Z, true);
 
-    return (l == Site::nNeighborsLimit() && ld == 0) || site == destination;
+//    uint l = Site::findLevel((uint)X, (uint)Y, (uint)Z) + 1;
+
+//    destination->distanceTo(site, XD, YD, ZD, true);
+
+//    uint ld = Site::findLevel((uint)XD, (uint)YD, (uint)ZD);
+
+//    return (l == Site::nNeighborsLimit() && ld == 0) || site == destination;
 }
 
 

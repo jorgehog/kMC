@@ -27,6 +27,11 @@ public:
 
     void update();
 
+    bool isActive()
+    {
+        return m_siteReactionArrayIndex != UNSET_ARRAY_INDEX;
+    }
+
     virtual bool isAffectedByChangeIn(const Site* site) const = 0;
 
     virtual bool isNotBlocked() = 0;

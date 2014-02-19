@@ -269,7 +269,10 @@ void Site::addReaction(Reaction *reaction)
 
 void Site::enableReaction(Reaction * reaction)
 {
-    assert(reaction->siteReactionArrayIndex() == Reaction::UNSET_ARRAY_INDEX);
+    if (reaction->isActive())
+    {
+        return;
+    }
 
     reaction->setSiteReactionArrayIndex(m_activeReactions.size());
     m_activeReactions.push_back(reaction);
@@ -279,7 +282,11 @@ void Site::enableReaction(Reaction * reaction)
 void Site::disableReaction(Reaction * reaction)
 {
 
-    assert(reaction->siteReactionArrayIndex() != Reaction::UNSET_ARRAY_INDEX);
+    if (!reaction->isActive())
+    {
+        return;
+    }
+
     assert(m_activeReactions.at(reaction->siteReactionArrayIndex()) == reaction);
 
     m_activeReactions.erase(m_activeReactions.begin() + reaction->siteReactionArrayIndex());
@@ -288,9 +295,7 @@ void Site::disableReaction(Reaction * reaction)
         m_activeReactions.at(i)->setSiteReactionArrayIndex(i);
     }
 
-#ifndef NDEBUG
     reaction->setSiteReactionArrayIndex(Reaction::UNSET_ARRAY_INDEX);
-#endif
 
 }
 
@@ -564,7 +569,6 @@ void Site::informNeighborhoodOnChange(int change)
 
                 level = m_levelMatrix(i, j, k);
                 neighbor->m_nNeighbors(level)+=change;
-
 
                 dE = change*DiffusionReaction::potential()(i, j, k);
 

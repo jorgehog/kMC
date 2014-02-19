@@ -8,6 +8,7 @@
 
 using namespace std;
 
+
 TEST(RNG_CHECK)
 {
     testBed test;
@@ -19,7 +20,7 @@ TEST(DIFF_REACT_SETUP)
     testBed test;
     test.testDiffusionSiteMatrixSetup();
 }
-/*
+
 TEST(NEIGHBORS_SETUP)
 {
     testBed test;
@@ -51,11 +52,14 @@ TEST(UPDATE_NEIGHBORS)
     test.testUpdateNeigbors();
 }
 
+
+
 TEST(RATECALC)
 {
     testBed test;
     test.testRateCalculation();
 }
+
 
 TEST(REACTIONCHOISE)
 {
@@ -91,7 +95,6 @@ TEST(KnownCase)
     testBed test;
     test.testKnownCase();
 }
-*/
 
 int main()
 {

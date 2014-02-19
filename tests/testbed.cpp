@@ -158,7 +158,8 @@ void testBed::testDiffusionSiteMatrixSetup()
                 Site & currentSite = *(solver->getSite(x, y, z));
 
                 uint C = 0;
-                CHECK_EQUAL(26 + 9*6 + 4*6*6 + 4*4*6 + 3*12 + 2*24 + 8, currentSite.dependentReactions().size());
+//                CHECK_EQUAL(26 + 9*6 + 4*6*6 + 4*4*6 + 3*12 + 2*24 + 8, currentSite.dependentReactions().size());
+                CHECK_EQUAL(26*124, currentSite.dependentReactions().size());
                 currentSite.activate();
 
                 for (int i = -1; i < 2; ++i)
@@ -472,7 +473,16 @@ void testBed::testReactionChoise(uint LIM)
 
 void testBed::testRateCalculation () {
 
-    reset();
+//    for (uint i = 0; i < NX; ++i) {
+//        for (uint j = 0; j < NY; ++j) {
+//            for (uint k = 0; k < NZ; ++k) {
+//                for (Reaction* r : solver->getSite(i, j, k)->siteReactions())
+//                {
+//                    r->calcRate();
+//                }
+//            }
+//        }
+//    }
 
     solver->initializeCrystal();
     solver->getRateVariables();
@@ -481,9 +491,29 @@ void testBed::testRateCalculation () {
         for (uint j = 0; j < NY; ++j) {
             for (uint k = 0; k < NZ; ++k) {
 
-                for (Reaction* r : solver->sites[i][j][k]->activeReactions()) {
+                for (Reaction* r : solver->getSite(i, j, k)->siteReactions()) {
 
-                    //                    double RATE = r->rate();
+                    bool isIn = false;
+                    for (Reaction* r2 : solver->getSite(i, j, k)->activeReactions())
+                    {
+                        if (r2 == r)
+                        {
+                            isIn = true;
+                            break;
+                        }
+                    }
+
+
+                    CHECK_EQUAL(isIn, r->isActive());
+
+                    CHECK_EQUAL(r->reactionSite()->isActive() && r->isNotBlocked(), r->isActive());
+
+                    if (!r->isActive())
+                    {
+                        continue;
+                    }
+
+                    double RATE = r->rate();
                     double E = ((DiffusionReaction*)r)->lastUsedE;
                     double Esp = ((DiffusionReaction*)r)->lastUsedEsp;
                     r->calcRate();
@@ -492,7 +522,7 @@ void testBed::testRateCalculation () {
 
                     CHECK_EQUAL(Esp, ((DiffusionReaction*)r)->lastUsedEsp);
 
-                    //                    CHECK_EQUAL(r->rate(), RATE);
+                    CHECK_EQUAL(r->rate(), RATE);
 
                 }
             }

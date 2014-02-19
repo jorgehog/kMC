@@ -51,8 +51,9 @@ void Reaction::initialize()
 {
     if (m_reactionSite->isActive() && isNotBlocked())
     {
-        cout << "enabled" << endl;
+        assert(false && "NOT TESTED");
         enable();
+        calcRate();
     }
 }
 
