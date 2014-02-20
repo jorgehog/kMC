@@ -63,6 +63,9 @@ public:
 
     static uint counterAllRate;
 
+    static wall_clock timer;
+    static double totalTime;
+
 
     friend class testBed;
 

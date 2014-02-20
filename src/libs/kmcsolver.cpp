@@ -160,7 +160,7 @@ void KMCSolver::run()
     }
     cout << "Frac equal saddles calculated:" << DiffusionReaction::counterEqSP/(double)DiffusionReaction::totalSP << endl;
     cout << "Frac saddles recalculated: " << DiffusionReaction::totalSP/(double)DiffusionReaction::counterAllRate << endl;
-
+    cout << "Average time in saddleFunc: " << DiffusionReaction::totalTime/DiffusionReaction::totalSP*1E6 << " µs" << endl;
 }
 
 

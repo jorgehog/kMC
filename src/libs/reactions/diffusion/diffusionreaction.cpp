@@ -74,6 +74,8 @@ void DiffusionReaction::setUpdateFlags(const Site *changedSite, uint level)
 double DiffusionReaction::getSaddleEnergy()
 {
 
+    timer.tic();
+
     double xs = ((x() + xD())%NX)/2.0;
     double ys = ((y() + yD())%NY)/2.0;
     double zs = ((z() + zD())%NZ)/2.0;
@@ -130,6 +132,8 @@ double DiffusionReaction::getSaddleEnergy()
     totalSP++;
 
     lastUsedEsp = Esp;
+
+    totalTime += timer.toc();
 
     return Esp;
 
@@ -212,11 +216,13 @@ bool DiffusionReaction::allowedAtSite()
 }
 
 
-double DiffusionReaction::rPower = 0;
-double DiffusionReaction::scale = 0;
+double DiffusionReaction::rPower;
+double DiffusionReaction::scale;
 
 cube   DiffusionReaction::m_potential;
 
 uint   DiffusionReaction::totalSP = 0;
 uint   DiffusionReaction::counterEqSP = 0;
 uint   DiffusionReaction::counterAllRate = 0;
+double DiffusionReaction::totalTime = 0;
+wall_clock DiffusionReaction::timer;
