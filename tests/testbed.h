@@ -28,10 +28,9 @@ public:
 
     void testRNG();
 
-    void testBinarySearchChoise(uint LIM);
+    void testBinarySearchChoise();
 
-
-    void testReactionChoise(uint LIM);
+    void testReactionChoise();
 
     void testRateCalculation();
 

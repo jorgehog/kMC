@@ -8,88 +8,40 @@
 
 using namespace std;
 
-TEST(RNG_CHECK)
-{
-    testBed test;
-    test.testRNG();
+#define UBERTEST(which)    \
+TEST(which)                \
+{                          \
+    testBed test;          \
+    test.test##which();  \
 }
 
-TEST(NEIGHBORS_SETUP)
-{
-    testBed test;
-    test.testEnergyAndNeighborSetup();
-}
+UBERTEST(RNG)
 
-TEST(DIFF_REACT_SETUP)
-{
-    testBed test;
-    test.testDiffusionSiteMatrixSetup();
-}
+UBERTEST(EnergyAndNeighborSetup)
 
-TEST(NEIGHBOUR_CHECK)
-{
-    testBed test;
-    test.testNeighbors();
-}
+UBERTEST(DiffusionSiteMatrixSetup)
 
-TEST(DISTANCE_TO)
-{
-    testBed test;
-    test.testDistanceTo();
-}
+UBERTEST(Neighbors)
 
-TEST(BINARYSEARCH)
-{
-    testBed test;
-    test.testBinarySearchChoise(10000);
-}
+UBERTEST(DistanceTo)
 
-TEST(UPDATE_NEIGHBORS)
-{
-    testBed test;
-    test.testUpdateNeigbors();
-}
+UBERTEST(BinarySearchChoise)
 
-TEST(RATECALC)
-{
-    testBed test;
-    test.testRateCalculation();
-}
+UBERTEST(UpdateNeigbors)
 
-TEST(REACTIONCHOISE)
-{
-    testBed test;
-    test.testReactionChoise(1);
-}
+UBERTEST(RateCalculation)
 
-TEST(CRYSTALSTUFF1) {
-    testBed test;
-    test.testHasCrystalNeighbor();
-}
+UBERTEST(ReactionChoise)
 
-TEST(INITCRYSTAL)
-{
-    testBed test;
-    test.testInitializationOfCrystal();
-}
+UBERTEST(HasCrystalNeighbor)
 
-TEST(INITREACTIONS)
-{
-    testBed test;
-    test.testInitialReactionSetup();
-}
+UBERTEST(InitializationOfCrystal)
 
-TEST(sequential)
-{
-    testBed test;
-    test.testSequential();
-}
+UBERTEST(InitialReactionSetup)
 
-TEST(KnownCase)
-{
-    testBed test;
-    test.testKnownCase();
-}
+UBERTEST(Sequential)
+
+UBERTEST(KnownCase)
 
 int main()
 {

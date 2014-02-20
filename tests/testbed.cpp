@@ -332,8 +332,9 @@ void testBed::testRNG()
 
 }
 
-void testBed::testBinarySearchChoise(uint LIM)
+void testBed::testBinarySearchChoise()
 {
+    uint LIM = 10000;
     uint choice;
     uint secondChoice;
     double R;
@@ -373,9 +374,9 @@ void testBed::testBinarySearchChoise(uint LIM)
 
 }
 
-void testBed::testReactionChoise(uint LIM)
+void testBed::testReactionChoise()
 {
-
+    uint LIM = 3;
     uint choice;
     double kTot;
     double r_pre;
@@ -745,6 +746,7 @@ void testBed::testHasCrystalNeighbor()
 
     //activating the seed. Should make closest neighbors crystals.
     initCrystal->activate();
+    Site::updateAffectedSites();
 
     uint nActives = 0;
     for (int i = -3; i < 4; ++i) {
@@ -837,6 +839,7 @@ void testBed::testInitialReactionSetup()
     }
 
     solver->initializeCrystal();
+    Site::updateAffectedSites();
 
     std::vector<Reaction*> oldReactions;
     double totRate1 = 0;

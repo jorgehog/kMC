@@ -45,6 +45,8 @@ public:
 
     static void loadConfig(const Setting & setting);
 
+    static void updateAffectedSites();
+
     static uint findLevel(uint i, uint j, uint k);
 
     static void resetAll()
@@ -53,6 +55,7 @@ public:
         m_totalEnergy = 0;
         m_levelMatrix.reset();
         m_originTransformVector.reset();
+        affectedSites.clear();
     }
 
     /*
@@ -247,7 +250,6 @@ private:
     static double m_totalEnergy;
 
     static set<Site*> affectedSites;
-    static void updateAffectedSites();
 
     static KMCSolver* mainSolver;
 

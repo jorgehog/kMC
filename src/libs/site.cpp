@@ -444,14 +444,6 @@ void Site::activate()
 
 #ifndef NDEBUG
 
-    if (affectedSites.size() != 0)
-    {
-        cout << "affectedsites not cleared." << endl;
-        cout << affectedSites.size() << " != " << 0 << endl;
-
-        exit(1);
-    }
-
     if (m_active == true)
     {
         cout << "Activating active site. " << endl;
@@ -487,8 +479,6 @@ void Site::deactivate()
 {
 
 #ifndef NDEBUG
-
-    assert(affectedSites.size() == 0);
 
     if (m_active == false)
     {
@@ -634,6 +624,8 @@ void Site::informNeighborhoodOnChange(int change)
                     reaction->setUpdateFlags(this, level);
                 }
 
+                affectedSites.insert(neighbor);
+
             }
         }
     }
@@ -664,8 +656,6 @@ void Site::informNeighborhoodOnChange(int change)
             exit(1);
         }
     }
-
-    updateAffectedSites();
 
 }
 

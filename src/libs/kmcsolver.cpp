@@ -146,6 +146,7 @@ void KMCSolver::run()
         choice = getReactionChoice(R);
 
         allReactions[choice]->execute();
+        Site::updateAffectedSites();
 
         if (cycle%cyclesPerOutput == 0)
         {
@@ -403,6 +404,8 @@ void KMCSolver::getRateVariables()
     kTot = 0;
     accuAllRates.clear();
     allReactions.clear();
+
+    Site::updateAffectedSites();
 
     for (uint x = 0; x < NX; ++x)
     {
