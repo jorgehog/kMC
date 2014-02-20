@@ -61,7 +61,7 @@ void DiffusionReaction::setUpdateFlags(const Site *changedSite, uint i, uint j, 
         updateFlag = updateFull;
     }
 
-    else if (destination->maxDistanceTo(changedSite) > Site::nNeighborsLimit())
+    else if (destination->maxDistanceTo(changedSite) == Site::nNeighborsLimit() + 1)
     {
         energyShift = dE;
         updateFlag = updateNoSaddle;
