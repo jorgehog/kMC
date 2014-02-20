@@ -47,7 +47,9 @@ void DiffusionReaction::loadConfig(const Setting &setting)
     m_potential *= scale;
 
 }
-
+/*
+ * 31% 64% old | 5% 47 % new
+ */
 
 void DiffusionReaction::setUpdateFlags(const Site *changedSite, uint level)
 {
@@ -81,6 +83,7 @@ double DiffusionReaction::getSaddleEnergy()
     double zs = ((z() + zD())%NZ)/2.0;
 
     vector<const Site*> neighborSet;
+    bool empty = true;
 
     for (const Site* site : m_reactionSite->allNeighbors())
     {
@@ -89,8 +92,14 @@ double DiffusionReaction::getSaddleEnergy()
             if (site == dSite && site->isActive())
             {
                 neighborSet.push_back(site);
+                empty = false;
             }
         }
+    }
+
+    if (empty)
+    {
+        return 0;
     }
 
     double Esp = 0;
@@ -124,14 +133,64 @@ double DiffusionReaction::getSaddleEnergy()
 
     }
 
+    bool sameSetup = true;
+
+    if (lastSetup.size() != neighborSet.size())
+    {
+        sameSetup = false;
+    }
+    else
+    {
+        for (const Site* s: neighborSet)
+        {
+            bool isIn = false;
+            for (const Site* slast : lastSetup)
+            {
+                if (s == slast)
+                {
+                    isIn = true;
+                    break;
+                }
+            }
+            if (!isIn)
+            {
+                sameSetup = false;
+                break;
+            }
+        }
+    }
+
     if (fabs(lastUsedEsp - Esp) < 1E-10)
     {
+        if (sameSetup)
+        {
+            for (const Site* s: neighborSet)
+            {
+                if (s->isSurface())
+                {
+                    cout << "surface in set" << endl;
+                }
+                else if (s->isCrystal())
+                {
+                    cout << "crystal in set" << endl;
+                }
+            }
+            cout << "exactly same setup calculated saddle twice..should be flagged" << endl;
+            cout << "got flag to update all by this event: " << endl;
+            exit(1);
+        }
         counterEqSP++;
+
     }
 
     totalSP++;
 
     lastUsedEsp = Esp;
+
+    for (const Site * s: neighborSet)
+    {
+        lastSetup.insert(s);
+    }
 
     totalTime += timer.toc();
 
@@ -216,7 +275,7 @@ bool DiffusionReaction::allowedAtSite()
 }
 
 
-double DiffusionReaction::rPower;
+double DiffusionReaction::rPower ;
 double DiffusionReaction::scale;
 
 cube   DiffusionReaction::m_potential;

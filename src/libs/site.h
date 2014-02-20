@@ -150,7 +150,7 @@ public:
     }
 
 
-    const int & particleState()
+    const int & particleState() const
     {
         return m_particleState;
     }
@@ -166,12 +166,12 @@ public:
     }
 
 
-    bool isCrystal()
+    bool isCrystal() const
     {
         return m_particleState == ParticleStates::crystal;
     }
 
-    bool isSurface()
+    bool isSurface() const
     {
         return m_particleState == ParticleStates::surface;
     }

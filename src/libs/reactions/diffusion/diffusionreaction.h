@@ -57,6 +57,7 @@ public:
     //tmp
     double lastUsedEnergy;
     double lastUsedEsp;
+    set<const Site*> lastSetup;
 
     static uint counterEqSP;
     static uint totalSP;
