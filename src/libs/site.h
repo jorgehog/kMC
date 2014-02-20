@@ -79,8 +79,6 @@ public:
 
     void addReaction(Reaction* reaction);
 
-    void setDiffusionReaction(DiffusionReaction* reaction, uint x, uint y, uint z);
-
     void updateReactions();
 
     void calculateRates();
@@ -268,9 +266,6 @@ private:
     double m_energy;
 
     int m_particleState = ParticleStates::solution;
-
-
-    DiffusionReaction**** m_diffusionReactions;
 
     vector<Reaction*> m_siteReactions;
 

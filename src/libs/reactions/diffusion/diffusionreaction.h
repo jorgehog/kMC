@@ -21,6 +21,9 @@ public:
 
     static void resetAll()
     {
+        counterAllRate = 0;
+        counterEqSP = 0;
+        totalSP = 0;
         m_potential.reset();
     }
 
@@ -33,17 +36,6 @@ public:
     static const cube & potentialBox()
     {
         return m_potential;
-    }
-
-    virtual void setSite(Site* site)
-    {
-        Reaction::setSite(site);
-
-        int xT, yT, zT;
-
-        site->distanceTo(destination, xT, yT, zT);
-
-        site->setDiffusionReaction(this, 1 + xT, 1 + yT, 1 + zT);
     }
 
     const uint & xD () const
@@ -63,10 +55,13 @@ public:
 
 
     //tmp
-    double lastUsedEnergy = 0;
-    double lastUsedEsp = 0;
-    static uint counter;
-    static uint total;
+    double lastUsedEnergy;
+    double lastUsedEsp;
+
+    static uint counterEqSP;
+    static uint totalSP;
+
+    static uint counterAllRate;
 
 
     friend class testBed;
@@ -81,13 +76,10 @@ private:
 
     Site* destination;
 
-    enum
+    enum SpecificUpdateFlags
     {
-        updateFull,
-        updateNoSaddle
+        updateNoSaddle = 1
     };
-
-    int updateFlag;
 
 
     // Reaction interface

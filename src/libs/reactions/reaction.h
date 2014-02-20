@@ -19,11 +19,17 @@ public:
 
     const string name;
 
+
+    const static double UNSET_RATE;
+
     static void setSolverPtr(KMCSolver * solver);
 
     static void loadConfig(const Setting & setting);
 
+
     virtual void setUpdateFlags(const Site * changedSite, uint level) = 0;
+
+    void getTriumphingUpdateFlag();
 
     virtual bool isNotBlocked() = 0;
 
@@ -37,14 +43,25 @@ public:
     virtual void dumpInfo(int xr = 0, int yr = 0, int zr = 0)  const;
 
 
-    virtual void setSite(Site* site)
+    static void resetAll()
+    {
+        IDcount = 0;
+    }
+
+    const static double & linearRateScale()
+    {
+        return m_linearRateScale;
+    }
+
+
+    void setSite(Site* site)
     {
         m_reactionSite = site;
     }
 
-    static void resetAll()
+    void clearUpdateFlags()
     {
-        IDcount = 0;
+        m_updateFlags.clear();
     }
 
     const uint & ID() const
@@ -55,11 +72,6 @@ public:
     const double &  rate() const
     {
         return m_rate;
-    }
-
-    const static double & linearRateScale()
-    {
-        return m_linearRateScale;
     }
 
     const uint & x() const
@@ -81,8 +93,6 @@ public:
     {
         return m_reactionSite;
     }
-
-    const static double UNSET_RATE;
 
     virtual string getInfoSnippet() const
     {
@@ -113,6 +123,16 @@ protected:
     Site* m_reactionSite;
 
     double m_rate;
+
+    set<int> m_updateFlags;
+    int      m_updateFlag;
+
+    //! Update flags are given in the order such that the minimum of the flag set is the
+    //! triumphant flag.
+    enum AllUpdateFlags
+    {
+        defaultUpdateFlag = 0
+    };
 
 };
 

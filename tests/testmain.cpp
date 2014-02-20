@@ -11,8 +11,10 @@ using namespace std;
 #define UBERTEST(which)    \
 TEST(which)                \
 {                          \
+    cout << "Testing: ";   \
+    cout << #which << endl;\
     testBed test;          \
-    test.test##which();  \
+    test.test##which();    \
 }
 
 UBERTEST(RNG)
@@ -40,6 +42,8 @@ UBERTEST(InitializationOfCrystal)
 UBERTEST(InitialReactionSetup)
 
 UBERTEST(Sequential)
+
+UBERTEST(SmartSaddleUpdateAlg)
 
 UBERTEST(KnownCase)
 

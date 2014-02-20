@@ -3,8 +3,9 @@
 
 DiffusionReaction::DiffusionReaction(Site *destination) :
     Reaction("DiffusionReaction"),
-    destination(destination),
-    updateFlag(updateFull)
+    lastUsedEnergy(0),
+    lastUsedEsp(0),
+    destination(destination)
 {
 
 }
@@ -53,19 +54,19 @@ void DiffusionReaction::setUpdateFlags(const Site *changedSite, uint level)
 
     if (level == 0 || m_rate == UNSET_RATE)
     {
-        updateFlag = updateFull;
+        m_updateFlags.insert(defaultUpdateFlag);
     }
 
     //if the destination is outsite the interaction cutoff, we can keep the old saddle energy.
     else if (destination->maxDistanceTo(changedSite) > Site::nNeighborsLimit())
     {
-        updateFlag = updateNoSaddle;
+        m_updateFlags.insert(updateNoSaddle);
     }
 
     else
     {
         assert(level == Site::nNeighborsLimit() - 1);
-        updateFlag = updateFull;
+        m_updateFlags.insert(defaultUpdateFlag);
     }
 
 }
@@ -121,11 +122,12 @@ double DiffusionReaction::getSaddleEnergy()
 
     }
 
-    if (lastUsedEsp == Esp)
+    if (fabs(lastUsedEsp - Esp) < 1E-10)
     {
-        counter++;
+        counterEqSP++;
     }
-    total++;
+
+    totalSP++;
 
     lastUsedEsp = Esp;
 
@@ -135,41 +137,10 @@ double DiffusionReaction::getSaddleEnergy()
 
 void DiffusionReaction::calcRate()
 {
-    updateFlag = updateFull;
-    if (updateFlag == updateNoSaddle)
+
+    if (m_updateFlag == updateNoSaddle)
     {
-        assert(m_rate != UNSET_RATE);
-
-        double energyShift = reactionSite()->energy() - lastUsedEnergy;
-        m_rate *= exp(-beta*energyShift);
-
-#ifndef NDEBUG
-
-        double newS = getSaddleEnergy();
-        if (newS == lastUsedEsp)
-        {
-            cout << "good: " << m_reactionSite->particleStateName() << " to " << destination->particleStateName() << endl;
-        }
-
-        double newRate = m_rate;
-        updateFlag = updateFull;
-        calcRate();
-        if (fabs(newRate - m_rate) > 1E-15)
-        {
-            cout << "BAD : " << m_reactionSite->particleStateName() << " to " << destination->particleStateName()<< endl;
-            cout << "SOMETHING WENT WRONG IN UPDATEING ALG" << endl;
-            cout << newRate << "  " << m_rate << endl;
-            cout << newRate - m_rate << endl;
-            dumpInfo();
-            exit(1);
-        }
-        else
-        {
-            cout << "super good" << m_reactionSite->particleStateName() << " to " << destination->particleStateName()<< endl;
-        }
-
-#endif
-
+        m_rate *= exp(-beta*(reactionSite()->energy() - lastUsedEnergy));
     }
 
     else
@@ -179,6 +150,7 @@ void DiffusionReaction::calcRate()
 
     lastUsedEnergy = m_reactionSite->energy();
 
+    counterAllRate++;
 }
 
 bool DiffusionReaction::isNotBlocked()
@@ -245,5 +217,6 @@ double DiffusionReaction::scale = 0;
 
 cube   DiffusionReaction::m_potential;
 
-uint   DiffusionReaction::total = 0;
-uint   DiffusionReaction::counter = 0;
+uint   DiffusionReaction::totalSP = 0;
+uint   DiffusionReaction::counterEqSP = 0;
+uint   DiffusionReaction::counterAllRate = 0;

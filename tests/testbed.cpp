@@ -149,6 +149,7 @@ void testBed::testDiffusionSiteMatrixSetup()
 {
 
     DiffusionReaction * currentDiffReaction;
+    int i, j, k;
 
     for (uint x = 0; x < NX; ++x)
     {
@@ -158,35 +159,27 @@ void testBed::testDiffusionSiteMatrixSetup()
             {
                 const Site & currentSite = *(solver->getSite(x, y, z));
 
-                for (uint i = 0; i < 3; ++i)
+                for (Reaction * r : currentSite.siteReactions())
                 {
-                    for (uint j = 0; j < 3; ++j)
-                    {
-                        for (uint k = 0; k < 3; ++k)
-                        {
 
-                            if (i == j && j == k && k == 1)
-                            {
-                                continue;
-                            }
+                    currentDiffReaction = (DiffusionReaction*)r;
 
-                            currentDiffReaction = currentSite.m_diffusionReactions[i][j][k];
+                    const Site & site = *(currentDiffReaction->reactionSite());
+                    const Site & dest  = *(currentDiffReaction->destination);
 
-                            const Site & site = *(currentDiffReaction->reactionSite());
+                    CHECK_EQUAL(currentSite, site);
 
-                            CHECK_EQUAL(currentSite, site);
+                    site.distanceTo(&dest, i, j, k);
 
-                            uint xt = (x + i + NX - 1) % NX;
-                            uint yt = (y + j + NY - 1) % NY;
-                            uint zt = (z + k + NZ - 1) % NZ;
+                    uint xt = (x + i + NX) % NX;
+                    uint yt = (y + j + NY) % NY;
+                    uint zt = (z + k + NZ) % NZ;
 
-                            const Site & dest  = *(currentDiffReaction->destination);
-                            const Site & dest2 = *(solver->getSite(xt, yt, zt));
+                    const Site & dest2 = *(solver->getSite(xt, yt, zt));
 
-                            CHECK_EQUAL(dest, dest2);
-                        }
-                    }
+                    CHECK_EQUAL(dest, dest2);
                 }
+
 
             }
         }
@@ -334,7 +327,7 @@ void testBed::testRNG()
 
 void testBed::testBinarySearchChoise()
 {
-    uint LIM = 10000;
+    uint LIM = 0;
     uint choice;
     uint secondChoice;
     double R;
@@ -1024,6 +1017,99 @@ void testBed::testKnownCase()
 
 
 
+}
+
+void testBed::testSmartSaddleUpdateAlg()
+{
+    uint choice, cycle;
+    double R;
+
+    solver->initializeCrystal();
+
+    DiffusionReaction * dr;
+
+    while(cycle < 1000)
+    {
+
+        solver->kTot = 0;
+        solver->accuAllRates.clear();
+        solver->allReactions.clear();
+
+        for (Site* site : Site::affectedSites)
+        {
+            site->updateReactions();
+
+            for (Reaction* reaction : site->m_activeReactions)
+            {
+                reaction->getTriumphingUpdateFlag();
+
+                dr = (DiffusionReaction*)reaction;
+
+
+                if (dr->m_updateFlag == dr->updateNoSaddle)
+                {
+                    CHECK_EQUAL(true, dr->m_rate != dr->UNSET_RATE);
+
+                    double energyShift = dr->reactionSite()->energy() - dr->lastUsedEnergy;
+                    dr->m_rate *= exp(-dr->beta*energyShift);
+
+            #ifndef NDEBUG
+
+                    double newS = dr->getSaddleEnergy();
+
+                    CHECK_CLOSE(newS, dr->lastUsedEsp, 0.0000000001);
+
+                    double newRate = dr->m_rate;
+                    dr->m_updateFlag = dr->defaultUpdateFlag;
+                    dr->calcRate();
+
+                    CHECK_CLOSE(dr->m_rate, newRate, 0.000000001);
+
+            #endif
+
+                }
+
+                else
+                {
+                    dr->m_rate = dr->m_linearRateScale*exp(-dr->beta*(dr->m_reactionSite->energy()-dr->getSaddleEnergy()));
+                }
+
+                dr->lastUsedEnergy = dr->m_reactionSite->energy();
+
+
+            }
+        }
+
+        Site::affectedSites.clear();
+
+        for (uint x = 0; x < NX; ++x)
+        {
+            for (uint y = 0; y < NY; ++y)
+            {
+                for (uint z = 0; z < NZ; ++z)
+                {
+                    for (Reaction* reaction : solver->sites[x][y][z]->activeReactions())
+                    {
+                        assert(reaction->rate() != Reaction::UNSET_RATE);
+                        solver->kTot += reaction->rate();
+                        solver->accuAllRates.push_back(solver->kTot);
+                        solver->allReactions.push_back(reaction);
+                    }
+                }
+            }
+        }
+
+        double r = KMC_RNG_UNIFORM();
+
+        R = solver->kTot*r;
+
+        choice = solver->getReactionChoice(R);
+
+        solver->allReactions[choice]->execute();
+
+        cycle++;
+
+    }
 }
 
 

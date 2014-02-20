@@ -48,6 +48,8 @@ public:
 
     void testKnownCase();
 
+    void testSmartSaddleUpdateAlg();
+
     uint failCount;
     uint winCount;
     uint nTrials;

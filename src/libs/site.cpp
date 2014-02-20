@@ -15,20 +15,6 @@ Site::Site(uint _x, uint _y, uint _z) :
     m_particleState(ParticleStates::solution)
 {
 
-    m_diffusionReactions = new DiffusionReaction***[3];
-
-    for (int i = 0; i < 3; ++i) {
-
-        m_diffusionReactions[i] = new DiffusionReaction**[3];
-        for (int j = 0; j < 3; ++j) {
-
-            m_diffusionReactions[i][j] = new DiffusionReaction*[3];
-
-        }
-    }
-
-    m_diffusionReactions[1][1][1] = NULL;
-
 }
 
 
@@ -44,19 +30,7 @@ Site::~Site()
         delete [] m_neighborHood[i];
     }
 
-    delete m_neighborHood;
-
-    for (uint i = 0; i < 3; ++i)
-    {
-        for (uint j = 0; j < 3; ++j)
-        {
-            delete [] m_diffusionReactions[i][j];
-        }
-
-        delete [] m_diffusionReactions[i];
-    }
-
-    delete [] m_diffusionReactions;
+    delete [] m_neighborHood;
 
 
     for (Reaction* reaction : m_siteReactions)
@@ -298,12 +272,6 @@ void Site::addReaction(Reaction *reaction)
     m_siteReactions.push_back(reaction);
 }
 
-void Site::setDiffusionReaction(DiffusionReaction *reaction, uint x, uint y, uint z)
-{
-    m_diffusionReactions[x][y][z] = reaction;
-}
-
-
 void Site::updateReactions()
 {
 
@@ -337,6 +305,7 @@ void Site::calculateRates()
 {
     for (Reaction* reaction : m_activeReactions)
     {
+        reaction->getTriumphingUpdateFlag();
         reaction->calcRate();
     }
 }
