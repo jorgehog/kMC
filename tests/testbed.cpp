@@ -460,11 +460,11 @@ void testBed::testRateCalculation () {
                 for (Reaction* r : solver->sites[i][j][k]->activeReactions()) {
 
                     //                    double RATE = r->rate();
-                    double E = ((DiffusionReaction*)r)->lastUsedE;
+                    double E = ((DiffusionReaction*)r)->lastUsedEnergy;
                     double Esp = ((DiffusionReaction*)r)->lastUsedEsp;
                     r->calcRate();
 
-                    CHECK_EQUAL(E, ((DiffusionReaction*)r)->lastUsedE);
+                    CHECK_EQUAL(E, ((DiffusionReaction*)r)->lastUsedEnergy);
 
                     CHECK_EQUAL(Esp, ((DiffusionReaction*)r)->lastUsedEsp);
 
@@ -517,7 +517,7 @@ void testBed::testEnergyAndNeighborSetup()
                                         if (thisSite != otherSite) {
                                             if (otherSite->isActive()) {
                                                 nn(Site::findLevel(ldx, ldy, ldz))++;
-                                                E += DiffusionReaction::potential()(Site::nNeighborsLimit() + ldx, Site::nNeighborsLimit() + ldy, Site::nNeighborsLimit() + ldz);
+                                                E += DiffusionReaction::potential(Site::nNeighborsLimit() + ldx,  Site::nNeighborsLimit() + ldy,  Site::nNeighborsLimit() + ldz);
                                             }
                                             C++;
                                         }
@@ -567,7 +567,7 @@ void testBed::testUpdateNeigbors()
         }
     }
 
-    double eMax = accu(DiffusionReaction::potential());
+    double eMax = accu(DiffusionReaction::potentialBox());
 
     for (uint i = 0; i < NX; ++i) {
         for (uint j = 0; j < NY; ++j) {

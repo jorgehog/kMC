@@ -25,7 +25,12 @@ public:
     }
 
 
-    static const cube & potential()
+    static const double & potential(const uint & x, const uint & y, const uint & z)
+    {
+        return m_potential(x, y, z);
+    }
+
+    static const cube & potentialBox()
     {
         return m_potential;
     }
@@ -58,7 +63,7 @@ public:
 
 
     //tmp
-    double lastUsedE = 0;
+    double lastUsedEnergy = 0;
     double lastUsedEsp = 0;
     static uint counter;
     static uint total;
@@ -84,13 +89,11 @@ private:
 
     int updateFlag;
 
-    double energyShift;
-
 
     // Reaction interface
 public:
 
-    void setUpdateFlags(const Site * changedSite, uint i, uint j, uint k, uint level, double dE);
+    void setUpdateFlags(const Site * changedSite, uint level);
 
     void calcRate();
 

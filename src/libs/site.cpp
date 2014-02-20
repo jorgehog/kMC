@@ -393,6 +393,19 @@ uint Site::maxDistanceTo(const Site *other)
 
 }
 
+double Site::potentialBetween(const Site *other)
+{
+    int X, Y, Z;
+
+    distanceTo(other, X, Y, Z, true);
+
+    X += Site::nNeighborsLimit();
+    Y += Site::nNeighborsLimit();
+    Z += Site::nNeighborsLimit();
+
+    return DiffusionReaction::potential(X, Y, Z);
+}
+
 bool Site::hasNeighboring(int state)
 {
 
@@ -607,7 +620,7 @@ void Site::informNeighborhoodOnChange(int change)
                 neighbor->m_nNeighbors(level)+=change;
 
 
-                dE = change*DiffusionReaction::potential()(i, j, k);
+                dE = change*DiffusionReaction::potential(i,  j,  k);
 
                 neighbor->m_energy += dE;
 
@@ -618,10 +631,37 @@ void Site::informNeighborhoodOnChange(int change)
                 //and thus not interfere with any flags set here, not require flags of their own.
                 for (Reaction * reaction : neighbor->siteReactions())
                 {
-                    reaction->setUpdateFlags(this, i, j, k, level, dE);
+                    reaction->setUpdateFlags(this, level);
                 }
 
             }
+        }
+    }
+
+    for (Site * n : allNeighbors())
+    {
+        if (!n->isActive())
+        {
+            continue;
+        }
+
+        double E = 0;
+        for (Site* n1 : n->allNeighbors())
+        {
+            if (!n1->isActive())
+            {
+                continue;
+            }
+
+            E += n1->potentialBetween(n);
+        }
+
+        if (fabs(E - n->energy()) > 1E-10)
+        {
+            cout << "WRONG ENERGY WTF." << endl;
+            cout << E << " " << n->energy() << endl;
+            cout << E - n->energy() << endl;
+            exit(1);
         }
     }
 

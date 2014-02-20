@@ -96,6 +96,9 @@ public:
 
     uint maxDistanceTo(const Site * other);
 
+    double potentialBetween(const Site * other);
+
+
     void queueAffectedSites();
 
 
@@ -149,6 +152,11 @@ public:
     const int & particleState()
     {
         return m_particleState;
+    }
+
+    string particleStateName() const
+    {
+        return ParticleStates::names.at(m_particleState);
     }
 
     uint nNeighbors(uint level = 0) const
