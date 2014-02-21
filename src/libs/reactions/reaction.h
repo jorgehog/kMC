@@ -40,7 +40,7 @@ public:
     virtual void execute() = 0;
 
 
-    virtual void dumpInfo(int xr = 0, int yr = 0, int zr = 0)  const;
+    virtual const string info(int xr = 0, int yr = 0, int zr = 0)  const;
 
 
     static void resetAll()
@@ -104,7 +104,12 @@ public:
         return this == &other;
     }
 
-    Site* affectedSite;
+    const string str() const
+    {
+        stringstream s;
+        s << name << "@(" << x() << "," << y() << "," << z() << ") [" << getInfoSnippet() << "]";
+        return s.str();
+    }
 
 protected:
 

@@ -846,14 +846,14 @@ void testBed::testInitialReactionSetup()
                     if (!solver->sites[i][j][k]->isActive())
                     {
                         cout << "DEACTIVE SITE SHOULD HAVE NO REACTIONS" << endl;
-                        solver->sites[i][j][k]->dumpInfo();
+                        solver->sites[i][j][k]->info();
                         exit(1);
                     }
 
                     if (!r->isNotBlocked())
                     {
                         cout << "REACTION NOT DEACTIVATED PROPERLY:" << endl;
-                        r->dumpInfo();
+                        r->info();
 
                         exit(1);
                     }
@@ -909,7 +909,7 @@ void testBed::testInitialReactionSetup()
         if (id1 != id2)
         {
             cout << "reaction " << id2 << " mismatched: " << endl;
-            oldReactions.at(i)->dumpInfo();
+            cout << oldReactions.at(i)->info() << endl;
             exit(1);
         }
     }
@@ -1023,6 +1023,8 @@ void testBed::testSmartSaddleUpdateAlg()
 {
     uint choice, cycle;
     double R;
+
+    cycle = 0;
 
     solver->initializeCrystal();
 

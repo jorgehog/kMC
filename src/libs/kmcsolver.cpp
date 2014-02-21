@@ -7,6 +7,7 @@
 #include "reactions/reaction.h"
 #include "reactions/diffusion/diffusionreaction.h"
 
+#include "debugger/kmcdebugger.h"
 
 #include <sys/time.h>
 
@@ -22,7 +23,6 @@ using namespace std;
 
 
 KMCSolver::KMCSolver(const Setting & root) :
-    selectedReaction(NULL),
     totalTime(0),
     cycle(0),
     outputCounter(0)
@@ -130,10 +130,13 @@ KMCSolver::~KMCSolver()
 void KMCSolver::run()
 {
 
+    Reaction * selectedReaction;
     uint choice;
     double R;
 
     initializeCrystal();
+
+    KMCDebugger_PushInitialTrace();
 
     while(cycle < nCycles)
     {
@@ -148,6 +151,8 @@ void KMCSolver::run()
 
         selectedReaction = allReactions.at(choice);
         selectedReaction->execute();
+        KMCDebugger_pushTraces(selectedReaction);
+
 
         if (cycle%cyclesPerOutput == 0)
         {

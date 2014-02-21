@@ -1,6 +1,8 @@
 #include "diffusionreaction.h"
 #include "../../kmcsolver.h"
 
+#include "../../debugger/kmcdebugger.h"
+
 DiffusionReaction::DiffusionReaction(Site *destination) :
     Reaction("DiffusionReaction"),
     lastUsedEnergy(0),
@@ -176,18 +178,9 @@ double DiffusionReaction::getSaddleEnergy()
                 }
             }
             cout << "exactly same setup calculated saddle twice..should be flagged" << endl;
-            cout << "got flag to update all by this event: " << affectedSite->nature() << endl;
-            cout << "I am " << m_reactionSite->particleStateName() << endl;
-            cout << "dest is " << destination->particleStateName() << endl;
 
-            int X3, Y3, Z3;
-            affectedSite->distanceTo(m_reactionSite, X3, Y3, Z3);
-            affectedSite->dumpInfo(X3, Y3, Z3);
-            if (mainSolver->getSelectedReaction() != NULL)
-            {
-                mainSolver->getSelectedReaction()->dumpInfo();
-            }
-            cout << neighborSet.size() << " " << lastSetup.size() << endl;
+            KMCDebugger_dumpFullTrace();
+
             exit(1);
         }
         counterEqSP++;
@@ -254,13 +247,12 @@ bool DiffusionReaction::isNotBlocked()
 
 void DiffusionReaction::execute()
 {
-
     m_reactionSite->deactivate();
     destination->activate();
 
 }
 
-void DiffusionReaction::dumpInfo(int xr, int yr, int zr)
+const string DiffusionReaction::info(int xr, int yr, int zr) const
 {
 
     (void) xr;
@@ -274,13 +266,17 @@ void DiffusionReaction::dumpInfo(int xr, int yr, int zr)
     assert((y() + NY + Y)%NY == destination->y());
     assert((z() + NZ + Z)%NZ == destination->z());
 
-    Reaction::dumpInfo(X, Y, Z);
+    stringstream s;
 
-    cout << "Path: " << X << " " << Y << " " << Z << endl;
-    cout << "Reaction initiates diffusion to " << endl;
-    cout << "{\n";
-    destination->dumpInfo(-X, -Y, -Z);
-    cout << "\n}" << endl;
+    s << Reaction::info(X, Y, Z);
+
+    s << "Path: " << X << " " << Y << " " << Z << endl;
+    s << "Reaction initiates diffusion to " << endl;
+    s << "{\n";
+    s << destination->info(-X, -Y, -Z);
+    s << "\n}" << endl;
+
+    return s.str();
 
 }
 

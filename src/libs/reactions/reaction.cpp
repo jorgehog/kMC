@@ -15,14 +15,16 @@ Reaction::~Reaction()
 
 }
 
-void Reaction::dumpInfo(int xr, int yr, int zr) const
+const string Reaction::info(int xr, int yr, int zr) const
 {
+    stringstream s;
+    s << "[Reaction " << m_ID << "/" << IDcount << "]:" << endl;
+    s << "rate: " << m_rate << endl;
+    s << "@{" << endl;
+    s << m_reactionSite->info(xr, yr, zr);
+    s << "\n}" << endl;
 
-    cout << "[Reaction " << m_ID << "/" << IDcount << "]:" << endl;
-    cout << "rate: " << m_rate << endl;
-    cout << "@{" << endl;
-    m_reactionSite->dumpInfo(xr, yr, zr);
-    cout << "\n}" << endl;
+    return s.str();
 
 }
 
@@ -78,6 +80,6 @@ uint         Reaction::IDcount = 0;
 
 ostream & operator << (ostream& os, const Reaction& ss)
 {
-    os << ss.name << "@(" << ss.x() << "," << ss.y() << "," << ss.z() << ") [" << ss.getInfoSnippet() << "]";
+    os << ss.str();
     return os;
 }

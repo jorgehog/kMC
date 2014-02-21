@@ -42,11 +42,6 @@ public:
         return sites[i][j][k];
     }
 
-    const Reaction * getSelectedReaction() const
-    {
-        return selectedReaction;
-    }
-
     const uint &getNX ()
     {
         return NX;
@@ -82,11 +77,7 @@ private:
     double kTot;
     std::vector<double> accuAllRates;
 
-
     std::vector<Reaction*> allReactions;
-
-    Reaction* selectedReaction;
-
 
     double totalTime;
 

@@ -99,7 +99,7 @@ public:
 
     void execute();
 
-    void dumpInfo(int xr = 0, int yr = 0, int zr = 0);
+    const string info(int xr = 0, int yr = 0, int zr = 0) const;
 
     bool allowedAtSite();
 

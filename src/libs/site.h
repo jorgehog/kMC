@@ -111,7 +111,7 @@ public:
     }
 
 
-    void dumpInfo(int xr = 0, int yr = 0, int zr = 0) const;
+    const string info(int xr = 0, int yr = 0, int zr = 0) const;
 
 
     /*
@@ -228,9 +228,11 @@ public:
         return this == &other;
     }
 
-    int nature() const
+    const string str() const
     {
-        return m_nature;
+        stringstream s;
+        s << "site@(" << x() << "," << y() << "," << z() << ")";
+        return s.str();
     }
 
     friend class testBed;
@@ -274,15 +276,6 @@ private:
     vector<Reaction*> m_siteReactions;
 
     vector<Reaction*> m_activeReactions;
-
-   enum NATURE
-    {
-        SolutionToSolution,
-        SolutionToSurface,
-        SurfaceToCrystal,
-        SurfaceToSolution,
-        CrystalToSurface
-    } m_nature;
 
 };
 
