@@ -121,6 +121,8 @@ KMCSolver::~KMCSolver()
     Reaction::resetAll();
     DiffusionReaction::resetAll();
 
+    KMCDebugger_Finalize();
+
     ptrCount--;
 
 }

@@ -179,7 +179,7 @@ double DiffusionReaction::getSaddleEnergy()
             }
             cout << "exactly same setup calculated saddle twice..should be flagged" << endl;
 
-            KMCDebugger_dumpFullTrace();
+            KMCDebugger_dumpFullTrace(true);
 
             exit(1);
         }

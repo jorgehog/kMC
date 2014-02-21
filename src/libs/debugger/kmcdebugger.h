@@ -26,8 +26,12 @@ public:
     static uint traceCount;
     static uint implicationCount;
 
-    static void dumpFullTrace();
+    static void dumpFullTrace(bool toFile);
     static void dumpPartialTrace(const uint & i);
+
+    static std::string fullTrace();
+    static std::string partialTrace(const uint & i);
+
     static void reset();
 
     static wall_clock timer;
@@ -36,15 +40,17 @@ public:
 #define _KMCDebugger_INITIAL_IMPLICATION_MSG "[implications]: \n"
 
 #define KMCDebugger_Init() \
-    KMCDebugger::reset(); \
     KMCDebugger::timer.tic()
+
+#define KMCDebugger_Finalize() \
+    KMCDebugger::reset();
 
 #define KMCDebugger_dumpTrace(i) \
     assert(i >= 0); \
     KMCDebugger::dumpPartialTrace(i)
 
-#define KMCDebugger_dumpFullTrace() \
-    KMCDebugger::dumpFullTrace()
+#define KMCDebugger_dumpFullTrace(toFile) \
+    KMCDebugger::dumpFullTrace(toFile)
 
 #define _KMCDebugger_TRACE_SEARCH(trace, i) \
     ((i < 0) \
@@ -101,10 +107,12 @@ public:
 //Ignore everything if we are not debugging.
 #define KMCDebugger_Init() \
     _KMCDebugger_IGNORE(0)
+#define KMCDebugger_Finalize() \
+    _KMCDebugger_IGNORE(0)
 #define KMCDebugger_dumpTrace(i) \
     _KMCDebugger_IGNORE(i)
-#define KMCDebugger_dumpFullTrace() \
-    _KMCDebugger_IGNORE(0)
+#define KMCDebugger_dumpFullTrace(toFile) \
+    _KMCDebugger_IGNORE(toFile)
 #define KMCDebugger_addImplicationSeparator(_msg) \
     _KMCDebugger_IGNORE(_msg)
 #define _KMCDebugger_TRACE_SEARCH(trace, i) \
