@@ -22,10 +22,10 @@ using namespace std;
 
 
 KMCSolver::KMCSolver(const Setting & root) :
+    selectedReaction(NULL),
     totalTime(0),
     cycle(0),
-    outputCounter(0),
-    selectedReaction(NULL)
+    outputCounter(0)
 {
 
     const Setting & SystemSettings = getSurfaceSetting(root, "System");
