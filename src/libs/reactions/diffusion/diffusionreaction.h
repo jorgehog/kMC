@@ -13,7 +13,9 @@ public:
 
     DiffusionReaction(Site *destination);
 
-    ~DiffusionReaction() {}
+    ~DiffusionReaction() {
+        lastSetup.clear();
+    }
 
     double getSaddleEnergy();
 
@@ -21,24 +23,21 @@ public:
 
     static void resetAll()
     {
+        counterAllRate = 0;
+        counterEqSP = 0;
+        totalSP = 0;
         m_potential.reset();
     }
 
 
-    static const cube & potential()
+    static const double & potential(const uint & x, const uint & y, const uint & z)
     {
-        return m_potential;
+        return m_potential(x, y, z);
     }
 
-    virtual void setSite(Site* site)
+    static const cube & potentialBox()
     {
-        Reaction::setSite(site);
-
-        int xT, yT, zT;
-
-        site->distanceTo(destination, xT, yT, zT);
-
-        site->setDiffusionReaction(this, 1 + xT, 1 + yT, 1 + zT);
+        return m_potential;
     }
 
     const uint & xD () const
@@ -58,10 +57,17 @@ public:
 
 
     //tmp
-    double lastUsedE = 0;
-    double lastUsedEsp = 0;
-    static uint counter;
-    static uint total;
+    double lastUsedEnergy;
+    double lastUsedEsp;
+    set<const Site*> lastSetup;
+
+    static uint counterEqSP;
+    static uint totalSP;
+
+    static uint counterAllRate;
+
+    static wall_clock timer;
+    static double totalTime;
 
 
     friend class testBed;
@@ -76,21 +82,16 @@ private:
 
     Site* destination;
 
-    enum
+    enum SpecificUpdateFlags
     {
-        updateFull,
-        updateNoSaddle
+        updateKeepSaddle = 2
     };
-
-    int updateFlag;
-
-    double energyShift;
 
 
     // Reaction interface
 public:
 
-    void setUpdateFlags(const Site * changedSite, uint i, uint j, uint k, uint level, double dE);
+    void setUpdateFlags(const Site * changedSite, uint level);
 
     void calcRate();
 

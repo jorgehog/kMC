@@ -46,6 +46,22 @@ void Reaction::loadConfig(const Setting &setting)
 
 }
 
+void Reaction::getTriumphingUpdateFlag()
+{
+    if (m_updateFlags.empty())
+    {
+        m_updateFlag = defaultUpdateFlag;
+    }
+
+    else
+    {
+        m_updateFlag = *std::min_element(m_updateFlags.begin(), m_updateFlags.end());
+    }
+
+    clearUpdateFlags();
+
+}
+
 const double Reaction::UNSET_RATE = -1;
 
 KMCSolver*   Reaction::mainSolver;

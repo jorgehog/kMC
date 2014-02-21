@@ -3,9 +3,9 @@
 
 DiffusionReaction::DiffusionReaction(Site *destination) :
     Reaction("DiffusionReaction"),
-    destination(destination),
-    updateFlag(updateFull),
-    energyShift(0)
+    lastUsedEnergy(0),
+    lastUsedEsp(0),
+    destination(destination)
 {
 
 }
@@ -47,30 +47,28 @@ void DiffusionReaction::loadConfig(const Setting &setting)
     m_potential *= scale;
 
 }
+/*
+ * 31% 64% old | 5% 47 % new
+ */
 
-
-void DiffusionReaction::setUpdateFlags(const Site *changedSite, uint i, uint j, uint k, uint level, double dE)
+void DiffusionReaction::setUpdateFlags(const Site *changedSite, uint level)
 {
-
-    (void) i;
-    (void) j;
-    (void) k;
 
     if (level == 0 || m_rate == UNSET_RATE)
     {
-        updateFlag = updateFull;
+        m_updateFlags.insert(defaultUpdateFlag);
     }
 
+    //if the destination is outsite the interaction cutoff, we can keep the old saddle energy.
     else if (destination->maxDistanceTo(changedSite) == Site::nNeighborsLimit() + 1)
     {
-        energyShift = dE;
-        updateFlag = updateNoSaddle;
+        m_updateFlags.insert(updateKeepSaddle);
     }
 
     else
     {
         assert(level == Site::nNeighborsLimit() - 1);
-        updateFlag = updateFull;
+        m_updateFlags.insert(defaultUpdateFlag);
     }
 
 }
@@ -78,11 +76,14 @@ void DiffusionReaction::setUpdateFlags(const Site *changedSite, uint i, uint j, 
 double DiffusionReaction::getSaddleEnergy()
 {
 
+    timer.tic();
+
     double xs = ((x() + xD())%NX)/2.0;
     double ys = ((y() + yD())%NY)/2.0;
     double zs = ((z() + zD())%NZ)/2.0;
 
     vector<const Site*> neighborSet;
+    bool empty = true;
 
     for (const Site* site : m_reactionSite->allNeighbors())
     {
@@ -91,8 +92,14 @@ double DiffusionReaction::getSaddleEnergy()
             if (site == dSite && site->isActive())
             {
                 neighborSet.push_back(site);
+                empty = false;
             }
         }
+    }
+
+    if (empty)
+    {
+        return 0;
     }
 
     double Esp = 0;
@@ -126,13 +133,77 @@ double DiffusionReaction::getSaddleEnergy()
 
     }
 
-    if (lastUsedEsp == Esp)
+    bool sameSetup = true;
+
+    if (lastSetup.size() != neighborSet.size())
     {
-        counter++;
+        sameSetup = false;
     }
-    total++;
+    else
+    {
+        for (const Site* s: neighborSet)
+        {
+            bool isIn = false;
+            for (const Site* slast : lastSetup)
+            {
+                if (s == slast)
+                {
+                    isIn = true;
+                    break;
+                }
+            }
+            if (!isIn)
+            {
+                sameSetup = false;
+                break;
+            }
+        }
+    }
+
+    if (fabs(lastUsedEsp - Esp) < 1E-10)
+    {
+        if (sameSetup)
+        {
+            for (const Site* s: neighborSet)
+            {
+                if (s->isSurface())
+                {
+                    cout << "surface in set" << endl;
+                }
+                else if (s->isCrystal())
+                {
+                    cout << "crystal in set" << endl;
+                }
+            }
+            cout << "exactly same setup calculated saddle twice..should be flagged" << endl;
+            cout << "got flag to update all by this event: " << affectedSite->nature() << endl;
+            cout << "I am " << m_reactionSite->particleStateName() << endl;
+            cout << "dest is " << destination->particleStateName() << endl;
+
+            int X3, Y3, Z3;
+            affectedSite->distanceTo(m_reactionSite, X3, Y3, Z3);
+            affectedSite->dumpInfo(X3, Y3, Z3);
+            if (mainSolver->getSelectedReaction() != NULL)
+            {
+                mainSolver->getSelectedReaction()->dumpInfo();
+            }
+            cout << neighborSet.size() << " " << lastSetup.size() << endl;
+            exit(1);
+        }
+        counterEqSP++;
+
+    }
+
+    totalSP++;
 
     lastUsedEsp = Esp;
+
+    for (const Site * s: neighborSet)
+    {
+        lastSetup.insert(s);
+    }
+
+    totalTime += timer.toc();
 
     return Esp;
 
@@ -141,44 +212,36 @@ double DiffusionReaction::getSaddleEnergy()
 void DiffusionReaction::calcRate()
 {
 
-    if (updateFlag == updateNoSaddle)
-    {
-        assert(m_rate != UNSET_RATE);
-        assert(energyShift != 0);
+    counterAllRate++;
 
-        m_rate *= exp(-beta*energyShift);
+    switch (m_updateFlag) {
+    case noUpdate:
 
-#ifndef NDEBUG
+        assert(m_reactionSite->energy() == lastUsedEnergy);
 
-        if (fabs(lastUsedE - reactionSite()->energy() + energyShift) > 1E-15)
-        {
-            cout << "ENERGY SHIFT MISMATCH" << endl;
-            cout << lastUsedE - reactionSite()->energy() <<endl;
-            cout << -energyShift << endl;
-            cout << lastUsedE - reactionSite()->energy() + energyShift << endl;
-            exit(1);
-        }
-        double newRate = m_rate;
-        updateFlag = updateFull;
-        calcRate();
-        if (fabs(newRate - m_rate) > 1E-15)
-        {
-            cout << "SOMETHING WENT WRONG IN UPDATEING ALG" << endl;
-            cout << newRate << "  " << m_rate << endl;
-            cout << newRate - m_rate << endl;
-            exit(1);
-        }
+        return;
 
-#endif
+    case defaultUpdateFlag:
 
-    }
-
-    else
-    {
         m_rate = m_linearRateScale*exp(-beta*(m_reactionSite->energy()-getSaddleEnergy()));
+
+        break;
+
+    case updateKeepSaddle:
+
+        m_rate *= exp(-beta*(reactionSite()->energy() - lastUsedEnergy));
+
+        break;
+
+    default:
+
+        cout << "Unknown update flag: " << m_updateFlag << endl;
+        exit(1);
+
+        break;
     }
 
-    lastUsedE = m_reactionSite->energy();
+    lastUsedEnergy = m_reactionSite->energy();
 
 }
 
@@ -241,10 +304,13 @@ bool DiffusionReaction::allowedAtSite()
 }
 
 
-double DiffusionReaction::rPower = 0;
-double DiffusionReaction::scale = 0;
+double DiffusionReaction::rPower ;
+double DiffusionReaction::scale;
 
 cube   DiffusionReaction::m_potential;
 
-uint   DiffusionReaction::total = 0;
-uint   DiffusionReaction::counter = 0;
+uint   DiffusionReaction::totalSP = 0;
+uint   DiffusionReaction::counterEqSP = 0;
+uint   DiffusionReaction::counterAllRate = 0;
+double DiffusionReaction::totalTime = 0;
+wall_clock DiffusionReaction::timer;

@@ -24,7 +24,8 @@ using namespace std;
 KMCSolver::KMCSolver(const Setting & root) :
     totalTime(0),
     cycle(0),
-    outputCounter(0)
+    outputCounter(0),
+    selectedReaction(NULL)
 {
 
     const Setting & SystemSettings = getSurfaceSetting(root, "System");
@@ -145,7 +146,8 @@ void KMCSolver::run()
 
         choice = getReactionChoice(R);
 
-        allReactions[choice]->execute();
+        selectedReaction = allReactions.at(choice);
+        selectedReaction->execute();
 
         if (cycle%cyclesPerOutput == 0)
         {
@@ -158,8 +160,9 @@ void KMCSolver::run()
         cycle++;
 
     }
-    cout << DiffusionReaction::counter/(double)DiffusionReaction::total << endl;
-
+    cout << "Frac equal saddles calculated:" << DiffusionReaction::counterEqSP/(double)DiffusionReaction::totalSP*100 << " %" << endl;
+    cout << "Frac saddles recalculated: " << DiffusionReaction::totalSP/(double)DiffusionReaction::counterAllRate*100 << " %" << endl;
+    cout << "Average time in saddleFunc: " << DiffusionReaction::totalTime/DiffusionReaction::totalSP*1E6 << " µs" << endl;
 }
 
 
@@ -403,6 +406,8 @@ void KMCSolver::getRateVariables()
     kTot = 0;
     accuAllRates.clear();
     allReactions.clear();
+
+    Site::updateAffectedSites();
 
     for (uint x = 0; x < NX; ++x)
     {

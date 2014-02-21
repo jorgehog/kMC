@@ -45,6 +45,8 @@ public:
 
     static void loadConfig(const Setting & setting);
 
+    static void updateAffectedSites();
+
     static uint findLevel(uint i, uint j, uint k);
 
     static void resetAll()
@@ -53,6 +55,7 @@ public:
         m_totalEnergy = 0;
         m_levelMatrix.reset();
         m_originTransformVector.reset();
+        affectedSites.clear();
     }
 
     /*
@@ -76,8 +79,6 @@ public:
 
     void addReaction(Reaction* reaction);
 
-    void setDiffusionReaction(DiffusionReaction* reaction, uint x, uint y, uint z);
-
     void updateReactions();
 
     void calculateRates();
@@ -85,7 +86,7 @@ public:
 
     void introduceNeighborhood();
 
-    bool hasNeighboring(int state);
+    bool hasNeighboring(int state) const;
 
     void propagateToNeighbors(int reqOldState, int newState);
 
@@ -95,6 +96,9 @@ public:
     void distanceTo(const Site * other, int &dx, int &dy, int &dz, bool absolutes = false) const;
 
     uint maxDistanceTo(const Site * other);
+
+    double potentialBetween(const Site * other);
+
 
     void queueAffectedSites();
 
@@ -146,9 +150,14 @@ public:
     }
 
 
-    const int & particleState()
+    const int & particleState() const
     {
         return m_particleState;
+    }
+
+    string particleStateName() const
+    {
+        return ParticleStates::names.at(m_particleState);
     }
 
     uint nNeighbors(uint level = 0) const
@@ -157,12 +166,12 @@ public:
     }
 
 
-    bool isCrystal()
+    bool isCrystal() const
     {
         return m_particleState == ParticleStates::crystal;
     }
 
-    bool isSurface()
+    bool isSurface() const
     {
         return m_particleState == ParticleStates::surface;
     }
@@ -219,6 +228,10 @@ public:
         return this == &other;
     }
 
+    int nature() const
+    {
+        return m_nature;
+    }
 
     friend class testBed;
 
@@ -239,7 +252,6 @@ private:
     static double m_totalEnergy;
 
     static set<Site*> affectedSites;
-    static void updateAffectedSites();
 
     static KMCSolver* mainSolver;
 
@@ -259,12 +271,18 @@ private:
 
     int m_particleState = ParticleStates::solution;
 
-
-    DiffusionReaction**** m_diffusionReactions;
-
     vector<Reaction*> m_siteReactions;
 
     vector<Reaction*> m_activeReactions;
+
+   enum NATURE
+    {
+        SolutionToSolution,
+        SolutionToSurface,
+        SurfaceToCrystal,
+        SurfaceToSolution,
+        CrystalToSurface
+    } m_nature;
 
 };
 
