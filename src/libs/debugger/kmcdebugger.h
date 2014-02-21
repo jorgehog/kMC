@@ -100,6 +100,8 @@ public:
     _KMCDebugger_IGNORE(site); \
     _KMCDebugger_IGNORE(_pre); \
     _KMCDebugger_IGNORE(_new)
+#define KMCDebugger_PushInitialTrace() \
+    _KMCDebugger_IGNORE(0)
 #endif
 
 
