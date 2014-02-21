@@ -4,10 +4,13 @@
 
 std::vector<std::string> KMCDebugger::reactionTrace;
 std::vector<std::string> KMCDebugger::implicationTrace;
-std::string              KMCDebugger::implications = _KMCDebugger_INITIAL_IMPLICATION_MSG;
+std::vector<double>      KMCDebugger::timerData;
+std::string              KMCDebugger::implications;
 
-uint KMCDebugger::traceCount = 0;
-uint KMCDebugger::implicationCount = 0;
+uint KMCDebugger::traceCount;
+uint KMCDebugger::implicationCount;
+
+wall_clock KMCDebugger::timer;
 
 void KMCDebugger::dumpFullTrace()
 {
@@ -30,10 +33,24 @@ void KMCDebugger::dumpPartialTrace(const uint &i)
 {
     using namespace std;
 
-    cout << "---[" << i << " / " << traceCount-1 << " ]" << endl;
+    cout << "---[" << i << " / " << traceCount-1 << " ] " << timerData.at(i)*1000 << " ms" << endl;
     cout << reactionTrace.at(i) << endl;
     cout << implicationTrace.at(i) << endl;
 
+}
+
+void KMCDebugger::reset()
+{
+    timer.toc();
+
+    reactionTrace.clear();
+    implicationTrace.clear();
+    timerData.clear();
+
+    traceCount = 0;
+    implicationCount = 0;
+
+    implications = _KMCDebugger_INITIAL_IMPLICATION_MSG;
 }
 
 #endif

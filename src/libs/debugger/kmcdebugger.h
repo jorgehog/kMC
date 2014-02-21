@@ -11,11 +11,16 @@
 
 #include <assert.h>
 
+#include <armadillo>
+
+using arma::wall_clock;
+
 class KMCDebugger
 {
 public:
     static std::vector<std::string> reactionTrace;
     static std::vector<std::string> implicationTrace;
+    static std::vector<double>      timerData;
     static std::string implications;
 
     static uint traceCount;
@@ -23,9 +28,16 @@ public:
 
     static void dumpFullTrace();
     static void dumpPartialTrace(const uint & i);
+    static void reset();
+
+    static wall_clock timer;
 };
 
 #define _KMCDebugger_INITIAL_IMPLICATION_MSG "[implications]: \n"
+
+#define KMCDebugger_Init() \
+    KMCDebugger::reset(); \
+    KMCDebugger::timer.tic()
 
 #define KMCDebugger_dumpTrace(i) \
     assert(i >= 0); \
@@ -51,11 +63,13 @@ public:
 #endif
 
 #define _KMCDebugger_PUSHTRACES_FROMSTR(_reactionStr) \
+    KMCDebugger::timerData.push_back(KMCDebugger::timer.toc()); \
     KMCDebugger::traceCount++; \
     KMCDebugger::implicationTrace.push_back(KMCDebugger::implications); \
     KMCDebugger::implicationCount = 0; \
     KMCDebugger::reactionTrace.push_back(_reactionStr); \
-    KMCDebugger::implications = _KMCDebugger_INITIAL_IMPLICATION_MSG
+    KMCDebugger::implications = _KMCDebugger_INITIAL_IMPLICATION_MSG; \
+    KMCDebugger::timer.tic()
 
 #ifdef KMC_VERBOSE_DEBUG
 #define _KMCDebugger_MAKE_IMPLICATION_MESSAGE(site, _pre, _new) \
@@ -85,6 +99,8 @@ public:
 #define _KMCDebugger_IGNORE(expr) static_cast<void>(expr)
 
 //Ignore everything if we are not debugging.
+#define KMCDebugger_Init() \
+    _KMCDebugger_IGNORE(0)
 #define KMCDebugger_dumpTrace(i) \
     _KMCDebugger_IGNORE(i)
 #define KMCDebugger_dumpFullTrace() \
