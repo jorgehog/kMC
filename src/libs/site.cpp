@@ -131,7 +131,7 @@ void Site::setParticleState(int state)
             }
 
             propagateToNeighbors(ParticleStates::surface, ParticleStates::solution);
-            queueAffectedReactions();
+            queueAffectedSites();
 
             break;
 
@@ -816,7 +816,7 @@ uint           Site::m_totalActiveSites = 0;
 
 double         Site::m_totalEnergy = 0;
 
-set<Reaction*> Site::affectedReactions;
+set<Reaction*> Site::affectedSites;
 
 
 const vector<string> ParticleStates::names = {"crystal", "solution", "surface"};
