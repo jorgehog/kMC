@@ -148,11 +148,10 @@ void testBed::testDistanceTo()
 void testBed::testDiffusionSiteMatrixSetup()
 {
 
-<<<<<<< HEAD
-=======
+
     DiffusionReaction * currentDiffReaction;
     int i, j, k;
->>>>>>> experimental2
+
 
     for (uint x = 0; x < NX; ++x)
     {
@@ -162,63 +161,7 @@ void testBed::testDiffusionSiteMatrixSetup()
             {
                 Site & currentSite = *(solver->getSite(x, y, z));
 
-<<<<<<< HEAD
-                uint C = 0;
-//                CHECK_EQUAL(26 + 9*6 + 4*6*6 + 4*4*6 + 3*12 + 2*24 + 8, currentSite.dependentReactions().size());
-                CHECK_EQUAL(26*124, currentSite.dependentReactions().size());
-                currentSite.activate();
 
-                for (int i = -1; i < 2; ++i)
-                {
-                    for (int j = -1; j < 2; ++j)
-                    {
-                        for (int k = -1; k < 2; ++k)
-                        {
-
-                            if (i == 0 && j == 0 && k == 0)
-                            {
-                                continue;
-                            }
-
-                            uint xt = (x + NX + i) % NX;
-                            uint yt = (y + NY + j) % NY;
-                            uint zt = (z + NZ + k) % NZ;
-
-                            const Site & dest = *(solver->getSite(xt, yt, zt));
-
-                            bool isDependent = false;
-
-
-                            CHECK_EQUAL(26 - C, currentSite.activeReactions().size());
-
-                            for (Reaction* reaction : currentSite.activeReactions())
-                            {
-                                if (*(((DiffusionReaction*)reaction)->destination) == dest)
-                                {
-                                    reaction->disable();
-                                    isDependent = true;
-                                }
-                            }
-
-                            C++;
-                            CHECK_EQUAL(true, isDependent);
-
-
-                        }
-                    }
-                }
-
-                for (Reaction * r : currentSite.siteReactions())
-                {
-                    r->update();
-                }
-
-                CHECK_EQUAL(26, currentSite.activeReactions().size());
-
-                currentSite.deactivate();
-
-                CHECK_EQUAL(0, currentSite.activeReactions().size());
-=======
                 for (Reaction * r : currentSite.siteReactions())
                 {
 
@@ -240,7 +183,6 @@ void testBed::testDiffusionSiteMatrixSetup()
                     CHECK_EQUAL(dest, dest2);
                 }
 
->>>>>>> experimental2
 
             }
         }
@@ -543,13 +485,10 @@ void testBed::testRateCalculation () {
                         continue;
                     }
 
-<<<<<<< HEAD
-                    double RATE = r->rate();
-                    double E = ((DiffusionReaction*)r)->lastUsedE;
-=======
+
                     //                    double RATE = r->rate();
                     double E = ((DiffusionReaction*)r)->lastUsedEnergy;
->>>>>>> experimental2
+
                     double Esp = ((DiffusionReaction*)r)->lastUsedEsp;
                     r->calcRate();
 

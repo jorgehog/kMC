@@ -35,8 +35,6 @@ public:
         return m_potential(x, y, z);
     }
 
-<<<<<<< HEAD
-=======
     static const cube & potentialBox()
     {
         return m_potential;
@@ -47,7 +45,6 @@ public:
         return m_destinationSite;
     }
 
->>>>>>> experimental2
     const uint & xD () const
     {
         return m_destinationSite->x();

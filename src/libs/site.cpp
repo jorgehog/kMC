@@ -32,10 +32,7 @@ Site::~Site()
     }
 
     delete [] m_neighborHood;
-<<<<<<< HEAD
-=======
 
->>>>>>> experimental2
 
     for (Reaction* reaction : m_siteReactions)
     {
@@ -56,10 +53,6 @@ Site::~Site()
 
 }
 
-
-
-<<<<<<< HEAD
-=======
 
 void Site::updateAffectedSites()
 {
@@ -83,7 +76,6 @@ void Site::resetAllFlags()
 }
 
 
->>>>>>> experimental2
 void Site::setParticleState(int state)
 {
 
@@ -110,11 +102,8 @@ void Site::setParticleState(int state)
             else
             {
                 m_particleState = ParticleStates::surface;
-<<<<<<< HEAD
-                queueAffectedReactions();
-=======
                 KMCDebugger_PushImplication(this, "solution", "surface");
->>>>>>> experimental2
+
             }
 
             queueAffectedSites();
@@ -203,12 +192,10 @@ void Site::setParticleState(int state)
             if (!(hasNeighboring(ParticleStates::crystal) || m_isFixedCrystalSeed))
             {
                 m_particleState = ParticleStates::solution;
-<<<<<<< HEAD
-                queueAffectedReactions();
-=======
+
                 KMCDebugger_PushImplication(this, "surface", "solution");
                 queueAffectedSites();
->>>>>>> experimental2
+
             }
 #ifndef KMC_NO_DEBUG
             else
@@ -315,42 +302,6 @@ void Site::addReaction(Reaction *reaction)
     m_siteReactions.push_back(reaction);
 }
 
-<<<<<<< HEAD
-void Site::enableReaction(Reaction * reaction)
-{
-    if (reaction->isActive())
-    {
-        return;
-    }
-
-    reaction->setSiteReactionArrayIndex(m_activeReactions.size());
-    m_activeReactions.push_back(reaction);
-
-}
-=======
-void Site::updateReactions()
-{
->>>>>>> experimental2
-
-void Site::disableReaction(Reaction * reaction)
-{
-
-    if (!reaction->isActive())
-    {
-        return;
-    }
-
-    assert(m_activeReactions.at(reaction->siteReactionArrayIndex()) == reaction);
-
-    m_activeReactions.erase(m_activeReactions.begin() + reaction->siteReactionArrayIndex());
-
-    for (uint i = reaction->siteReactionArrayIndex(); i < m_activeReactions.size(); i++) {
-        m_activeReactions.at(i)->setSiteReactionArrayIndex(i);
-    }
-
-    reaction->setSiteReactionArrayIndex(Reaction::UNSET_ARRAY_INDEX);
-
-}
 
 
 void Site::spawnAsFixedCrystal()
@@ -361,8 +312,6 @@ void Site::spawnAsFixedCrystal()
 }
 
 
-<<<<<<< HEAD
-=======
 void Site::calculateRates()
 {
     for (Reaction* reaction : m_activeReactions)
@@ -373,7 +322,6 @@ void Site::calculateRates()
 }
 
 
->>>>>>> experimental2
 void Site::setSolverPtr(KMCSolver *solver)
 {
 
@@ -474,19 +422,10 @@ bool Site::hasNeighboring(int state) const
 void Site::activate()
 {
 
-<<<<<<< HEAD
-#ifndef NDEBUG
 
-    if (affectedReactions.size() != 0)
-    {
-        cout << "affectedsites not cleared." << endl;
-        cout << affectedReactions.size() << " != " << 0 << endl;
 
-        exit(1);
-    }
-=======
 #ifndef KMC_NO_DEBUG
->>>>>>> experimental2
+
 
     if (m_active == true)
     {
@@ -512,14 +451,7 @@ void Site::activate()
     {
         setParticleState(ParticleStates::crystal);
     }
-<<<<<<< HEAD
 
-    informNeighborhoodOnChange(+1);
-
-    queueAffectedReactions();
-
-    updateAffectedReactions();
-=======
 #ifndef KMC_NO_DEBUG
     else
     {
@@ -528,7 +460,7 @@ void Site::activate()
 #endif
 
     informNeighborhoodOnChange(+1);
->>>>>>> experimental2
+
 
     m_totalActiveSites++;
 
@@ -539,13 +471,8 @@ void Site::activate()
 void Site::deactivate()
 {
 
-<<<<<<< HEAD
-#ifndef NDEBUG
 
-    assert(affectedReactions.size() == 0);
-=======
 #ifndef KMC_NO_DEBUG
->>>>>>> experimental2
 
     if (m_active == false)
     {
@@ -578,15 +505,6 @@ void Site::deactivate()
 #endif
 
     informNeighborhoodOnChange(-1);
-<<<<<<< HEAD
-
-    queueAffectedReactions();
-
-    updateAffectedReactions();
-
-    m_activeReactions.clear();
-=======
->>>>>>> experimental2
 
     m_totalActiveSites--;
 
@@ -693,12 +611,9 @@ void Site::informNeighborhoodOnChange(int change)
                 level = m_levelMatrix(i, j, k);
                 neighbor->m_nNeighbors(level)+=change;
 
-<<<<<<< HEAD
-                dE = change*DiffusionReaction::potential()(i, j, k);
-=======
 
                 dE = change*DiffusionReaction::potential(i,  j,  k);
->>>>>>> experimental2
+
 
                 neighbor->m_energy += dE;
 
@@ -713,44 +628,8 @@ void Site::informNeighborhoodOnChange(int change)
 
 }
 
-void Site::queueAffectedReactions()
+void Site::queueAffectedSites()
 {
-<<<<<<< HEAD
-
-#ifndef NDEBUG
-
-    for (Reaction* r : m_siteReactions)
-    {
-        for (Reaction* r1 : m_dependentReactions)
-        {
-            if (r == r1)
-            {
-                cout << "a site's reaction dependencies should come from outsite reactions" << endl;
-                cout << *r << " " << *r1 << endl;
-                exit(1);
-            }
-        }
-    }
-
-#endif
-
-    affectedReactions.insert(m_siteReactions.begin(), m_siteReactions.end());
-    affectedReactions.insert(m_dependentReactions.begin(), m_dependentReactions.end());
-
-}
-
-
-void Site::updateAffectedReactions()
-{
-
-    for (Reaction* reaction : affectedReactions)
-    {
-        reaction->update();
-    }
-
-    affectedReactions.clear();
-
-=======
     uint C = 0;
     for (uint i = 0; i < m_neighborhoodLength; ++i)
     {
@@ -775,7 +654,7 @@ void Site::updateAffectedReactions()
     assert(C == 125*26);
 
     affectedSites.insert(m_allNeighbors.begin(), m_allNeighbors.end());
->>>>>>> experimental2
+
 }
 
 uint Site::findLevel(uint i, uint j, uint k)

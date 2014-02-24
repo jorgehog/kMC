@@ -348,11 +348,7 @@ bool DiffusionReaction::isAffectedByChangeIn(const Site *site) const
 }
 
 
-<<<<<<< HEAD
 double DiffusionReaction::rPower;
-=======
-double DiffusionReaction::rPower ;
->>>>>>> experimental2
 double DiffusionReaction::scale;
 
 cube   DiffusionReaction::m_potential;

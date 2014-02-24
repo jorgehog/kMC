@@ -54,8 +54,7 @@ public:
     virtual const string info(int xr = 0, int yr = 0, int zr = 0, string desc = ".")  const;
 
 
-<<<<<<< HEAD
-=======
+
     static void resetAll()
     {
         IDcount = 0;
@@ -67,7 +66,6 @@ public:
     }
 
 
->>>>>>> experimental2
     void setSite(Site* site)
     {
         m_reactionSite = site;
@@ -119,10 +117,7 @@ public:
         return m_reactionSite;
     }
 
-<<<<<<< HEAD
-    const static double UNSET_RATE;
-    const static uint   UNSET_ARRAY_INDEX;
-=======
+
     bool isType(const string name) const
     {
         return name.compare(this->name) == 0;
@@ -134,7 +129,7 @@ public:
     }
 
     virtual string getFinalizingDebugMessage() const;
->>>>>>> experimental2
+
 
     virtual string getInfoSnippet() const
     {
@@ -146,18 +141,7 @@ public:
         return this == &other;
     }
 
-<<<<<<< HEAD
-    string str() const
-    {
 
-        stringstream s;
-        s << name << "@(" << x() << "," << y() << "," << z() << ") [" << getInfoSnippet() << "]";
-
-        return s.str();
-
-    }
-
-=======
     const string str() const
     {
         stringstream s;
@@ -175,7 +159,7 @@ public:
         UNSET_UPDATE_FLAG = 1337
     };
 
->>>>>>> experimental2
+
     friend class testBed;
 
 protected:
@@ -199,15 +183,11 @@ protected:
 
     double m_rate;
 
-<<<<<<< HEAD
-    void enable();
 
-    void disable();
-=======
     set<int> m_updateFlags;
     int      m_updateFlag;
 
->>>>>>> experimental2
+
 
 };
 

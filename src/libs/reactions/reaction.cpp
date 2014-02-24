@@ -6,13 +6,8 @@
 Reaction::Reaction(string name):
     name(name),
     m_ID(IDcount++),
-<<<<<<< HEAD
-    m_siteReactionArrayIndex(UNSET_ARRAY_INDEX),
-    m_rate(UNSET_RATE)
-=======
     m_rate(UNSET_RATE),
     m_updateFlag(UNSET_UPDATE_FLAG)
->>>>>>> experimental2
 {
 
 }
@@ -86,61 +81,16 @@ void Reaction::loadConfig(const Setting &setting)
 
 }
 
-<<<<<<< HEAD
-void Reaction::initialize()
-{
-    if (m_reactionSite->isActive() && isNotBlocked())
-    {
-        assert(false && "NOT TESTED");
-        enable();
-        calcRate();
-    }
-}
 
-void Reaction::update()
-{
-
-    if (!m_reactionSite->isActive())
-    {
-        m_siteReactionArrayIndex = UNSET_ARRAY_INDEX;
-
-        return;
-    }
-
-    if (isNotBlocked())
-    {
-        enable();
-=======
 void Reaction::getTriumphingUpdateFlag()
 {
     if (m_updateFlags.empty())
     {
         m_updateFlag = defaultUpdateFlag;
->>>>>>> experimental2
     }
 
     else
     {
-<<<<<<< HEAD
-        disable();
-    }
-
-    calcRate();
-
-}
-void Reaction::enable()
-{
-    m_reactionSite->enableReaction(this);
-}
-
-void Reaction::disable()
-{
-    m_reactionSite->disableReaction(this);
-}
-
-const double Reaction::UNSET_RATE = -1;
-const uint   Reaction::UNSET_ARRAY_INDEX = 27;
-=======
         m_updateFlag = *std::min_element(m_updateFlags.begin(), m_updateFlags.end());
     }
 
@@ -149,7 +99,6 @@ const uint   Reaction::UNSET_ARRAY_INDEX = 27;
 }
 
 const double   Reaction::UNSET_RATE = -1;
->>>>>>> experimental2
 
 KMCSolver*     Reaction::mainSolver;
 

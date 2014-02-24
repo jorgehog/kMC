@@ -78,16 +78,9 @@ public:
 
     void addReaction(Reaction* reaction);
 
-<<<<<<< HEAD
-    void addDependency(Reaction* reaction)
-    {
-        m_dependentReactions.push_back(reaction);
-    }
 
-    void setDiffusionReaction(DiffusionReaction* reaction, uint x, uint y, uint z);
-=======
     void updateReactions();
->>>>>>> experimental2
+
 
     void enableReaction(Reaction *reaction);
 
@@ -104,15 +97,14 @@ public:
 
     void distanceTo(const Site * other, int &dx, int &dy, int &dz, bool absolutes = false) const;
 
-<<<<<<< HEAD
-=======
+
     uint maxDistanceTo(const Site * other);
 
     double potentialBetween(const Site * other);
 
 
     void queueAffectedSites();
->>>>>>> experimental2
+
 
     void resetUpdateFlags();
 
@@ -255,23 +247,14 @@ public:
         return this == &other;
     }
 
-<<<<<<< HEAD
-    string str() const
-    {
-        stringstream s;
-        s << "site@(" << x() << "," << y() << "," << z() << ")";
 
-        return s.str();
-    }
-
-=======
     const string str() const
     {
         stringstream s;
         s << "site@(" << x() << "," << y() << "," << z() << ")";
         return s.str();
     }
->>>>>>> experimental2
+
 
     friend class testBed;
 
@@ -291,15 +274,9 @@ private:
 
     static double m_totalEnergy;
 
-<<<<<<< HEAD
-    static void updateAffectedReactions();
 
-    static set<Reaction*> affectedReactions;
-
-    void queueAffectedReactions();
-=======
     static set<Site*> affectedSites;
->>>>>>> experimental2
+
 
     static KMCSolver* mainSolver;
 
