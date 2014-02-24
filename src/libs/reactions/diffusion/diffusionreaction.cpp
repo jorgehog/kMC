@@ -9,7 +9,7 @@ DiffusionReaction::DiffusionReaction(Site *destination) :
     lastUsedEsp(0),
     destination(destination)
 {
-
+    m_type = diff;
 }
 
 
@@ -56,7 +56,20 @@ void DiffusionReaction::loadConfig(const Setting &setting)
 void DiffusionReaction::setUpdateFlags(const Site *changedSite, uint level)
 {
 
-    if (level == 0 || m_rate == UNSET_RATE)
+    if (m_rate == UNSET_RATE)
+    {
+        m_updateFlags.insert(defaultUpdateFlag);
+    }
+
+    else if (changedSite->isSurface())
+    {
+        if (!destination->isSurface())
+        {
+            m_updateFlags.insert(updateKeepSaddle);
+        }
+    }
+
+    else if (level == 0)
     {
         m_updateFlags.insert(defaultUpdateFlag);
     }
@@ -179,7 +192,7 @@ double DiffusionReaction::getSaddleEnergy()
             }
             cout << "exactly same setup calculated saddle twice..should be flagged" << endl;
 
-            KMCDebugger_dumpFullTrace(true);
+            KMCDebugger_DumpFullTrace(true);
 
             exit(1);
         }
@@ -252,12 +265,13 @@ void DiffusionReaction::execute()
 
 }
 
-const string DiffusionReaction::info(int xr, int yr, int zr) const
+const string DiffusionReaction::info(int xr, int yr, int zr, string desc) const
 {
 
     (void) xr;
     (void) yr;
     (void) zr;
+    (void) desc;
 
     int X, Y, Z;
     m_reactionSite->distanceTo(destination, X, Y, Z);
@@ -267,13 +281,12 @@ const string DiffusionReaction::info(int xr, int yr, int zr) const
     assert((z() + NZ + Z)%NZ == destination->z());
 
     stringstream s;
-
-    s << Reaction::info(X, Y, Z);
+    s << Reaction::info(X, Y, Z, "D");
 
     s << "Path: " << X << " " << Y << " " << Z << endl;
     s << "Reaction initiates diffusion to " << endl;
     s << "{\n";
-    s << destination->info(-X, -Y, -Z);
+    s << destination->info(-X, -Y, -Z, "O");
     s << "\n}" << endl;
 
     return s.str();

@@ -8,7 +8,11 @@ HEADERS = RNG/kMCRNG.h \
     kmcsolver.h \
     site.h \
     reactions/diffusion/diffusionreaction.h \
-    debugger/kmcdebugger.h
+    debugger/kmcdebugger.h \
+    debugger/bits/nodebug.h \
+    debugger/bits/intrinsicmacros.h \
+    debugger/bits/kmcdebugger_class.h \
+    debugger/bits/debug_api.h
 
 SOURCES += \
     reactions/reaction.cpp \
@@ -16,7 +20,7 @@ SOURCES += \
     site.cpp \
     reactions/diffusion/diffusionreaction.cpp \
     RNG/kMCRNG.cpp \
-    debugger/kmcdebugger.cpp
+    debugger/bits/kmcdebugger_class.cpp
 
 RNG_ZIG {
 

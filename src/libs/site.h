@@ -20,8 +20,7 @@ struct ParticleStates
     {
         crystal,
         solution,
-        surface,
-        any
+        surface
     };
 
     const static vector<string> names;
@@ -69,8 +68,6 @@ public:
 
     void spawnAsFixedCrystal();
 
-    void crystallize();
-
 
     void activate();
 
@@ -111,7 +108,7 @@ public:
     }
 
 
-    const string info(int xr = 0, int yr = 0, int zr = 0) const;
+    const string info(int xr = 0, int yr = 0, int zr = 0, string desc = ".") const;
 
 
     /*
@@ -158,6 +155,11 @@ public:
     string particleStateName() const
     {
         return ParticleStates::names.at(m_particleState);
+    }
+
+    string particleStateShortName() const
+    {
+        return ParticleStates::shortNames.at(m_particleState);
     }
 
     uint nNeighbors(uint level = 0) const
@@ -223,6 +225,11 @@ public:
         return m_energy;
     }
 
+    const bool & isFixedCrystalSeed()
+    {
+        return m_isFixedCrystalSeed;
+    }
+
     bool operator == (const Site & other) const
     {
         return this == &other;
@@ -263,7 +270,7 @@ private:
 
     bool m_active;
 
-    bool isFixedCrystalSeed;
+    bool m_isFixedCrystalSeed;
 
     uint m_x;
     uint m_y;

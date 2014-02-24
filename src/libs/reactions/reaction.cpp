@@ -5,7 +5,8 @@
 Reaction::Reaction(string name):
     name(name),
     m_ID(IDcount++),
-    m_rate(UNSET_RATE)
+    m_rate(UNSET_RATE),
+    m_type(std)
 {
 
 }
@@ -15,13 +16,13 @@ Reaction::~Reaction()
 
 }
 
-const string Reaction::info(int xr, int yr, int zr) const
+const string Reaction::info(int xr, int yr, int zr, string desc) const
 {
     stringstream s;
-    s << "[Reaction " << m_ID << "/" << IDcount << "]:" << endl;
+    s << "[" << name << " " << m_ID << "/" << IDcount << "]:" << endl;
     s << "rate: " << m_rate << endl;
     s << "@{" << endl;
-    s << m_reactionSite->info(xr, yr, zr);
+    s << m_reactionSite->info(xr, yr, zr, desc);
     s << "\n}" << endl;
 
     return s.str();

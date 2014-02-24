@@ -140,7 +140,7 @@ void KMCSolver::run()
 
     initializeCrystal();
 
-    KMCDebugger_PushInitialTrace();
+    KMCDebugger_PushTraces();
 
     while(cycle < nCycles)
     {
@@ -154,8 +154,10 @@ void KMCSolver::run()
         choice = getReactionChoice(R);
 
         selectedReaction = allReactions.at(choice);
+        KMCDebugger_SetActiveReaction(selectedReaction);
+
         selectedReaction->execute();
-        KMCDebugger_pushTraces(selectedReaction);
+        KMCDebugger_PushTraces();
 
 
         if (cycle%cyclesPerOutput == 0)

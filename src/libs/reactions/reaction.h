@@ -40,7 +40,7 @@ public:
     virtual void execute() = 0;
 
 
-    virtual const string info(int xr = 0, int yr = 0, int zr = 0)  const;
+    virtual const string info(int xr = 0, int yr = 0, int zr = 0, string desc = ".")  const;
 
 
     static void resetAll()
@@ -94,6 +94,11 @@ public:
         return m_reactionSite;
     }
 
+    int type()
+    {
+        return m_type;
+    }
+
     virtual string getInfoSnippet() const
     {
         return "-";
@@ -110,6 +115,14 @@ public:
         s << name << "@(" << x() << "," << y() << "," << z() << ") [" << getInfoSnippet() << "]";
         return s.str();
     }
+
+
+    enum type
+    {
+        std,
+        diff
+    };
+
 
 protected:
 
@@ -141,6 +154,8 @@ protected:
         defaultUpdateFlag = 0,
         noUpdate = 100
     };
+
+    int m_type;
 
 };
 

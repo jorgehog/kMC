@@ -1,20 +1,33 @@
-#include "kmcdebugger.h"
+#include "kmcdebugger_class.h"
+
+#ifndef KMC_NO_DEBUG
 
 #include <fstream>
 #include <sys/time.h>
 
-#ifndef KMC_NO_DEBUG
+#include "intrinsicmacros.h"
 
-std::vector<std::string> KMCDebugger::reactionTrace;
+std::vector<std::string> KMCDebugger::reactionTraceBefore;
+std::vector<std::string> KMCDebugger::reactionTraceAfter;
 std::vector<std::string> KMCDebugger::implicationTrace;
 std::vector<double>      KMCDebugger::timerData;
-std::string              KMCDebugger::implications = _KMCDebugger_INITIAL_IMPLICATION_MSG;
+
+std::string KMCDebugger::implications = _KMCDebugger_INITIAL_IMPLICATION_MSG;
+std::string KMCDebugger::reactionString = _KMCDebugger_INITIAL_REACTION_STR;
+
+Reaction* KMCDebugger::currentReaction = NULL;
 
 uint KMCDebugger::traceCount = 0;
 uint KMCDebugger::implicationCount = 0;
 
+std::string KMCDebugger::traceFileName = "";
+std::string KMCDebugger::traceFilePath = "";
+
 wall_clock KMCDebugger::timer;
 
+std::stringstream KMCDebugger::s;
+
+double KMCDebugger::t;
 
 
 void KMCDebugger::dumpFullTrace(bool toFile)
@@ -27,11 +40,24 @@ void KMCDebugger::dumpFullTrace(bool toFile)
 
         stringstream path;
 
-#ifdef KMCDebugger_Path
-        path << KMCDebugger_Path << "/";
-#endif
+        if (!traceFilePath.empty())
+        {
+            path << traceFilePath << "/";
+        }
 
-        path << "trace" << time(NULL) << ".txt";
+        path << "trace_";
+
+        if (!traceFileName.empty())
+        {
+            path << traceFileName;
+        }
+
+        else
+        {
+            path << time(NULL);
+        }
+
+        path << ".txt";
 
         file.open(path.str().c_str());
         file << fullTrace() << endl;
@@ -80,9 +106,14 @@ string KMCDebugger::partialTrace(const uint &i)
     stringstream s;
 
     s << "---[" << i << " / " << traceCount-1 << " ] " << timerData.at(i)*1000 << " ms" << endl;
-    s << reactionTrace.at(i) << endl;
+    s << reactionTraceBefore.at(i) << endl;
     s << implicationTrace.at(i);
 
+    if (!reactionTraceAfter.at(i).empty())
+    {
+        s << "\nEnd of reaction look from initial reaction site view: " << endl;
+        s << reactionTraceAfter.at(i);
+    }
     return s.str();
 
 }
@@ -90,14 +121,18 @@ string KMCDebugger::partialTrace(const uint &i)
 void KMCDebugger::reset()
 {
 
-    reactionTrace.clear();
+    reactionTraceBefore.clear();
+    reactionTraceAfter.clear();
     implicationTrace.clear();
     timerData.clear();
 
-    traceCount = 0;
-    implicationCount = 0;
+    currentReaction = NULL;
 
     implications = _KMCDebugger_INITIAL_IMPLICATION_MSG;
+    reactionString = _KMCDebugger_INITIAL_REACTION_STR;
+
+    traceCount = 0;
+    implicationCount = 0;
 
     (void)timer.toc();
 
