@@ -78,8 +78,9 @@ public:
 
     void addReaction(Reaction* reaction);
 
-
     void updateReactions();
+
+    void calculateRates();
 
 
     void enableReaction(Reaction *reaction);
