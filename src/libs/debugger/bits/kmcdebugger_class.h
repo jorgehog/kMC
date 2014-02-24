@@ -34,7 +34,8 @@ public:
             const char * B,
             const char * file,
             const char * func,
-            int line)
+            int line,
+            std::string what = "")
     {
         using namespace std;
 
@@ -42,7 +43,14 @@ public:
 
         cerr << "Assertion '" << A << " " << OP << " " << B << "' failed: ";
 
-        cerr << Aval << " !" << OP << " " << Bval << "." << endl;
+        cerr << Aval << " !" << OP << " " << Bval << ".";
+
+        if (!what.empty())
+        {
+            cerr << "\nwhat? : " << what;
+        }
+
+        cerr << endl;
 
         exit(1);
 

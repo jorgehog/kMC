@@ -626,8 +626,7 @@ void Site::informNeighborhoodOnChange(int change)
         }
     }
 
-    KMCDebugger_Assert(C, ==, 124*26);
-
+    KMCDebugger_Assert(C, ==, 123*26);
     queueAffectedSites();
 
 }
