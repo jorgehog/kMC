@@ -79,14 +79,8 @@ string DiffusionReaction::getFinalizingDebugMessage() const
 void DiffusionReaction::setUpdateFlags(const Site *changedSite, uint level)
 {
 
-    m_updateFlags.insert(defaultUpdateFlag);
 
-    if (m_rate == UNSET_RATE)
-    {
-        m_updateFlags.insert(defaultUpdateFlag);
-    }
-
-    else if (level == 0)
+    if (m_rate == UNSET_RATE || level == 0)
     {
         m_updateFlags.insert(defaultUpdateFlag);
     }
@@ -115,7 +109,6 @@ double DiffusionReaction::getSaddleEnergy()
     double zs = ((z() + zD())%NZ)/2.0;
 
     vector<const Site*> neighborSet;
-    bool empty = true;
 
     for (const Site* site : m_reactionSite->allNeighbors())
     {
@@ -124,14 +117,8 @@ double DiffusionReaction::getSaddleEnergy()
             if (site == dSite && site->isActive())
             {
                 neighborSet.push_back(site);
-                empty = false;
             }
         }
-    }
-
-    if (empty)
-    {
-        return 0;
     }
 
     double Esp = 0;
