@@ -3,11 +3,11 @@
 
 #include "../../debugger/kmcdebugger.h"
 
-DiffusionReaction::DiffusionReaction(Site *destination) :
+DiffusionReaction::DiffusionReaction(Site *destinationSite) :
     Reaction("DiffusionReaction"),
     lastUsedEnergy(0),
     lastUsedEsp(0),
-    m_destinationSite(destination)
+    m_destinationSite(destinationSite)
 {
 
 }
@@ -79,6 +79,7 @@ string DiffusionReaction::getFinalizingDebugMessage() const
 void DiffusionReaction::setUpdateFlags(const Site *changedSite, uint level)
 {
 
+    m_updateFlags.insert(defaultUpdateFlag);
 
     if (m_rate == UNSET_RATE || level == 0)
     {
@@ -93,7 +94,7 @@ void DiffusionReaction::setUpdateFlags(const Site *changedSite, uint level)
 
     else
     {
-        assert(level == Site::nNeighborsLimit() - 1);
+        assert(level == Site::nNeighborsLimit() - 1 || level == Site::nNeighborsLimit() + 1);
         m_updateFlags.insert(defaultUpdateFlag);
     }
 

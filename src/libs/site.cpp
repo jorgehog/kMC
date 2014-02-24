@@ -67,14 +67,6 @@ void Site::updateAffectedSites()
 
 }
 
-void Site::resetAllFlags()
-{
-    for (Site* site : affectedSites)
-    {
-        site->resetUpdateFlags();
-    }
-}
-
 
 void Site::setParticleState(int state)
 {
@@ -106,6 +98,7 @@ void Site::setParticleState(int state)
             }
 
             queueAffectedSites();
+
             break;
 
             //Crystal -> surface
@@ -165,6 +158,7 @@ void Site::setParticleState(int state)
             m_particleState  = ParticleStates::crystal;
             KMCDebugger_PushImplication(this, "surface", "crystal");
             propagateToNeighbors(ParticleStates::solution, ParticleStates::surface);
+            queueAffectedSites();
 
             break;
 
@@ -269,7 +263,7 @@ void Site::loadConfig(const Setting &setting)
             {
                 if (i == m_nNeighborsLimit && j == m_nNeighborsLimit && k == m_nNeighborsLimit)
                 {
-                    m_levelMatrix(i, j, k) = 0;
+                    m_levelMatrix(i, j, k) = m_nNeighborsLimit + 1;
                     continue;
                 }
 
@@ -795,15 +789,6 @@ const string Site::info(int xr, int yr, int zr, string desc) const
 
     return s_full.str();
 
-}
-
-void Site::resetUpdateFlags()
-{
-    for (Reaction * reaction : m_siteReactions)
-    {
-        reaction->clearUpdateFlags();
-        reaction->setUpdateFlag(Reaction::defaultUpdateFlag);
-    }
 }
 
 

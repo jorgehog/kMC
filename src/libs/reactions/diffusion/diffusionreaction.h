@@ -11,7 +11,7 @@ class DiffusionReaction : public Reaction
 public:
 
 
-    DiffusionReaction(Site *m_destinationSite);
+    DiffusionReaction(Site *destinationSite);
 
     ~DiffusionReaction() {
         lastSetup.clear();
@@ -90,7 +90,7 @@ private:
 
     enum SpecificUpdateFlags
     {
-        updateKeepSaddle = 2
+        updateKeepSaddle = 1
     };
 
 
