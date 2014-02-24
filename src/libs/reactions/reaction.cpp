@@ -6,7 +6,8 @@
 Reaction::Reaction(string name):
     name(name),
     m_ID(IDcount++),
-    m_rate(UNSET_RATE)
+    m_rate(UNSET_RATE),
+    m_updateFlag(UNSET_UPDATE_FLAG)
 {
 
 }
@@ -41,6 +42,7 @@ const string Reaction::info(int xr, int yr, int zr, string desc) const
 
 string Reaction::getFinalizingDebugMessage() const
 {
+#ifndef KMC_NO_DEBUG
     int X, Y, Z;
     stringstream s;
 
@@ -54,7 +56,9 @@ string Reaction::getFinalizingDebugMessage() const
     s << m_reactionSite->info(X, Y, Z);
 
     return s.str();
-
+#else
+    return "";
+#endif
 }
 
 

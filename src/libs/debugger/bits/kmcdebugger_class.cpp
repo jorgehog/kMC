@@ -94,7 +94,7 @@ string KMCDebugger::fullTrace(int line, const string filename, const string addi
     }
 
     s << "Full trace initiated at line " << line;
-    s << "in " << filename << "\n";
+    s << "\nin " << filename << "\n";
     s << "=====================\n  TRACE FINISHED  \n=====================\n" << endl;
 
     if (!additionalInfo.empty())

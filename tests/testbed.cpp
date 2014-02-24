@@ -1021,15 +1021,40 @@ void testBed::testKnownCase()
 
 void testBed::testSmartSaddleUpdateAlg()
 {
+    KMCDebugger_Init();
     uint choice, cycle;
     double R;
 
     cycle = 0;
 
     solver->initializeCrystal();
+    KMCDebugger_PushTraces();
+    reset();
+
+    for (Site* SITE : Site::affectedSites)
+    {
+        for (Reaction* REACT : SITE->siteReactions())
+        {
+            CHECK_EQUAL(REACT->rate(), Reaction::UNSET_RATE);
+            CHECK_EQUAL(1, REACT->m_updateFlags.size());
+            if (Reaction::UNSET_UPDATE_FLAG == *REACT->m_updateFlags.begin())
+            {
+                failCount++;
+            }
+            else
+            {
+                winCount++;
+            }
+            nTrials++;
+        }
+    }
+
+    CHECK_EQUAL(winCount, nTrials);
+    CHECK_EQUAL(failCount, 0);
+    assert(failCount == 0);
 
     DiffusionReaction * dr;
-
+    Reaction* selectedReaction;
     while(cycle < 1000)
     {
 
@@ -1043,10 +1068,14 @@ void testBed::testSmartSaddleUpdateAlg()
 
             for (Reaction* reaction : site->m_activeReactions)
             {
+
                 reaction->getTriumphingUpdateFlag();
 
-                dr = (DiffusionReaction*)reaction;
+                if (cycle == 0) {
+                    CHECK_EQUAL(Reaction::defaultUpdateFlag, reaction->m_updateFlag);
+                }
 
+                dr = (DiffusionReaction*)reaction;
 
                 if (dr->m_updateFlag == dr->updateKeepSaddle)
                 {
@@ -1056,6 +1085,12 @@ void testBed::testSmartSaddleUpdateAlg()
                     dr->m_rate *= exp(-dr->beta*energyShift);
 
                     double newS = dr->getSaddleEnergy();
+
+                    if (newS == 0)
+                    {
+                        KMCDebugger_DumpFullTrace(dr->getFinalizingDebugMessage(), true);
+                        exit(1);
+                    }
 
                     CHECK_CLOSE(newS, dr->lastUsedEsp, 0.0000000001);
 
@@ -1104,7 +1139,11 @@ void testBed::testSmartSaddleUpdateAlg()
 
         choice = solver->getReactionChoice(R);
 
-        solver->allReactions[choice]->execute();
+        selectedReaction = solver->allReactions.at(choice);
+        KMCDebugger_SetActiveReaction(selectedReaction);
+
+        selectedReaction->execute();
+        KMCDebugger_PushTraces();
 
         cycle++;
 

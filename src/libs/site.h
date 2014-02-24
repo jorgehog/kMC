@@ -46,6 +46,8 @@ public:
 
     static void updateAffectedSites();
 
+    static void resetAllFlags();
+
     static uint findLevel(uint i, uint j, uint k);
 
     static void resetAll()
@@ -99,6 +101,7 @@ public:
 
     void queueAffectedSites();
 
+    void resetUpdateFlags();
 
     void reset()
     {

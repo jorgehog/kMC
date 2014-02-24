@@ -67,6 +67,14 @@ void Site::updateAffectedSites()
 
 }
 
+void Site::resetAllFlags()
+{
+    for (Site* site : affectedSites)
+    {
+        site->resetUpdateFlags();
+    }
+}
+
 
 void Site::setParticleState(int state)
 {
@@ -622,25 +630,30 @@ void Site::informNeighborhoodOnChange(int change)
 
 void Site::queueAffectedSites()
 {
+    uint C = 0;
     for (uint i = 0; i < m_neighborhoodLength; ++i)
     {
         for (uint j = 0; j < m_neighborhoodLength; ++j)
         {
             for (uint k = 0; k < m_neighborhoodLength; ++k)
             {
+
                 //This approach assumes that recursive updating of non-neighboring sites
                 //WILL NOT ACTIVATE OR DEACTIVATE any sites, simply change their state,
                 //and thus not interfere with any flags set here, not require flags of their own.
                 for (Reaction * reaction : m_neighborHood[i][j][k]->siteReactions())
                 {
                     reaction->setUpdateFlags(this, m_levelMatrix(i, j, k));
+                    C++;
                 }
 
             }
         }
     }
 
-    affectedSites.insert(allNeighbors().begin(), allNeighbors().end());
+    assert(C == 125*26);
+
+    affectedSites.insert(m_allNeighbors.begin(), m_allNeighbors.end());
 }
 
 uint Site::findLevel(uint i, uint j, uint k)
@@ -701,7 +714,7 @@ const string Site::info(int xr, int yr, int zr, string desc) const
 
                 if (currentSite->isFixedCrystalSeed())
                 {
-                    assert(currentSite->isCrystal());
+                    assert((currentSite->isCrystal() && currentSite->isActive()) || (currentSite->isSurface() && !currentSite->isActive()));
                 }
 
                 if (currentSite == this)
@@ -722,7 +735,6 @@ const string Site::info(int xr, int yr, int zr, string desc) const
                 else if (currentSite->isSurface())
                 {
                     nN(i, j, k) = ParticleStates::surface;
-                    assert(currentSite->hasNeighboring(ParticleStates::crystal));
                 }
 
             }
@@ -742,7 +754,7 @@ const string Site::info(int xr, int yr, int zr, string desc) const
             ss << A.row(j);
         }
 
-        ss << endl;
+        ss << "\n";
 
     }
 
@@ -769,6 +781,8 @@ const string Site::info(int xr, int yr, int zr, string desc) const
     };
 
 
+    searchRepl("        ", "  ");
+
     typeSearchRepl(ParticleStates::crystal);
     typeSearchRepl(ParticleStates::surface);
     typeSearchRepl(ParticleStates::solution);
@@ -781,6 +795,15 @@ const string Site::info(int xr, int yr, int zr, string desc) const
 
     return s_full.str();
 
+}
+
+void Site::resetUpdateFlags()
+{
+    for (Reaction * reaction : m_siteReactions)
+    {
+        reaction->clearUpdateFlags();
+        reaction->setUpdateFlag(Reaction::defaultUpdateFlag);
+    }
 }
 
 

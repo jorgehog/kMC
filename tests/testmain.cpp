@@ -4,6 +4,8 @@
 #include <sys/types.h>
 #include "testbed.h"
 
+#include "../../src/libs/debugger/kmcdebugger.h"
+
 #include <math.h>
 
 using namespace std;
@@ -35,5 +37,6 @@ UBERTEST(KnownCase)
 
 int main()
 {
+    KMCDebugger_SetFilename("Tests");
     return UnitTest::RunAllTests();
 }

@@ -52,6 +52,7 @@ void DiffusionReaction::loadConfig(const Setting &setting)
 
 string DiffusionReaction::getFinalizingDebugMessage() const
 {
+    #ifndef KMC_NO_DEBUG
     int X, Y, Z;
     stringstream s;
 
@@ -66,6 +67,9 @@ string DiffusionReaction::getFinalizingDebugMessage() const
     s << m_reactionSite->info(X, Y, Z);
 
     return s.str();
+#else
+    return "";
+#endif
 }
 
 /*
@@ -78,14 +82,6 @@ void DiffusionReaction::setUpdateFlags(const Site *changedSite, uint level)
     if (m_rate == UNSET_RATE)
     {
         m_updateFlags.insert(defaultUpdateFlag);
-    }
-
-    else if (changedSite->isSurface())
-    {
-        if (!m_destinationSite->isSurface())
-        {
-            m_updateFlags.insert(updateKeepSaddle);
-        }
     }
 
     else if (level == 0)
@@ -167,6 +163,7 @@ double DiffusionReaction::getSaddleEnergy()
 
     }
 
+    #ifndef KMC_NO_DEBUG
     bool sameSetup = true;
 
     if (lastSetup.size() != neighborSet.size())
@@ -199,11 +196,11 @@ double DiffusionReaction::getSaddleEnergy()
         if (sameSetup)
         {
 
-            cout << "exactly same setup calculated saddle twice..should be flagged" << endl;
+//            cout << "exactly same setup calculated saddle twice..should be flagged" << endl;
 
-            KMCDebugger_DumpFullTrace(getFinalizingDebugMessage(), true);
+//            KMCDebugger_DumpFullTrace(getFinalizingDebugMessage(), true);
 
-            exit(1);
+//            exit(1);
         }
         counterEqSP++;
 
@@ -211,14 +208,16 @@ double DiffusionReaction::getSaddleEnergy()
 
     totalSP++;
 
-    lastUsedEsp = Esp;
-
     for (const Site * s: neighborSet)
     {
         lastSetup.insert(s);
     }
 
     totalTime += timer.toc();
+
+#endif
+
+    lastUsedEsp = Esp;
 
     return Esp;
 

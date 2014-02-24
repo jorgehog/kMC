@@ -22,6 +22,7 @@ public:
 
     const static double UNSET_RATE;
 
+
     static void setSolverPtr(KMCSolver * solver);
 
     static void loadConfig(const Setting & setting);
@@ -62,6 +63,7 @@ public:
     void clearUpdateFlags()
     {
         m_updateFlags.clear();
+        assert(m_updateFlags.empty());
     }
 
     const uint & ID() const
@@ -99,6 +101,11 @@ public:
         return name.compare(this->name) == 0;
     }
 
+    void setUpdateFlag(int flag)
+    {
+        m_updateFlag = flag;
+    }
+
     virtual string getFinalizingDebugMessage() const;
 
     virtual string getInfoSnippet() const
@@ -119,7 +126,16 @@ public:
     }
 
 
+    //! Update flags are given in the order such that the minimum of the flag set is the
+    //! triumphant flag.
+    enum AllUpdateFlags
+    {
+        defaultUpdateFlag = 0,
+        noUpdate = 100,
+        UNSET_UPDATE_FLAG = 1337
+    };
 
+    friend class testBed;
 
 protected:
 
@@ -144,13 +160,6 @@ protected:
     set<int> m_updateFlags;
     int      m_updateFlag;
 
-    //! Update flags are given in the order such that the minimum of the flag set is the
-    //! triumphant flag.
-    enum AllUpdateFlags
-    {
-        defaultUpdateFlag = 0,
-        noUpdate = 100
-    };
 
 };
 
