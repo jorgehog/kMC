@@ -7,6 +7,7 @@
 #include "reactions/reaction.h"
 #include "reactions/diffusion/diffusionreaction.h"
 
+#include "debugger/kmcdebugger.h"
 
 #include <sys/time.h>
 
@@ -120,6 +121,8 @@ KMCSolver::~KMCSolver()
     Reaction::resetAll();
     DiffusionReaction::resetAll();
 
+    KMCDebugger_Finalize();
+
     ptrCount--;
 
 }
@@ -129,10 +132,15 @@ KMCSolver::~KMCSolver()
 void KMCSolver::run()
 {
 
+    KMCDebugger_Init();
+
+    Reaction * selectedReaction;
     uint choice;
     double R;
 
     initializeCrystal();
+
+    KMCDebugger_PushTraces();
 
     while(cycle < nCycles)
     {
@@ -145,7 +153,12 @@ void KMCSolver::run()
 
         choice = getReactionChoice(R);
 
-        allReactions[choice]->execute();
+        selectedReaction = allReactions.at(choice);
+        KMCDebugger_SetActiveReaction(selectedReaction);
+
+        selectedReaction->execute();
+        KMCDebugger_PushTraces();
+
 
         if (cycle%cyclesPerOutput == 0)
         {
@@ -158,8 +171,9 @@ void KMCSolver::run()
         cycle++;
 
     }
-    cout << DiffusionReaction::counter/(double)DiffusionReaction::total << endl;
-
+    cout << "Frac equal saddles calculated:" << DiffusionReaction::counterEqSP/(double)DiffusionReaction::totalSP*100 << " %" << endl;
+    cout << "Frac saddles recalculated: " << DiffusionReaction::totalSP/(double)DiffusionReaction::counterAllRate*100 << " %" << endl;
+    cout << "Average time in saddleFunc: " << DiffusionReaction::totalTime/DiffusionReaction::totalSP*1E6 << " µs" << endl;
 }
 
 
@@ -408,6 +422,8 @@ void KMCSolver::getRateVariables()
     kTot = 0;
     accuAllRates.clear();
     allReactions.clear();
+
+    Site::updateAffectedSites();
 
     for (uint x = 0; x < NX; ++x)
     {

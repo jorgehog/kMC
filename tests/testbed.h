@@ -28,10 +28,9 @@ public:
 
     void testRNG();
 
-    void testBinarySearchChoise(uint LIM);
+    void testBinarySearchChoise();
 
-
-    void testReactionChoise(uint LIM);
+    void testReactionChoise();
 
     void testRateCalculation();
 
@@ -48,6 +47,8 @@ public:
     void testSequential();
 
     void testKnownCase();
+
+    void testSmartSaddleUpdateAlg();
 
     uint failCount;
     uint winCount;

@@ -19,6 +19,10 @@ public:
 
     const string name;
 
+
+    const static double UNSET_RATE;
+
+
     static void setSolverPtr(KMCSolver * solver);
 
     static void loadConfig(const Setting & setting);
@@ -34,29 +38,45 @@ public:
 
     virtual bool isAffectedByChangeIn(const Site* site) const = 0;
 
+    virtual void setUpdateFlags(const Site * changedSite, uint level) = 0;
+
+    void getTriumphingUpdateFlag();
+
     virtual bool isNotBlocked() = 0;
 
-    virtual bool allowedAtSite()
-    {
-        return true;
-    }
+    virtual bool allowedAtSite() = 0;
 
     virtual void calcRate() = 0;
 
     virtual void execute() = 0;
 
 
-    virtual void dumpInfo(int xr = 0, int yr = 0, int zr = 0)  const;
+    virtual const string info(int xr = 0, int yr = 0, int zr = 0, string desc = ".")  const;
 
 
+<<<<<<< HEAD
+=======
+    static void resetAll()
+    {
+        IDcount = 0;
+    }
+
+    const static double & linearRateScale()
+    {
+        return m_linearRateScale;
+    }
+
+
+>>>>>>> experimental2
     void setSite(Site* site)
     {
         m_reactionSite = site;
     }
 
-    static void resetAll()
+    void clearUpdateFlags()
     {
-        IDcount = 0;
+        m_updateFlags.clear();
+        assert(m_updateFlags.empty());
     }
 
     void setSiteReactionArrayIndex(uint index)
@@ -79,11 +99,6 @@ public:
         return m_rate;
     }
 
-    const static double & linearRateScale()
-    {
-        return m_linearRateScale;
-    }
-
     const uint & x() const
     {
         return m_reactionSite->x();
@@ -104,8 +119,22 @@ public:
         return m_reactionSite;
     }
 
+<<<<<<< HEAD
     const static double UNSET_RATE;
     const static uint   UNSET_ARRAY_INDEX;
+=======
+    bool isType(const string name) const
+    {
+        return name.compare(this->name) == 0;
+    }
+
+    void setUpdateFlag(int flag)
+    {
+        m_updateFlag = flag;
+    }
+
+    virtual string getFinalizingDebugMessage() const;
+>>>>>>> experimental2
 
     virtual string getInfoSnippet() const
     {
@@ -117,6 +146,7 @@ public:
         return this == &other;
     }
 
+<<<<<<< HEAD
     string str() const
     {
 
@@ -127,6 +157,25 @@ public:
 
     }
 
+=======
+    const string str() const
+    {
+        stringstream s;
+        s << name << "@(" << x() << "," << y() << "," << z() << ") [" << getInfoSnippet() << "]";
+        return s.str();
+    }
+
+
+    //! Update flags are given in the order such that the minimum of the flag set is the
+    //! triumphant flag.
+    enum AllUpdateFlags
+    {
+        defaultUpdateFlag = 0,
+        noUpdate = 100,
+        UNSET_UPDATE_FLAG = 1337
+    };
+
+>>>>>>> experimental2
     friend class testBed;
 
 protected:
@@ -147,11 +196,18 @@ protected:
     Site* m_reactionSite;
     uint m_siteReactionArrayIndex;
 
+
     double m_rate;
 
+<<<<<<< HEAD
     void enable();
 
     void disable();
+=======
+    set<int> m_updateFlags;
+    int      m_updateFlag;
+
+>>>>>>> experimental2
 
 };
 

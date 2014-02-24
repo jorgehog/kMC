@@ -1,9 +1,13 @@
 #include "diffusionreaction.h"
 #include "../../kmcsolver.h"
 
+#include "../../debugger/kmcdebugger.h"
+
 DiffusionReaction::DiffusionReaction(Site *destination) :
     Reaction("DiffusionReaction"),
-    destination(destination)
+    lastUsedEnergy(0),
+    lastUsedEsp(0),
+    m_destinationSite(destination)
 {
 
 }
@@ -46,24 +50,88 @@ void DiffusionReaction::loadConfig(const Setting &setting)
 
 }
 
+string DiffusionReaction::getFinalizingDebugMessage() const
+{
+    #ifndef KMC_NO_DEBUG
+    int X, Y, Z;
+    stringstream s;
+
+    s << Reaction::getFinalizingDebugMessage();
+
+    const Reaction * lastReaction = KMCDebugger_GetReaction(lastCurrent);
+    const Site* dest = static_cast<const DiffusionReaction*>(lastReaction)->destinationSite();
+
+    m_reactionSite->distanceTo(dest, X, Y, Z);
+
+    s << "\nDestination of last active reaction site marked on current site:\n";
+    s << m_reactionSite->info(X, Y, Z);
+
+    return s.str();
+#else
+    return "";
+#endif
+}
+
+/*
+ * 31% 64% old | 5% 47 % new
+ */
+
+void DiffusionReaction::setUpdateFlags(const Site *changedSite, uint level)
+{
+
+    m_updateFlags.insert(defaultUpdateFlag);
+
+    if (m_rate == UNSET_RATE)
+    {
+        m_updateFlags.insert(defaultUpdateFlag);
+    }
+
+    else if (level == 0)
+    {
+        m_updateFlags.insert(defaultUpdateFlag);
+    }
+
+    //if the destination is outsite the interaction cutoff, we can keep the old saddle energy.
+    else if (m_destinationSite->maxDistanceTo(changedSite) == Site::nNeighborsLimit() + 1)
+    {
+        m_updateFlags.insert(updateKeepSaddle);
+    }
+
+    else
+    {
+        assert(level == Site::nNeighborsLimit() - 1);
+        m_updateFlags.insert(defaultUpdateFlag);
+    }
+
+}
+
 double DiffusionReaction::getSaddleEnergy()
 {
+
+    timer.tic();
 
     double xs = ((x() + xD())%NX)/2.0;
     double ys = ((y() + yD())%NY)/2.0;
     double zs = ((z() + zD())%NZ)/2.0;
 
     vector<const Site*> neighborSet;
+    bool empty = true;
 
     for (const Site* site : m_reactionSite->allNeighbors())
     {
-        for (const Site* dSite : destination->allNeighbors())
+        for (const Site* dSite : m_destinationSite->allNeighbors())
         {
             if (site == dSite && site->isActive())
             {
                 neighborSet.push_back(site);
+                empty = false;
             }
         }
+    }
+
+    if (empty)
+    {
+        return 0;
     }
 
     double Esp = 0;
@@ -97,11 +165,59 @@ double DiffusionReaction::getSaddleEnergy()
 
     }
 
-    if (lastUsedEsp == Esp)
+    #ifndef KMC_NO_DEBUG
+    bool sameSetup = true;
+
+    if (lastSetup.size() != neighborSet.size())
     {
-        counter++;
+        sameSetup = false;
     }
-    total++;
+    else
+    {
+        for (const Site* s: neighborSet)
+        {
+            bool isIn = false;
+            for (const Site* slast : lastSetup)
+            {
+                if (s == slast)
+                {
+                    isIn = true;
+                    break;
+                }
+            }
+            if (!isIn)
+            {
+                sameSetup = false;
+                break;
+            }
+        }
+    }
+
+    if (fabs(lastUsedEsp - Esp) < 1E-10)
+    {
+        if (sameSetup)
+        {
+
+//            cout << "exactly same setup calculated saddle twice..should be flagged" << endl;
+
+//            KMCDebugger_DumpFullTrace(getFinalizingDebugMessage(), true);
+
+//            exit(1);
+        }
+        counterEqSP++;
+
+    }
+
+    totalSP++;
+
+    for (const Site * s: neighborSet)
+    {
+        lastSetup.insert(s);
+    }
+
+    totalTime += timer.toc();
+
+#endif
 
     lastUsedEsp = Esp;
 
@@ -112,45 +228,76 @@ double DiffusionReaction::getSaddleEnergy()
 void DiffusionReaction::calcRate()
 {
 
-    lastUsedE = m_reactionSite->energy();
-    m_rate = m_linearRateScale*exp(-beta*(m_reactionSite->energy()-getSaddleEnergy()));
+    counterAllRate++;
+
+    switch (m_updateFlag) {
+    case noUpdate:
+
+        assert(m_reactionSite->energy() == lastUsedEnergy);
+
+        return;
+
+    case defaultUpdateFlag:
+
+        m_rate = m_linearRateScale*exp(-beta*(m_reactionSite->energy()-getSaddleEnergy()));
+
+        break;
+
+    case updateKeepSaddle:
+
+        m_rate *= exp(-beta*(reactionSite()->energy() - lastUsedEnergy));
+
+        break;
+
+    default:
+
+        cout << "Unknown update flag: " << m_updateFlag << endl;
+        exit(1);
+
+        break;
+    }
+
+    lastUsedEnergy = m_reactionSite->energy();
 
 }
 
 bool DiffusionReaction::isNotBlocked()
 {
-    return !destination->isActive() && (destination->isSurface() || (destination->nNeighbors() == 1));
+    return !m_destinationSite->isActive() && (m_destinationSite->isSurface() || (m_destinationSite->nNeighbors() == 1));
 }
 
 void DiffusionReaction::execute()
 {
-
     m_reactionSite->deactivate();
-    destination->activate();
+    m_destinationSite->activate();
 
 }
 
-void DiffusionReaction::dumpInfo(int xr, int yr, int zr)
+const string DiffusionReaction::info(int xr, int yr, int zr, string desc) const
 {
 
     (void) xr;
     (void) yr;
     (void) zr;
+    (void) desc;
 
     int X, Y, Z;
-    m_reactionSite->distanceTo(destination, X, Y, Z);
+    m_reactionSite->distanceTo(m_destinationSite, X, Y, Z);
 
-    assert((x() + NX + X)%NX == destination->x());
-    assert((y() + NY + Y)%NY == destination->y());
-    assert((z() + NZ + Z)%NZ == destination->z());
+    assert((x() + NX + X)%NX == m_destinationSite->x());
+    assert((y() + NY + Y)%NY == m_destinationSite->y());
+    assert((z() + NZ + Z)%NZ == m_destinationSite->z());
 
-    Reaction::dumpInfo(X, Y, Z);
+    stringstream s;
+    s << Reaction::info(X, Y, Z, "D");
 
-    cout << "Path: " << X << " " << Y << " " << Z << endl;
-    cout << "Reaction initiates diffusion to " << endl;
-    cout << "{\n";
-    destination->dumpInfo(-X, -Y, -Z);
-    cout << "\n}" << endl;
+    s << "Path: " << X << " " << Y << " " << Z << endl;
+    s << "Reaction initiates diffusion to " << endl;
+    s << "{\n";
+    s << m_destinationSite->info(-X, -Y, -Z, "O");
+    s << "\n}" << endl;
+
+    return s.str();
 
 }
 
@@ -158,7 +305,7 @@ bool DiffusionReaction::allowedAtSite()
 {
 
     //Diffusion reactions may occur to surfaces
-    if (destination->isSurface())
+    if (m_destinationSite->isSurface())
     {
         return true;
     }
@@ -166,7 +313,7 @@ bool DiffusionReaction::allowedAtSite()
     //if were not on a surface, we check if te destination is close to other particles.
     else
     {
-        return destination->nNeighbors() == 0;
+        return m_destinationSite->nNeighbors() == 0;
     }
 
     return true;
@@ -201,10 +348,17 @@ bool DiffusionReaction::isAffectedByChangeIn(const Site *site) const
 }
 
 
+<<<<<<< HEAD
 double DiffusionReaction::rPower;
+=======
+double DiffusionReaction::rPower ;
+>>>>>>> experimental2
 double DiffusionReaction::scale;
 
 cube   DiffusionReaction::m_potential;
 
-uint   DiffusionReaction::total = 0;
-uint   DiffusionReaction::counter = 0;
+uint   DiffusionReaction::totalSP = 0;
+uint   DiffusionReaction::counterEqSP = 0;
+uint   DiffusionReaction::counterAllRate = 0;
+double DiffusionReaction::totalTime = 0;
+wall_clock DiffusionReaction::timer;

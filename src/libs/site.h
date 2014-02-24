@@ -20,8 +20,7 @@ struct ParticleStates
     {
         crystal,
         solution,
-        surface,
-        any
+        surface
     };
 
     const static vector<string> names;
@@ -45,6 +44,10 @@ public:
 
     static void loadConfig(const Setting & setting);
 
+    static void updateAffectedSites();
+
+    static void resetAllFlags();
+
     static uint findLevel(uint i, uint j, uint k);
 
     static void resetAll()
@@ -53,6 +56,7 @@ public:
         m_totalEnergy = 0;
         m_levelMatrix.reset();
         m_originTransformVector.reset();
+        affectedSites.clear();
     }
 
     /*
@@ -66,8 +70,6 @@ public:
 
     void spawnAsFixedCrystal();
 
-    void crystallize();
-
 
     void activate();
 
@@ -76,12 +78,16 @@ public:
 
     void addReaction(Reaction* reaction);
 
+<<<<<<< HEAD
     void addDependency(Reaction* reaction)
     {
         m_dependentReactions.push_back(reaction);
     }
 
     void setDiffusionReaction(DiffusionReaction* reaction, uint x, uint y, uint z);
+=======
+    void updateReactions();
+>>>>>>> experimental2
 
     void enableReaction(Reaction *reaction);
 
@@ -89,7 +95,7 @@ public:
 
     void introduceNeighborhood();
 
-    bool hasNeighboring(int state);
+    bool hasNeighboring(int state) const;
 
     void propagateToNeighbors(int reqOldState, int newState);
 
@@ -98,7 +104,17 @@ public:
 
     void distanceTo(const Site * other, int &dx, int &dy, int &dz, bool absolutes = false) const;
 
+<<<<<<< HEAD
+=======
+    uint maxDistanceTo(const Site * other);
 
+    double potentialBetween(const Site * other);
+
+
+    void queueAffectedSites();
+>>>>>>> experimental2
+
+    void resetUpdateFlags();
 
     void reset()
     {
@@ -108,7 +124,7 @@ public:
     }
 
 
-    void dumpInfo(int xr = 0, int yr = 0, int zr = 0) const;
+    const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const;
 
 
     /*
@@ -147,9 +163,19 @@ public:
     }
 
 
-    const int & particleState()
+    const int & particleState() const
     {
         return m_particleState;
+    }
+
+    string particleStateName() const
+    {
+        return ParticleStates::names.at(m_particleState);
+    }
+
+    string particleStateShortName() const
+    {
+        return ParticleStates::shortNames.at(m_particleState);
     }
 
     uint nNeighbors(uint level = 0) const
@@ -158,12 +184,12 @@ public:
     }
 
 
-    bool isCrystal()
+    bool isCrystal() const
     {
         return m_particleState == ParticleStates::crystal;
     }
 
-    bool isSurface()
+    bool isSurface() const
     {
         return m_particleState == ParticleStates::surface;
     }
@@ -219,11 +245,17 @@ public:
         return m_energy;
     }
 
+    const bool & isFixedCrystalSeed()
+    {
+        return m_isFixedCrystalSeed;
+    }
+
     bool operator == (const Site & other) const
     {
         return this == &other;
     }
 
+<<<<<<< HEAD
     string str() const
     {
         stringstream s;
@@ -232,6 +264,14 @@ public:
         return s.str();
     }
 
+=======
+    const string str() const
+    {
+        stringstream s;
+        s << "site@(" << x() << "," << y() << "," << z() << ")";
+        return s.str();
+    }
+>>>>>>> experimental2
 
     friend class testBed;
 
@@ -251,11 +291,15 @@ private:
 
     static double m_totalEnergy;
 
+<<<<<<< HEAD
     static void updateAffectedReactions();
 
     static set<Reaction*> affectedReactions;
 
     void queueAffectedReactions();
+=======
+    static set<Site*> affectedSites;
+>>>>>>> experimental2
 
     static KMCSolver* mainSolver;
 
@@ -265,7 +309,7 @@ private:
 
     bool m_active;
 
-    bool isFixedCrystalSeed;
+    bool m_isFixedCrystalSeed;
 
     uint m_x;
     uint m_y;

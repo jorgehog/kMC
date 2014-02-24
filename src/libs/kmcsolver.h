@@ -77,9 +77,7 @@ private:
     double kTot;
     std::vector<double> accuAllRates;
 
-
     std::vector<Reaction*> allReactions;
-
 
     double totalTime;
 

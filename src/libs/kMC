@@ -9,3 +9,5 @@
 #include "reactions/diffusion/diffusionreaction.h"
 
 #include "kmcsolver.h"
+
+#include "debugger/kmcdebugger.h"

@@ -3,11 +3,12 @@
 #include "reactions/diffusion/diffusionreaction.h"
 #include "kmcsolver.h"
 
+#include "debugger/kmcdebugger.h"
 
 
 Site::Site(uint _x, uint _y, uint _z) :
     m_active(false),
-    isFixedCrystalSeed(false),
+    m_isFixedCrystalSeed(false),
     m_x(_x),
     m_y(_y),
     m_z(_z),
@@ -31,6 +32,10 @@ Site::~Site()
     }
 
     delete [] m_neighborHood;
+<<<<<<< HEAD
+=======
+
+>>>>>>> experimental2
 
     for (Reaction* reaction : m_siteReactions)
     {
@@ -53,6 +58,32 @@ Site::~Site()
 
 
 
+<<<<<<< HEAD
+=======
+
+void Site::updateAffectedSites()
+{
+
+    for (Site* site : affectedSites)
+    {
+        site->updateReactions();
+        site->calculateRates();
+    }
+
+    affectedSites.clear();
+
+}
+
+void Site::resetAllFlags()
+{
+    for (Site* site : affectedSites)
+    {
+        site->resetUpdateFlags();
+    }
+}
+
+
+>>>>>>> experimental2
 void Site::setParticleState(int state)
 {
 
@@ -71,33 +102,43 @@ void Site::setParticleState(int state)
             //if a particle is present, we crystallize it immidiately.
             if (m_active)
             {
-                crystallize();
+                m_particleState  = ParticleStates::crystal;
+                KMCDebugger_PushImplication(this, "solution", "crystal");
+                propagateToNeighbors(ParticleStates::solution, ParticleStates::surface);
             }
 
             else
             {
                 m_particleState = ParticleStates::surface;
+<<<<<<< HEAD
                 queueAffectedReactions();
+=======
+                KMCDebugger_PushImplication(this, "solution", "surface");
+>>>>>>> experimental2
             }
 
+            queueAffectedSites();
             break;
 
-        //Crystal -> surface
+            //Crystal -> surface
         case ParticleStates::crystal:
 
-            if (isFixedCrystalSeed)
+            if (m_isFixedCrystalSeed)
             {
                 m_particleState = ParticleStates::surface;
+                KMCDebugger_PushImplication(this, "fixedcrystal", "surface");
             }
 
             else if (hasNeighboring(ParticleStates::crystal))
             {
                 m_particleState = ParticleStates::surface;
+                KMCDebugger_PushImplication(this, "crystal", "surface");
             }
 
             else
             {
                 m_particleState = ParticleStates::solution;
+                KMCDebugger_PushImplication(this, "crystal", "solution");
             }
 
             propagateToNeighbors(ParticleStates::surface, ParticleStates::solution);
@@ -108,6 +149,7 @@ void Site::setParticleState(int state)
             //surface -> surface
         case ParticleStates::surface:
             //Nothing to do here.
+            KMCDebugger_PushImplication(this, "surface", "surface");
             break;
 
         default:
@@ -132,7 +174,10 @@ void Site::setParticleState(int state)
             //No need to test if it has neigh crystals because
             //diffusion reactions deactivates old spot before activating new spot.
             //Which will remove access surface.
-            crystallize();
+            m_particleState  = ParticleStates::crystal;
+            KMCDebugger_PushImplication(this, "surface", "crystal");
+            propagateToNeighbors(ParticleStates::solution, ParticleStates::surface);
+
             break;
 
         default:
@@ -155,11 +200,22 @@ void Site::setParticleState(int state)
         //surface -> solution
         case ParticleStates::surface:
 
-            if (!(hasNeighboring(ParticleStates::crystal) || isFixedCrystalSeed))
+            if (!(hasNeighboring(ParticleStates::crystal) || m_isFixedCrystalSeed))
             {
                 m_particleState = ParticleStates::solution;
+<<<<<<< HEAD
                 queueAffectedReactions();
+=======
+                KMCDebugger_PushImplication(this, "surface", "solution");
+                queueAffectedSites();
+>>>>>>> experimental2
             }
+#ifndef KMC_NO_DEBUG
+            else
+            {
+                KMCDebugger_PushImplication(this, "surface", "surface");
+            }
+#endif
 
             break;
 
@@ -209,14 +265,6 @@ bool Site::isLegalToSpawn()
 }
 
 
-void Site::crystallize()
-{
-    m_particleState  = ParticleStates::crystal;
-    propagateToNeighbors(ParticleStates::solution, ParticleStates::surface);
-
-}
-
-
 void Site::loadConfig(const Setting &setting)
 {
 
@@ -237,7 +285,7 @@ void Site::loadConfig(const Setting &setting)
             {
                 if (i == m_nNeighborsLimit && j == m_nNeighborsLimit && k == m_nNeighborsLimit)
                 {
-                    m_levelMatrix(i, j, k) = m_nNeighborsLimit + 1;
+                    m_levelMatrix(i, j, k) = 0;
                     continue;
                 }
 
@@ -267,6 +315,7 @@ void Site::addReaction(Reaction *reaction)
     m_siteReactions.push_back(reaction);
 }
 
+<<<<<<< HEAD
 void Site::enableReaction(Reaction * reaction)
 {
     if (reaction->isActive())
@@ -278,6 +327,10 @@ void Site::enableReaction(Reaction * reaction)
     m_activeReactions.push_back(reaction);
 
 }
+=======
+void Site::updateReactions()
+{
+>>>>>>> experimental2
 
 void Site::disableReaction(Reaction * reaction)
 {
@@ -303,11 +356,24 @@ void Site::disableReaction(Reaction * reaction)
 void Site::spawnAsFixedCrystal()
 {
     m_particleState = ParticleStates::surface;
-    isFixedCrystalSeed = true;
+    m_isFixedCrystalSeed = true;
     activate();
 }
 
 
+<<<<<<< HEAD
+=======
+void Site::calculateRates()
+{
+    for (Reaction* reaction : m_activeReactions)
+    {
+        reaction->getTriumphingUpdateFlag();
+        reaction->calcRate();
+    }
+}
+
+
+>>>>>>> experimental2
 void Site::setSolverPtr(KMCSolver *solver)
 {
 
@@ -349,7 +415,30 @@ void Site::distanceTo(const Site *other, int &dx, int &dy, int &dz, bool absolut
 
 }
 
-bool Site::hasNeighboring(int state)
+uint Site::maxDistanceTo(const Site *other)
+{
+    int X, Y, Z;
+
+    this->distanceTo(other, X, Y, Z, true);
+
+    return findLevel((uint)X, (uint)Y, (uint)Z) + 1;
+
+}
+
+double Site::potentialBetween(const Site *other)
+{
+    int X, Y, Z;
+
+    distanceTo(other, X, Y, Z, true);
+
+    X += Site::nNeighborsLimit();
+    Y += Site::nNeighborsLimit();
+    Z += Site::nNeighborsLimit();
+
+    return DiffusionReaction::potential(X, Y, Z);
+}
+
+bool Site::hasNeighboring(int state) const
 {
 
     Site *nextNeighbor;
@@ -385,6 +474,7 @@ bool Site::hasNeighboring(int state)
 void Site::activate()
 {
 
+<<<<<<< HEAD
 #ifndef NDEBUG
 
     if (affectedReactions.size() != 0)
@@ -394,18 +484,21 @@ void Site::activate()
 
         exit(1);
     }
+=======
+#ifndef KMC_NO_DEBUG
+>>>>>>> experimental2
 
     if (m_active == true)
     {
         cout << "Activating active site. " << endl;
-        dumpInfo();
+        info();
         exit(1);
     }
 
     else if (isCrystal())
     {
         cout << "Activating a crystal. (should always be active)";
-        dumpInfo();
+        info();
         exit(1);
     }
 
@@ -413,38 +506,57 @@ void Site::activate()
 
     m_active = true;
 
+    affectedSites.insert(this);
+
     if (isSurface())
     {
         setParticleState(ParticleStates::crystal);
     }
+<<<<<<< HEAD
 
     informNeighborhoodOnChange(+1);
 
     queueAffectedReactions();
 
     updateAffectedReactions();
+=======
+#ifndef KMC_NO_DEBUG
+    else
+    {
+        KMCDebugger_PushImplication(this, "deactiveSolution", "activeSolution");
+    }
+#endif
+
+    informNeighborhoodOnChange(+1);
+>>>>>>> experimental2
 
     m_totalActiveSites++;
+
+    KMCDebugger_MarkPartialStep("ACTIVATE_DONE");
 
 }
 
 void Site::deactivate()
 {
 
+<<<<<<< HEAD
 #ifndef NDEBUG
 
     assert(affectedReactions.size() == 0);
+=======
+#ifndef KMC_NO_DEBUG
+>>>>>>> experimental2
 
     if (m_active == false)
     {
         cout << "deactivating deactive site. " << endl;
-        dumpInfo();
+        info();
         exit(1);
     }
     else if (isSurface())
     {
         cout << "deactivating a surface. (should always be deactive)";
-        dumpInfo();
+        info();
         exit(1);
     }
 #endif
@@ -458,16 +570,27 @@ void Site::deactivate()
     {
         setParticleState(ParticleStates::surface);
     }
+#ifndef KMC_NO_DEBUG
+    else
+    {
+        KMCDebugger_PushImplication(this, "activeSolution", "deactiveSolution");
+    }
+#endif
 
     informNeighborhoodOnChange(-1);
+<<<<<<< HEAD
 
     queueAffectedReactions();
 
     updateAffectedReactions();
 
     m_activeReactions.clear();
+=======
+>>>>>>> experimental2
 
     m_totalActiveSites--;
+
+    KMCDebugger_MarkPartialStep("DEACTIVATE_DONE");
 
 }
 
@@ -535,7 +658,7 @@ void Site::propagateToNeighbors(int reqOldState, int newState)
                 }
 
                 assert(!(newState == ParticleStates::solution && nextNeighbor->particleState() == ParticleStates::solution));
-                if (nextNeighbor->particleState() == reqOldState || reqOldState == ParticleStates::any)
+                if (nextNeighbor->particleState() == reqOldState)
                 {
                     nextNeighbor->setParticleState(newState);
                 }
@@ -570,20 +693,29 @@ void Site::informNeighborhoodOnChange(int change)
                 level = m_levelMatrix(i, j, k);
                 neighbor->m_nNeighbors(level)+=change;
 
+<<<<<<< HEAD
                 dE = change*DiffusionReaction::potential()(i, j, k);
+=======
+
+                dE = change*DiffusionReaction::potential(i,  j,  k);
+>>>>>>> experimental2
 
                 neighbor->m_energy += dE;
 
                 m_totalEnergy += dE;
 
+
             }
         }
     }
+
+    queueAffectedSites();
 
 }
 
 void Site::queueAffectedReactions()
 {
+<<<<<<< HEAD
 
 #ifndef NDEBUG
 
@@ -618,6 +750,32 @@ void Site::updateAffectedReactions()
 
     affectedReactions.clear();
 
+=======
+    uint C = 0;
+    for (uint i = 0; i < m_neighborhoodLength; ++i)
+    {
+        for (uint j = 0; j < m_neighborhoodLength; ++j)
+        {
+            for (uint k = 0; k < m_neighborhoodLength; ++k)
+            {
+
+                //This approach assumes that recursive updating of non-neighboring sites
+                //WILL NOT ACTIVATE OR DEACTIVATE any sites, simply change their state,
+                //and thus not interfere with any flags set here, not require flags of their own.
+                for (Reaction * reaction : m_neighborHood[i][j][k]->siteReactions())
+                {
+                    reaction->setUpdateFlags(this, m_levelMatrix(i, j, k));
+                    C++;
+                }
+
+            }
+        }
+    }
+
+    assert(C == 125*26);
+
+    affectedSites.insert(m_allNeighbors.begin(), m_allNeighbors.end());
+>>>>>>> experimental2
 }
 
 uint Site::findLevel(uint i, uint j, uint k)
@@ -640,30 +798,33 @@ uint Site::findLevel(uint i, uint j, uint k)
 }
 
 
-void Site::dumpInfo(int xr, int yr, int zr)  const
+const string Site::info(int xr, int yr, int zr, string desc) const
 {
 
-    cout << "Site   " << m_x << " " << m_y << " " << m_z << endl;
-    cout << "in Box " << NX << " " << NY << " " << NZ << endl;
-    cout << "nNeighbors : " << m_nNeighbors.t();
-    cout << "type: " << ParticleStates::names.at(m_particleState) << endl;
+    stringstream s_full;
+
+    s_full << "Site   " << m_x << " " << m_y << " " << m_z << endl;
+    s_full << "in Box " << NX << " " << NY << " " << NZ << endl;
+    s_full << "nNeighbors : " << m_nNeighbors.t();
+    s_full << "type: " << ParticleStates::names.at(m_particleState) << endl;
 
     if (m_active)
     {
-        cout << "ACTIVE";
+        s_full << "ACTIVE";
     }
 
     else
     {
-        cout << "DEACTIVE";
+        s_full << "DEACTIVE";
     }
 
-    cout << endl;
+    s_full << endl;
 
     ucube nN;
     nN.copy_size(m_levelMatrix);
-    nN.zeros();
+    nN.fill(7);
 
+    Site * currentSite;
     for (uint i = 0; i < m_neighborhoodLength; ++i)
     {
         for (uint j = 0; j < m_neighborhoodLength; ++j)
@@ -671,19 +832,31 @@ void Site::dumpInfo(int xr, int yr, int zr)  const
             for (uint k = 0; k < m_neighborhoodLength; ++k)
             {
 
-                if (i == j && j == k && k == Site::nNeighborsLimit())
+                currentSite = m_neighborHood[i][j][k];
+
+                if (currentSite->isFixedCrystalSeed())
                 {
-                    nN(i, j, k) = 3;
+                    assert((currentSite->isCrystal() && currentSite->isActive()) || (currentSite->isSurface() && !currentSite->isActive()));
+                }
+
+                if (currentSite == this)
+                {
+                    nN(i, j, k) = 9;
                 }
 
                 else if ((i == Site::nNeighborsLimit() + xr) && (j == Site::nNeighborsLimit() + yr) && (k == Site::nNeighborsLimit() + zr))
                 {
-                    nN(i, j, k) = 2;
+                    nN(i, j, k) = 8;
                 }
 
-                else if (m_neighborHood[i][j][k]->isActive())
+                else if (currentSite->isActive())
                 {
-                    nN(i, j, k) = 1;
+                    nN(i, j, k) = currentSite->particleState();
+                }
+
+                else if (currentSite->isSurface())
+                {
+                    nN(i, j, k) = ParticleStates::surface;
                 }
 
             }
@@ -703,43 +876,56 @@ void Site::dumpInfo(int xr, int yr, int zr)  const
             ss << A.row(j);
         }
 
-        ss << endl;
+        ss << "\n";
 
     }
 
 
     string s = ss.str();
 
-    int position = s.find("0");
-    while (position != (int)string::npos)
+    auto searchRepl = [&s] (string _find, string _repl)
     {
-        s.replace(position, 1, ".");
-        position = s.find("0", position + 1);
-    }
 
-    position = s.find("1");
-    while (position != (int)string::npos)
+        int position = s.find(_find);
+        while (position != (int)string::npos)
+        {
+            s.replace(position, _find.size(), _repl);
+            position = s.find(_find, position + 1);
+        }
+
+    };
+
+    auto typeSearchRepl = [&s, &searchRepl] (int pType)
     {
-        s.replace(position, 1, "X");
-        position = s.find("1", position + 1);
-    }
+        stringstream type;
+        type << pType;
+        searchRepl(type.str(), ParticleStates::shortNames.at(pType));
+    };
 
-    position = s.find("2");
-    while (position != (int)string::npos)
+
+    searchRepl("        ", "  ");
+
+    typeSearchRepl(ParticleStates::crystal);
+    typeSearchRepl(ParticleStates::surface);
+    typeSearchRepl(ParticleStates::solution);
+
+    searchRepl("9 ", particleStateShortName() + "^");
+    searchRepl("8", desc);
+    searchRepl("7", ".");
+
+    s_full << s;
+
+    return s_full.str();
+
+}
+
+void Site::resetUpdateFlags()
+{
+    for (Reaction * reaction : m_siteReactions)
     {
-        s.replace(position, 1, "O");
-        position = s.find("2", position + 1);
+        reaction->clearUpdateFlags();
+        reaction->setUpdateFlag(Reaction::defaultUpdateFlag);
     }
-
-    position = s.find("3");
-    while (position != (int)string::npos)
-    {
-        s.replace(position, 1, "#");
-        position = s.find("3", position + 1);
-    }
-
-    cout << s << endl;
-
 }
 
 
@@ -763,8 +949,8 @@ double         Site::m_totalEnergy = 0;
 set<Reaction*> Site::affectedReactions;
 
 
-const vector<string> ParticleStates::names = {"crystal", "solution", "surface", "any"};
-const vector<string> ParticleStates::shortNames = {"C", "P", "S", "X"};
+const vector<string> ParticleStates::names = {"crystal", "solution", "surface"};
+const vector<string> ParticleStates::shortNames = {"C", "P", "S"};
 
 
 ostream & operator << (ostream& os, const Site& ss)

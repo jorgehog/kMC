@@ -1,5 +1,4 @@
-
-#include <kmcsolver.h>
+#include <kMC>
 
 #include <libconfig_utils/libconfig_utils.h>
 
@@ -15,6 +14,7 @@ int main()
 
     const Setting & root = cfg.getRoot();
 
+    KMCDebugger_SetFilename("sameSaddleProblem");
     KMCSolver* solver = new KMCSolver(root);
 
     solver->run();
