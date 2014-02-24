@@ -79,6 +79,8 @@ string DiffusionReaction::getFinalizingDebugMessage() const
 void DiffusionReaction::setUpdateFlags(const Site *changedSite, uint level)
 {
 
+    m_updateFlags.insert(defaultUpdateFlag);
+
     if (m_rate == UNSET_RATE)
     {
         m_updateFlags.insert(defaultUpdateFlag);
