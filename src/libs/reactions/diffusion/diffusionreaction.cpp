@@ -7,7 +7,7 @@ DiffusionReaction::DiffusionReaction(Site *destination) :
     Reaction("DiffusionReaction"),
     lastUsedEnergy(0),
     lastUsedEsp(0),
-    destination(destination)
+    m_destinationSite(destination)
 {
 
 }
@@ -49,6 +49,25 @@ void DiffusionReaction::loadConfig(const Setting &setting)
     m_potential *= scale;
 
 }
+
+string DiffusionReaction::getFinalizingDebugMessage() const
+{
+    int X, Y, Z;
+    stringstream s;
+
+    s << Reaction::getFinalizingDebugMessage();
+
+    const Reaction * lastReaction = KMCDebugger_GetReaction(lastCurrent);
+    const Site* dest = static_cast<const DiffusionReaction*>(lastReaction)->destinationSite();
+
+    m_reactionSite->distanceTo(dest, X, Y, Z);
+
+    s << "\nDestination of last active reaction site marked on current site:\n";
+    s << m_reactionSite->info(X, Y, Z);
+
+    return s.str();
+}
+
 /*
  * 31% 64% old | 5% 47 % new
  */
@@ -63,7 +82,7 @@ void DiffusionReaction::setUpdateFlags(const Site *changedSite, uint level)
 
     else if (changedSite->isSurface())
     {
-        if (!destination->isSurface())
+        if (!m_destinationSite->isSurface())
         {
             m_updateFlags.insert(updateKeepSaddle);
         }
@@ -75,7 +94,7 @@ void DiffusionReaction::setUpdateFlags(const Site *changedSite, uint level)
     }
 
     //if the destination is outsite the interaction cutoff, we can keep the old saddle energy.
-    else if (destination->maxDistanceTo(changedSite) == Site::nNeighborsLimit() + 1)
+    else if (m_destinationSite->maxDistanceTo(changedSite) == Site::nNeighborsLimit() + 1)
     {
         m_updateFlags.insert(updateKeepSaddle);
     }
@@ -102,7 +121,7 @@ double DiffusionReaction::getSaddleEnergy()
 
     for (const Site* site : m_reactionSite->allNeighbors())
     {
-        for (const Site* dSite : destination->allNeighbors())
+        for (const Site* dSite : m_destinationSite->allNeighbors())
         {
             if (site == dSite && site->isActive())
             {
@@ -182,7 +201,7 @@ double DiffusionReaction::getSaddleEnergy()
 
             cout << "exactly same setup calculated saddle twice..should be flagged" << endl;
 
-            KMCDebugger_DumpFullTrace(true, info());
+            KMCDebugger_DumpFullTrace(getFinalizingDebugMessage(), true);
 
             exit(1);
         }
@@ -244,14 +263,14 @@ void DiffusionReaction::calcRate()
 bool DiffusionReaction::isNotBlocked()
 {
 
-    return !destination->isActive() && (destination->isSurface() || (destination->nNeighbors() == 1));
+    return !m_destinationSite->isActive() && (m_destinationSite->isSurface() || (m_destinationSite->nNeighbors() == 1));
 
 }
 
 void DiffusionReaction::execute()
 {
     m_reactionSite->deactivate();
-    destination->activate();
+    m_destinationSite->activate();
 
 }
 
@@ -264,11 +283,11 @@ const string DiffusionReaction::info(int xr, int yr, int zr, string desc) const
     (void) desc;
 
     int X, Y, Z;
-    m_reactionSite->distanceTo(destination, X, Y, Z);
+    m_reactionSite->distanceTo(m_destinationSite, X, Y, Z);
 
-    assert((x() + NX + X)%NX == destination->x());
-    assert((y() + NY + Y)%NY == destination->y());
-    assert((z() + NZ + Z)%NZ == destination->z());
+    assert((x() + NX + X)%NX == m_destinationSite->x());
+    assert((y() + NY + Y)%NY == m_destinationSite->y());
+    assert((z() + NZ + Z)%NZ == m_destinationSite->z());
 
     stringstream s;
     s << Reaction::info(X, Y, Z, "D");
@@ -276,7 +295,7 @@ const string DiffusionReaction::info(int xr, int yr, int zr, string desc) const
     s << "Path: " << X << " " << Y << " " << Z << endl;
     s << "Reaction initiates diffusion to " << endl;
     s << "{\n";
-    s << destination->info(-X, -Y, -Z, "O");
+    s << m_destinationSite->info(-X, -Y, -Z, "O");
     s << "\n}" << endl;
 
     return s.str();
@@ -287,7 +306,7 @@ bool DiffusionReaction::allowedAtSite()
 {
 
     //Diffusion reactions may occur to surfaces
-    if (destination->isSurface())
+    if (m_destinationSite->isSurface())
     {
         return true;
     }
@@ -295,7 +314,7 @@ bool DiffusionReaction::allowedAtSite()
     //if were not on a surface, we check if te destination is close to other particles.
     else
     {
-        return destination->nNeighbors() == 0;
+        return m_destinationSite->nNeighbors() == 0;
     }
 
     return true;

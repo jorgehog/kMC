@@ -94,6 +94,13 @@ public:
         return m_reactionSite;
     }
 
+    bool isType(const string name) const
+    {
+        return name.compare(this->name) == 0;
+    }
+
+    virtual string getFinalizingDebugMessage() const;
+
     virtual string getInfoSnippet() const
     {
         return "-";

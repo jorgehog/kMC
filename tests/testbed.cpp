@@ -165,7 +165,7 @@ void testBed::testDiffusionSiteMatrixSetup()
                     currentDiffReaction = (DiffusionReaction*)r;
 
                     const Site & site = *(currentDiffReaction->reactionSite());
-                    const Site & dest  = *(currentDiffReaction->destination);
+                    const Site & dest  = *(currentDiffReaction->m_destinationSite);
 
                     CHECK_EQUAL(currentSite, site);
 

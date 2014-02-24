@@ -12,16 +12,11 @@
     ? trace.at((KMCDebugger::traceCount + (i))) \
     : trace.at(i))
 
-#define _KMCDebugger_REACTIONCAST() \
-    ((KMCDebugger::currentReaction->name == "DiffusionReaction") \
-    ? ((DiffusionReaction*)KMCDebugger::currentReaction) \
-    : ((Reaction*)KMCDebugger::currentReaction))
-
 #ifdef KMC_VERBOSE_DEBUG
-#define _KMCDebugger_REACTION_STR() _KMCDebugger_REACTIONCAST()->info()
+#define _KMCDebugger_REACTION_STR() KMCDebugger::currentReaction->info()
 #define _KMCDebugger_SITE_STR(site) site->info()
 #else
-#define _KMCDebugger_REACTION_STR() _KMCDebugger_REACTIONCAST()->str()
+#define _KMCDebugger_REACTION_STR() KMCDebugger::currentReaction->info()
 #define _KMCDebugger_SITE_STR(site) site->str()
 #endif
 

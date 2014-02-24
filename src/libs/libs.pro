@@ -31,5 +31,3 @@ SOURCES += RNG/zigrandom.cpp \
            RNG/zignor.cpp
 
 }
-
-

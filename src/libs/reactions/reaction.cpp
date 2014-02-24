@@ -1,6 +1,7 @@
 #include "reaction.h"
 #include "../kmcsolver.h"
 
+#include "../debugger/kmcdebugger.h"
 
 Reaction::Reaction(string name):
     name(name),
@@ -18,11 +19,39 @@ Reaction::~Reaction()
 const string Reaction::info(int xr, int yr, int zr, string desc) const
 {
     stringstream s;
-    s << "[" << name << " " << m_ID << "/" << IDcount << "]:" << endl;
-    s << "rate: " << m_rate << endl;
-    s << "@{" << endl;
+    s << "[" << name << " " << m_ID << "/" << IDcount << "]:" << "\n";
+    s << "rate: " << m_rate << "\n";
+    s << "updateFlags: ";
+
+    for (int flag : m_updateFlags)
+    {
+        s << flag;
+    }
+
+    s << "\n";
+    s << "Selected flag: " << m_updateFlag << "\n";
+
+    s << "@{" << "\n";
     s << m_reactionSite->info(xr, yr, zr, desc);
-    s << "\n}" << endl;
+    s << "\n}";
+
+    return s.str();
+
+}
+
+string Reaction::getFinalizingDebugMessage() const
+{
+    int X, Y, Z;
+    stringstream s;
+
+    const Reaction * lastReaction = KMCDebugger_GetReaction(lastCurrent);
+    const Site* site = lastReaction->reactionSite();
+
+    m_reactionSite->distanceTo(site, X, Y, Z);
+
+    s << info();
+    s << "\nLast active reaction site marked on current site:\n";
+    s << m_reactionSite->info(X, Y, Z);
 
     return s.str();
 
@@ -64,18 +93,18 @@ void Reaction::getTriumphingUpdateFlag()
 
 }
 
-const double Reaction::UNSET_RATE = -1;
+const double   Reaction::UNSET_RATE = -1;
 
-KMCSolver*   Reaction::mainSolver;
+KMCSolver*     Reaction::mainSolver;
 
-double       Reaction::beta;
-double       Reaction::m_linearRateScale;
+double         Reaction::beta;
+double         Reaction::m_linearRateScale;
 
-uint         Reaction::NX;
-uint         Reaction::NY;
-uint         Reaction::NZ;
+uint           Reaction::NX;
+uint           Reaction::NY;
+uint           Reaction::NZ;
 
-uint         Reaction::IDcount = 0;
+uint           Reaction::IDcount = 0;
 
 
 ostream & operator << (ostream& os, const Reaction& ss)

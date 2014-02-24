@@ -16,6 +16,7 @@ std::string KMCDebugger::implications = _KMCDebugger_INITIAL_IMPLICATION_MSG;
 std::string KMCDebugger::reactionString = _KMCDebugger_INITIAL_REACTION_STR;
 
 Reaction* KMCDebugger::currentReaction = NULL;
+Reaction* KMCDebugger::lastCurrentReaction = NULL;
 
 uint KMCDebugger::traceCount = 0;
 uint KMCDebugger::implicationCount = 0;
@@ -30,7 +31,7 @@ std::stringstream KMCDebugger::s;
 double KMCDebugger::t;
 
 
-void KMCDebugger::dumpFullTrace(bool toFile, const string additionalInfo)
+void KMCDebugger::dumpFullTrace(int line, const char * filename, const string additionalInfo, bool toFile)
 {
     using namespace std;
 
@@ -60,14 +61,14 @@ void KMCDebugger::dumpFullTrace(bool toFile, const string additionalInfo)
         path << ".txt";
 
         file.open(path.str().c_str());
-        file << fullTrace(additionalInfo);
+        file << fullTrace(line, filename, additionalInfo);
         file.close();
 
         return;
 
     }
 
-    cout << fullTrace();
+    cout << fullTrace(line, filename, additionalInfo);
 
 }
 
@@ -78,7 +79,7 @@ void KMCDebugger::dumpPartialTrace(const uint &i)
     cout << partialTrace(i);
 }
 
-string KMCDebugger::fullTrace(const string additionalInfo)
+string KMCDebugger::fullTrace(int line, const string filename, const string additionalInfo)
 {
     using namespace std;
 
@@ -92,12 +93,13 @@ string KMCDebugger::fullTrace(const string additionalInfo)
         s << partialTrace(i);
     }
 
-
+    s << "Full trace initiated at line " << line;
+    s << "in " << filename << "\n";
     s << "=====================\n  TRACE FINISHED  \n=====================\n" << endl;
 
     if (!additionalInfo.empty())
     {
-        s << "\nAdditional Information:\n============================\n\n";
+        s << "\nFinalizing debug info:\n============================\n\n";
 
         s << additionalInfo;
     }
@@ -143,6 +145,7 @@ void KMCDebugger::reset()
     timerData.clear();
 
     currentReaction = NULL;
+    lastCurrentReaction = NULL;
 
     implications = _KMCDebugger_INITIAL_IMPLICATION_MSG;
     reactionString = _KMCDebugger_INITIAL_REACTION_STR;

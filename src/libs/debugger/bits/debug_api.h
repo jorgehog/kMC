@@ -18,6 +18,7 @@
 #define KMCDebugger_SearchReactionTraceBefore(i) _KMCDebugger_TRACE_SEARCH(KMCDebugger::reactionTraceBefore, i)
 #define KMCDebugger_SearchReactionTraceAfter(i)  _KMCDebugger_TRACE_SEARCH(KMCDebugger::reactionTraceAfter, i)
 #define KMCDebugger_SearchImplicationTrace(i)    _KMCDebugger_TRACE_SEARCH(KMCDebugger::implicationTrace, i)
+#define KMCDebugger_GetReaction(which)            KMCDebugger::which##Reaction
 
 #define KMCDebugger_DumpTrace(i) \
     assert(i >= 0); \
@@ -25,12 +26,13 @@
 
 #define KMCDebugger_DumpFullTrace(...) \
     if (KMCDebugger::currentReaction != NULL) {KMCDebugger_PushTraces();} \
-    KMCDebugger::dumpFullTrace(__VA_ARGS__)
+    KMCDebugger::dumpFullTrace(__LINE__, __FILE__, ##__VA_ARGS__)
 //
 
 //DEBUGGER FEEDER FUNCTIONS
 #define KMCDebugger_SetActiveReaction(reaction) \
     KMCDebugger::currentReaction = reaction; \
+    KMCDebugger::lastCurrentReaction = reaction; \
     KMCDebugger::reactionString = _KMCDebugger_REACTION_STR()
 
 #define KMCDebugger_MarkPartialStep(_msg) \

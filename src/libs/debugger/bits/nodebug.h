@@ -3,6 +3,8 @@
 #define _KMCDebugger_IGNORE(expr) static_cast<void>(expr)
 
 //Ignore everything if we are not debugging.
+#define KMCDebugger_GetReaction(which) \
+    _KMCDebugger_IGNORE(0)
 #define KMCDebugger_SetFilename(filename) \
     _KMCDebugger_IGNORE(filename)
 #define KMCDebugger_SetPath(path) \

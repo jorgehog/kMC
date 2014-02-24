@@ -11,7 +11,7 @@ class DiffusionReaction : public Reaction
 public:
 
 
-    DiffusionReaction(Site *destination);
+    DiffusionReaction(Site *m_destinationSite);
 
     ~DiffusionReaction() {
         lastSetup.clear();
@@ -40,21 +40,27 @@ public:
         return m_potential;
     }
 
+    const Site* destinationSite() const
+    {
+        return m_destinationSite;
+    }
+
     const uint & xD () const
     {
-        return destination->x();
+        return m_destinationSite->x();
     }
 
     const uint & yD () const
     {
-        return destination->y();
+        return m_destinationSite->y();
     }
 
     const uint & zD () const
     {
-        return destination->z();
+        return m_destinationSite->z();
     }
 
+    string getFinalizingDebugMessage() const;
 
     //tmp
     double lastUsedEnergy;
@@ -80,7 +86,7 @@ private:
 
     static cube m_potential;
 
-    Site* destination;
+    Site* m_destinationSite;
 
     enum SpecificUpdateFlags
     {
