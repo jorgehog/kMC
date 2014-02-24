@@ -148,10 +148,8 @@ void testBed::testDistanceTo()
 void testBed::testDiffusionSiteMatrixSetup()
 {
 
-
     DiffusionReaction * currentDiffReaction;
     int i, j, k;
-
 
     for (uint x = 0; x < NX; ++x)
     {
@@ -159,8 +157,7 @@ void testBed::testDiffusionSiteMatrixSetup()
         {
             for (uint z = 0; z < NZ; ++z)
             {
-                Site & currentSite = *(solver->getSite(x, y, z));
-
+                const Site & currentSite = *(solver->getSite(x, y, z));
 
                 for (Reaction * r : currentSite.siteReactions())
                 {
@@ -445,16 +442,7 @@ void testBed::testReactionChoise()
 
 void testBed::testRateCalculation () {
 
-//    for (uint i = 0; i < NX; ++i) {
-//        for (uint j = 0; j < NY; ++j) {
-//            for (uint k = 0; k < NZ; ++k) {
-//                for (Reaction* r : solver->getSite(i, j, k)->siteReactions())
-//                {
-//                    r->calcRate();
-//                }
-//            }
-//        }
-//    }
+    reset();
 
     solver->initializeCrystal();
     solver->getRateVariables();
@@ -463,32 +451,10 @@ void testBed::testRateCalculation () {
         for (uint j = 0; j < NY; ++j) {
             for (uint k = 0; k < NZ; ++k) {
 
-                for (Reaction* r : solver->getSite(i, j, k)->siteReactions()) {
-
-                    bool isIn = false;
-                    for (Reaction* r2 : solver->getSite(i, j, k)->activeReactions())
-                    {
-                        if (r2 == r)
-                        {
-                            isIn = true;
-                            break;
-                        }
-                    }
-
-
-                    CHECK_EQUAL(isIn, r->isActive());
-
-                    CHECK_EQUAL(r->reactionSite()->isActive() && r->isNotBlocked(), r->isActive());
-
-                    if (!r->isActive())
-                    {
-                        continue;
-                    }
-
+                for (Reaction* r : solver->sites[i][j][k]->activeReactions()) {
 
                     //                    double RATE = r->rate();
                     double E = ((DiffusionReaction*)r)->lastUsedEnergy;
-
                     double Esp = ((DiffusionReaction*)r)->lastUsedEsp;
                     r->calcRate();
 
@@ -496,7 +462,7 @@ void testBed::testRateCalculation () {
 
                     CHECK_EQUAL(Esp, ((DiffusionReaction*)r)->lastUsedEsp);
 
-                    CHECK_EQUAL(r->rate(), RATE);
+                    //                    CHECK_EQUAL(r->rate(), RATE);
 
                 }
             }
@@ -859,7 +825,7 @@ void testBed::testInitialReactionSetup()
         for (uint j = 0; j < NY; ++j) {
             for (uint k = 0; k < NZ; ++k) {
 
-                CHECK_EQUAL(solver->getSite(i, j, k)->siteReactions().size(), 26);
+                CHECK_EQUAL(solver->sites[i][j][k]->siteReactions().size(), 26);
 
             }
         }
@@ -900,19 +866,19 @@ void testBed::testInitialReactionSetup()
 
 
 
-    //    Site* currentSite;
-    //    for (uint i = 0; i < NX; ++i) {
-    //        for (uint j = 0; j < NY; ++j) {
-    //            for (uint k = 0; k < NZ; ++k) {
+    Site* currentSite;
+    for (uint i = 0; i < NX; ++i) {
+        for (uint j = 0; j < NY; ++j) {
+            for (uint k = 0; k < NZ; ++k) {
 
-    //                currentSite = solver->sites[i][j][k];
+                currentSite = solver->sites[i][j][k];
 
-    //                currentSite->updateReactions();
-    //                currentSite->calculateRates();
+                currentSite->updateReactions();
+                currentSite->calculateRates();
 
-    //            }
-    //        }
-    //    }
+            }
+        }
+    }
 
 
     std::vector<Reaction*> reactions;
