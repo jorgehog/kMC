@@ -1086,11 +1086,11 @@ void testBed::testSmartSaddleUpdateAlg()
 
                     double newS = dr->getSaddleEnergy();
 
-                    if (newS == 0)
-                    {
-                        KMCDebugger_DumpFullTrace(dr->getFinalizingDebugMessage(), true);
-                        exit(1);
-                    }
+//                    if (newS == 0)
+//                    {
+//                        KMCDebugger_DumpFullTrace(dr->getFinalizingDebugMessage(), true);
+//                        exit(1);
+//                    }
 
                     CHECK_CLOSE(newS, dr->lastUsedEsp, 0.0000000001);
 
