@@ -83,10 +83,6 @@ public:
     void calculateRates();
 
 
-    void enableReaction(Reaction *reaction);
-
-    void disableReaction(Reaction *reaction);
-
     void introduceNeighborhood();
 
     bool hasNeighboring(int state) const;
@@ -98,14 +94,12 @@ public:
 
     void distanceTo(const Site * other, int &dx, int &dy, int &dz, bool absolutes = false) const;
 
-
     uint maxDistanceTo(const Site * other);
 
     double potentialBetween(const Site * other);
 
 
     void queueAffectedSites();
-
 
     void resetUpdateFlags();
 
@@ -208,19 +202,15 @@ public:
         return m_z;
     }
 
-    const vector<Reaction*> & siteReactions() const
-    {
-        return m_siteReactions;
-    }
-
-    const vector<Reaction*> & dependentReactions() const
-    {
-        return m_dependentReactions;
-    }
 
     const vector<Reaction*> & activeReactions() const
     {
         return m_activeReactions;
+    }
+
+    const vector<Reaction*> & siteReactions() const
+    {
+        return m_siteReactions;
     }
 
     const vector<Site*> & allNeighbors() const
@@ -248,14 +238,12 @@ public:
         return this == &other;
     }
 
-
     const string str() const
     {
         stringstream s;
         s << "site@(" << x() << "," << y() << "," << z() << ")";
         return s.str();
     }
-
 
     friend class testBed;
 
@@ -275,9 +263,7 @@ private:
 
     static double m_totalEnergy;
 
-
     static set<Site*> affectedSites;
-
 
     static KMCSolver* mainSolver;
 
@@ -300,8 +286,6 @@ private:
     vector<Reaction*> m_siteReactions;
 
     vector<Reaction*> m_activeReactions;
-
-    vector<Reaction*> m_dependentReactions;
 
 };
 
