@@ -816,7 +816,7 @@ uint           Site::m_totalActiveSites = 0;
 
 double         Site::m_totalEnergy = 0;
 
-set<Reaction*> Site::affectedSites;
+set<Site*> Site::affectedSites;
 
 
 const vector<string> ParticleStates::names = {"crystal", "solution", "surface"};
