@@ -23,9 +23,9 @@
     assert(i >= 0); \
     KMCDebugger::dumpPartialTrace(i)
 
-#define KMCDebugger_DumpFullTrace(toFile) \
+#define KMCDebugger_DumpFullTrace(...) \
     if (KMCDebugger::currentReaction != NULL) {KMCDebugger_PushTraces();} \
-    KMCDebugger::dumpFullTrace(toFile)
+    KMCDebugger::dumpFullTrace(__VA_ARGS__)
 //
 
 //DEBUGGER FEEDER FUNCTIONS

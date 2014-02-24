@@ -5,8 +5,7 @@
 Reaction::Reaction(string name):
     name(name),
     m_ID(IDcount++),
-    m_rate(UNSET_RATE),
-    m_type(std)
+    m_rate(UNSET_RATE)
 {
 
 }

@@ -15,8 +15,8 @@
     _KMCDebugger_IGNORE(0)
 #define KMCDebugger_DumpTrace(i) \
     _KMCDebugger_IGNORE(i)
-#define KMCDebugger_DumpFullTrace(toFile) \
-    _KMCDebugger_IGNORE(toFile)
+#define KMCDebugger_DumpFullTrace(...) \
+    _KMCDebugger_IGNORE(0)
 #define KMCDebugger_MarkPartialStep(_msg) \
     _KMCDebugger_IGNORE(_msg)
 #define KMCDebugger_SearchReactionTraceBefore(i) \

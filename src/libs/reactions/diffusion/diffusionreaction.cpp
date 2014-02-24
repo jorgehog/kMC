@@ -9,7 +9,7 @@ DiffusionReaction::DiffusionReaction(Site *destination) :
     lastUsedEsp(0),
     destination(destination)
 {
-    m_type = diff;
+
 }
 
 
@@ -179,20 +179,10 @@ double DiffusionReaction::getSaddleEnergy()
     {
         if (sameSetup)
         {
-            for (const Site* s: neighborSet)
-            {
-                if (s->isSurface())
-                {
-                    cout << "surface in set" << endl;
-                }
-                else if (s->isCrystal())
-                {
-                    cout << "crystal in set" << endl;
-                }
-            }
+
             cout << "exactly same setup calculated saddle twice..should be flagged" << endl;
 
-            KMCDebugger_DumpFullTrace(true);
+            KMCDebugger_DumpFullTrace(true, info());
 
             exit(1);
         }

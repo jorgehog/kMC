@@ -94,11 +94,6 @@ public:
         return m_reactionSite;
     }
 
-    int type()
-    {
-        return m_type;
-    }
-
     virtual string getInfoSnippet() const
     {
         return "-";
@@ -117,11 +112,6 @@ public:
     }
 
 
-    enum type
-    {
-        std,
-        diff
-    };
 
 
 protected:
@@ -154,8 +144,6 @@ protected:
         defaultUpdateFlag = 0,
         noUpdate = 100
     };
-
-    int m_type;
 
 };
 

@@ -13,7 +13,7 @@
     : trace.at(i))
 
 #define _KMCDebugger_REACTIONCAST() \
-    ((KMCDebugger::currentReaction->type() == Reaction::diff) \
+    ((KMCDebugger::currentReaction->name == "DiffusionReaction") \
     ? ((DiffusionReaction*)KMCDebugger::currentReaction) \
     : ((Reaction*)KMCDebugger::currentReaction))
 

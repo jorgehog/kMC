@@ -22,10 +22,10 @@ public:
     static uint traceCount;
     static uint implicationCount;
 
-    static void dumpFullTrace(bool toFile);
+    static void dumpFullTrace(bool toFile = false, const string additionalInfo = "");
     static void dumpPartialTrace(const uint & i);
 
-    static std::string fullTrace();
+    static std::string fullTrace(const string additionalInfo = "");
     static std::string partialTrace(const uint & i);
 
     static void reset();

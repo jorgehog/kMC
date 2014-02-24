@@ -30,7 +30,7 @@ std::stringstream KMCDebugger::s;
 double KMCDebugger::t;
 
 
-void KMCDebugger::dumpFullTrace(bool toFile)
+void KMCDebugger::dumpFullTrace(bool toFile, const string additionalInfo)
 {
     using namespace std;
 
@@ -60,14 +60,14 @@ void KMCDebugger::dumpFullTrace(bool toFile)
         path << ".txt";
 
         file.open(path.str().c_str());
-        file << fullTrace() << endl;
+        file << fullTrace(additionalInfo);
         file.close();
 
         return;
 
     }
 
-    cout << fullTrace() << endl;
+    cout << fullTrace();
 
 }
 
@@ -75,16 +75,16 @@ void KMCDebugger::dumpPartialTrace(const uint &i)
 {
     using namespace std;
 
-    cout << partialTrace(i) << endl;
+    cout << partialTrace(i);
 }
 
-string KMCDebugger::fullTrace()
+string KMCDebugger::fullTrace(const string additionalInfo)
 {
     using namespace std;
 
     stringstream s;
 
-    s << "======================\n TRACING REACTIONS \n==================\n" << endl;
+    s << "=====================\n TRACING REACTIONS \n=====================\n" << endl;
 
 
     for (uint i = 0; i < traceCount; ++i)
@@ -93,7 +93,16 @@ string KMCDebugger::fullTrace()
     }
 
 
-    s << "======================\n   TRACE FINISHED   \n==================\n" << endl;
+    s << "=====================\n  TRACE FINISHED  \n=====================\n" << endl;
+
+    if (!additionalInfo.empty())
+    {
+        s << "\nAdditional Information:\n============================\n\n";
+
+        s << additionalInfo;
+    }
+
+    s << endl;
 
     return s.str();
 
@@ -106,14 +115,21 @@ string KMCDebugger::partialTrace(const uint &i)
     stringstream s;
 
     s << "---[" << i << " / " << traceCount-1 << " ] " << timerData.at(i)*1000 << " ms" << endl;
+
     s << reactionTraceBefore.at(i) << endl;
+
     s << implicationTrace.at(i);
 
+#ifdef KMC_VERBOSE_DEBUG
     if (!reactionTraceAfter.at(i).empty())
     {
         s << "\nEnd of reaction look from initial reaction site view: " << endl;
         s << reactionTraceAfter.at(i);
     }
+#endif
+
+    s << endl;
+
     return s.str();
 
 }
