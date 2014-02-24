@@ -433,7 +433,7 @@ void KMCSolver::getRateVariables()
             {
                 for (Reaction* reaction : sites[x][y][z]->activeReactions())
                 {
-                    assert(reaction->isActive());
+                    assert(reaction->rate() != Reaction::UNSET_RATE);
                     kTot += reaction->rate();
                     accuAllRates.push_back(kTot);
                     allReactions.push_back(reaction);
