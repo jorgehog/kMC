@@ -43,8 +43,6 @@ Site::~Site()
 
     m_siteReactions.clear();
 
-    m_dependentReactions.clear();
-
     m_allNeighbors.clear();
 
     m_nNeighbors.reset();
@@ -52,6 +50,8 @@ Site::~Site()
     m_energy = 0;
 
 }
+
+
 
 
 void Site::updateAffectedSites()
@@ -103,7 +103,6 @@ void Site::setParticleState(int state)
             {
                 m_particleState = ParticleStates::surface;
                 KMCDebugger_PushImplication(this, "solution", "surface");
-
             }
 
             queueAffectedSites();
@@ -192,10 +191,8 @@ void Site::setParticleState(int state)
             if (!(hasNeighboring(ParticleStates::crystal) || m_isFixedCrystalSeed))
             {
                 m_particleState = ParticleStates::solution;
-
                 KMCDebugger_PushImplication(this, "surface", "solution");
                 queueAffectedSites();
-
             }
 #ifndef KMC_NO_DEBUG
             else
@@ -293,6 +290,25 @@ void Site::addReaction(Reaction *reaction)
     m_siteReactions.push_back(reaction);
 }
 
+void Site::updateReactions()
+{
+
+    m_activeReactions.clear();
+
+    if (!m_active)
+    {
+        return;
+    }
+
+    for (Reaction* reaction : m_siteReactions)
+    {
+        if (reaction->isNotBlocked())
+        {
+            m_activeReactions.push_back(reaction);
+        }
+    }
+
+}
 
 
 void Site::spawnAsFixedCrystal()
@@ -413,10 +429,7 @@ bool Site::hasNeighboring(int state) const
 void Site::activate()
 {
 
-
-
 #ifndef KMC_NO_DEBUG
-
 
     if (m_active == true)
     {
@@ -442,7 +455,6 @@ void Site::activate()
     {
         setParticleState(ParticleStates::crystal);
     }
-
 #ifndef KMC_NO_DEBUG
     else
     {
@@ -452,7 +464,6 @@ void Site::activate()
 
     informNeighborhoodOnChange(+1);
 
-
     m_totalActiveSites++;
 
     KMCDebugger_MarkPartialStep("ACTIVATE_DONE");
@@ -461,7 +472,6 @@ void Site::activate()
 
 void Site::deactivate()
 {
-
 
 #ifndef KMC_NO_DEBUG
 
@@ -605,7 +615,6 @@ void Site::informNeighborhoodOnChange(int change)
 
                 dE = change*DiffusionReaction::potential(i,  j,  k);
 
-
                 neighbor->m_energy += dE;
 
                 m_totalEnergy += dE;
@@ -645,7 +654,6 @@ void Site::queueAffectedSites()
     assert(C == 125*26);
 
     affectedSites.insert(m_allNeighbors.begin(), m_allNeighbors.end());
-
 }
 
 uint Site::findLevel(uint i, uint j, uint k)
@@ -799,22 +807,22 @@ void Site::resetUpdateFlags()
 }
 
 
-KMCSolver*     Site::mainSolver;
+KMCSolver* Site::mainSolver;
 
-uint           Site::NX;
-uint           Site::NY;
-uint           Site::NZ;
+uint       Site::NX;
+uint       Site::NY;
+uint       Site::NZ;
 
-uint           Site::m_nNeighborsLimit;
+uint       Site::m_nNeighborsLimit;
 
-uint           Site::m_neighborhoodLength;
+uint       Site::m_neighborhoodLength;
 
-ucube          Site::m_levelMatrix;
-ivec           Site::m_originTransformVector;
+ucube      Site::m_levelMatrix;
+ivec       Site::m_originTransformVector;
 
-uint           Site::m_totalActiveSites = 0;
+uint       Site::m_totalActiveSites = 0;
 
-double         Site::m_totalEnergy = 0;
+double     Site::m_totalEnergy = 0;
 
 set<Site*> Site::affectedSites;
 
