@@ -289,15 +289,6 @@ void Site::loadConfig(const Setting &setting)
 void Site::addReaction(Reaction *reaction)
 {
     reaction->setSite(this);
-    reaction->initialize();
-
-    for (Site* neighbor : m_allNeighbors)
-    {
-        if (reaction->isAffectedByChangeIn(neighbor))
-        {
-            neighbor->addDependency(reaction);
-        }
-    }
 
     m_siteReactions.push_back(reaction);
 }
