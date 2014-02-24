@@ -221,6 +221,7 @@ void DiffusionReaction::calcRate()
     switch (m_updateFlag) {
     case noUpdate:
 
+        assert(false);
         assert(m_reactionSite->energy() == lastUsedEnergy);
 
         return;

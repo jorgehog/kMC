@@ -105,7 +105,7 @@ public:
 
     void execute();
 
-    const string info(int xr = 0, int yr = 0, int zr = 0, string desc = ".") const;
+    const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const;
 
     bool allowedAtSite();
 

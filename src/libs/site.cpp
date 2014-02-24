@@ -94,10 +94,10 @@ void Site::setParticleState(int state)
             else
             {
                 m_particleState = ParticleStates::surface;
+                queueAffectedSites();
                 KMCDebugger_PushImplication(this, "solution", "surface");
             }
 
-            queueAffectedSites();
 
             break;
 
@@ -158,7 +158,6 @@ void Site::setParticleState(int state)
             m_particleState  = ParticleStates::crystal;
             KMCDebugger_PushImplication(this, "surface", "crystal");
             propagateToNeighbors(ParticleStates::solution, ParticleStates::surface);
-            queueAffectedSites();
 
             break;
 

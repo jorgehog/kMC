@@ -41,7 +41,7 @@ public:
     virtual void execute() = 0;
 
 
-    virtual const string info(int xr = 0, int yr = 0, int zr = 0, string desc = ".")  const;
+    virtual const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X")  const;
 
 
     static void resetAll()
@@ -101,10 +101,6 @@ public:
         return name.compare(this->name) == 0;
     }
 
-    void setUpdateFlag(int flag)
-    {
-        m_updateFlag = flag;
-    }
 
     virtual string getFinalizingDebugMessage() const;
 
