@@ -79,6 +79,7 @@ void KMCDebugger::dumpPartialTrace(const uint &i)
     cout << partialTrace(i);
 }
 
+
 string KMCDebugger::fullTrace(int line, const string filename, const string additionalInfo)
 {
     using namespace std;

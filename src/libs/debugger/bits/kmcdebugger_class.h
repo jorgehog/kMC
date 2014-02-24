@@ -25,6 +25,29 @@ public:
     static void dumpFullTrace(int line, const char *filename, const string additionalInfo = "", bool toFile = false);
     static void dumpPartialTrace(const uint & i);
 
+    template<typename TA, typename TB>
+    static void
+    _assert(TA Aval,
+            TB Bval,
+            const char * OP,
+            const char * A,
+            const char * B,
+            const char * file,
+            const char * func,
+            int line)
+    {
+        using namespace std;
+
+        cerr <<  file << ":" << line << ":\n" << func << ":\n";
+
+        cerr << "Assertion '" << A << " " << OP << " " << B << "' failed: ";
+
+        cerr << Aval << " !" << OP << " " << Bval << "." << endl;
+
+        exit(1);
+
+    }
+
     static std::string fullTrace(int line, const string filename, const string additionalInfo = "");
     static std::string partialTrace(const uint & i);
 

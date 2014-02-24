@@ -588,6 +588,7 @@ void Site::informNeighborhoodOnChange(int change)
     uint level;
     double dE;
 
+    uint C = 0;
     for (uint i = 0; i < m_neighborhoodLength; ++i)
     {
         for (uint j = 0; j < m_neighborhoodLength; ++j)
@@ -605,6 +606,14 @@ void Site::informNeighborhoodOnChange(int change)
                 level = m_levelMatrix(i, j, k);
                 neighbor->m_nNeighbors(level)+=change;
 
+                //This approach assumes that recursive updating of non-neighboring sites
+                //WILL NOT ACTIVATE OR DEACTIVATE any sites, simply change their state,
+                //and thus not interfere with any flags set here, not require flags of their own.
+                for (Reaction * reaction : m_neighborHood[i][j][k]->siteReactions())
+                {
+                    reaction->setUpdateFlags(this, level);
+                    C++;
+                }
 
                 dE = change*DiffusionReaction::potential(i,  j,  k);
 
@@ -617,35 +626,14 @@ void Site::informNeighborhoodOnChange(int change)
         }
     }
 
+    KMCDebugger_Assert(C, ==, 124*26);
+
     queueAffectedSites();
 
 }
 
 void Site::queueAffectedSites()
 {
-    uint C = 0;
-    for (uint i = 0; i < m_neighborhoodLength; ++i)
-    {
-        for (uint j = 0; j < m_neighborhoodLength; ++j)
-        {
-            for (uint k = 0; k < m_neighborhoodLength; ++k)
-            {
-
-                //This approach assumes that recursive updating of non-neighboring sites
-                //WILL NOT ACTIVATE OR DEACTIVATE any sites, simply change their state,
-                //and thus not interfere with any flags set here, not require flags of their own.
-                for (Reaction * reaction : m_neighborHood[i][j][k]->siteReactions())
-                {
-                    reaction->setUpdateFlags(this, m_levelMatrix(i, j, k));
-                    C++;
-                }
-
-            }
-        }
-    }
-
-    assert(C == 125*26);
-
     affectedSites.insert(m_allNeighbors.begin(), m_allNeighbors.end());
 }
 

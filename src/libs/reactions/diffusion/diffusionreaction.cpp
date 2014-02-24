@@ -79,22 +79,23 @@ string DiffusionReaction::getFinalizingDebugMessage() const
 void DiffusionReaction::setUpdateFlags(const Site *changedSite, uint level)
 {
 
-    m_updateFlags.insert(defaultUpdateFlag);
+//    m_updateFlags.insert(defaultUpdateFlag);
 
-    if (m_rate == UNSET_RATE || level == 0)
+    if (m_rate == UNSET_RATE || level == 0 || level == Site::nNeighborsLimit() + 1)
     {
         m_updateFlags.insert(defaultUpdateFlag);
     }
 
     //if the destination is outsite the interaction cutoff, we can keep the old saddle energy.
-    else if (m_destinationSite->maxDistanceTo(changedSite) == Site::nNeighborsLimit() + 1)
+    else if (m_destinationSite->maxDistanceTo(changedSite) > Site::nNeighborsLimit())
     {
+        KMCDebugger_Assert(Site::nNeighborsLimit() + 1, ==,  m_destinationSite->maxDistanceTo(changedSite));
         m_updateFlags.insert(updateKeepSaddle);
     }
 
     else
     {
-        assert(level == Site::nNeighborsLimit() - 1 || level == Site::nNeighborsLimit() + 1);
+        assert(level == Site::nNeighborsLimit() - 1);
         m_updateFlags.insert(defaultUpdateFlag);
     }
 

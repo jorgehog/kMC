@@ -1,7 +1,9 @@
 #pragma once
 
+#include "../kmcdebugger.h"
 
 #include "kmcdebugger_class.h"
+
 #include "intrinsicmacros.h"
 
 #include <assert.h>
@@ -12,6 +14,13 @@
 #define KMCDebugger_Finalize KMCDebugger::reset
 #define KMCDebugger_SetFilename(filename) KMCDebugger::traceFileName = filename
 #define KMCDebugger_SetPath(path)         KMCDebugger::traceFilePath = path
+#define KMCDebugger_Assert(A, OP, B) \
+    ((A OP B) \
+    ? _KMCDebugger_IGNORE(0) \
+    : KMCDebugger::_assert(A, B, #OP, #A, #B, \
+                           __FILE__, \
+                           __PRETTY_FUNCTION__, \
+                           __LINE__))
 //
 
 //TRACE OUTPUT/FETCH FUNCTIONS
