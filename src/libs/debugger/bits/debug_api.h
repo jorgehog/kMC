@@ -10,7 +10,10 @@
 #include <sstream>
 
 //MISC
-#define KMCDebugger_Init KMCDebugger::timer.tic
+#define KMCDebugger_Init(_solverObject) \
+    KMCDebugger::solverObject = _solverObject; \
+    KMCDebugger::timer.tic()
+
 #define KMCDebugger_Finalize KMCDebugger::reset
 #define KMCDebugger_SetFilename(filename) KMCDebugger::traceFileName = filename
 #define KMCDebugger_SetPath(path)         KMCDebugger::traceFilePath = path

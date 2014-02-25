@@ -1021,7 +1021,7 @@ void testBed::testKnownCase()
 
 void testBed::testSmartSaddleUpdateAlg()
 {
-    KMCDebugger_Init();
+    KMCDebugger_Init(solver);
     uint choice, cycle;
     double R;
 

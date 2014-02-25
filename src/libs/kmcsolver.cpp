@@ -131,7 +131,7 @@ KMCSolver::~KMCSolver()
 void KMCSolver::run()
 {
 
-    KMCDebugger_Init();
+    KMCDebugger_Init(this);
 
     Reaction * selectedReaction;
     uint choice;

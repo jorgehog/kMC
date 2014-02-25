@@ -17,6 +17,9 @@ using arma::wall_clock;
 class KMCDebugger
 {
 public:
+
+    static KMCSolver * solverObject;
+
     static std::vector<std::string> reactionTraceBefore;
     static std::vector<std::string> reactionTraceAfter;
     static std::vector<std::string> implicationTrace;

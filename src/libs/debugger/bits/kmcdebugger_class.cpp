@@ -7,6 +7,8 @@
 
 #include "intrinsicmacros.h"
 
+KMCSolver * KMCDebugger::solverObject;
+
 std::vector<std::string> KMCDebugger::reactionTraceBefore;
 std::vector<std::string> KMCDebugger::reactionTraceAfter;
 std::vector<std::string> KMCDebugger::implicationTrace;

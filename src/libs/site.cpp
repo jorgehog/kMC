@@ -444,6 +444,7 @@ void Site::activate()
 
     affectedSites.insert(this);
 
+
     if (isSurface())
     {
         setParticleState(ParticleStates::crystal);
@@ -483,6 +484,8 @@ void Site::deactivate()
 #endif
 
     m_active = false;
+
+    affectedSites.insert(this);
 
     //if we deactivate a crystal site, we have to potentially
     //reduce the surface by adding more sites as solution sites.
