@@ -7,7 +7,7 @@ Reaction::Reaction(string name):
     name(name),
     m_ID(IDcount++),
     m_rate(UNSET_RATE),
-    m_updateFlag(1337)
+    m_updateFlag(defaultUpdateFlag)
 {
 
 }
