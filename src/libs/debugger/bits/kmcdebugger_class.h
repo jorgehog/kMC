@@ -1,5 +1,7 @@
 #pragma once
 
+#include "debug_api.h"
+
 #include "../../reactions/reaction.h"
 
 #include <vector>
@@ -54,7 +56,7 @@ public:
     {
         using namespace std;
 
-        stringstream s;
+        stringstream s, _cerr;
         string replString;
 
         s  << " " << OP << " " << B;
@@ -62,9 +64,9 @@ public:
         replString = s.str();
         searchRepl(replString, " == true", "");
 
-        cerr <<  file << ":" << line << ":\n" << func << ":\n";
+        _cerr <<  file << ":" << line << ":\n" << func << ":\n";
 
-        cerr << "Assertion '" << A << replString << "' failed: ";
+        _cerr << "Assertion '" << A << replString << "' failed: ";
 
         s.str(string());
 
@@ -80,14 +82,18 @@ public:
         searchRepl(replString, "!<=",  ">");
 
 
-        cerr << Aval << " " <<  replString << " " << Bval << ".";
+        _cerr << Aval << " " <<  replString << " " << Bval << ".";
 
         if (!what.empty())
         {
-            cerr << "\nwhat? : " << what;
+            _cerr << "\nwhat? : " << what;
         }
 
-        cerr << endl;
+        _cerr << endl;
+
+        cerr << _cerr.str();
+
+        dumpFullTrace(line, file, _cerr.str(), true);
 
         exit(1);
 
