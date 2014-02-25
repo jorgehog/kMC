@@ -210,6 +210,13 @@ double DiffusionReaction::getSaddleEnergy()
 
     lastUsedEsp = Esp;
 
+    uint nSum = 0;
+    for (uint i = 0; i < Site::nNeighborsLimit(); ++i)
+    {
+        nSum += m_reactionSite->nNeighbors(i) + m_destinationSite->nNeighbors(i);
+    }
+    KMCDebugger_AssertBool((Esp == 0) && (nSum == 0), "Zero saddle energy means none of the sites has neighbours.. right?");
+
     return Esp;
 
 }

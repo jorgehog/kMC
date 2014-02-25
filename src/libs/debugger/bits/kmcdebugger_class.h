@@ -27,6 +27,19 @@ public:
     static void dumpFullTrace(int line, const char *filename, const string additionalInfo = "", bool toFile = false);
     static void dumpPartialTrace(const uint & i);
 
+    static void searchRepl(string & s, string _find, string _repl)
+    {
+
+        int position = s.find(_find);
+        while (position != (int)string::npos)
+        {
+            s.replace(position, _find.size(), _repl);
+            position = s.find(_find, position + 1);
+        }
+
+    }
+
+
     template<typename TA, typename TB>
     static void
     _assert(TA Aval,
@@ -41,11 +54,33 @@ public:
     {
         using namespace std;
 
+        stringstream s;
+        string replString;
+
+        s  << " " << OP << " " << B;
+
+        replString = s.str();
+        searchRepl(replString, " == true", "");
+
         cerr <<  file << ":" << line << ":\n" << func << ":\n";
 
-        cerr << "Assertion '" << A << " " << OP << " " << B << "' failed: ";
+        cerr << "Assertion '" << A << replString << "' failed: ";
 
-        cerr << Aval << " !" << OP << " " << Bval << ".";
+        s.str(string());
+
+        s << "!" << OP;
+
+        replString = s.str();
+
+        searchRepl(replString, "!==", "!=");
+        searchRepl(replString, "!!=", "==");
+        searchRepl(replString, "!>" , "<=");
+        searchRepl(replString, "!<" , ">=");
+        searchRepl(replString, "!>=",  "<");
+        searchRepl(replString, "!<=",  ">");
+
+
+        cerr << Aval << " " <<  replString << " " << Bval << ".";
 
         if (!what.empty())
         {

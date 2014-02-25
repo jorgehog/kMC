@@ -21,6 +21,8 @@
                            __FILE__, \
                            __PRETTY_FUNCTION__, \
                            __LINE__, ##__VA_ARGS__))
+#define KMCDebugger_AssertBool(expr, ...) \
+    KMCDebugger_Assert(expr, ==, true, ##__VA_ARGS__)
 //
 
 //TRACE OUTPUT/FETCH FUNCTIONS

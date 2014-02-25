@@ -30,7 +30,6 @@ std::stringstream KMCDebugger::s;
 
 double KMCDebugger::t;
 
-
 void KMCDebugger::dumpFullTrace(int line, const char * filename, const string additionalInfo, bool toFile)
 {
     using namespace std;
