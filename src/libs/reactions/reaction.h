@@ -34,7 +34,7 @@ public:
 
     void getTriumphingUpdateFlag();
 
-    virtual bool isNotBlocked() = 0;
+    virtual bool isNotBlocked() const = 0;
 
     virtual bool allowedAtSite() = 0;
 
@@ -128,9 +128,7 @@ public:
     //! triumphant flag.
     enum AllUpdateFlags
     {
-        defaultUpdateFlag = 0,
-        noUpdate = 100,
-        UNSET_UPDATE_FLAG = 1337
+        defaultUpdateFlag = 0
     };
 
     friend class testBed;

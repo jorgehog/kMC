@@ -427,14 +427,14 @@ void Site::activate()
     if (m_active == true)
     {
         cout << "Activating active site. " << endl;
-        info();
+        KMCDebugger_DumpFullTrace(info(), true);
         exit(1);
     }
 
     else if (isCrystal())
     {
         cout << "Activating a crystal. (should always be active)";
-        info();
+        KMCDebugger_DumpFullTrace(info(), true);
         exit(1);
     }
 
@@ -471,13 +471,13 @@ void Site::deactivate()
     if (m_active == false)
     {
         cout << "deactivating deactive site. " << endl;
-        info();
+        KMCDebugger_DumpFullTrace(info(), true);
         exit(1);
     }
     else if (isSurface())
     {
         cout << "deactivating a surface. (should always be deactive)";
-        info();
+        KMCDebugger_DumpFullTrace(info(), true);
         exit(1);
     }
 #endif
@@ -606,14 +606,6 @@ void Site::informNeighborhoodOnChange(int change)
                 level = m_levelMatrix(i, j, k);
                 neighbor->m_nNeighbors(level)+=change;
 
-                //This approach assumes that recursive updating of non-neighboring sites
-                //WILL NOT ACTIVATE OR DEACTIVATE any sites, simply change their state,
-                //and thus not interfere with any flags set here, not require flags of their own.
-                for (Reaction * reaction : neighbor->siteReactions())
-                {
-                    reaction->setDirectUpdateFlags(this, level);
-                    C++;
-                }
 
                 dE = change*DiffusionReaction::potential(i,  j,  k);
 
@@ -621,12 +613,24 @@ void Site::informNeighborhoodOnChange(int change)
 
                 m_totalEnergy += dE;
 
+                if (neighbor->isActive())
+                {
 
+                    //This approach assumes that recursive updating of non-neighboring sites
+                    //WILL NOT ACTIVATE OR DEACTIVATE any sites, simply change their state,
+                    //and thus not interfere with any flags set here, not require flags of their own.
+                    for (Reaction * reaction : neighbor->siteReactions())
+                    {
+                        reaction->setDirectUpdateFlags(this, level);
+                        C++;
+                    }
+
+                }
             }
         }
     }
 
-    KMCDebugger_Assert(C, ==, 124*26, "Not every site had every reaction updated.");
+    KMCDebugger_Assert(C, ==, sum(m_nNeighbors)*26, "Not every site had every reaction updated.");
 
 }
 

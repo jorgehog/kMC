@@ -101,7 +101,7 @@ public:
 
     void calcRate();
 
-    bool isNotBlocked();
+    bool isNotBlocked() const;
 
     void execute();
 

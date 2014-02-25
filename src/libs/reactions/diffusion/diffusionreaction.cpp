@@ -182,7 +182,7 @@ double DiffusionReaction::getSaddleEnergy()
         }
     }
 
-    if (fabs(lastUsedEsp - Esp) < 1E-10)
+    if (fabs(lastUsedEsp - Esp) < 1E-10 && Esp != 0)
     {
         if (sameSetup)
         {
@@ -210,13 +210,6 @@ double DiffusionReaction::getSaddleEnergy()
 
     lastUsedEsp = Esp;
 
-    uint nSum = 0;
-    for (uint i = 0; i < Site::nNeighborsLimit(); ++i)
-    {
-        nSum += m_reactionSite->nNeighbors(i) + m_destinationSite->nNeighbors(i);
-    }
-    KMCDebugger_AssertBool((Esp == 0) && (nSum == 0), "Zero saddle energy means none of the sites has neighbours.. right?");
-
     return Esp;
 
 }
@@ -227,12 +220,6 @@ void DiffusionReaction::calcRate()
     counterAllRate++;
 
     switch (m_updateFlag) {
-    case noUpdate:
-
-        assert(false);
-        assert(m_reactionSite->energy() == lastUsedEnergy);
-
-        return;
 
     case defaultUpdateFlag:
 
@@ -258,7 +245,7 @@ void DiffusionReaction::calcRate()
 
 }
 
-bool DiffusionReaction::isNotBlocked()
+bool DiffusionReaction::isNotBlocked() const
 {
 
     return !m_destinationSite->isActive() && (m_destinationSite->isSurface() || (m_destinationSite->nNeighbors() == 1));

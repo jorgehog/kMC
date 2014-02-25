@@ -7,7 +7,7 @@ Reaction::Reaction(string name):
     name(name),
     m_ID(IDcount++),
     m_rate(UNSET_RATE),
-    m_updateFlag(UNSET_UPDATE_FLAG)
+    m_updateFlag(1337)
 {
 
 }
@@ -31,7 +31,7 @@ const string Reaction::info(int xr, int yr, int zr, string desc) const
 
     s << "\n";
     s << "Selected flag: " << m_updateFlag << "\n";
-
+    s << "Blocked? " << !isNotBlocked() << endl;
     s << "@{" << "\n";
     s << m_reactionSite->info(xr, yr, zr, desc);
     s << "\n}";
