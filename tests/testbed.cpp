@@ -955,7 +955,6 @@ void testBed::testKnownCase()
 
     solver = new KMCSolver(root);
 
-    solver->run();
 
     bool make = false;
 
@@ -971,7 +970,15 @@ void testBed::testKnownCase()
     else
     {
         o.open("knowncase.txt");
+
+        if (!o.good())
+        {
+            cout << "NO KNOWNCASE FILE EXIST." << endl;
+            return;
+        }
     }
+
+    solver->run();
 
     string line;
     stringstream s;
