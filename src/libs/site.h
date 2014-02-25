@@ -54,7 +54,7 @@ public:
         m_totalEnergy = 0;
         m_levelMatrix.reset();
         m_originTransformVector.reset();
-        affectedSites.clear();
+        m_affectedSites.clear();
     }
 
     /*
@@ -214,6 +214,11 @@ public:
         return m_allNeighbors;
     }
 
+    const static set<Site*> & affectedSites()
+    {
+        return m_affectedSites;
+    }
+
     Site**** neighborHood() const
     {
         return m_neighborHood;
@@ -259,7 +264,7 @@ private:
 
     static double m_totalEnergy;
 
-    static set<Site*> affectedSites;
+    static set<Site*> m_affectedSites;
 
     static KMCSolver* mainSolver;
 

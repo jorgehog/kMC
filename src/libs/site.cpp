@@ -57,13 +57,13 @@ Site::~Site()
 void Site::updateAffectedSites()
 {
 
-    for (Site* site : affectedSites)
+    for (Site* site : m_affectedSites)
     {
         site->updateReactions();
         site->calculateRates();
     }
 
-    affectedSites.clear();
+    m_affectedSites.clear();
 
 }
 
@@ -442,7 +442,7 @@ void Site::activate()
 
     m_active = true;
 
-    affectedSites.insert(this);
+    m_affectedSites.insert(this);
 
 
     if (isSurface())
@@ -485,7 +485,7 @@ void Site::deactivate()
 
     m_active = false;
 
-    affectedSites.insert(this);
+    m_affectedSites.insert(this);
 
     //if we deactivate a crystal site, we have to potentially
     //reduce the surface by adding more sites as solution sites.
@@ -639,7 +639,7 @@ void Site::informNeighborhoodOnChange(int change)
 
 void Site::queueAffectedSites()
 {
-    affectedSites.insert(m_allNeighbors.begin(), m_allNeighbors.end());
+    m_affectedSites.insert(m_allNeighbors.begin(), m_allNeighbors.end());
 }
 
 uint Site::findLevel(uint i, uint j, uint k)
@@ -801,7 +801,7 @@ uint       Site::m_totalActiveSites = 0;
 
 double     Site::m_totalEnergy = 0;
 
-set<Site*> Site::affectedSites;
+set<Site*> Site::m_affectedSites;
 
 
 const vector<string> ParticleStates::names = {"crystal", "solution", "surface"};

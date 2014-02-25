@@ -1062,7 +1062,7 @@ void testBed::testSmartSaddleUpdateAlg()
         solver->accuAllRates.clear();
         solver->allReactions.clear();
 
-        for (Site* site : Site::affectedSites)
+        for (Site* site : Site::affectedSites())
         {
             site->updateReactions();
 
@@ -1114,7 +1114,7 @@ void testBed::testSmartSaddleUpdateAlg()
             }
         }
 
-        Site::affectedSites.clear();
+        Site::m_affectedSites.clear();
 
         for (uint x = 0; x < NX; ++x)
         {

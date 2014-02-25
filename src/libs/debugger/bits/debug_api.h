@@ -21,9 +21,9 @@
     ((A OP B) \
     ? _KMCDebugger_IGNORE(0) \
     : KMCDebugger::_assert(A, B, #OP, #A, #B, \
-                           __FILE__, \
-                           __PRETTY_FUNCTION__, \
-                           __LINE__, ##__VA_ARGS__))
+    __FILE__, \
+    __PRETTY_FUNCTION__, \
+    __LINE__, ##__VA_ARGS__))
 #define KMCDebugger_AssertBool(expr, ...) \
     KMCDebugger_Assert(expr, ==, true, ##__VA_ARGS__)
 //
@@ -47,24 +47,30 @@
 #define KMCDebugger_SetActiveReaction(reaction) \
     KMCDebugger::currentReaction = reaction; \
     KMCDebugger::lastCurrentReaction = reaction; \
-    KMCDebugger::reactionString = _KMCDebugger_REACTION_STR()
+    KMCDebugger::reactionString = _KMCDebugger_REACTION_STR(); \
+    KMCDebugger::affectedUnion.clear()
 
 #define KMCDebugger_MarkPartialStep(_msg) \
     _KMCDebugger_MAKE_SEPARATOR(_msg); \
-\
+    \
     KMCDebugger::implications += KMCDebugger::s.str(); \
     KMCDebugger::implicationCount = 0; \
-\
+    \
     _KMCDebugger_CLEAN_SS()
 
 #define KMCDebugger_PushImplication(site, _pre, _new) \
     KMCDebugger::s << "[Implication " << KMCDebugger::implicationCount << "]" << std::endl; \
     KMCDebugger::s << _KMCDebugger_MAKE_IMPLICATION_MESSAGE(site, _pre, _new); \
+    \
+    KMCDebugger::s << "New affected site(s):\n"; \
+    KMCDebugger::setupAffectedUnion(); \
+    \
     KMCDebugger::s << "[End of implication " << KMCDebugger::implicationCount << "]\n" << std::endl; \
     KMCDebugger::implications += KMCDebugger::s.str(); \
+    \
     KMCDebugger::currentReaction = NULL; \
     KMCDebugger::implicationCount++; \
-\
+    \
     _KMCDebugger_CLEAN_SS()
 
 #define KMCDebugger_PushTraces() \
@@ -72,11 +78,11 @@
     KMCDebugger::timerData.push_back(KMCDebugger::t); \
     KMCDebugger::implicationTrace.push_back(KMCDebugger::implications); \
     KMCDebugger::reactionTraceBefore.push_back(KMCDebugger::reactionString); \
-\
+    \
     (KMCDebugger::currentReaction != NULL) \
     ? KMCDebugger::reactionTraceAfter.push_back(_KMCDebugger_SITE_STR(KMCDebugger::currentReaction->reactionSite())) \
     : KMCDebugger::reactionTraceAfter.push_back(""); \
-\
+    \
     KMCDebugger::implications = _KMCDebugger_INITIAL_IMPLICATION_MSG; \
     KMCDebugger::implicationCount = 0; \
     KMCDebugger::reactionString = "No Reaction Selected"; \

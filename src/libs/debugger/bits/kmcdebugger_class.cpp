@@ -14,6 +14,9 @@ std::vector<std::string> KMCDebugger::reactionTraceAfter;
 std::vector<std::string> KMCDebugger::implicationTrace;
 std::vector<double>      KMCDebugger::timerData;
 
+std::set<Site*>          KMCDebugger::affectedUnion;
+
+
 std::string KMCDebugger::implications = _KMCDebugger_INITIAL_IMPLICATION_MSG;
 std::string KMCDebugger::reactionString = _KMCDebugger_INITIAL_REACTION_STR;
 
@@ -145,6 +148,8 @@ void KMCDebugger::reset()
     reactionTraceAfter.clear();
     implicationTrace.clear();
     timerData.clear();
+
+    affectedUnion.clear();
 
     currentReaction = NULL;
     lastCurrentReaction = NULL;

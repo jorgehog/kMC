@@ -1,6 +1,9 @@
 #pragma once
 
 #include "kmcdebugger_class.h"
+
+#include "../../site.h"
+
 #include "../../reactions/reaction.h"
 #include "../../reactions/diffusion/diffusionreaction.h"
 
@@ -24,6 +27,6 @@
 ("  "  + (_KMCDebugger_SITE_STR(site) + (": " + ((std::string)_pre + ("->" + (std::string)_new + (";\n"))))))
 
 #define _KMCDebugger_MAKE_SEPARATOR(_msg) \
-    KMCDebugger::s << "##### " << _msg << "  " << "prev. imp.: " << KMCDebugger::implicationCount << " #####\n\n" << std::endl
+    KMCDebugger::s << "##### " << _msg << "  " << "prev. imp.: " << KMCDebugger::implicationCount << " #####" << std::endl; \
 
 #define _KMCDebugger_CLEAN_SS() KMCDebugger::s.str(std::string());

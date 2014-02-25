@@ -29,6 +29,57 @@ public:
     static uint traceCount;
     static uint implicationCount;
 
+    static std::set<Site*> affectedUnion;
+
+    static void setupAffectedUnion()
+    {
+        using namespace std;
+
+        vector<Site*> intersect;
+
+        bool currentSiteInPrev;
+
+
+        for (Site * currentSite : Site::affectedSites())
+        {
+
+            currentSiteInPrev = false;
+            for (Site * previousSite : affectedUnion)
+            {
+                if (currentSite == previousSite)
+                {
+                    currentSiteInPrev = true;
+                    break;
+                }
+            }
+
+            if (!currentSiteInPrev)
+            {
+                intersect.push_back(currentSite);
+            }
+        }
+
+        int X, Y, Z;
+        for (Site * site : intersect)
+        {
+            s << "   -" << site->str();
+
+            if (currentReaction != NULL)
+            {
+                site->distanceTo(currentReaction->reactionSite(), X, Y, Z);
+                s << " [" << X << ", " << Y  << ", " << Z << "]";
+            }
+
+            s << "\n";
+
+            affectedUnion.insert(site);
+        }
+
+        s << "Total: " << intersect.size() << endl;
+        intersect.clear();
+
+    }
+
     static void dumpFullTrace(int line, const char *filename, const string additionalInfo = "", bool toFile = false);
     static void dumpPartialTrace(const uint & i);
 
