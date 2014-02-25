@@ -28,7 +28,9 @@ public:
     static void loadConfig(const Setting & setting);
 
 
-    virtual void setUpdateFlags(const Site * changedSite, uint level) = 0;
+    virtual void setDirectUpdateFlags(const Site * changedSite, uint level) = 0;
+
+    virtual void setImplicitUpdateFlags() {}
 
     void getTriumphingUpdateFlag();
 

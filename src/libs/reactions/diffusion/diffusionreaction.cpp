@@ -76,7 +76,7 @@ string DiffusionReaction::getFinalizingDebugMessage() const
  * 31% 64% old | 5% 47 % new
  */
 
-void DiffusionReaction::setUpdateFlags(const Site *changedSite, uint level)
+void DiffusionReaction::setDirectUpdateFlags(const Site *changedSite, uint level)
 {
 
 //    m_updateFlags.insert(defaultUpdateFlag);

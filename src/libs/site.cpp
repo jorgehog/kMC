@@ -609,9 +609,9 @@ void Site::informNeighborhoodOnChange(int change)
                 //This approach assumes that recursive updating of non-neighboring sites
                 //WILL NOT ACTIVATE OR DEACTIVATE any sites, simply change their state,
                 //and thus not interfere with any flags set here, not require flags of their own.
-                for (Reaction * reaction : m_neighborHood[i][j][k]->siteReactions())
+                for (Reaction * reaction : neighbor->siteReactions())
                 {
-                    reaction->setUpdateFlags(this, level);
+                    reaction->setDirectUpdateFlags(this, level);
                     C++;
                 }
 
@@ -626,8 +626,7 @@ void Site::informNeighborhoodOnChange(int change)
         }
     }
 
-    KMCDebugger_Assert(C, ==, 123*26);
-    queueAffectedSites();
+    KMCDebugger_Assert(C, ==, 124*26, "Not every site had every reaction updated.");
 
 }
 

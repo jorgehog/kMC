@@ -6,6 +6,8 @@
 #include <string>
 #include <sys/types.h>
 
+#include <exception>
+
 #include <armadillo>
 
 using arma::wall_clock;
