@@ -485,8 +485,6 @@ void Site::deactivate()
 
     m_active = false;
 
-    m_affectedSites.insert(this);
-
     //if we deactivate a crystal site, we have to potentially
     //reduce the surface by adding more sites as solution sites.
     //Site will change only if it is not surrounded by any crystals.
