@@ -19,7 +19,6 @@ TEST(which)                                             \
     cout << "------------------------------\n" << endl; \
 }
 
-/*
 UBERTEST(RNG)
 UBERTEST(EnergyAndNeighborSetup)
 UBERTEST(DiffusionSiteMatrixSetup)
@@ -33,7 +32,6 @@ UBERTEST(HasCrystalNeighbor)
 UBERTEST(InitializationOfCrystal)
 UBERTEST(InitialReactionSetup)
 UBERTEST(Sequential)
-*/
 UBERTEST(SmartSaddleUpdateAlg)
 UBERTEST(KnownCase)
 
