@@ -633,6 +633,8 @@ void Site::informNeighborhoodOnChange(int change)
         }
     }
 
+    queueAffectedSites();
+
     KMCDebugger_Assert(C, ==, sum(m_nNeighbors)*26, "Not every site had every reaction updated.");
 
 }

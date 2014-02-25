@@ -79,7 +79,7 @@ string DiffusionReaction::getFinalizingDebugMessage() const
 void DiffusionReaction::setDirectUpdateFlags(const Site *changedSite, uint level)
 {
 
-//    m_updateFlags.insert(defaultUpdateFlag);
+    m_updateFlags.insert(defaultUpdateFlag);
 
     if (m_rate == UNSET_RATE || level == 0 || level == Site::nNeighborsLimit() + 1)
     {
