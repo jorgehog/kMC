@@ -460,7 +460,7 @@ void Site::activate()
 
     m_totalActiveSites++;
 
-    KMCDebugger_MarkPartialStep("ACTIVATE_DONE");
+    KMCDebugger_MarkPartialStep("ACTIVATION COMPLETE");
 
 }
 
@@ -485,6 +485,8 @@ void Site::deactivate()
 
     m_active = false;
 
+    m_affectedSites.insert(this);
+
     //if we deactivate a crystal site, we have to potentially
     //reduce the surface by adding more sites as solution sites.
     //Site will change only if it is not surrounded by any crystals.
@@ -503,7 +505,7 @@ void Site::deactivate()
 
     m_totalActiveSites--;
 
-    KMCDebugger_MarkPartialStep("DEACTIVATE_DONE");
+    KMCDebugger_MarkPartialStep("DEACTIVATION COMPLETE");
 
 }
 
@@ -614,28 +616,43 @@ void Site::informNeighborhoodOnChange(int change)
 
                 m_totalEnergy += dE;
 
-                //This approach assumes that recursive updating of non-neighboring sites
-                //WILL NOT ACTIVATE OR DEACTIVATE any sites, simply change their state,
-                //and thus not interfere with any flags set here, not require flags of their own.
-                for (Reaction * reaction : neighbor->siteReactions())
+                if (neighbor->isActive())
                 {
-                    reaction->setDirectUpdateFlags(this, level);
-                    C++;
-                }
+                    //This approach assumes that recursive updating of non-neighboring sites
+                    //WILL NOT ACTIVATE OR DEACTIVATE any sites, simply change their state,
+                    //and thus not interfere with any flags set here, not require flags of their own.
+                    for (Reaction * reaction : neighbor->siteReactions())
+                    {
+                        reaction->setDirectUpdateFlags(this, level);
+                        C++;
+                    }
 
+                    m_affectedSites.insert(neighbor);
+
+                }
             }
         }
     }
 
-    KMCDebugger_Assert(C, ==, 124*26, "Not every site had every reaction updated.");
-
-    queueAffectedSites();
+    KMCDebugger_Assert(C, ==, sum(m_nNeighbors)*26, "Not every site had every reaction updated.");
 
 }
 
 void Site::queueAffectedSites()
 {
-    m_affectedSites.insert(m_allNeighbors.begin(), m_allNeighbors.end());
+    for (Site * neighbor : m_allNeighbors)
+    {
+        if (neighbor->isActive())
+        {
+
+            for (Reaction * reaction : neighbor->siteReactions())
+            {
+                reaction->setImplicitUpdateFlags();
+            }
+
+            m_affectedSites.insert(neighbor);
+        }
+    }
 }
 
 uint Site::findLevel(uint i, uint j, uint k)

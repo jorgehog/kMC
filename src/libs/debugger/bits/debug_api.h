@@ -68,7 +68,6 @@
     KMCDebugger::s << "[End of implication " << KMCDebugger::implicationCount << "]\n" << std::endl; \
     KMCDebugger::implications += KMCDebugger::s.str(); \
     \
-    KMCDebugger::currentReaction = NULL; \
     KMCDebugger::implicationCount++; \
     \
     _KMCDebugger_CLEAN_SS()
@@ -83,6 +82,7 @@
     ? KMCDebugger::reactionTraceAfter.push_back(_KMCDebugger_SITE_STR(KMCDebugger::currentReaction->reactionSite())) \
     : KMCDebugger::reactionTraceAfter.push_back(""); \
     \
+    KMCDebugger::currentReaction = NULL; \
     KMCDebugger::implications = _KMCDebugger_INITIAL_IMPLICATION_MSG; \
     KMCDebugger::implicationCount = 0; \
     KMCDebugger::reactionString = "No Reaction Selected"; \
