@@ -195,11 +195,10 @@ double DiffusionReaction::getSaddleEnergy()
         if (sameSetup)
         {
 
-            cout << "exactly same setup calculated saddle twice..should be flagged" << endl;
+//            cout << "exactly same setup calculated saddle twice..should be flagged" << endl;
 
-            KMCDebugger_DumpFullTrace(getFinalizingDebugMessage(), true);
-
-            exit(1);
+//            KMCDebugger_DumpFullTrace(getFinalizingDebugMessage(), true);
+//            exit(1);
         }
         counterEqSP++;
 
