@@ -59,6 +59,7 @@ void Site::updateAffectedSites()
 
     for (Site* site : m_affectedSites)
     {
+        KMCDebugger_AssertBool(site->isActive(), site->info());
         site->updateReactions();
         site->calculateRates();
     }
@@ -400,6 +401,7 @@ void Site::setDirectUpdateFlags()
             for (Reaction * reaction : neighbor->siteReactions())
             {
                 reaction->setDirectUpdateFlags(this);
+                KMCDebugger_Assert(reaction->updateFlags().size(), !=, 0, reaction->info());
                 C++;
             }
 
@@ -408,15 +410,7 @@ void Site::setDirectUpdateFlags()
         }
     }
 
-    for (Reaction * reaction : siteReactions())
-    {
-        reaction->setDirectUpdateFlags(this);
-        C++;
-    }
-
-    m_affectedSites.insert(this);
-
-    KMCDebugger_Assert(C, ==, (sum(m_nNeighbors) + 1)*26, "Not every site had every reaction updated.");
+    KMCDebugger_Assert(C, ==, sum(m_nNeighbors)*26, "Not every site had every reaction updated.");
 
 }
 
@@ -491,6 +485,12 @@ void Site::activate()
 
     setDirectUpdateFlags();
 
+    m_affectedSites.insert(this);
+    for (Reaction * reaction : siteReactions())
+    {
+        reaction->setDirectUpdateFlags(this);
+    }
+
     m_totalActiveSites++;
 
     KMCDebugger_MarkPartialStep("ACTIVATION COMPLETE");
@@ -535,6 +535,8 @@ void Site::deactivate()
 #endif
 
     setDirectUpdateFlags();
+
+    m_activeReactions.clear();
 
     m_totalActiveSites--;
 
@@ -697,8 +699,8 @@ const string Site::info(int xr, int yr, int zr, string desc) const
 
     stringstream s_full;
 
-    s_full << "Site (" << m_x << " " << m_y << " " << m_z << ") ";
-    s_full << "[" << NX << " " << NY << " " << NZ << "] *";
+    s_full << str();
+    s_full << "[" << NX << " x " << NY << " x " << NZ << "] *";
 
     s_full << "  Currently ";
     if (m_active)

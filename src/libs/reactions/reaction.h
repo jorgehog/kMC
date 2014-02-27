@@ -127,7 +127,7 @@ public:
     const string str() const
     {
         stringstream s;
-        s << name << "@(" << x() << "," << y() << "," << z() << ") [" << getInfoSnippet() << "]";
+        s << name << "@(" << x() << ", " << y() << ", " << z() << ") [" << getInfoSnippet() << "]";
         return s.str();
     }
 

@@ -78,12 +78,14 @@ public:
         s << "Total: " << intersect.size() << endl;
         intersect.clear();
 
+        assert(affectedUnion.size() == Site::affectedSites().size());
+
     }
 
     static void addFlagsToImplications()
     {
 #ifdef KMC_VERBOSE_DEBUG
-        stringstream ss, sitess;
+        stringstream ss, sitess, reacss;
 
         for (Site * site : affectedUnion)
         {
@@ -98,18 +100,26 @@ public:
                     continue;
                 }
 
-                sitess << "    .    " << r->str() << " Flags: ";
+                reacss << "    .    " << r->str() << " Flags: ";
+
+                bool addReac = false;
 
                 for (int flag : r->updateFlags())
                 {
-                    if (flag != Reaction::defaultUpdateFlag)
+                    if (!((flag == Reaction::defaultUpdateFlag) && (r->updateFlags().size() == 1)))
                     {
-                        sitess << flag << " ";
+                        reacss << flag << " ";
+                        addReac = true;
                         addSite = true;
                     }
                 }
 
-                sitess << "\n";
+                if (addReac)
+                {
+                    sitess << reacss.str() << "\n";
+                }
+
+                reacss.str(string());
 
             }
 

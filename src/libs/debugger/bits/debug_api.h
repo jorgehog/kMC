@@ -79,6 +79,10 @@
 #define KMCDebugger_PushTraces() \
     KMCDebugger::t = KMCDebugger::timer.toc(); \
     KMCDebugger::timerData.push_back(KMCDebugger::t); \
+    \
+    KMCDebugger::s << "New affected site(s):\n"; \
+    KMCDebugger::setupAffectedUnion(); \
+    \
     KMCDebugger::addFlagsToImplications();\
     KMCDebugger::implicationTrace.push_back(KMCDebugger::implications); \
     KMCDebugger::reactionTraceBefore.push_back(KMCDebugger::reactionString); \

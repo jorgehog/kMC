@@ -32,7 +32,7 @@ const string Reaction::info(int xr, int yr, int zr, string desc) const
     s << "  ";
     s << "Selected flag: " << m_updateFlag << "  ";
     s << "Blocked? " << !isNotBlocked() << "\n";
-    s << "@ ";
+    s << "@";
     s << m_reactionSite->info(xr, yr, zr, desc);
     s << "\n";
 

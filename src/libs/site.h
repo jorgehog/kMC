@@ -243,7 +243,7 @@ public:
     const string str() const
     {
         stringstream s;
-        s << "site@(" << x() << "," << y() << "," << z() << ")";
+        s << "Site@(" << x() << ", " << y() << ", " << z() << ")";
         return s.str();
     }
 

@@ -113,7 +113,7 @@ public:
     {
         stringstream s;
 
-        s << xD() << "," << yD() << "," << zD();
+        s << xD() << ", " << yD() << ", " << zD();
 
         return s.str();
     }
