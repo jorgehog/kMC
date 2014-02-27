@@ -25,7 +25,7 @@ UBERTEST(DiffusionSiteMatrixSetup)
 UBERTEST(Neighbors)
 UBERTEST(DistanceTo)
 UBERTEST(BinarySearchChoise)
-//UBERTEST(UpdateNeigbors)
+UBERTEST(UpdateNeigbors)
 UBERTEST(RateCalculation)
 UBERTEST(ReactionChoise)
 UBERTEST(HasCrystalNeighbor)
@@ -37,6 +37,6 @@ UBERTEST(KnownCase)
 
 int main()
 {
-    KMCDebugger_SetFilename("Tests");
+    KMCDebugger_SetEnabledTo(false);
     return UnitTest::RunAllTests();
 }

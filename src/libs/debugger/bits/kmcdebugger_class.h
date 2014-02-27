@@ -18,6 +18,8 @@ class KMCDebugger
 {
 public:
 
+    static bool enabled;
+
     static KMCSolver * solverObject;
 
     static std::vector<std::string> reactionTraceBefore;
@@ -29,119 +31,36 @@ public:
     static uint traceCount;
     static uint implicationCount;
 
+    static Reaction * currentReaction;
+    static Reaction * lastCurrentReaction;
+
+    static std::string reactionString;
+
+    static std::string traceFileName;
+    static std::string traceFilePath;
+
+    static wall_clock timer;
+
     static std::set<Site*> affectedUnion;
 
-    static void setupAffectedUnion()
-    {
-        using namespace std;
+    //CALLED FROM MACROS
+    static void setEnabledTo(bool state);
+    static void pushTraces();
+    static void pushImplication(Site *site, const char *_pre, const char *_new);
+    static void markPartialStep(const char * msg);
+    static void setActiveReaction(Reaction * reaction);
+    static void initialize(KMCSolver * solver);
+    static void reset();
+    static std::string fullTrace(int line, const string filename, const string what, const string additionalInfo = "");
+    static std::string partialTrace(const uint & i);
+    //
 
-        vector<Site*> intersect;
+    static string setupAffectedUnion();
 
-        bool currentSiteInPrev;
+    static string addFlagsToImplications();
 
-
-        for (Site * currentSite : Site::affectedSites())
-        {
-
-            currentSiteInPrev = false;
-            for (Site * previousSite : affectedUnion)
-            {
-                if (currentSite == previousSite)
-                {
-                    currentSiteInPrev = true;
-                    break;
-                }
-            }
-
-            if (!currentSiteInPrev)
-            {
-                intersect.push_back(currentSite);
-            }
-        }
-
-        int X, Y, Z;
-        for (Site * site : intersect)
-        {
-            s << "   -" << site->str();
-
-            if (currentReaction != NULL)
-            {
-                site->distanceTo(currentReaction->reactionSite(), X, Y, Z);
-                s << " [" << X << ", " << Y  << ", " << Z << "]";
-            }
-
-            s << "\n";
-
-            affectedUnion.insert(site);
-        }
-
-        s << "Total: " << intersect.size() << endl;
-        intersect.clear();
-
-        assert(affectedUnion.size() == Site::affectedSites().size());
-
-    }
-
-    static void addFlagsToImplications()
-    {
-#ifdef KMC_VERBOSE_DEBUG
-        stringstream ss, sitess, reacss;
-
-        for (Site * site : affectedUnion)
-        {
-            bool addSite = false;
-
-            sitess << "   " << site->str() << "\n";
-            for (Reaction * r : site->siteReactions())
-            {
-                //we are not interested in logging blocked reactions
-                if (!r->isNotBlocked())
-                {
-                    continue;
-                }
-
-                reacss << "    .    " << r->str() << " Flags: ";
-
-                bool addReac = false;
-
-                for (int flag : r->updateFlags())
-                {
-                    if (!((flag == Reaction::defaultUpdateFlag) && (r->updateFlags().size() == 1)))
-                    {
-                        reacss << flag << " ";
-                        addReac = true;
-                        addSite = true;
-                    }
-                }
-
-                if (addReac)
-                {
-                    sitess << reacss.str() << "\n";
-                }
-
-                reacss.str(string());
-
-            }
-
-            if (addSite)
-            {
-                ss << sitess.str();
-                sitess.str(string());
-            }
-        }
-
-        if (ss.str().empty())
-        {
-            return;
-        }
-
-        implications += ("New non-default flags given to affected site reactions:\n\n" + ss.str());
-
-#endif
-    }
-
-    static void dumpFullTrace(int line, const char *filename, const string additionalInfo = "", bool toFile = false);
-    static void dumpPartialTrace(const uint & i);
+    static void dumpFullTrace(int line, const char *filename, const string what = "", const string additionalInfo = "", bool toFile = true);
+    static void dumpPartialTrace(const int &i);
 
     static void searchRepl(string & s, string _find, string _repl)
     {
@@ -166,7 +85,8 @@ public:
             const char * file,
             const char * func,
             int line,
-            std::string what = "")
+            std::string what = "",
+            std::string additionalInfo = "")
     {
         using namespace std;
 
@@ -205,31 +125,16 @@ public:
 
         _cerr << endl;
 
-        cerr << _cerr.str();
+        if (enabled)
+        {
+            cerr << _cerr.str();
+        }
 
-        dumpFullTrace(line, file, _cerr.str(), true);
-
-        exit(1);
+        dumpFullTrace(line, file, _cerr.str(), additionalInfo);
 
     }
 
-    static std::string fullTrace(int line, const string filename, const string additionalInfo = "");
-    static std::string partialTrace(const uint & i);
 
-    static void reset();
 
-    static Reaction * currentReaction;
-    static Reaction * lastCurrentReaction;
-
-    static std::string reactionString;
-
-    static std::string traceFileName;
-    static std::string traceFilePath;
-
-    static wall_clock timer;
-
-    static std::stringstream s;
-
-    static double t;
 
 };

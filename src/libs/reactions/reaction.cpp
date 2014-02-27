@@ -43,10 +43,13 @@ const string Reaction::info(int xr, int yr, int zr, string desc) const
 string Reaction::getFinalizingDebugMessage() const
 {
 #ifndef KMC_NO_DEBUG
+
+    if (!KMCDebugger::enabled) return "";
+
     int X, Y, Z;
     stringstream s;
 
-    const Reaction * lastReaction = KMCDebugger_GetReaction(lastCurrent);
+    const Reaction * lastReaction = KMCDebugger::lastCurrentReaction;
     const Site* site = lastReaction->reactionSite();
 
     m_reactionSite->distanceTo(site, X, Y, Z);

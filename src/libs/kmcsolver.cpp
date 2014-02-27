@@ -77,7 +77,7 @@ KMCSolver::KMCSolver(const Setting & root) :
     saturation = getSurfaceSetting<double>(InitializationSettings, "SaturationLevel");
     RelativeSeedSize = getSurfaceSetting<double>(InitializationSettings, "RelativeSeedSize");
 
-    assert(RelativeSeedSize < 1.0 && "The seed size cannot exceed the box size.");
+    KMCDebugger_Assert(RelativeSeedSize, <, 1.0, "The seed size cannot exceed the box size.");
 
 
     initializeSites();

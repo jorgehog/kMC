@@ -53,12 +53,15 @@ void DiffusionReaction::loadConfig(const Setting &setting)
 string DiffusionReaction::getFinalizingDebugMessage() const
 {
 #ifndef KMC_NO_DEBUG
+
+    if (!KMCDebugger::enabled) return "";
+
     int X, Y, Z;
     stringstream s;
 
     s << Reaction::getFinalizingDebugMessage();
 
-    const Reaction * lastReaction = KMCDebugger_GetReaction(lastCurrent);
+    const Reaction * lastReaction = KMCDebugger::lastCurrentReaction;
     const Site* dest = static_cast<const DiffusionReaction*>(lastReaction)->destinationSite();
 
     m_reactionSite->distanceTo(dest, X, Y, Z);
@@ -192,14 +195,8 @@ double DiffusionReaction::getSaddleEnergy()
 
     if (fabs(lastUsedEsp - Esp) < 1E-10 && Esp != 0)
     {
-        if (sameSetup)
-        {
+        KMCDebugger_AssertBool(!sameSetup, "exactly same setup calculated saddle twice..should be flagged", getFinalizingDebugMessage());
 
-//            cout << "exactly same setup calculated saddle twice..should be flagged" << endl;
-
-//            KMCDebugger_DumpFullTrace(getFinalizingDebugMessage(), true);
-//            exit(1);
-        }
         counterEqSP++;
 
     }

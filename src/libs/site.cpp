@@ -450,23 +450,9 @@ bool Site::hasNeighboring(int state) const
 void Site::activate()
 {
 
-#ifndef KMC_NO_DEBUG
+    KMCDebugger_AssertBool(!m_active, "activating deactivated site", info());
+    KMCDebugger_AssertBool(!isCrystal(), "Activating a crystal. (should always be active)", info());
 
-    if (m_active == true)
-    {
-        cout << "Activating active site. " << endl;
-        KMCDebugger_DumpFullTrace(info(), true);
-        exit(1);
-    }
-
-    else if (isCrystal())
-    {
-        cout << "Activating a crystal. (should always be active)";
-        KMCDebugger_DumpFullTrace(info(), true);
-        exit(1);
-    }
-
-#endif
 
     m_active = true;
 
@@ -476,12 +462,10 @@ void Site::activate()
     {
         setParticleState(ParticleStates::crystal);
     }
-#ifndef KMC_NO_DEBUG
     else
     {
         KMCDebugger_PushImplication(this, "deactiveSolution", "activeSolution");
     }
-#endif
 
     setDirectUpdateFlags();
 
@@ -500,21 +484,9 @@ void Site::activate()
 void Site::deactivate()
 {
 
-#ifndef KMC_NO_DEBUG
+    KMCDebugger_AssertBool(m_active, "deactivating deactive site. ", info());
+    KMCDebugger_AssertBool(!isSurface(), "deactivating a surface. (should always be deactive)", info());
 
-    if (m_active == false)
-    {
-        cout << "deactivating deactive site. " << endl;
-        KMCDebugger_DumpFullTrace(info(), true);
-        exit(1);
-    }
-    else if (isSurface())
-    {
-        cout << "deactivating a surface. (should always be deactive)";
-        KMCDebugger_DumpFullTrace(info(), true);
-        exit(1);
-    }
-#endif
 
     m_active = false;
 
@@ -527,12 +499,11 @@ void Site::deactivate()
     {
         setParticleState(ParticleStates::surface);
     }
-#ifndef KMC_NO_DEBUG
+
     else
     {
         KMCDebugger_PushImplication(this, "activeSolution", "deactiveSolution");
     }
-#endif
 
     setDirectUpdateFlags();
 

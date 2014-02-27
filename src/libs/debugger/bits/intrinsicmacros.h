@@ -16,17 +16,25 @@
     : trace.at(i))
 
 #ifdef KMC_VERBOSE_DEBUG
-#define _KMCDebugger_REACTION_STR() KMCDebugger::currentReaction->info()
-#define _KMCDebugger_SITE_STR(site) site->info()
+
+#define _KMCDebugger_REACTION_STR() \
+    KMCDebugger::currentReaction->info()
+
+#define _KMCDebugger_SITE_STR(site) \
+    site->info()
+
 #else
-#define _KMCDebugger_REACTION_STR() KMCDebugger::currentReaction->info()
-#define _KMCDebugger_SITE_STR(site) site->str()
+
+#define _KMCDebugger_REACTION_STR() \
+    KMCDebugger::currentReaction->str()
+
+#define _KMCDebugger_SITE_STR(site) \
+    site->str()
+
 #endif
 
 #define _KMCDebugger_MAKE_IMPLICATION_MESSAGE(site, _pre, _new) \
-(_KMCDebugger_SITE_STR(site) + ("  What? " + ((std::string)_pre + (" -> " + (std::string)_new + ("\n\n")))))
-
-#define _KMCDebugger_MAKE_SEPARATOR(_msg) \
-    KMCDebugger::s << "##### " << _msg << "  " << "prev. imp.: " << KMCDebugger::implicationCount << " #####\n\n"; \
-
-#define _KMCDebugger_CLEAN_SS() KMCDebugger::s.str(std::string());
+    (_KMCDebugger_SITE_STR(site) + \
+    ("  What? " + \
+    ((std::string)_pre + (" -> " + (std::string)_new + \
+    ("\n\n")))))

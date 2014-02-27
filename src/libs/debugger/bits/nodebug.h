@@ -3,6 +3,8 @@
 #include "../kmcdebugger.h"
 
 //Ignore everything if we are not debugging.
+#define KMCDebugger_SetEnabledTo(state) \
+    _KMCDebugger_IGNORE(state)
 #define KMCDebugger_Assert(TA, TB, A, B, ...) \
     _KMCDebugger_IGNORE(TA); \
     _KMCDebugger_IGNORE(TB); \
