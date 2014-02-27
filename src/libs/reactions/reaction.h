@@ -28,9 +28,12 @@ public:
     static void loadConfig(const Setting & setting);
 
 
-    virtual void setDirectUpdateFlags(const Site * changedSite, uint level) = 0;
+    virtual void setDirectUpdateFlags(const Site * changedSite) = 0;
 
-    virtual void setImplicitUpdateFlags() {}
+    virtual void setImplicitUpdateFlags()
+    {
+        m_updateFlags.insert(defaultUpdateFlag);
+    }
 
     void getTriumphingUpdateFlag();
 
@@ -66,6 +69,11 @@ public:
     {
         m_updateFlags.clear();
         assert(m_updateFlags.empty());
+    }
+
+    const set<int> & updateFlags() const
+    {
+        return m_updateFlags;
     }
 
     const uint & ID() const

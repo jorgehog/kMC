@@ -80,6 +80,56 @@ public:
 
     }
 
+    static void addFlagsToImplications()
+    {
+#ifdef KMC_VERBOSE_DEBUG
+        stringstream ss, sitess;
+
+        for (Site * site : affectedUnion)
+        {
+            bool addSite = false;
+
+            sitess << "   " << site->str() << "\n";
+            for (Reaction * r : site->siteReactions())
+            {
+                //we are not interested in logging blocked reactions
+                if (!r->isNotBlocked())
+                {
+                    continue;
+                }
+
+                sitess << "    .    " << r->str() << " Flags: ";
+
+                for (int flag : r->updateFlags())
+                {
+                    if (flag != Reaction::defaultUpdateFlag)
+                    {
+                        sitess << flag << " ";
+                        addSite = true;
+                    }
+                }
+
+                sitess << "\n";
+
+            }
+
+            if (addSite)
+            {
+                ss << sitess.str();
+                sitess.str(string());
+            }
+        }
+
+        if (ss.str().empty())
+        {
+            return;
+        }
+
+        implications += ("New non-default flags given to affected site reactions:\n\n" + ss.str());
+
+#endif
+    }
+
     static void dumpFullTrace(int line, const char *filename, const string additionalInfo = "", bool toFile = false);
     static void dumpPartialTrace(const uint & i);
 

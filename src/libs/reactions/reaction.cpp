@@ -21,7 +21,7 @@ const string Reaction::info(int xr, int yr, int zr, string desc) const
 {
     stringstream s;
     s << "[" << name << " " << m_ID << "/" << IDcount << "]:" << "\n";
-    s << "rate: " << m_rate << "\n";
+    s << "   rate: " << m_rate << "  ";
     s << "updateFlags: ";
 
     for (int flag : m_updateFlags)
@@ -29,12 +29,12 @@ const string Reaction::info(int xr, int yr, int zr, string desc) const
         s << flag;
     }
 
-    s << "\n";
-    s << "Selected flag: " << m_updateFlag << "\n";
-    s << "Blocked? " << !isNotBlocked() << endl;
-    s << "@{" << "\n";
+    s << "  ";
+    s << "Selected flag: " << m_updateFlag << "  ";
+    s << "Blocked? " << !isNotBlocked() << "\n";
+    s << "@ ";
     s << m_reactionSite->info(xr, yr, zr, desc);
-    s << "\n}";
+    s << "\n";
 
     return s.str();
 
@@ -52,7 +52,7 @@ string Reaction::getFinalizingDebugMessage() const
     m_reactionSite->distanceTo(site, X, Y, Z);
 
     s << info();
-    s << "\nLast active reaction site marked on current site:\n";
+    s << "\nLast active reaction site marked on current site:\n\n";
     s << m_reactionSite->info(X, Y, Z);
 
     return s.str();

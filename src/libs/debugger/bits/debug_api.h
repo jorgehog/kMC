@@ -47,25 +47,29 @@
 #define KMCDebugger_SetActiveReaction(reaction) \
     KMCDebugger::currentReaction = reaction; \
     KMCDebugger::lastCurrentReaction = reaction; \
-    KMCDebugger::reactionString = _KMCDebugger_REACTION_STR(); \
-    KMCDebugger::affectedUnion.clear()
+    KMCDebugger::reactionString = _KMCDebugger_REACTION_STR()
 
 #define KMCDebugger_MarkPartialStep(_msg) \
     _KMCDebugger_MAKE_SEPARATOR(_msg); \
     \
+    KMCDebugger::addFlagsToImplications();\
     KMCDebugger::implications += KMCDebugger::s.str(); \
     KMCDebugger::implicationCount = 0; \
     \
     _KMCDebugger_CLEAN_SS()
 
 #define KMCDebugger_PushImplication(site, _pre, _new) \
-    KMCDebugger::s << "[Implication " << KMCDebugger::implicationCount << "]" << std::endl; \
+    KMCDebugger::s << "[Implication"; \
+    if ((KMCDebugger::currentReaction == NULL)) KMCDebugger::s << " (standalone)"; \
+    KMCDebugger::s<< " " << KMCDebugger::implicationCount << "]\n"; \
     KMCDebugger::s << _KMCDebugger_MAKE_IMPLICATION_MESSAGE(site, _pre, _new); \
     \
     KMCDebugger::s << "New affected site(s):\n"; \
     KMCDebugger::setupAffectedUnion(); \
     \
-    KMCDebugger::s << "[End of implication " << KMCDebugger::implicationCount << "]\n" << std::endl; \
+    KMCDebugger::s << "[End of implication"; \
+    if ((KMCDebugger::currentReaction == NULL)) KMCDebugger::s << " (standalone)"; \
+    KMCDebugger::s<< " " << KMCDebugger::implicationCount << "]\n\n"; \
     KMCDebugger::implications += KMCDebugger::s.str(); \
     \
     KMCDebugger::implicationCount++; \
@@ -75,6 +79,7 @@
 #define KMCDebugger_PushTraces() \
     KMCDebugger::t = KMCDebugger::timer.toc(); \
     KMCDebugger::timerData.push_back(KMCDebugger::t); \
+    KMCDebugger::addFlagsToImplications();\
     KMCDebugger::implicationTrace.push_back(KMCDebugger::implications); \
     KMCDebugger::reactionTraceBefore.push_back(KMCDebugger::reactionString); \
     \
@@ -87,5 +92,7 @@
     KMCDebugger::implicationCount = 0; \
     KMCDebugger::reactionString = "No Reaction Selected"; \
     KMCDebugger::traceCount++; \
+    KMCDebugger_Assert(KMCDebugger::affectedUnion.size(), ==, Site::affectedSites().size());\
+    KMCDebugger::affectedUnion.clear(); \
     KMCDebugger::timer.tic()
 //

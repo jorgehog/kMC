@@ -68,6 +68,8 @@ void KMCDebugger::dumpFullTrace(int line, const char * filename, const string ad
         file << fullTrace(line, filename, additionalInfo);
         file.close();
 
+        cout << "Trace saved to " << path.str() << endl;
+
         return;
 
     }

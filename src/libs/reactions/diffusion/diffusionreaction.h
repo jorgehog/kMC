@@ -97,7 +97,7 @@ private:
     // Reaction interface
 public:
 
-    void setDirectUpdateFlags(const Site * changedSite, uint level);
+    void setDirectUpdateFlags(const Site * changedSite);
 
     void calcRate();
 

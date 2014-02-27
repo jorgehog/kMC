@@ -92,10 +92,11 @@ public:
 
     void distanceTo(const Site * other, int &dx, int &dy, int &dz, bool absolutes = false) const;
 
-    uint maxDistanceTo(const Site * other);
+    uint maxDistanceTo(const Site * other) const;
 
     double potentialBetween(const Site * other);
 
+    void setDirectUpdateFlags();
 
     void queueAffectedSites();
 

@@ -7,7 +7,7 @@
 #include "../../reactions/reaction.h"
 #include "../../reactions/diffusion/diffusionreaction.h"
 
-#define _KMCDebugger_INITIAL_IMPLICATION_MSG "[implications]: \n"
+#define _KMCDebugger_INITIAL_IMPLICATION_MSG "[Implications]: \n"
 #define _KMCDebugger_INITIAL_REACTION_STR    "Initialization"
 
 #define _KMCDebugger_TRACE_SEARCH(trace, i) \
@@ -24,9 +24,9 @@
 #endif
 
 #define _KMCDebugger_MAKE_IMPLICATION_MESSAGE(site, _pre, _new) \
-("  "  + (_KMCDebugger_SITE_STR(site) + (": " + ((std::string)_pre + ("->" + (std::string)_new + (";\n"))))))
+(_KMCDebugger_SITE_STR(site) + ("  What? " + ((std::string)_pre + (" -> " + (std::string)_new + ("\n\n")))))
 
 #define _KMCDebugger_MAKE_SEPARATOR(_msg) \
-    KMCDebugger::s << "##### " << _msg << "  " << "prev. imp.: " << KMCDebugger::implicationCount << " #####" << std::endl; \
+    KMCDebugger::s << "##### " << _msg << "  " << "prev. imp.: " << KMCDebugger::implicationCount << " #####\n\n"; \
 
 #define _KMCDebugger_CLEAN_SS() KMCDebugger::s.str(std::string());

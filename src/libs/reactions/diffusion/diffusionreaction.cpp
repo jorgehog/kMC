@@ -52,7 +52,7 @@ void DiffusionReaction::loadConfig(const Setting &setting)
 
 string DiffusionReaction::getFinalizingDebugMessage() const
 {
-    #ifndef KMC_NO_DEBUG
+#ifndef KMC_NO_DEBUG
     int X, Y, Z;
     stringstream s;
 
@@ -63,7 +63,7 @@ string DiffusionReaction::getFinalizingDebugMessage() const
 
     m_reactionSite->distanceTo(dest, X, Y, Z);
 
-    s << "\nDestination of last active reaction site marked on current site:\n";
+    s << "\nDestination of last active reaction site marked on current site:\n\n";
     s << m_reactionSite->info(X, Y, Z);
 
     return s.str();
@@ -76,27 +76,35 @@ string DiffusionReaction::getFinalizingDebugMessage() const
  * 31% 64% old | 5% 47 % new
  */
 
-void DiffusionReaction::setDirectUpdateFlags(const Site *changedSite, uint level)
+void DiffusionReaction::setDirectUpdateFlags(const Site *changedSite)
 {
 
-//    m_updateFlags.insert(defaultUpdateFlag);
+    //    m_updateFlags.insert(defaultUpdateFlag);
 
-    if (m_rate == UNSET_RATE || level == 0 || level == Site::nNeighborsLimit() + 1)
+    uint d_maxDistance;
+    uint r_maxDistance = reactionSite()->maxDistanceTo(changedSite);
+
+    if (m_rate == UNSET_RATE || r_maxDistance == 1 || changedSite == m_reactionSite)
     {
         m_updateFlags.insert(defaultUpdateFlag);
-    }
-
-    //if the destination is outsite the interaction cutoff, we can keep the old saddle energy.
-    else if (m_destinationSite->maxDistanceTo(changedSite) > Site::nNeighborsLimit())
-    {
-        KMCDebugger_Assert(Site::nNeighborsLimit() + 1, ==,  m_destinationSite->maxDistanceTo(changedSite));
-        m_updateFlags.insert(updateKeepSaddle);
     }
 
     else
     {
-        assert(level == Site::nNeighborsLimit() - 1);
-        m_updateFlags.insert(defaultUpdateFlag);
+        d_maxDistance = m_destinationSite->maxDistanceTo(changedSite);
+
+        //if the destination is outsite the interaction cutoff, we can keep the old saddle energy.
+        if (d_maxDistance > Site::nNeighborsLimit())
+        {
+            KMCDebugger_Assert(Site::nNeighborsLimit() + 1, ==,  d_maxDistance);
+            m_updateFlags.insert(updateKeepSaddle);
+        }
+
+        else
+        {
+            KMCDebugger_Assert(r_maxDistance, ==, Site::nNeighborsLimit());
+            m_updateFlags.insert(defaultUpdateFlag);
+        }
     }
 
 }
@@ -154,7 +162,7 @@ double DiffusionReaction::getSaddleEnergy()
 
     }
 
-    #ifndef KMC_NO_DEBUG
+#ifndef KMC_NO_DEBUG
     bool sameSetup = true;
 
     if (lastSetup.size() != neighborSet.size())
@@ -277,11 +285,11 @@ const string DiffusionReaction::info(int xr, int yr, int zr, string desc) const
     stringstream s;
     s << Reaction::info(X, Y, Z, "D");
 
-    s << "Path: " << X << " " << Y << " " << Z << endl;
-    s << "Reaction initiates diffusion to " << endl;
-    s << "{\n";
+    s << "Reaction initiates diffusion to\n\n";
+
     s << m_destinationSite->info(-X, -Y, -Z, "O");
-    s << "\n}" << endl;
+
+    s << "\nPath: " << X << " " << Y << " " << Z << endl;
 
     return s.str();
 

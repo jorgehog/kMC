@@ -276,7 +276,8 @@ void Site::loadConfig(const Setting &setting)
 }
 
 
-void Site::addReaction(Reaction *reaction)
+void Site::
+addReaction(Reaction *reaction)
 {
     reaction->setSite(this);
 
@@ -363,7 +364,7 @@ void Site::distanceTo(const Site *other, int &dx, int &dy, int &dz, bool absolut
 
 }
 
-uint Site::maxDistanceTo(const Site *other)
+uint Site::maxDistanceTo(const Site *other) const
 {
     int X, Y, Z;
 
@@ -384,6 +385,39 @@ double Site::potentialBetween(const Site *other)
     Z += Site::nNeighborsLimit();
 
     return DiffusionReaction::potential(X, Y, Z);
+}
+
+void Site::setDirectUpdateFlags()
+{
+    uint C = 0;
+    for (Site * neighbor : m_allNeighbors)
+    {
+        if (neighbor->isActive())
+        {
+            //This approach assumes that recursive updating of non-neighboring sites
+            //WILL NOT ACTIVATE OR DEACTIVATE any sites, simply change their state,
+            //and thus not interfere with any flags set here, not require flags of their own.
+            for (Reaction * reaction : neighbor->siteReactions())
+            {
+                reaction->setDirectUpdateFlags(this);
+                C++;
+            }
+
+            m_affectedSites.insert(neighbor);
+
+        }
+    }
+
+    for (Reaction * reaction : siteReactions())
+    {
+        reaction->setDirectUpdateFlags(this);
+        C++;
+    }
+
+    m_affectedSites.insert(this);
+
+    KMCDebugger_Assert(C, ==, (sum(m_nNeighbors) + 1)*26, "Not every site had every reaction updated.");
+
 }
 
 bool Site::hasNeighboring(int state) const
@@ -442,8 +476,7 @@ void Site::activate()
 
     m_active = true;
 
-    m_affectedSites.insert(this);
-
+    informNeighborhoodOnChange(+1);
 
     if (isSurface())
     {
@@ -456,7 +489,7 @@ void Site::activate()
     }
 #endif
 
-    informNeighborhoodOnChange(+1);
+    setDirectUpdateFlags();
 
     m_totalActiveSites++;
 
@@ -485,7 +518,7 @@ void Site::deactivate()
 
     m_active = false;
 
-    m_affectedSites.insert(this);
+    informNeighborhoodOnChange(-1);
 
     //if we deactivate a crystal site, we have to potentially
     //reduce the surface by adding more sites as solution sites.
@@ -501,7 +534,7 @@ void Site::deactivate()
     }
 #endif
 
-    informNeighborhoodOnChange(-1);
+    setDirectUpdateFlags();
 
     m_totalActiveSites--;
 
@@ -591,7 +624,6 @@ void Site::informNeighborhoodOnChange(int change)
     uint level;
     double dE;
 
-    uint C = 0;
     for (uint i = 0; i < m_neighborhoodLength; ++i)
     {
         for (uint j = 0; j < m_neighborhoodLength; ++j)
@@ -616,25 +648,10 @@ void Site::informNeighborhoodOnChange(int change)
 
                 m_totalEnergy += dE;
 
-                if (neighbor->isActive())
-                {
-                    //This approach assumes that recursive updating of non-neighboring sites
-                    //WILL NOT ACTIVATE OR DEACTIVATE any sites, simply change their state,
-                    //and thus not interfere with any flags set here, not require flags of their own.
-                    for (Reaction * reaction : neighbor->siteReactions())
-                    {
-                        reaction->setDirectUpdateFlags(this, level);
-                        C++;
-                    }
-
-                    m_affectedSites.insert(neighbor);
-
-                }
             }
         }
     }
 
-    KMCDebugger_Assert(C, ==, sum(m_nNeighbors)*26, "Not every site had every reaction updated.");
 
 }
 
@@ -680,22 +697,29 @@ const string Site::info(int xr, int yr, int zr, string desc) const
 
     stringstream s_full;
 
-    s_full << "Site   " << m_x << " " << m_y << " " << m_z << endl;
-    s_full << "in Box " << NX << " " << NY << " " << NZ << endl;
-    s_full << "nNeighbors : " << m_nNeighbors.t();
-    s_full << "type: " << ParticleStates::names.at(m_particleState) << endl;
+    s_full << "Site (" << m_x << " " << m_y << " " << m_z << ") ";
+    s_full << "[" << NX << " " << NY << " " << NZ << "] *";
 
+    s_full << "  Currently ";
     if (m_active)
     {
-        s_full << "ACTIVE";
+        s_full << "active";
     }
 
     else
     {
-        s_full << "DEACTIVE";
+        s_full << "deactive";
     }
 
-    s_full << endl;
+    s_full << " * nNeighbors: ";
+
+    for (uint n : m_nNeighbors)
+    {
+        s_full << n << " ";
+
+    }
+
+    s_full << "\n";
 
     ucube nN;
     nN.copy_size(m_levelMatrix);
@@ -744,13 +768,21 @@ const string Site::info(int xr, int yr, int zr, string desc) const
 
     umat A;
     stringstream ss;
-    for(int i = nN.n_slices - 1; i >= 0; --i)
-    {
-        A = nN.slice(i).t();
 
-        for (int j = A.n_rows - 1; j >= 0; --j)
+    for (int j = m_neighborhoodLength - 1; j >= 0; --j)
+    {
+        for(uint i = 0; i < m_neighborhoodLength; ++i)
         {
-            ss << A.row(j);
+            A = nN.slice(i).t();
+
+            ss << " ";
+
+            for (auto val : A.row(j).eval())
+            {
+                ss << val << " ";
+            }
+
+            if (i != m_neighborhoodLength - 1) ss << " | ";
         }
 
         ss << "\n";
