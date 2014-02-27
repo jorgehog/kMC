@@ -51,7 +51,7 @@ public:
     static void setActiveReaction(Reaction * reaction);
     static void initialize(KMCSolver * solver);
     static void reset();
-    static std::string fullTrace(int line, const string filename, const string what, const string additionalInfo = "");
+    static std::string fullTrace(int line, const string filename, const string additionalInfo = "");
     static std::string partialTrace(const uint & i);
     //
 
@@ -59,7 +59,7 @@ public:
 
     static string addFlagsToImplications();
 
-    static void dumpFullTrace(int line, const char *filename, const string what = "", const string additionalInfo = "", bool toFile = true);
+    static void dumpFullTrace(int line, const char *filename, const string additionalInfo = "");
     static void dumpPartialTrace(const int &i);
 
     static void searchRepl(string & s, string _find, string _repl)
@@ -125,12 +125,11 @@ public:
 
         _cerr << endl;
 
-        if (enabled)
-        {
-            cerr << _cerr.str();
-        }
 
-        dumpFullTrace(line, file, _cerr.str(), additionalInfo);
+        cerr << _cerr.str();
+
+
+       ss dumpFullTrace(line, file, additionalInfo);
 
     }
 

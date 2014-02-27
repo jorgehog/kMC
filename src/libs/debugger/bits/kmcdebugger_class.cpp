@@ -273,12 +273,15 @@ std::string KMCDebugger::addFlagsToImplications()
 
 }
 
-void KMCDebugger::dumpFullTrace(int line, const char * filename, const string what, const string additionalInfo, bool toFile)
+void KMCDebugger::dumpFullTrace(int line, const char * filename, const string additionalInfo)
 {
     if (!enabled) return;
 
 
     using namespace std;
+
+    ofstream file;
+    stringstream path;
 
 
     if (currentReaction != NULL)
@@ -286,45 +289,30 @@ void KMCDebugger::dumpFullTrace(int line, const char * filename, const string wh
         pushTraces();
     }
 
-    if (toFile)
+    if (!traceFilePath.empty())
     {
-        ofstream file;
-
-        stringstream path;
-
-        if (!traceFilePath.empty())
-        {
-            path << traceFilePath << "/";
-        }
-
-        path << "trace_";
-
-        if (!traceFileName.empty())
-        {
-            path << traceFileName;
-        }
-
-        else
-        {
-            path << time(NULL);
-        }
-
-        path << ".txt";
-
-        file.open(path.str().c_str());
-        file << fullTrace(line, filename, what, additionalInfo);
-        file.close();
-
-        cout << "Trace ordered: " << what << "\n";
-        cout << "Trace saved to " << path.str() << endl;
-
-        exit(1);
-
-        return;
-
+        path << traceFilePath << "/";
     }
 
-    cout << fullTrace(line, filename, what, additionalInfo);
+    path << "trace_";
+
+    if (!traceFileName.empty())
+    {
+        path << traceFileName;
+    }
+
+    else
+    {
+        path << time(NULL);
+    }
+
+    path << ".txt";
+
+    file.open(path.str().c_str());
+    file << fullTrace(line, filename, additionalInfo);
+    file.close();
+
+    cout << "Trace saved to " << path.str() << endl;
 
     exit(1);
 
@@ -343,16 +331,12 @@ void KMCDebugger::dumpPartialTrace(const int &i)
 }
 
 
-string KMCDebugger::fullTrace(int line, const string filename, const string what, const string additionalInfo)
+string KMCDebugger::fullTrace(int line, const string filename, const string additionalInfo)
 {
     using namespace std;
 
     stringstream s;
 
-    if (!what.empty())
-    {
-        s << "What? : " << what << "\n\n";
-    }
 
     s << "=====================\n TRACING REACTIONS \n=====================\n" << endl;
 
