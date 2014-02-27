@@ -137,9 +137,9 @@ void KMCSolver::run()
     uint choice;
     double R;
 
+    KMCDebugger_SetEnabledTo(false);
     initializeCrystal();
-
-    KMCDebugger_PushTraces();
+    KMCDebugger_SetEnabledTo(true                           );
 
     while(cycle < nCycles)
     {
@@ -343,6 +343,7 @@ void KMCSolver::initializeCrystal()
 {
 
     sites[NX/2][NY/2][NZ/2]->spawnAsFixedCrystal();
+    KMCDebugger_PushTraces();
 
     uint crystalSizeX = round(NX*RelativeSeedSize);
     uint crystalSizeY = round(NY*RelativeSeedSize);
@@ -380,6 +381,7 @@ void KMCSolver::initializeCrystal()
                             if (!((i == NX/2 && j == NY/2 && k == NZ/2)))
                             {
                                 sites[i][j][k]->activate();
+                                KMCDebugger_PushTraces();
                             }
 
                             continue;
@@ -395,6 +397,7 @@ void KMCSolver::initializeCrystal()
                         if(sites[i][j][k]->isLegalToSpawn())
                         {
                             sites[i][j][k]->activate();
+                            KMCDebugger_PushTraces();
                         }
                     }
                 }

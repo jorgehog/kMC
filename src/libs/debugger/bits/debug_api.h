@@ -37,6 +37,11 @@
 #define KMCDebugger_AssertBool(expr, ...) \
     KMCDebugger_Assert(expr, ==, true, ##__VA_ARGS__)
 
+#define KMCDebugger_AssertClose(A, B, lim, ...) \
+    ((A > B) \
+    ? KMCDebugger_Assert(A - B, <=, lim, ##__VA_ARGS__) \
+    : KMCDebugger_Assert(B - A, <=, lim, ##__VA_ARGS__))
+
 
 #define KMCDebugger_SetEnabledTo(state) \
     KMCDebugger::setEnabledTo(state)

@@ -68,6 +68,17 @@ void Site::updateAffectedSites()
 
 }
 
+void Site::selectUpdateFlags()
+{
+    for (Site * site : affectedSites())
+    {
+        for (Reaction * reaction : site->siteReactions())
+        {
+            reaction->selectTriumphingUpdateFlag();
+        }
+    }
+}
+
 
 void Site::setParticleState(int state)
 {
@@ -318,7 +329,6 @@ void Site::calculateRates()
 {
     for (Reaction* reaction : m_activeReactions)
     {
-        reaction->getTriumphingUpdateFlag();
         reaction->calcRate();
     }
 }
@@ -455,6 +465,7 @@ void Site::activate()
 
 
     m_active = true;
+    m_affectedSites.insert(this);
 
     informNeighborhoodOnChange(+1);
 
@@ -469,11 +480,12 @@ void Site::activate()
 
     setDirectUpdateFlags();
 
-    m_affectedSites.insert(this);
-    for (Reaction * reaction : siteReactions())
+    for (Reaction * reaction : m_siteReactions)
     {
         reaction->setDirectUpdateFlags(this);
     }
+
+    selectUpdateFlags();
 
     m_totalActiveSites++;
 
@@ -508,6 +520,8 @@ void Site::deactivate()
     setDirectUpdateFlags();
 
     m_activeReactions.clear();
+
+    selectUpdateFlags();
 
     m_totalActiveSites--;
 
@@ -643,6 +657,12 @@ void Site::queueAffectedSites()
             m_affectedSites.insert(neighbor);
         }
     }
+}
+
+void Site::setZeroEnergy()
+{
+    KMCDebugger_Assert(nNeighborsSum(), ==, 0, "Energy is not zero.", info());
+    m_energy = 0;
 }
 
 uint Site::findLevel(uint i, uint j, uint k)

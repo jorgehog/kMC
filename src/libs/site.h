@@ -46,6 +46,8 @@ public:
 
     static void updateAffectedSites();
 
+    static void selectUpdateFlags();
+
     static uint findLevel(uint i, uint j, uint k);
 
     static void resetAll()
@@ -99,6 +101,8 @@ public:
     void setDirectUpdateFlags();
 
     void queueAffectedSites();
+
+    void setZeroEnergy();
 
     void reset()
     {
@@ -167,6 +171,10 @@ public:
         return m_nNeighbors(level);
     }
 
+    uint nNeighborsSum() const
+    {
+        return sum(m_nNeighbors);
+    }
 
     bool isCrystal() const
     {

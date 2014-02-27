@@ -75,9 +75,6 @@ string DiffusionReaction::getFinalizingDebugMessage() const
 #endif
 }
 
-/*
- * 31% 64% old | 5% 47 % new
- */
 
 void DiffusionReaction::setDirectUpdateFlags(const Site *changedSite)
 {
@@ -89,7 +86,7 @@ void DiffusionReaction::setDirectUpdateFlags(const Site *changedSite)
 
     if (m_rate == UNSET_RATE || r_maxDistance == 1 || changedSite == m_reactionSite)
     {
-        m_updateFlags.insert(defaultUpdateFlag);
+        setImplicitUpdateFlags();
     }
 
     else
@@ -106,9 +103,28 @@ void DiffusionReaction::setDirectUpdateFlags(const Site *changedSite)
         else
         {
             KMCDebugger_Assert(r_maxDistance, ==, Site::nNeighborsLimit());
-            m_updateFlags.insert(defaultUpdateFlag);
+            setImplicitUpdateFlags();
         }
     }
+
+    KMCDebugger_AssertBool(!m_updateFlags.empty(), "Updateflag should not be empty!", info());
+
+}
+
+void DiffusionReaction::setImplicitUpdateFlags()
+{
+    if (m_reactionSite->nNeighborsSum() == 0)
+    {
+        KMCDebugger_AssertClose(m_reactionSite->energy(), 0, 1E-10, "Energy should be equal to zero for this flag.", info());
+        m_reactionSite->setZeroEnergy();
+        m_updateFlags.insert(unitRate);
+    }
+    else
+    {
+        m_updateFlags.insert(defaultUpdateFlag);
+    }
+
+    KMCDebugger_AssertBool(!m_updateFlags.empty(), "Updateflag should not be empty!", info());
 
 }
 
@@ -195,7 +211,7 @@ double DiffusionReaction::getSaddleEnergy()
 
     if (fabs(lastUsedEsp - Esp) < 1E-10 && Esp != 0)
     {
-        KMCDebugger_AssertBool(!sameSetup, "exactly same setup calculated saddle twice..should be flagged", getFinalizingDebugMessage());
+//        KMCDebugger_AssertBool(!sameSetup, "exactly same setup calculated saddle twice..should be flagged", getFinalizingDebugMessage());
 
         counterEqSP++;
 
@@ -231,7 +247,16 @@ void DiffusionReaction::calcRate()
 
         break;
 
+    case unitRate:
+
+        KMCDebugger_AssertClose(m_reactionSite->energy(), 0, 1E-15, "Energy should be zero for a unit rate.", getFinalizingDebugMessage());
+
+        lastUsedEsp = 0;
+        m_rate = 1;
+
     case updateKeepSaddle:
+
+        //this case has a unit test implementation and thus no assert.
 
         m_rate *= exp(-beta*(reactionSite()->energy() - lastUsedEnergy));
 

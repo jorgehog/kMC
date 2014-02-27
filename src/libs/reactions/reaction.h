@@ -35,7 +35,7 @@ public:
         m_updateFlags.insert(defaultUpdateFlag);
     }
 
-    void getTriumphingUpdateFlag();
+    void selectTriumphingUpdateFlag();
 
     virtual bool isNotBlocked() const = 0;
 
@@ -65,15 +65,14 @@ public:
         m_reactionSite = site;
     }
 
-    void clearUpdateFlags()
-    {
-        m_updateFlags.clear();
-        assert(m_updateFlags.empty());
-    }
-
     const set<int> & updateFlags() const
     {
         return m_updateFlags;
+    }
+
+    const int & updateFlag() const
+    {
+        return m_updateFlag;
     }
 
     const uint & ID() const
@@ -136,6 +135,7 @@ public:
     //! triumphant flag.
     enum AllUpdateFlags
     {
+        UNSET_UPDATE_FLAG = -1,
         defaultUpdateFlag = 0
     };
 

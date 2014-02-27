@@ -7,7 +7,7 @@ Reaction::Reaction(string name):
     name(name),
     m_ID(IDcount++),
     m_rate(UNSET_RATE),
-    m_updateFlag(defaultUpdateFlag)
+    m_updateFlag(UNSET_UPDATE_FLAG)
 {
 
 }
@@ -84,23 +84,24 @@ void Reaction::loadConfig(const Setting &setting)
 
 }
 
-void Reaction::getTriumphingUpdateFlag()
+void Reaction::selectTriumphingUpdateFlag()
 {
+
+    //This means the last activated site had no direct impact on this previosuly affected site.
     if (m_updateFlags.empty())
     {
-        m_updateFlag = defaultUpdateFlag;
+        return;
     }
 
-    else
-    {
-        m_updateFlag = *std::min_element(m_updateFlags.begin(), m_updateFlags.end());
-    }
+    m_updateFlag = *std::min_element(m_updateFlags.begin(), m_updateFlags.end());
 
-    clearUpdateFlags();
+    KMCDebugger_Assert(m_updateFlag, !=, UNSET_UPDATE_FLAG, "Update flag was not initialized correctly.", info());
+
+    m_updateFlags.clear();
 
 }
 
-const double   Reaction::UNSET_RATE = -1;
+const double   Reaction::UNSET_RATE = -1.337;
 
 KMCSolver*     Reaction::mainSolver;
 

@@ -90,7 +90,8 @@ private:
 
     enum SpecificUpdateFlags
     {
-        updateKeepSaddle = 1
+        unitRate = 1,
+        updateKeepSaddle = 2
     };
 
 
@@ -98,6 +99,8 @@ private:
 public:
 
     void setDirectUpdateFlags(const Site * changedSite);
+
+    void setImplicitUpdateFlags();
 
     void calcRate();
 

@@ -53,11 +53,10 @@ void KMCDebugger::pushTraces()
 {
     if (!enabled) return;
 
-    stringstream s;
-
     timerData.push_back(timer.toc());
 
-    s << "New affected site(s):\n";
+    stringstream s;
+
     s << setupAffectedUnion();
 
     s << addFlagsToImplications();
@@ -103,8 +102,7 @@ void KMCDebugger::pushImplication(Site * site, const char * _pre, const char * _
     s << " " << implicationCount << "]\n";
     s << _KMCDebugger_MAKE_IMPLICATION_MESSAGE(site, _pre, _new);
 
-    s << "New affected site(s):\n";
-    setupAffectedUnion();
+    s << setupAffectedUnion();
 
     s << "[End of implication";
     if (currentReaction == NULL) s << " (standalone)";
@@ -164,7 +162,6 @@ std::string KMCDebugger::setupAffectedUnion()
 
     bool currentSiteInPrev;
 
-
     for (Site * currentSite : Site::affectedSites())
     {
 
@@ -200,12 +197,17 @@ std::string KMCDebugger::setupAffectedUnion()
         affectedUnion.insert(site);
     }
 
+    if (intersect.size() == 0)
+    {
+        return "";
+    }
+
     s << "Total: " << intersect.size() << endl;
     intersect.clear();
 
     assert(affectedUnion.size() == Site::affectedSites().size());
 
-    return s.str();
+    return "New affected site(s):\n" + s.str();
 
 }
 
@@ -232,15 +234,11 @@ std::string KMCDebugger::addFlagsToImplications()
 
             bool addReac = false;
 
-            for (int flag : r->updateFlags())
-            {
-                if (!((flag == Reaction::defaultUpdateFlag) && (r->updateFlags().size() == 1)))
-                {
-                    reacss << flag << " ";
-                    addReac = true;
-                    addSite = true;
-                }
-            }
+            reacss << r->updateFlag() << " ";
+            addReac = true;
+            addSite = true;
+
+
 
             if (addReac)
             {
@@ -263,9 +261,8 @@ std::string KMCDebugger::addFlagsToImplications()
         return "";
     }
 
-    s << "New non-default flags given to affected site reactions:\n\n";
 
-    return s.str();
+    return "New non-default flags given to affected site reactions:\n\n" + s.str();
 
 #else
     return "";
@@ -284,7 +281,7 @@ void KMCDebugger::dumpFullTrace(int line, const char * filename, const string ad
     stringstream path;
 
 
-    if (currentReaction != NULL)
+    if (currentReaction != NULL || (traceCount == 0 && !implications.empty()))
     {
         pushTraces();
     }
@@ -345,6 +342,7 @@ string KMCDebugger::fullTrace(int line, const string filename, const string addi
     {
         s << partialTrace(i);
     }
+
 
     s << "Full trace initiated at line " << line;
     s << "\nin " << filename << "\n";

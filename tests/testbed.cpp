@@ -1076,7 +1076,7 @@ void testBed::testSmartSaddleUpdateAlg()
             for (Reaction* reaction : site->m_activeReactions)
             {
 
-                reaction->getTriumphingUpdateFlag();
+//                reaction->selectTriumphingUpdateFlag();
 
                 if (cycle == 0) {
                     CHECK_EQUAL(Reaction::defaultUpdateFlag, reaction->m_updateFlag);

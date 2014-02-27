@@ -110,10 +110,10 @@ public:
 
         searchRepl(replString, "!==", "!=");
         searchRepl(replString, "!!=", "==");
-        searchRepl(replString, "!>" , "<=");
-        searchRepl(replString, "!<" , ">=");
         searchRepl(replString, "!>=",  "<");
         searchRepl(replString, "!<=",  ">");
+        searchRepl(replString, "!>" , "<=");
+        searchRepl(replString, "!<" , ">=");
 
 
         _cerr << Aval << " " <<  replString << " " << Bval << ".";
