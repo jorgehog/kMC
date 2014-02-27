@@ -5,11 +5,8 @@
 //Ignore everything if we are not debugging.
 #define KMCDebugger_SetEnabledTo(state) \
     _KMCDebugger_IGNORE(state)
-#define KMCDebugger_Assert(TA, TB, A, B, ...) \
-    _KMCDebugger_IGNORE(TA); \
-    _KMCDebugger_IGNORE(TB); \
-    _KMCDebugger_IGNORE(A); \
-    _KMCDebugger_IGNORE(B)
+#define KMCDebugger_Assert(A, OP, B, ...) \
+    _KMCDebugger_IGNORE(0)
 #define KMCDebugger_AssertBool(expr, ...) \
     _KMCDebugger_IGNORE(expr)
 #define KMCDebugger_GetReaction(which) \

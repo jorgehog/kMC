@@ -129,7 +129,7 @@ public:
         cerr << _cerr.str();
 
 
-       ss dumpFullTrace(line, file, additionalInfo);
+        dumpFullTrace(line, file, additionalInfo);
 
     }
 

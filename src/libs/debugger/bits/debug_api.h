@@ -1,5 +1,7 @@
 #pragma once
 
+#ifndef KMC_NO_DEBUG
+
 #include "../kmcdebugger.h"
 
 #include "kmcdebugger_class.h"
@@ -66,3 +68,5 @@
 
 #define KMCDebugger_PushTraces() \
     KMCDebugger::pushTraces()
+
+#endif
