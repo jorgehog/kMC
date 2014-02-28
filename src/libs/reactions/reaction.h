@@ -1,8 +1,8 @@
 #pragma once
 
-
-#include "../site.h"
 #include <sys/types.h>
+#include <sstream>
+#include <set>
 
 #include <libconfig_utils/libconfig_utils.h>
 
@@ -85,20 +85,11 @@ public:
         return m_rate;
     }
 
-    const uint & x() const
-    {
-        return m_reactionSite->x();
-    }
+    const uint & x() const;
 
-    const uint & y() const
-    {
-        return m_reactionSite->y();
-    }
+    const uint & y() const;
 
-    const uint & z() const
-    {
-        return m_reactionSite->z();
-    }
+    const uint & z() const;
 
     const Site * reactionSite() const
     {

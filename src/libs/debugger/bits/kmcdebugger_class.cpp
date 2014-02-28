@@ -2,14 +2,15 @@
 
 #ifndef KMC_NO_DEBUG
 
+#include "../../site.h"
+#include "../../reactions/reaction.h"
+
 #include <fstream>
 #include <sys/time.h>
 
 #include "intrinsicmacros.h"
 
 bool KMCDebugger::enabled = true;
-
-KMCSolver * KMCDebugger::solverObject;
 
 std::vector<std::string> KMCDebugger::reactionTraceBefore;
 std::vector<std::string> KMCDebugger::reactionTraceAfter;
@@ -40,7 +41,7 @@ void KMCDebugger::setEnabledTo(bool state)
 
     if (enabled)
     {
-        initialize(solverObject);
+        initialize();
     }
 
     else
@@ -82,7 +83,6 @@ void KMCDebugger::pushTraces()
     implicationCount = 0;
     reactionString = "No Reaction Selected";
     traceCount++;
-    assert(affectedUnion.size() == Site::affectedSites().size());
     affectedUnion.clear();
     timer.tic();
 
@@ -142,13 +142,9 @@ void KMCDebugger::setActiveReaction(Reaction *reaction)
     reactionString = _KMCDebugger_REACTION_STR();
 }
 
-void KMCDebugger::initialize(KMCSolver *solver)
+void KMCDebugger::initialize()
 {
-
     if (!enabled) return;
-
-    enabled = true;
-    solverObject = solver;
     timer.tic();
 }
 
@@ -188,7 +184,7 @@ std::string KMCDebugger::setupAffectedUnion()
 
         if (currentReaction != NULL)
         {
-            site->distanceTo(currentReaction->reactionSite(), X, Y, Z);
+            currentReaction->reactionSite()->distanceTo(site, X, Y, Z);
             s << " [" << X << ", " << Y  << ", " << Z << "]";
         }
 
@@ -205,7 +201,7 @@ std::string KMCDebugger::setupAffectedUnion()
     s << "Total: " << intersect.size() << endl;
     intersect.clear();
 
-    assert(affectedUnion.size() == Site::affectedSites().size());
+    KMCDebugger_Assert(affectedUnion.size(), ==, Site::affectedSites().size());
 
     return "New affected site(s):\n" + s.str();
 
@@ -234,7 +230,12 @@ std::string KMCDebugger::addFlagsToImplications()
 
             bool addReac = false;
 
-            reacss << r->updateFlag() << " ";
+            for (int flag : r->updateFlags())
+            {
+                reacss << flag << " ";
+            }
+
+            reacss << " ur? " << ((DiffusionReaction*)r)->hasUnitRate();
             addReac = true;
             addSite = true;
 

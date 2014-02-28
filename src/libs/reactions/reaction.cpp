@@ -1,5 +1,7 @@
 #include "reaction.h"
+
 #include "../kmcsolver.h"
+#include "site.h"
 
 #include "../debugger/kmcdebugger.h"
 
@@ -40,6 +42,22 @@ const string Reaction::info(int xr, int yr, int zr, string desc) const
 
 }
 
+const uint &Reaction::x() const
+{
+    return m_reactionSite->x();
+}
+
+const uint &Reaction::y() const
+{
+    return m_reactionSite->y();
+}
+
+const uint &Reaction::z() const
+{
+    return m_reactionSite->z();
+}
+
+
 string Reaction::getFinalizingDebugMessage() const
 {
 #ifndef KMC_NO_DEBUG
@@ -47,13 +65,18 @@ string Reaction::getFinalizingDebugMessage() const
     if (!KMCDebugger::enabled) return "";
 
     int X, Y, Z;
+    X = 0;
+    Y = 0;
+    Z = 0;
+
     stringstream s;
 
     const Reaction * lastReaction = KMCDebugger::lastCurrentReaction;
-    const Site* site = lastReaction->reactionSite();
 
-    m_reactionSite->distanceTo(site, X, Y, Z);
-
+    if (lastReaction != NULL)
+    {
+        m_reactionSite->distanceTo(lastReaction->reactionSite(), X, Y, Z);
+    }
     s << info();
     s << "\nLast active reaction site marked on current site:\n\n";
     s << m_reactionSite->info(X, Y, Z);

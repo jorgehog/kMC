@@ -12,11 +12,14 @@
 #include <sstream>
 
 //MISC
-#define KMCDebugger_Init(_solverObject) \
-    KMCDebugger::initialize(_solverObject)
+#define KMCDebugger_Init() \
+    KMCDebugger::initialize()
 
 #define KMCDebugger_Finalize \
     KMCDebugger::reset
+
+#define KMCDebugger_IsEnabled \
+    KMCDebugger::enabled
 
 
 #define KMCDebugger_SetFilename(filename) \
@@ -27,8 +30,8 @@
 
 
 #define KMCDebugger_Assert(A, OP, B, ...) \
-    ((A OP B) \
-    ? _KMCDebugger_IGNORE(0) \
+    (((A) OP (B)) \
+    ? static_cast<void>(0) \
     : KMCDebugger::_assert(A, B, #OP, #A, #B, \
     __FILE__, \
     __PRETTY_FUNCTION__, \

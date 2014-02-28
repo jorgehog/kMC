@@ -2,17 +2,20 @@
 
 #include "debug_api.h"
 
-#include "../../reactions/reaction.h"
-
 #include <vector>
 #include <string>
+#include <set>
 #include <sys/types.h>
 
 #include <exception>
 
 #include <armadillo>
-
 using arma::wall_clock;
+
+class Reaction;
+class Site;
+
+using namespace std;
 
 class KMCDebugger
 {
@@ -20,13 +23,11 @@ public:
 
     static bool enabled;
 
-    static KMCSolver * solverObject;
-
-    static std::vector<std::string> reactionTraceBefore;
-    static std::vector<std::string> reactionTraceAfter;
-    static std::vector<std::string> implicationTrace;
-    static std::vector<double>      timerData;
-    static std::string implications;
+    static vector<string> reactionTraceBefore;
+    static vector<string> reactionTraceAfter;
+    static vector<string> implicationTrace;
+    static vector<double>      timerData;
+    static string implications;
 
     static uint traceCount;
     static uint implicationCount;
@@ -41,7 +42,7 @@ public:
 
     static wall_clock timer;
 
-    static std::set<Site*> affectedUnion;
+    static set<Site*> affectedUnion;
 
     //CALLED FROM MACROS
     static void setEnabledTo(bool state);
@@ -49,10 +50,10 @@ public:
     static void pushImplication(Site *site, const char *_pre, const char *_new);
     static void markPartialStep(const char * msg);
     static void setActiveReaction(Reaction * reaction);
-    static void initialize(KMCSolver * solver);
+    static void initialize();
     static void reset();
-    static std::string fullTrace(int line, const string filename, const string additionalInfo = "");
-    static std::string partialTrace(const uint & i);
+    static string fullTrace(int line, const string filename, const string additionalInfo = "");
+    static string partialTrace(const uint & i);
     //
 
     static string setupAffectedUnion();
@@ -85,10 +86,9 @@ public:
             const char * file,
             const char * func,
             int line,
-            std::string what = "",
-            std::string additionalInfo = "")
+            string what = "",
+            string additionalInfo = "")
     {
-        using namespace std;
 
         stringstream s, _cerr;
         string replString;
@@ -123,10 +123,8 @@ public:
             _cerr << "\nwhat? : " << what;
         }
 
-        _cerr << endl;
 
-
-        cerr << _cerr.str();
+        cerr << _cerr.str() << endl;
 
 
         dumpFullTrace(line, file, additionalInfo);

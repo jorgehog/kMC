@@ -3,8 +3,11 @@
 
 #include "../reaction.h"
 
+#include <armadillo>
+
 #include <libconfig_utils/libconfig_utils.h>
 
+using namespace arma;
 
 class DiffusionReaction : public Reaction
 {
@@ -14,8 +17,10 @@ public:
     DiffusionReaction(Site *destinationSite);
 
     ~DiffusionReaction() {
-        lastSetup.clear();
+
     }
+
+    static const double UNSET_ENERGY;
 
     double getSaddleEnergy();
 
@@ -45,27 +50,22 @@ public:
         return m_destinationSite;
     }
 
-    const uint & xD () const
+    const bool & hasUnitRate()
     {
-        return m_destinationSite->x();
+        return m_hasUnitRate;
     }
 
-    const uint & yD () const
-    {
-        return m_destinationSite->y();
-    }
+    const uint & xD () const;
 
-    const uint & zD () const
-    {
-        return m_destinationSite->z();
-    }
+    const uint & yD () const;
+
+    const uint & zD () const;
 
     string getFinalizingDebugMessage() const;
 
     //tmp
     double lastUsedEnergy;
     double lastUsedEsp;
-    set<const Site*> lastSetup;
 
     static uint counterEqSP;
     static uint totalSP;
@@ -81,6 +81,8 @@ public:
 
 private:
 
+    bool m_hasUnitRate;
+
     static double rPower;
     static double scale;
 
@@ -90,7 +92,6 @@ private:
 
     enum SpecificUpdateFlags
     {
-        unitRate = 1,
         updateKeepSaddle = 2
     };
 
@@ -99,8 +100,6 @@ private:
 public:
 
     void setDirectUpdateFlags(const Site * changedSite);
-
-    void setImplicitUpdateFlags();
 
     void calcRate();
 
