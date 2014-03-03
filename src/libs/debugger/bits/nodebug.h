@@ -21,8 +21,8 @@
     _KMCDebugger_IGNORE(path)
 #define KMCDebugger_SetActiveReaction(reaction) \
     _KMCDebugger_IGNORE(reaction)
-#define KMCDebugger_Init(solver) \
-    _KMCDebugger_IGNORE(solver)
+#define KMCDebugger_Init() \
+    _KMCDebugger_IGNORE(0)
 #define KMCDebugger_Finalize() \
     _KMCDebugger_IGNORE(0)
 #define KMCDebugger_DumpTrace(i) \

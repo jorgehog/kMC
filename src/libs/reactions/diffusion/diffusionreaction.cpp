@@ -105,7 +105,13 @@ void DiffusionReaction::setDirectUpdateFlags(const Site *changedSite)
     //    m_updateFlags.insert(defaultUpdateFlag);
     uint d_maxDistance, r_maxDistance;
 
-    if (m_reactionSite->nNeighborsSum() == 0)
+    if (m_rate == UNSET_RATE || changedSite == m_reactionSite)
+    {
+        setImplicitUpdateFlags();
+        m_hasUnitRate = false;
+    }
+
+    else if (m_reactionSite->nNeighborsSum() == 0)
     {
         m_hasUnitRate = true;
     }
@@ -116,7 +122,7 @@ void DiffusionReaction::setDirectUpdateFlags(const Site *changedSite)
         r_maxDistance = reactionSite()->maxDistanceTo(changedSite);
 
 
-        if (m_rate == UNSET_RATE || r_maxDistance == 1 || changedSite == m_reactionSite)
+        if (r_maxDistance == 1)
         {
             setImplicitUpdateFlags();
         }
@@ -129,7 +135,7 @@ void DiffusionReaction::setDirectUpdateFlags(const Site *changedSite)
             if (d_maxDistance > Site::nNeighborsLimit())
             {
                 KMCDebugger_Assert(Site::nNeighborsLimit() + 1, ==,  d_maxDistance);
-                m_updateFlags.insert(updateKeepSaddle);
+                m_updateFlags.push_back(updateKeepSaddle);
             }
 
             else
@@ -222,8 +228,6 @@ void DiffusionReaction::calcRate()
 
         m_rate = 1;
 
-        m_hasUnitRate = false;
-
         KMCDebugger_Assert(getSaddleEnergy(), ==, 0, "Should be very zero.", getFinalizingDebugMessage());
     }
 
@@ -231,9 +235,6 @@ void DiffusionReaction::calcRate()
     {
 
         double Esp = getSaddleEnergy();
-
-        KMCDebugger_Assert(m_reactionSite->nNeighborsSum(), !=, 0,
-                               "This should be flagged as unitRate.", getFinalizingDebugMessage());
 
         m_rate = m_linearRateScale*exp(-beta*(m_reactionSite->energy()- Esp));
 

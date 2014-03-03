@@ -456,6 +456,7 @@ void testBed::testRateCalculation () {
                     //                    double RATE = r->rate();
                     double E = ((DiffusionReaction*)r)->lastUsedEnergy;
                     double Esp = ((DiffusionReaction*)r)->lastUsedEsp;
+                    r->m_updateFlag = Reaction::defaultUpdateFlag;
                     r->calcRate();
 
                     CHECK_EQUAL(E, ((DiffusionReaction*)r)->lastUsedEnergy);
@@ -827,6 +828,8 @@ void testBed::testInitializationOfCrystal()
 void testBed::testInitialReactionSetup()
 {
 
+    KMCDebugger_Init();
+
     for (uint i = 0; i < NX; ++i) {
         for (uint j = 0; j < NY; ++j) {
             for (uint k = 0; k < NZ; ++k) {
@@ -849,20 +852,14 @@ void testBed::testInitialReactionSetup()
 
                 for (Reaction* r : solver->sites[i][j][k]->activeReactions())
                 {
-                    if (!solver->sites[i][j][k]->isActive())
-                    {
-                        cout << "DEACTIVE SITE SHOULD HAVE NO REACTIONS" << endl;
-                        solver->sites[i][j][k]->info();
-                        exit(1);
-                    }
+                    KMCDebugger_AssertBool(solver->sites[i][j][k]->isActive(),
+                                           "DEACTIVE SITE SHOULD HAVE NO REACTIONS",
+                                           solver->sites[i][j][k]->info());
 
-                    if (!r->isNotBlocked())
-                    {
-                        cout << "REACTION NOT DEACTIVATED PROPERLY:" << endl;
-                        r->info();
+                    KMCDebugger_AssertBool(r->isNotBlocked(),
+                                           "REACTION NOT DEACTIVATED PROPERLY:",
+                                           r->info());
 
-                        exit(1);
-                    }
                     oldReactions.push_back(r);
                     totRate1 += r->rate();
                 }
@@ -1026,6 +1023,10 @@ void testBed::testKnownCase()
     {
         o.close();
         CHECK_EQUAL(NX*NY*NZ, winCount);
+        if (winCount != NX*NY*NZ)
+        {
+            KMCDebugger_DumpFullTrace("");
+        }
     }
 
 

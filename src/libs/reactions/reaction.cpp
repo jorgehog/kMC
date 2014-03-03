@@ -115,6 +115,8 @@ void Reaction::selectTriumphingUpdateFlag()
     {
         return;
     }
+    m_updateFlag = m_updateFlags.at(m_updateFlags.size()-1);
+    return;
 
     m_updateFlag = *std::min_element(m_updateFlags.begin(), m_updateFlags.end());
 

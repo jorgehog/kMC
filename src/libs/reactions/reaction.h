@@ -32,7 +32,7 @@ public:
 
     virtual void setImplicitUpdateFlags()
     {
-        m_updateFlags.insert(defaultUpdateFlag);
+        m_updateFlags.push_back(defaultUpdateFlag);
     }
 
     void selectTriumphingUpdateFlag();
@@ -65,7 +65,7 @@ public:
         m_reactionSite = site;
     }
 
-    const set<int> & updateFlags() const
+    const vector<int> & updateFlags() const
     {
         return m_updateFlags;
     }
@@ -152,7 +152,7 @@ protected:
 
     double m_rate;
 
-    set<int> m_updateFlags;
+    vector<int> m_updateFlags;
     int      m_updateFlag;
 
 
