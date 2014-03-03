@@ -94,7 +94,7 @@ private:
 
     umat::fixed<3, 2> neighborSetIntersectionPoints;
     ivec::fixed<3> path;
-    vec::fixed<3> rSaddle;
+    uvec::fixed<3> saddleFieldIndices;
 
 
 

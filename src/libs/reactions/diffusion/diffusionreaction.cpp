@@ -14,9 +14,9 @@ DiffusionReaction::DiffusionReaction(Site * currentSite, Site *destinationSite) 
 
     m_reactionSite->distanceTo(destinationSite, path(0), path(1), path(2));
 
-    rSaddle = conv_to<vec>::from(path)/2;
-
     neighborSetIntersectionPoints = getSaddleOverlapMatrix(path);
+
+    saddleFieldIndices = conv_to<uvec>::from(path + 1);
 
 }
 
@@ -235,17 +235,13 @@ double DiffusionReaction::getSaddleEnergy()
 
     timer.tic();
 
-
     Site * targetSite;
 
-    double xs, ys, zs;
-
-    xs = x() + 0.5*path(0);
-    ys = y() + 0.5*path(1);
-    zs = z() + 0.5*path(2);
-
     double Esp = 0;
-    double Esp2 = 0;
+
+    const cube & saddlePot = m_saddlePotential(saddleFieldIndices(0),
+                                               saddleFieldIndices(1),
+                                               saddleFieldIndices(2));
 
     for (uint xn = neighborSetIntersectionPoints(0, 0); xn < neighborSetIntersectionPoints(0, 1); ++xn)
     {
@@ -265,39 +261,9 @@ double DiffusionReaction::getSaddleEnergy()
                     continue;
                 }
 
-                double dx = fabs(xs - targetSite->x());
-                double dy = fabs(ys - targetSite->y());
-                double dz = fabs(zs - targetSite->z());
-
-                if (dx > Site::nNeighborsLimit())
-                {
-                    dx = NX - dx;
-                }
-
-                if (dy > Site::nNeighborsLimit())
-                {
-                    dy = NY - dy;
-                }
-
-                if (dz > Site::nNeighborsLimit())
-                {
-                    dz = NZ - dz;
-                }
-
-                double r = sqrt(dx*dx + dy*dy + dz*dz);
-
-                assert(r >= 1/2. && "Saddle point is atleast this distance from another site.");
-                Esp += scale/pow(r, rPower);
-
-
-                const cube & saddlePot = m_saddlePotential(path(0) + 1, path(1) + 1, path(2) + 1);
-
-                Esp2 += saddlePot(xn - neighborSetIntersectionPoints(0, 0),
-                                  yn - neighborSetIntersectionPoints(1, 0),
-                                  zn - neighborSetIntersectionPoints(2, 0));
-
-                KMCDebugger_Assert(Esp, ==, Esp2);
-
+                Esp += saddlePot(xn - neighborSetIntersectionPoints(0, 0),
+                                 yn - neighborSetIntersectionPoints(1, 0),
+                                 zn - neighborSetIntersectionPoints(2, 0));
             }
         }
     }
