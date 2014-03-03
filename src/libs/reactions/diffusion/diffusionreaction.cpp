@@ -185,7 +185,11 @@ double DiffusionReaction::getSaddleEnergy()
         return 0;
     }
 
+
     timer.tic();
+
+
+    Site * targetSite;
 
     double xs = ((x() + xD())%NX)/2.0;
     double ys = ((y() + yD())%NY)/2.0;
@@ -193,13 +197,25 @@ double DiffusionReaction::getSaddleEnergy()
 
     double Esp = 0;
 
+
+
     for (uint xn = neighborSetIntersectionPoints(0, 0); xn < neighborSetIntersectionPoints(0, 1); ++xn)
     {
         for (uint yn = neighborSetIntersectionPoints(1, 0); yn < neighborSetIntersectionPoints(1, 1); ++yn)
         {
             for (uint zn = neighborSetIntersectionPoints(2, 0); zn < neighborSetIntersectionPoints(2, 1); ++zn)
             {
-                Site * targetSite = m_reactionSite->neighborHood(xn, yn, zn);
+                targetSite = m_reactionSite->neighborHood(xn, yn, zn);
+
+                if (!targetSite->isActive())
+                {
+                    continue;
+                }
+
+                else if (targetSite == m_reactionSite)
+                {
+                    continue;
+                }
 
                 double dx = fabs(xs - targetSite->x());
                 double dy = fabs(ys - targetSite->y());
