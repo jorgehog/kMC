@@ -18,8 +18,11 @@ int main()
     KMCDebugger_SetFilename("sameSaddleProblem");
     KMCSolver* solver = new KMCSolver(root);
 
-    solver->run();
+    wall_clock t;
 
+    t.tic();
+    solver->run();
+    cout << "Simulation ended after " << t.toc() << " seconds" << endl;
 
 
     return 0;
