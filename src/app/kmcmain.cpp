@@ -11,7 +11,7 @@ int main()
 
     Config cfg;
 
-    cfg.readFile("infiles/config.cfg");
+    cfg.readFile("infiles/knowncase.cfg");
 
     const Setting & root = cfg.getRoot();
 

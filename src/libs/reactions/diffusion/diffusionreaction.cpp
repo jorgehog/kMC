@@ -64,7 +64,6 @@ void DiffusionReaction::loadConfig(const Setting &setting)
             {
                 if ((x == 0) && (y == 0) && (z == 0))
                 {
-                    m_saddlePotential(1, 1, 1).reset();
                     continue;
                 }
 
@@ -81,7 +80,7 @@ void DiffusionReaction::loadConfig(const Setting &setting)
 
                 KMCDebugger_Assert(m_saddlePotential.n_elem, !=, 0, "illegal box size.");
                 KMCDebugger_Assert(m_saddlePotential.n_elem, !=, arma::prod(overlapBox.col(1)-overlapBox.col(0)), "saddle mat fail.");
-
+//                cout << " --------  " << x << " " << y << " " << z << "  ------ " << endl;
                 for (uint xn = overlapBox(0, 0); xn < overlapBox(0, 1); ++xn)
                 {
 
@@ -95,9 +94,16 @@ void DiffusionReaction::loadConfig(const Setting &setting)
                         for (uint zn = overlapBox(2, 0); zn < overlapBox(2, 1); ++zn)
                         {
 
+                            if (xn == yn && yn == zn && zn == Site::nNeighborsLimit())
+                            {
+                                continue;
+                            }
+
                             dz = z/2.0 + (int)zn - (int)Site::nNeighborsLimit();
 
                             r = sqrt(dx*dx + dy*dy + dz*dz);
+
+//                            cout << xn << " " << yn << " " << zn << " " << dx << " " << dy << " " << dz << endl;
 
                             m_saddlePotential(i, j, k)(xn - overlapBox(0, 0),
                                                        yn - overlapBox(1, 0),
@@ -231,13 +237,16 @@ double DiffusionReaction::getSaddleEnergy()
 
     Site * targetSite;
 
-    //    double xs = ((x() + xD())%NX)/2.0;
-    //    double ys = ((y() + yD())%NY)/2.0;
-    //    double zs = ((z() + zD())%NZ)/2.0;
+    double xs, ys, zs;
+
+    xs = x() + 0.5*path(0);
+    ys = y() + 0.5*path(1);
+    zs = z() + 0.5*path(2);
 
     double Esp = 0;
+    double Esp2 = 0;
 
-
+    cout << path.t();
     for (uint xn = neighborSetIntersectionPoints(0, 0); xn < neighborSetIntersectionPoints(0, 1); ++xn)
     {
         for (uint yn = neighborSetIntersectionPoints(1, 0); yn < neighborSetIntersectionPoints(1, 1); ++yn)
@@ -256,39 +265,52 @@ double DiffusionReaction::getSaddleEnergy()
                     continue;
                 }
 
-                //                double dx = fabs(xs - targetSite->x());
-                //                double dy = fabs(ys - targetSite->y());
-                //                double dz = fabs(zs - targetSite->z());
+                double dx = fabs(xs - targetSite->x());
+                double dy = fabs(ys - targetSite->y());
+                double dz = fabs(zs - targetSite->z());
 
-                //                if (dx > Site::nNeighborsLimit())
-                //                {
-                //                    dx = NX - dx;
-                //                }
+                if (dx > Site::nNeighborsLimit())
+                {
+                    dx = NX - dx;
+                }
 
-                //                if (dy > Site::nNeighborsLimit())
-                //                {
-                //                    dy = NY - dy;
-                //                }
+                if (dy > Site::nNeighborsLimit())
+                {
+                    dy = NY - dy;
+                }
 
-                //                if (dz > Site::nNeighborsLimit())
-                //                {
-                //                    dz = NZ - dz;
-                //                }
+                if (dz > Site::nNeighborsLimit())
+                {
+                    dz = NZ - dz;
+                }
 
-                //                double r = sqrt(dx*dx + dy*dy + dz*dz);
+                double r = sqrt(dx*dx + dy*dy + dz*dz);
 
-                //                assert(r >= 1/2. && "Saddle point is atleast this distance from another site.");
-                //                Esp += scale/pow(r, rPower);
+                cout << xn << " " << yn << " " << zn << " " << dx << " " << dy << " " << dz << endl;
+
+                assert(r >= 1/2. && "Saddle point is atleast this distance from another site.");
+                Esp += scale/pow(r, rPower);
 
 
                 const cube & saddlePot = m_saddlePotential(path(0) + 1, path(1) + 1, path(2) + 1);
-                Esp += saddlePot(xn - neighborSetIntersectionPoints(0, 0),
-                                 yn - neighborSetIntersectionPoints(1, 0),
-                                 zn - neighborSetIntersectionPoints(2, 0));
+
+                Esp2 += saddlePot(xn - neighborSetIntersectionPoints(0, 0),
+                                  yn - neighborSetIntersectionPoints(1, 0),
+                                  zn - neighborSetIntersectionPoints(2, 0));
+
+                KMCDebugger_Assert(Esp, ==, Esp2);
+//                if (Esp == Esp2)
+//                {
+//                    cout << "WIN"<< endl;
+//                } else {
+//                    cout << "FAIL" << endl;
+//                }
 
             }
         }
     }
+
+    cout << "######################" << endl;
 
     totalTime += timer.toc();
 
