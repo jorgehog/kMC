@@ -24,6 +24,8 @@ public:
 
     double getSaddleEnergy();
 
+    static umat::fixed<3, 2> getSaddleOverlapMatrix(const ivec &relCoor);
+
     static void loadConfig(const Setting & setting);
 
     static void resetAll()
@@ -80,6 +82,8 @@ private:
     static double scale;
 
     static cube m_potential;
+    static field<cube> m_saddlePotential;
+
 
     Site* m_destinationSite;
 
@@ -89,7 +93,9 @@ private:
     };
 
     umat::fixed<3, 2> neighborSetIntersectionPoints;
-    ivec::fixed<3>    path;
+    ivec::fixed<3> path;
+    vec::fixed<3> rSaddle;
+
 
 
     // Reaction interface

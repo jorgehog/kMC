@@ -14,33 +14,11 @@ DiffusionReaction::DiffusionReaction(Site * currentSite, Site *destinationSite) 
 
     m_reactionSite->distanceTo(destinationSite, path(0), path(1), path(2));
 
-    for (uint xyz = 0; xyz < 3; ++xyz)
-    {
-        if (path(xyz) == 1)
-        {
+    rSaddle = conv_to<vec>::from(path)/2;
 
-            neighborSetIntersectionPoints(xyz, 0) = 1;
-            neighborSetIntersectionPoints(xyz, 1) = Site::neighborhoodLength();
+    neighborSetIntersectionPoints = getSaddleOverlapMatrix(path);
 
-        }
 
-        else if (path(xyz) == -1)
-        {
-
-            neighborSetIntersectionPoints(xyz, 0) = 0;
-            neighborSetIntersectionPoints(xyz, 1) = Site::neighborhoodLength() - 1;
-
-        }
-
-        else
-        {
-
-            neighborSetIntersectionPoints(xyz, 0) = 0;
-            neighborSetIntersectionPoints(xyz, 1) = Site::neighborhoodLength();
-
-            KMCDebugger_Assert(path(xyz), ==, 0, "There should be no other option.", getFinalizingDebugMessage());
-        }
-    }
 
 }
 
@@ -74,6 +52,70 @@ void DiffusionReaction::loadConfig(const Setting &setting)
             }
         }
     }
+
+    m_saddlePotential.set_size(3, 3, 3);
+
+    uint i, j, k, ci, cj, ck;
+    int di, dj, dk;
+    double dx, dy, dz, r;
+
+    for (int x = -1; x <= 1; ++x)
+    {
+        for (int y = -1; y <= 1; ++y)
+        {
+            for (int z = -1; z <= 1; ++z)
+            {
+                if (x == 0 && y == 0 && z == 0)
+                {
+                    m_saddlePotential(x, y, z).reset();
+                }
+
+                i = x + 1;
+                j = y + 1;
+                k = z + 1;
+
+                umat overlapBox = getSaddleOverlapMatrix({x, y, z});
+
+                m_saddlePotential(i, j, k).set_size(overlapBox(0, 1) - overlapBox(0, 0),
+                                                    overlapBox(1, 1) - overlapBox(1, 0),
+                                                    overlapBox(2, 1) - overlapBox(2, 0));
+
+
+
+                ci = 0;
+                for (uint xn = overlapBox(0, 0); xn < overlapBox(0, 1); ++xn, ++ci)
+                {
+
+                    di = (int)xn - (int)Site::nNeighborsLimit();
+                    dx = x + di;
+
+                    cj = 0;
+                    for (uint yn = overlapBox(1, 0); yn < overlapBox(1, 1); ++yn, ++cj)
+                    {
+
+                        dj = (int)yn - (int)Site::nNeighborsLimit();
+                        dy = y + dj;
+
+                        ck = 0;
+                        for (uint zn = overlapBox(2, 0); zn < overlapBox(2, 1); ++zn, ++ck)
+                        {
+                            dk = (int)zn - (int)Site::nNeighborsLimit();
+                            dz = z + dk;
+
+                            r = sqrt(dx*dx + dy*dy + dz*dz);
+
+                            m_saddlePotential(i, j, k)(ci, cj, ck) = scale/pow(r, rPower);
+
+                        }
+                    }
+                }
+
+            }
+        }
+    }
+
+
+
 
     //rescale the potential to avoid exploding rates for some choices of parameters.
     //    scale = 1.0/accu(m_potential);
@@ -191,12 +233,11 @@ double DiffusionReaction::getSaddleEnergy()
 
     Site * targetSite;
 
-    double xs = ((x() + xD())%NX)/2.0;
-    double ys = ((y() + yD())%NY)/2.0;
-    double zs = ((z() + zD())%NZ)/2.0;
+//    double xs = ((x() + xD())%NX)/2.0;
+//    double ys = ((y() + yD())%NY)/2.0;
+//    double zs = ((z() + zD())%NZ)/2.0;
 
     double Esp = 0;
-
 
 
     for (uint xn = neighborSetIntersectionPoints(0, 0); xn < neighborSetIntersectionPoints(0, 1); ++xn)
@@ -217,29 +258,33 @@ double DiffusionReaction::getSaddleEnergy()
                     continue;
                 }
 
-                double dx = fabs(xs - targetSite->x());
-                double dy = fabs(ys - targetSite->y());
-                double dz = fabs(zs - targetSite->z());
+//                double dx = fabs(xs - targetSite->x());
+//                double dy = fabs(ys - targetSite->y());
+//                double dz = fabs(zs - targetSite->z());
 
-                if (dx > Site::nNeighborsLimit())
-                {
-                    dx = NX - dx;
-                }
+//                if (dx > Site::nNeighborsLimit())
+//                {
+//                    dx = NX - dx;
+//                }
 
-                if (dy > Site::nNeighborsLimit())
-                {
-                    dy = NY - dy;
-                }
+//                if (dy > Site::nNeighborsLimit())
+//                {
+//                    dy = NY - dy;
+//                }
 
-                if (dz > Site::nNeighborsLimit())
-                {
-                    dz = NZ - dz;
-                }
+//                if (dz > Site::nNeighborsLimit())
+//                {
+//                    dz = NZ - dz;
+//                }
 
-                double r = sqrt(dx*dx + dy*dy + dz*dz);
+//                double r = sqrt(dx*dx + dy*dy + dz*dz);
 
-                assert(r >= 1/2. && "Saddle point is atleast this distance from another site.");
-                Esp += scale/pow(r, rPower);
+//                assert(r >= 1/2. && "Saddle point is atleast this distance from another site.");
+//                Esp += scale/pow(r, rPower);
+
+                Esp += m_saddlePotential(path(0) + 1, path(1) + 1, path(2) + 1)(xn - neighborSetIntersectionPoints(0, 0),
+                                                                                yn - neighborSetIntersectionPoints(1, 0),
+                                                                                zn - neighborSetIntersectionPoints(2, 0));
 
             }
         }
@@ -251,12 +296,45 @@ double DiffusionReaction::getSaddleEnergy()
 
 }
 
+umat::fixed<3, 2> DiffusionReaction::getSaddleOverlapMatrix(const ivec & relCoor)
+{
+
+    umat::fixed<3, 2> overlap;
+
+    for (uint xyz = 0; xyz < 3; ++xyz)
+    {
+        if (relCoor(xyz) == 1)
+        {
+
+            overlap(xyz, 0) = 1;
+            overlap(xyz, 1) = Site::neighborhoodLength();
+
+        }
+
+        else if (relCoor(xyz) == -1)
+        {
+
+            overlap(xyz, 0) = 0;
+            overlap(xyz, 1) = Site::neighborhoodLength() - 1;
+        }
+
+        else
+        {
+
+            overlap(xyz, 0) = 0;
+            overlap(xyz, 1) = Site::neighborhoodLength();
+
+            KMCDebugger_Assert(overlap(xyz), ==, 0, "There should be no other option.");
+        }
+    }
+
+    return overlap;
+}
+
 void DiffusionReaction::calcRate()
 {
 
     counterAllRate++;
-
-    m_updateFlag = defaultUpdateFlag;
 
     if (m_updateFlag == defaultUpdateFlag)
     {
@@ -360,15 +438,16 @@ bool DiffusionReaction::allowedAtSite()
 }
 
 const
-double DiffusionReaction::UNSET_ENERGY = -1;
+double        DiffusionReaction::UNSET_ENERGY = -1;
 
-double DiffusionReaction::rPower;
-double DiffusionReaction::scale;
+double        DiffusionReaction::rPower;
+double        DiffusionReaction::scale;
 
-cube   DiffusionReaction::m_potential;
+cube          DiffusionReaction::m_potential;
+field<cube>   DiffusionReaction::m_saddlePotential;
 
-uint   DiffusionReaction::totalSP = 0;
-uint   DiffusionReaction::counterEqSP = 0;
-uint   DiffusionReaction::counterAllRate = 0;
-double DiffusionReaction::totalTime = 0;
-wall_clock DiffusionReaction::timer;
+uint          DiffusionReaction::totalSP = 0;
+uint          DiffusionReaction::counterEqSP = 0;
+uint          DiffusionReaction::counterAllRate = 0;
+double        DiffusionReaction::totalTime = 0;
+wall_clock    DiffusionReaction::timer;
