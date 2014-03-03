@@ -14,7 +14,7 @@ class DiffusionReaction : public Reaction
 public:
 
 
-    DiffusionReaction(Site *destinationSite);
+    DiffusionReaction(Site *currentSite, Site *destinationSite);
 
     ~DiffusionReaction() {
 
@@ -87,6 +87,9 @@ private:
     {
         updateKeepSaddle = 2
     };
+
+    umat::fixed<3, 2> neighborSetIntersectionPoints;
+    ivec::fixed<3>    path;
 
 
     // Reaction interface

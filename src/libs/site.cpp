@@ -290,8 +290,6 @@ void Site::loadConfig(const Setting &setting)
 void Site::
 addReaction(Reaction *reaction)
 {
-    reaction->setSite(this);
-
     m_siteReactions.push_back(reaction);
 }
 

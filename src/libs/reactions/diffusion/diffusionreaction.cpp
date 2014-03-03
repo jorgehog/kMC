@@ -3,12 +3,44 @@
 
 #include "../../debugger/kmcdebugger.h"
 
-DiffusionReaction::DiffusionReaction(Site *destinationSite) :
+DiffusionReaction::DiffusionReaction(Site * currentSite, Site *destinationSite) :
     Reaction("DiffusionReaction"),
     lastUsedEnergy(UNSET_ENERGY),
     lastUsedEsp(UNSET_ENERGY),
     m_destinationSite(destinationSite)
 {
+
+    setSite(currentSite);
+
+    m_reactionSite->distanceTo(destinationSite, path(0), path(1), path(2));
+
+    for (uint xyz = 0; xyz < 3; ++xyz)
+    {
+        if (path(xyz) == 1)
+        {
+
+            neighborSetIntersectionPoints(xyz, 0) = 1;
+            neighborSetIntersectionPoints(xyz, 1) = Site::neighborhoodLength();
+
+        }
+
+        else if (path(xyz) == -1)
+        {
+
+            neighborSetIntersectionPoints(xyz, 0) = 0;
+            neighborSetIntersectionPoints(xyz, 1) = Site::neighborhoodLength() - 1;
+
+        }
+
+        else
+        {
+
+            neighborSetIntersectionPoints(xyz, 0) = 0;
+            neighborSetIntersectionPoints(xyz, 1) = Site::neighborhoodLength();
+
+            KMCDebugger_Assert(path(xyz), ==, 0, "There should be no other option.", getFinalizingDebugMessage());
+        }
+    }
 
 }
 
@@ -159,50 +191,43 @@ double DiffusionReaction::getSaddleEnergy()
     double ys = ((y() + yD())%NY)/2.0;
     double zs = ((z() + zD())%NZ)/2.0;
 
-    vector<const Site*> neighborSet;
+    double Esp = 0;
 
-    for (const Site* site : m_reactionSite->allNeighbors())
+    for (uint xn = neighborSetIntersectionPoints(0, 0); xn < neighborSetIntersectionPoints(0, 1); ++xn)
     {
-        for (const Site* dSite : m_destinationSite->allNeighbors())
+        for (uint yn = neighborSetIntersectionPoints(1, 0); yn < neighborSetIntersectionPoints(1, 1); ++yn)
         {
-            if (site == dSite && site->isActive())
+            for (uint zn = neighborSetIntersectionPoints(2, 0); zn < neighborSetIntersectionPoints(2, 1); ++zn)
             {
-                neighborSet.push_back(site);
+                Site * targetSite = m_reactionSite->neighborHood(xn, yn, zn);
+
+                double dx = fabs(xs - targetSite->x());
+                double dy = fabs(ys - targetSite->y());
+                double dz = fabs(zs - targetSite->z());
+
+                if (dx > Site::nNeighborsLimit())
+                {
+                    dx = NX - dx;
+                }
+
+                if (dy > Site::nNeighborsLimit())
+                {
+                    dy = NY - dy;
+                }
+
+                if (dz > Site::nNeighborsLimit())
+                {
+                    dz = NZ - dz;
+                }
+
+                double r = sqrt(dx*dx + dy*dy + dz*dz);
+
+                assert(r >= 1/2. && "Saddle point is atleast this distance from another site.");
+                Esp += scale/pow(r, rPower);
+
             }
         }
     }
-
-    double Esp = 0;
-
-    for (const Site* targetSite : neighborSet)
-    {
-
-        double dx = fabs(xs - targetSite->x());
-        double dy = fabs(ys - targetSite->y());
-        double dz = fabs(zs - targetSite->z());
-
-        if (dx > Site::nNeighborsLimit())
-        {
-            dx = NX - dx;
-        }
-
-        if (dy > Site::nNeighborsLimit())
-        {
-            dy = NY - dy;
-        }
-
-        if (dz > Site::nNeighborsLimit())
-        {
-            dz = NZ - dz;
-        }
-
-        double r = sqrt(dx*dx + dy*dy + dz*dz);
-
-        assert(r >= 1/2. && "Saddle point is atleast this distance from another site.");
-        Esp += scale/pow(r, rPower);
-
-    }
-
 
     totalTime += timer.toc();
 
@@ -214,6 +239,8 @@ void DiffusionReaction::calcRate()
 {
 
     counterAllRate++;
+
+    m_updateFlag = defaultUpdateFlag;
 
     if (m_updateFlag == defaultUpdateFlag)
     {
@@ -227,7 +254,7 @@ void DiffusionReaction::calcRate()
 
             if (fabs(lastUsedEsp - Esp) < 1E-10)
             {
-                KMCDebugger_AssertBool(false, "should never happen.", getFinalizingDebugMessage());
+                //                KMCDebugger_AssertBool(false, "should never happen.", getFinalizingDebugMessage());
                 counterEqSP++;
             }
 
@@ -276,8 +303,9 @@ const string DiffusionReaction::info(int xr, int yr, int zr, string desc) const
     (void) zr;
     (void) desc;
 
-    int X, Y, Z;
-    m_reactionSite->distanceTo(m_destinationSite, X, Y, Z);
+    int X = path(0);
+    int Y = path(1);
+    int Z = path(2);
 
     assert((x() + NX + X)%NX == m_destinationSite->x());
     assert((y() + NY + Y)%NY == m_destinationSite->y());

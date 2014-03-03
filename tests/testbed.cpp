@@ -517,13 +517,17 @@ void testBed::testEnergyAndNeighborSetup()
                                             C++;
                                         }
 
-                                        if (otherSite != thisSite->neighborHood()[Site::nNeighborsLimit() + dx][Site::nNeighborsLimit() + dy][Site::nNeighborsLimit() + dz]) {
-                                            //                                            cout << "fail neighbor" << endl;
+                                        if (otherSite != thisSite->neighborHood(Site::nNeighborsLimit() + dx,
+                                                                                Site::nNeighborsLimit() + dy,
+                                                                                Site::nNeighborsLimit() + dz))
+                                        {
                                             failCount++;
                                         }
 
-                                        if (thisSite != otherSite->neighborHood()[Site::nNeighborsLimit() - dx][Site::nNeighborsLimit() - dy][Site::nNeighborsLimit() - dz]) {
-                                            //                                            cout << "fail neighbor" << endl;
+                                        if (thisSite != otherSite->neighborHood(Site::nNeighborsLimit() - dx,
+                                                                                Site::nNeighborsLimit() - dy,
+                                                                                Site::nNeighborsLimit() - dz))
+                                        {
                                             failCount++;
                                         }
                                     }

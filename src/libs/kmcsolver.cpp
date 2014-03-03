@@ -278,12 +278,14 @@ void KMCSolver::initializeDiffusionReactions()
                         for (uint k = 0; k < 3; ++k)
                         {
 
-                            destination = currentSite->neighborHood()[Site::nNeighborsLimit() -1 + i][Site::nNeighborsLimit() - 1 + j][Site::nNeighborsLimit() - 1 + k];
+                            destination = currentSite->neighborHood(Site::nNeighborsLimit() - 1 + i,
+                                                                    Site::nNeighborsLimit() - 1 + j,
+                                                                    Site::nNeighborsLimit() - 1 + k);
 
                             //This menas we are not at the current site.
                             if(destination != currentSite)
                             {
-                                currentSite->addReaction(new DiffusionReaction(destination));
+                                currentSite->addReaction(new DiffusionReaction(currentSite, destination));
                             }
 
                             else

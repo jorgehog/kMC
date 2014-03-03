@@ -226,9 +226,9 @@ public:
         return m_affectedSites;
     }
 
-    Site**** neighborHood() const
+    Site* neighborHood(const uint x, const uint y, const uint z) const
     {
-        return m_neighborHood;
+        return m_neighborHood[x][y][z];
     }
 
     double energy() const
