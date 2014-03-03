@@ -1,8 +1,8 @@
 #pragma once
 
-
-#include "../site.h"
 #include <sys/types.h>
+#include <sstream>
+#include <set>
 
 #include <libconfig_utils/libconfig_utils.h>
 
@@ -35,7 +35,7 @@ public:
         m_updateFlags.insert(defaultUpdateFlag);
     }
 
-    void getTriumphingUpdateFlag();
+    void selectTriumphingUpdateFlag();
 
     virtual bool isNotBlocked() const = 0;
 
@@ -65,15 +65,14 @@ public:
         m_reactionSite = site;
     }
 
-    void clearUpdateFlags()
-    {
-        m_updateFlags.clear();
-        assert(m_updateFlags.empty());
-    }
-
     const set<int> & updateFlags() const
     {
         return m_updateFlags;
+    }
+
+    const int & updateFlag() const
+    {
+        return m_updateFlag;
     }
 
     const uint & ID() const
@@ -86,20 +85,11 @@ public:
         return m_rate;
     }
 
-    const uint & x() const
-    {
-        return m_reactionSite->x();
-    }
+    const uint & x() const;
 
-    const uint & y() const
-    {
-        return m_reactionSite->y();
-    }
+    const uint & y() const;
 
-    const uint & z() const
-    {
-        return m_reactionSite->z();
-    }
+    const uint & z() const;
 
     const Site * reactionSite() const
     {
@@ -136,6 +126,7 @@ public:
     //! triumphant flag.
     enum AllUpdateFlags
     {
+        UNSET_UPDATE_FLAG = -1,
         defaultUpdateFlag = 0
     };
 

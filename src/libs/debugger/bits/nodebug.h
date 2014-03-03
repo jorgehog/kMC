@@ -1,14 +1,18 @@
 #pragma once
 
-#include "../kmcdebugger.h"
+#define _KMCDebugger_IGNORE(expr) static_cast<void>(expr)
 
 //Ignore everything if we are not debugging.
 #define KMCDebugger_SetEnabledTo(state) \
     _KMCDebugger_IGNORE(state)
+#define KMCDebugger_IsEnabled \
+    false
 #define KMCDebugger_Assert(A, OP, B, ...) \
     _KMCDebugger_IGNORE(0)
 #define KMCDebugger_AssertBool(expr, ...) \
     _KMCDebugger_IGNORE(expr)
+#define KMCDebugger_AssertClose(A, B, lim, ...) \
+    _KMCDebugger_IGNORE(0)
 #define KMCDebugger_GetReaction(which) \
     _KMCDebugger_IGNORE(0)
 #define KMCDebugger_SetFilename(filename) \
@@ -17,8 +21,8 @@
     _KMCDebugger_IGNORE(path)
 #define KMCDebugger_SetActiveReaction(reaction) \
     _KMCDebugger_IGNORE(reaction)
-#define KMCDebugger_Init(solver) \
-    _KMCDebugger_IGNORE(solver)
+#define KMCDebugger_Init() \
+    _KMCDebugger_IGNORE(0)
 #define KMCDebugger_Finalize() \
     _KMCDebugger_IGNORE(0)
 #define KMCDebugger_DumpTrace(i) \

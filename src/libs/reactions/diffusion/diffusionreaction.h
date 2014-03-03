@@ -3,21 +3,33 @@
 
 #include "../reaction.h"
 
+#include <armadillo>
+
 #include <libconfig_utils/libconfig_utils.h>
 
+using namespace arma;
 
 class DiffusionReaction : public Reaction
 {
 public:
 
 
-    DiffusionReaction(Site *destinationSite);
+    DiffusionReaction(Site *currentSite, Site *destinationSite);
 
     ~DiffusionReaction() {
-        lastSetup.clear();
+
     }
 
+
     double getSaddleEnergy();
+
+    double getSaddleEnergyContributionFrom(const Site* site);
+
+    double getSaddleEnergyContributionFromNeighborAt(const uint &i, const uint &j, const uint &k);
+
+    static const double UNSET_ENERGY;
+
+    static umat::fixed<3, 2> getSaddleOverlapMatrix(const ivec &relCoor);
 
     static void loadConfig(const Setting & setting);
 
@@ -45,27 +57,17 @@ public:
         return m_destinationSite;
     }
 
-    const uint & xD () const
-    {
-        return m_destinationSite->x();
-    }
+    const uint & xD () const;
 
-    const uint & yD () const
-    {
-        return m_destinationSite->y();
-    }
+    const uint & yD () const;
 
-    const uint & zD () const
-    {
-        return m_destinationSite->z();
-    }
+    const uint & zD () const;
 
     string getFinalizingDebugMessage() const;
 
     //tmp
     double lastUsedEnergy;
     double lastUsedEsp;
-    set<const Site*> lastSetup;
 
     static uint counterEqSP;
     static uint totalSP;
@@ -85,13 +87,20 @@ private:
     static double scale;
 
     static cube m_potential;
+    static field<cube> m_saddlePotential;
+
 
     Site* m_destinationSite;
 
     enum SpecificUpdateFlags
     {
-        updateKeepSaddle = 1
+        updateKeepSaddle = 2
     };
+
+    umat::fixed<3, 2> neighborSetIntersectionPoints;
+    ivec::fixed<3> path;
+    uvec::fixed<3> saddleFieldIndices;
+
 
 
     // Reaction interface

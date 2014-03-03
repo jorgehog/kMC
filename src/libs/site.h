@@ -46,6 +46,8 @@ public:
 
     static void updateAffectedSites();
 
+    static void selectUpdateFlags();
+
     static uint findLevel(uint i, uint j, uint k);
 
     static void resetAll()
@@ -100,11 +102,14 @@ public:
 
     void queueAffectedSites();
 
+    void setZeroEnergy();
+
     void reset()
     {
         m_nNeighbors.zeros();
         m_totalEnergy -= m_energy;
         m_energy = 0;
+        m_nNeighborsSum = 0;
     }
 
 
@@ -167,6 +172,7 @@ public:
         return m_nNeighbors(level);
     }
 
+    uint nNeighborsSum() const;
 
     bool isCrystal() const
     {
@@ -220,9 +226,9 @@ public:
         return m_affectedSites;
     }
 
-    Site**** neighborHood() const
+    Site* neighborHood(const uint x, const uint y, const uint z) const
     {
-        return m_neighborHood;
+        return m_neighborHood[x][y][z];
     }
 
     double energy() const
@@ -272,6 +278,7 @@ private:
     Site**** m_neighborHood;
     vector<Site*> m_allNeighbors;
     uvec m_nNeighbors;
+    uint m_nNeighborsSum;
 
     bool m_active;
 

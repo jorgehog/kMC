@@ -32,11 +32,10 @@ UBERTEST(HasCrystalNeighbor)
 UBERTEST(InitializationOfCrystal)
 UBERTEST(InitialReactionSetup)
 UBERTEST(Sequential)
-UBERTEST(SmartSaddleUpdateAlg)
 UBERTEST(KnownCase)
 
 int main()
 {
-    KMCDebugger_SetEnabledTo(false);
+    KMCDebugger_SetFilename("testTrace");
     return UnitTest::RunAllTests();
 }

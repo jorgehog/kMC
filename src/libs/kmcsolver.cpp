@@ -47,7 +47,6 @@ KMCSolver::KMCSolver(const Setting & root) :
 
     DiffusionReaction::loadConfig(getSetting(root, {"Reactions", "Diffusion"}));
 
-
     nCycles = getSurfaceSetting<uint>(SolverSettings, "nCycles");
 
     cyclesPerOutput = getSurfaceSetting<uint>(SolverSettings, "cyclesPerOutput");
@@ -131,15 +130,13 @@ KMCSolver::~KMCSolver()
 void KMCSolver::run()
 {
 
-    KMCDebugger_Init(this);
+    KMCDebugger_Init();
 
     Reaction * selectedReaction;
     uint choice;
     double R;
 
     initializeCrystal();
-
-    KMCDebugger_PushTraces();
 
     while(cycle < nCycles)
     {
@@ -171,11 +168,9 @@ void KMCSolver::run()
 
     }
 
-#ifndef KMC_NO_DEBUG
     cout << "Frac equal saddles calculated:" << DiffusionReaction::counterEqSP/(double)DiffusionReaction::totalSP*100 << " %" << endl;
     cout << "Frac saddles recalculated: " << DiffusionReaction::totalSP/(double)DiffusionReaction::counterAllRate*100 << " %" << endl;
     cout << "Average time in saddleFunc: " << DiffusionReaction::totalTime/DiffusionReaction::totalSP*1E6 << " µs" << endl;
-#endif
 
 }
 
@@ -282,12 +277,14 @@ void KMCSolver::initializeDiffusionReactions()
                         for (uint k = 0; k < 3; ++k)
                         {
 
-                            destination = currentSite->neighborHood()[Site::nNeighborsLimit() -1 + i][Site::nNeighborsLimit() - 1 + j][Site::nNeighborsLimit() - 1 + k];
+                            destination = currentSite->neighborHood(Site::nNeighborsLimit() - 1 + i,
+                                                                    Site::nNeighborsLimit() - 1 + j,
+                                                                    Site::nNeighborsLimit() - 1 + k);
 
                             //This menas we are not at the current site.
                             if(destination != currentSite)
                             {
-                                currentSite->addReaction(new DiffusionReaction(destination));
+                                currentSite->addReaction(new DiffusionReaction(currentSite, destination));
                             }
 
                             else
@@ -342,7 +339,11 @@ void KMCSolver::initializeSites()
 void KMCSolver::initializeCrystal()
 {
 
+    bool enabled = KMCDebugger_IsEnabled;
+    KMCDebugger_SetEnabledTo(false);
+
     sites[NX/2][NY/2][NZ/2]->spawnAsFixedCrystal();
+    KMCDebugger_PushTraces();
 
     uint crystalSizeX = round(NX*RelativeSeedSize);
     uint crystalSizeY = round(NY*RelativeSeedSize);
@@ -380,6 +381,7 @@ void KMCSolver::initializeCrystal()
                             if (!((i == NX/2 && j == NY/2 && k == NZ/2)))
                             {
                                 sites[i][j][k]->activate();
+                                KMCDebugger_PushTraces();
                             }
 
                             continue;
@@ -395,6 +397,7 @@ void KMCSolver::initializeCrystal()
                         if(sites[i][j][k]->isLegalToSpawn())
                         {
                             sites[i][j][k]->activate();
+                            KMCDebugger_PushTraces();
                         }
                     }
                 }
@@ -408,6 +411,9 @@ void KMCSolver::initializeCrystal()
          << endl;
 
     dumpXYZ();
+
+
+    KMCDebugger_SetEnabledTo(enabled);
 
 }
 
@@ -445,6 +451,8 @@ void KMCSolver::getRateVariables()
 
 uint KMCSolver::getReactionChoice(double R)
 {
+
+    KMCDebugger_Assert(accuAllRates.size(), !=, 0, "No active reactions.");
 
     uint imax = accuAllRates.size() - 1;
     uint MAX = imax;

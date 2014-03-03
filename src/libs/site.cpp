@@ -2,11 +2,10 @@
 #include "reactions/reaction.h"
 #include "reactions/diffusion/diffusionreaction.h"
 #include "kmcsolver.h"
-
 #include "debugger/kmcdebugger.h"
 
-
 Site::Site(uint _x, uint _y, uint _z) :
+    m_nNeighborsSum(0),
     m_active(false),
     m_isFixedCrystalSeed(false),
     m_x(_x),
@@ -47,8 +46,6 @@ Site::~Site()
 
     m_nNeighbors.reset();
 
-    m_energy = 0;
-
 }
 
 
@@ -59,13 +56,26 @@ void Site::updateAffectedSites()
 
     for (Site* site : m_affectedSites)
     {
-        KMCDebugger_AssertBool(site->isActive(), site->info());
+        KMCDebugger_AssertBool(site->isActive(), "Affected site should be active.", site->info());
         site->updateReactions();
         site->calculateRates();
     }
 
     m_affectedSites.clear();
 
+}
+
+void Site::selectUpdateFlags()
+{
+    for (Site * site : m_affectedSites)
+    {
+
+        for (Reaction * reaction : site->siteReactions())
+        {
+            reaction->selectTriumphingUpdateFlag();
+        }
+
+    }
 }
 
 
@@ -280,8 +290,6 @@ void Site::loadConfig(const Setting &setting)
 void Site::
 addReaction(Reaction *reaction)
 {
-    reaction->setSite(this);
-
     m_siteReactions.push_back(reaction);
 }
 
@@ -318,7 +326,7 @@ void Site::calculateRates()
 {
     for (Reaction* reaction : m_activeReactions)
     {
-        reaction->getTriumphingUpdateFlag();
+        reaction->selectTriumphingUpdateFlag();
         reaction->calcRate();
     }
 }
@@ -401,7 +409,6 @@ void Site::setDirectUpdateFlags()
             for (Reaction * reaction : neighbor->siteReactions())
             {
                 reaction->setDirectUpdateFlags(this);
-                KMCDebugger_Assert(reaction->updateFlags().size(), !=, 0, reaction->info());
                 C++;
             }
 
@@ -455,6 +462,7 @@ void Site::activate()
 
 
     m_active = true;
+    m_affectedSites.insert(this);
 
     informNeighborhoodOnChange(+1);
 
@@ -469,15 +477,15 @@ void Site::activate()
 
     setDirectUpdateFlags();
 
-    m_affectedSites.insert(this);
-    for (Reaction * reaction : siteReactions())
+    for (Reaction * reaction : m_siteReactions)
     {
         reaction->setDirectUpdateFlags(this);
     }
 
+    KMCDebugger_MarkPartialStep("ACTIVATION COMPLETE");
+
     m_totalActiveSites++;
 
-    KMCDebugger_MarkPartialStep("ACTIVATION COMPLETE");
 
 }
 
@@ -507,11 +515,12 @@ void Site::deactivate()
 
     setDirectUpdateFlags();
 
+
     m_activeReactions.clear();
 
-    m_totalActiveSites--;
-
     KMCDebugger_MarkPartialStep("DEACTIVATION COMPLETE");
+
+    m_totalActiveSites--;
 
 }
 
@@ -611,8 +620,14 @@ void Site::informNeighborhoodOnChange(int change)
                     continue;
                 }
 
+                KMCDebugger_AssertBool(!((change < 0) && (neighbor->nNeighborsSum() == 0)), "Call initiated to set negative nNeighbors.", neighbor->info());
+
                 level = m_levelMatrix(i, j, k);
-                neighbor->m_nNeighbors(level)+=change;
+
+                KMCDebugger_AssertBool(!((change < 0) && (neighbor->nNeighbors(level) == 0)), "Call initiated to set negative neighbor.", neighbor->info());
+
+                neighbor->m_nNeighbors(level)+= change;
+                neighbor->m_nNeighborsSum += change;
 
 
                 dE = change*DiffusionReaction::potential(i,  j,  k);
@@ -643,6 +658,14 @@ void Site::queueAffectedSites()
             m_affectedSites.insert(neighbor);
         }
     }
+}
+
+
+//! Sets the site energy to zero. Used to avoid round-off error zeros.
+void Site::setZeroEnergy()
+{
+    KMCDebugger_Assert(m_nNeighborsSum, ==, 0, "Energy is not zero.", info());
+    m_energy = 0;
 }
 
 uint Site::findLevel(uint i, uint j, uint k)
@@ -799,6 +822,12 @@ const string Site::info(int xr, int yr, int zr, string desc) const
 
     return s_full.str();
 
+}
+
+uint Site::nNeighborsSum() const
+{
+    KMCDebugger_Assert(sum(m_nNeighbors), ==, m_nNeighborsSum, "Should be identical.", info());
+    return m_nNeighborsSum;
 }
 
 

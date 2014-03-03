@@ -456,6 +456,7 @@ void testBed::testRateCalculation () {
                     //                    double RATE = r->rate();
                     double E = ((DiffusionReaction*)r)->lastUsedEnergy;
                     double Esp = ((DiffusionReaction*)r)->lastUsedEsp;
+                    r->m_updateFlag = Reaction::defaultUpdateFlag;
                     r->calcRate();
 
                     CHECK_EQUAL(E, ((DiffusionReaction*)r)->lastUsedEnergy);
@@ -516,13 +517,17 @@ void testBed::testEnergyAndNeighborSetup()
                                             C++;
                                         }
 
-                                        if (otherSite != thisSite->neighborHood()[Site::nNeighborsLimit() + dx][Site::nNeighborsLimit() + dy][Site::nNeighborsLimit() + dz]) {
-                                            //                                            cout << "fail neighbor" << endl;
+                                        if (otherSite != thisSite->neighborHood(Site::nNeighborsLimit() + dx,
+                                                                                Site::nNeighborsLimit() + dy,
+                                                                                Site::nNeighborsLimit() + dz))
+                                        {
                                             failCount++;
                                         }
 
-                                        if (thisSite != otherSite->neighborHood()[Site::nNeighborsLimit() - dx][Site::nNeighborsLimit() - dy][Site::nNeighborsLimit() - dz]) {
-                                            //                                            cout << "fail neighbor" << endl;
+                                        if (thisSite != otherSite->neighborHood(Site::nNeighborsLimit() - dx,
+                                                                                Site::nNeighborsLimit() - dy,
+                                                                                Site::nNeighborsLimit() - dz))
+                                        {
                                             failCount++;
                                         }
                                     }
@@ -550,6 +555,10 @@ void testBed::testEnergyAndNeighborSetup()
 
 void testBed::testUpdateNeigbors()
 {
+
+    bool enabled = KMCDebugger_IsEnabled;
+    KMCDebugger_SetEnabledTo(false);
+
     CHECK_EQUAL(0, Site::totalEnergy());
     CHECK_EQUAL(0, Site::totalActiveSites());
 
@@ -604,6 +613,8 @@ void testBed::testUpdateNeigbors()
 
     CHECK_EQUAL(0, Site::totalActiveSites());
     CHECK_CLOSE(0, Site::totalEnergy(), 0.001);
+
+    KMCDebugger_SetEnabledTo(enabled);
 
 }
 
@@ -821,6 +832,8 @@ void testBed::testInitializationOfCrystal()
 void testBed::testInitialReactionSetup()
 {
 
+    KMCDebugger_Init();
+
     for (uint i = 0; i < NX; ++i) {
         for (uint j = 0; j < NY; ++j) {
             for (uint k = 0; k < NZ; ++k) {
@@ -843,20 +856,14 @@ void testBed::testInitialReactionSetup()
 
                 for (Reaction* r : solver->sites[i][j][k]->activeReactions())
                 {
-                    if (!solver->sites[i][j][k]->isActive())
-                    {
-                        cout << "DEACTIVE SITE SHOULD HAVE NO REACTIONS" << endl;
-                        solver->sites[i][j][k]->info();
-                        exit(1);
-                    }
+                    KMCDebugger_AssertBool(solver->sites[i][j][k]->isActive(),
+                                           "DEACTIVE SITE SHOULD HAVE NO REACTIONS",
+                                           solver->sites[i][j][k]->info());
 
-                    if (!r->isNotBlocked())
-                    {
-                        cout << "REACTION NOT DEACTIVATED PROPERLY:" << endl;
-                        r->info();
+                    KMCDebugger_AssertBool(r->isNotBlocked(),
+                                           "REACTION NOT DEACTIVATED PROPERLY:",
+                                           r->info());
 
-                        exit(1);
-                    }
                     oldReactions.push_back(r);
                     totRate1 += r->rate();
                 }
@@ -1020,142 +1027,16 @@ void testBed::testKnownCase()
     {
         o.close();
         CHECK_EQUAL(NX*NY*NZ, winCount);
+        if (winCount != NX*NY*NZ)
+        {
+            KMCDebugger_DumpFullTrace("");
+        }
     }
 
 
 
 }
 
-void testBed::testSmartSaddleUpdateAlg()
-{
-    KMCDebugger_Init(solver);
-    uint choice, cycle;
-    double R;
-
-    cycle = 0;
-
-    solver->initializeCrystal();
-    KMCDebugger_PushTraces();
-//    reset();
-
-//    for (Site* SITE : Site::affectedSites)
-//    {
-//        for (Reaction* REACT : SITE->siteReactions())
-//        {
-//            CHECK_EQUAL(REACT->rate(), Reaction::UNSET_RATE);
-//            CHECK_EQUAL(1, REACT->m_updateFlags.size());
-//            if (Reaction::UNSET_UPDATE_FLAG == *REACT->m_updateFlags.begin())
-//            {
-//                failCount++;
-//            }
-//            else
-//            {
-//                winCount++;
-//            }
-//            nTrials++;
-//        }
-//    }
-
-//    CHECK_EQUAL(winCount, nTrials);
-//    CHECK_EQUAL(failCount, 0);
-//    assert(failCount == 0);
-
-    DiffusionReaction * dr;
-    Reaction* selectedReaction;
-    while(cycle < 1000)
-    {
-
-        solver->kTot = 0;
-        solver->accuAllRates.clear();
-        solver->allReactions.clear();
-
-        for (Site* site : Site::affectedSites())
-        {
-            site->updateReactions();
-
-            for (Reaction* reaction : site->m_activeReactions)
-            {
-
-                reaction->getTriumphingUpdateFlag();
-
-                if (cycle == 0) {
-                    CHECK_EQUAL(Reaction::defaultUpdateFlag, reaction->m_updateFlag);
-                }
-
-                dr = (DiffusionReaction*)reaction;
-
-                if (dr->m_updateFlag == dr->updateKeepSaddle)
-                {
-                    CHECK_EQUAL(true, dr->m_rate != dr->UNSET_RATE);
-
-                    double energyShift = dr->reactionSite()->energy() - dr->lastUsedEnergy;
-                    dr->m_rate *= exp(-dr->beta*energyShift);
-
-                    double newS = dr->getSaddleEnergy();
-
-//                    if (newS == 0)
-//                    {
-//                        KMCDebugger_DumpFullTrace(dr->getFinalizingDebugMessage(), true);
-//                        exit(1);
-//                    }
-
-                    CHECK_CLOSE(newS, dr->lastUsedEsp, 0.0000000001);
-
-                    double newRate = dr->m_rate;
-                    dr->m_updateFlag = dr->defaultUpdateFlag;
-                    dr->calcRate();
-
-                    CHECK_CLOSE(dr->m_rate, newRate, 0.000000001);
-
-
-                }
-
-                else
-                {
-                    dr->m_rate = dr->m_linearRateScale*exp(-dr->beta*(dr->m_reactionSite->energy()-dr->getSaddleEnergy()));
-                }
-
-                dr->lastUsedEnergy = dr->m_reactionSite->energy();
-
-
-            }
-        }
-
-        Site::m_affectedSites.clear();
-
-        for (uint x = 0; x < NX; ++x)
-        {
-            for (uint y = 0; y < NY; ++y)
-            {
-                for (uint z = 0; z < NZ; ++z)
-                {
-                    for (Reaction* reaction : solver->sites[x][y][z]->activeReactions())
-                    {
-                        assert(reaction->rate() != Reaction::UNSET_RATE);
-                        solver->kTot += reaction->rate();
-                        solver->accuAllRates.push_back(solver->kTot);
-                        solver->allReactions.push_back(reaction);
-                    }
-                }
-            }
-        }
-
-        double r = KMC_RNG_UNIFORM();
-
-        R = solver->kTot*r;
-
-        choice = solver->getReactionChoice(R);
-
-        selectedReaction = solver->allReactions.at(choice);
-        KMCDebugger_SetActiveReaction(selectedReaction);
-
-        selectedReaction->execute();
-        KMCDebugger_PushTraces();
-
-        cycle++;
-
-    }
-}
 
 
 
