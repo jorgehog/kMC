@@ -54,6 +54,7 @@ void DiffusionReaction::loadConfig(const Setting &setting)
     m_saddlePotential.set_size(3, 3, 3);
 
     uint i, j, k;
+    ivec _path;
     double dx, dy, dz, r;
 
     for (int x = -1; x <= 1; ++x)
@@ -71,7 +72,8 @@ void DiffusionReaction::loadConfig(const Setting &setting)
                 j = y + 1;
                 k = z + 1;
 
-                umat overlapBox = getSaddleOverlapMatrix({x, y, z});
+                _path = {x, y, z};
+                umat overlapBox = getSaddleOverlapMatrix(_path);
 
 
                 m_saddlePotential(i, j, k).set_size(overlapBox(0, 1) - overlapBox(0, 0),
@@ -80,16 +82,16 @@ void DiffusionReaction::loadConfig(const Setting &setting)
 
                 KMCDebugger_Assert(m_saddlePotential.n_elem, !=, 0, "illegal box size.");
                 KMCDebugger_Assert(m_saddlePotential.n_elem, !=, arma::prod(overlapBox.col(1)-overlapBox.col(0)), "saddle mat fail.");
-//                cout << " --------  " << x << " " << y << " " << z << "  ------ " << endl;
+
                 for (uint xn = overlapBox(0, 0); xn < overlapBox(0, 1); ++xn)
                 {
 
-                    dx = x/2.0 + (int)xn - (int)Site::nNeighborsLimit();
+                    dx = x/2.0 - (int)xn + (int)Site::nNeighborsLimit();
 
                     for (uint yn = overlapBox(1, 0); yn < overlapBox(1, 1); ++yn)
                     {
 
-                        dy = y/2.0 + (int)yn - (int)Site::nNeighborsLimit();
+                        dy = y/2.0 - (int)yn + (int)Site::nNeighborsLimit();
 
                         for (uint zn = overlapBox(2, 0); zn < overlapBox(2, 1); ++zn)
                         {
@@ -99,11 +101,10 @@ void DiffusionReaction::loadConfig(const Setting &setting)
                                 continue;
                             }
 
-                            dz = z/2.0 + (int)zn - (int)Site::nNeighborsLimit();
+                            dz = z/2.0 - (int)zn + (int)Site::nNeighborsLimit();
 
                             r = sqrt(dx*dx + dy*dy + dz*dz);
 
-//                            cout << xn << " " << yn << " " << zn << " " << dx << " " << dy << " " << dz << endl;
 
                             m_saddlePotential(i, j, k)(xn - overlapBox(0, 0),
                                                        yn - overlapBox(1, 0),
@@ -246,7 +247,6 @@ double DiffusionReaction::getSaddleEnergy()
     double Esp = 0;
     double Esp2 = 0;
 
-    cout << path.t();
     for (uint xn = neighborSetIntersectionPoints(0, 0); xn < neighborSetIntersectionPoints(0, 1); ++xn)
     {
         for (uint yn = neighborSetIntersectionPoints(1, 0); yn < neighborSetIntersectionPoints(1, 1); ++yn)
@@ -286,8 +286,6 @@ double DiffusionReaction::getSaddleEnergy()
 
                 double r = sqrt(dx*dx + dy*dy + dz*dz);
 
-                cout << xn << " " << yn << " " << zn << " " << dx << " " << dy << " " << dz << endl;
-
                 assert(r >= 1/2. && "Saddle point is atleast this distance from another site.");
                 Esp += scale/pow(r, rPower);
 
@@ -299,18 +297,10 @@ double DiffusionReaction::getSaddleEnergy()
                                   zn - neighborSetIntersectionPoints(2, 0));
 
                 KMCDebugger_Assert(Esp, ==, Esp2);
-//                if (Esp == Esp2)
-//                {
-//                    cout << "WIN"<< endl;
-//                } else {
-//                    cout << "FAIL" << endl;
-//                }
 
             }
         }
     }
-
-    cout << "######################" << endl;
 
     totalTime += timer.toc();
 
