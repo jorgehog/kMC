@@ -20,9 +20,14 @@ public:
 
     }
 
-    static const double UNSET_ENERGY;
 
     double getSaddleEnergy();
+
+    double getSaddleEnergyContributionFrom(const Site* site);
+
+    double getSaddleEnergyContributionFromNeighborAt(const uint &i, const uint &j, const uint &k);
+
+    static const double UNSET_ENERGY;
 
     static umat::fixed<3, 2> getSaddleOverlapMatrix(const ivec &relCoor);
 

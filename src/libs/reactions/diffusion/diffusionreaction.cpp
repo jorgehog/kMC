@@ -264,6 +264,14 @@ double DiffusionReaction::getSaddleEnergy()
                 Esp += saddlePot(xn - neighborSetIntersectionPoints(0, 0),
                                  yn - neighborSetIntersectionPoints(1, 0),
                                  zn - neighborSetIntersectionPoints(2, 0));
+
+                KMCDebugger_Assert(saddlePot(xn - neighborSetIntersectionPoints(0, 0),
+                                             yn - neighborSetIntersectionPoints(1, 0),
+                                             zn - neighborSetIntersectionPoints(2, 0)),
+                                   ==,
+                                   getSaddleEnergyContributionFrom(targetSite),
+                                   "Mismatch in saddle energy contribution.",
+                                   getFinalizingDebugMessage());
             }
         }
     }
@@ -271,6 +279,29 @@ double DiffusionReaction::getSaddleEnergy()
     totalTime += timer.toc();
 
     return Esp;
+
+}
+
+double DiffusionReaction::getSaddleEnergyContributionFrom(const Site *site)
+{
+    int X, Y, Z;
+
+    m_reactionSite->distanceTo(site, X, Y, Z);
+
+    return getSaddleEnergyContributionFromNeighborAt(X + Site::nNeighborsLimit(),
+                                                     Y + Site::nNeighborsLimit(),
+                                                     Z + Site::nNeighborsLimit());
+
+}
+
+double DiffusionReaction::getSaddleEnergyContributionFromNeighborAt(const uint &i, const uint &j, const uint &k)
+{
+    return m_saddlePotential(saddleFieldIndices(0),
+                             saddleFieldIndices(1),
+                             saddleFieldIndices(2))
+            (i - neighborSetIntersectionPoints(0, 0),
+             j - neighborSetIntersectionPoints(1, 0),
+             k - neighborSetIntersectionPoints(2, 0));
 
 }
 
