@@ -7,7 +7,6 @@ DiffusionReaction::DiffusionReaction(Site *destinationSite) :
     Reaction("DiffusionReaction"),
     lastUsedEnergy(UNSET_ENERGY),
     lastUsedEsp(UNSET_ENERGY),
-    m_hasUnitRate(false),
     m_destinationSite(destinationSite)
 {
 
@@ -102,18 +101,12 @@ string DiffusionReaction::getFinalizingDebugMessage() const
 void DiffusionReaction::setDirectUpdateFlags(const Site *changedSite)
 {
 
-    //    m_updateFlags.insert(defaultUpdateFlag);
     uint d_maxDistance, r_maxDistance;
+
 
     if (m_rate == UNSET_RATE || changedSite == m_reactionSite)
     {
         setImplicitUpdateFlags();
-        m_hasUnitRate = false;
-    }
-
-    else if (m_reactionSite->nNeighborsSum() == 0)
-    {
-        m_hasUnitRate = true;
     }
 
     else
@@ -135,7 +128,7 @@ void DiffusionReaction::setDirectUpdateFlags(const Site *changedSite)
             if (d_maxDistance > Site::nNeighborsLimit())
             {
                 KMCDebugger_Assert(Site::nNeighborsLimit() + 1, ==,  d_maxDistance);
-                m_updateFlags.push_back(updateKeepSaddle);
+                m_updateFlags.insert(updateKeepSaddle);
             }
 
             else
@@ -145,7 +138,6 @@ void DiffusionReaction::setDirectUpdateFlags(const Site *changedSite)
             }
         }
 
-        m_hasUnitRate = false;
 
         KMCDebugger_AssertBool(!m_updateFlags.empty(), "Updateflag should not be empty!", info());
     }
@@ -155,6 +147,11 @@ void DiffusionReaction::setDirectUpdateFlags(const Site *changedSite)
 
 double DiffusionReaction::getSaddleEnergy()
 {
+
+    if (m_reactionSite->nNeighborsSum() == 0 || m_destinationSite->nNeighborsSum() == 1)
+    {
+        return 0;
+    }
 
     timer.tic();
 
@@ -218,33 +215,25 @@ void DiffusionReaction::calcRate()
 
     counterAllRate++;
 
-    if (m_hasUnitRate)
-    {
-        KMCDebugger_AssertClose(m_reactionSite->energy(), 0, 1E-10, "Energy should be zero for a unit rate.", getFinalizingDebugMessage());
-
-        m_reactionSite->setZeroEnergy();
-
-        lastUsedEsp = 0;
-
-        m_rate = 1;
-
-        KMCDebugger_Assert(getSaddleEnergy(), ==, 0, "Should be very zero.", getFinalizingDebugMessage());
-    }
-
-    else if (m_updateFlag == defaultUpdateFlag)
+    if (m_updateFlag == defaultUpdateFlag)
     {
 
         double Esp = getSaddleEnergy();
 
         m_rate = m_linearRateScale*exp(-beta*(m_reactionSite->energy()- Esp));
 
-        if (fabs(lastUsedEsp - Esp) < 1E-10)
+        if (Esp != 0)
         {
-            counterEqSP++;
+
+            if (fabs(lastUsedEsp - Esp) < 1E-10)
+            {
+                KMCDebugger_AssertBool(false, "should never happen.", getFinalizingDebugMessage());
+                counterEqSP++;
+            }
+
         }
 
         totalSP++;
-
         lastUsedEsp = Esp;
     }
 
@@ -301,8 +290,7 @@ const string DiffusionReaction::info(int xr, int yr, int zr, string desc) const
 
     s << m_destinationSite->info(-X, -Y, -Z, "O");
 
-    s << "\nPath: " << X << " " << Y << " " << Z;
-    s << "  Has unit rate? " << m_hasUnitRate << endl;
+    s << "\nPath: " << X << " " << Y << " " << Z << endl;
 
     return s.str();
 

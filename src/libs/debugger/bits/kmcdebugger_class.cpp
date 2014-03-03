@@ -124,7 +124,7 @@ void KMCDebugger::markPartialStep(const char * msg)
 
     s << "##### " << msg << "  " << "prev. imp.: " << implicationCount << " #####\n\n";
 
-    addFlagsToImplications();
+    s << addFlagsToImplications();
 
     implications += s.str();
 
@@ -220,11 +220,6 @@ std::string KMCDebugger::addFlagsToImplications()
         sitess << "   " << site->str() << "\n";
         for (Reaction * r : site->siteReactions())
         {
-            //we are not interested in logging blocked reactions
-            if (!r->isNotBlocked())
-            {
-                continue;
-            }
 
             reacss << "    .    " << r->str() << " Flags: ";
 
@@ -235,10 +230,13 @@ std::string KMCDebugger::addFlagsToImplications()
                 reacss << flag << " ";
             }
 
-            reacss << " ur? " << ((DiffusionReaction*)r)->hasUnitRate();
+            if (!r->isNotBlocked())
+            {
+                reacss << " (blocked)";
+            }
+
             addReac = true;
             addSite = true;
-
 
 
             if (addReac)

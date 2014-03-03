@@ -67,12 +67,14 @@ void Site::updateAffectedSites()
 
 void Site::selectUpdateFlags()
 {
-    for (Site * site : affectedSites())
+    for (Site * site : m_affectedSites)
     {
+
         for (Reaction * reaction : site->siteReactions())
         {
             reaction->selectTriumphingUpdateFlag();
         }
+
     }
 }
 
@@ -482,9 +484,10 @@ void Site::activate()
         reaction->setDirectUpdateFlags(this);
     }
 
+    KMCDebugger_MarkPartialStep("ACTIVATION COMPLETE");
+
     m_totalActiveSites++;
 
-    KMCDebugger_MarkPartialStep("ACTIVATION COMPLETE");
 
 }
 
@@ -514,11 +517,12 @@ void Site::deactivate()
 
     setDirectUpdateFlags();
 
+
     m_activeReactions.clear();
 
-    m_totalActiveSites--;
-
     KMCDebugger_MarkPartialStep("DEACTIVATION COMPLETE");
+
+    m_totalActiveSites--;
 
 }
 

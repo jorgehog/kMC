@@ -169,11 +169,9 @@ void KMCSolver::run()
 
     }
 
-#ifndef KMC_NO_DEBUG
     cout << "Frac equal saddles calculated:" << DiffusionReaction::counterEqSP/(double)DiffusionReaction::totalSP*100 << " %" << endl;
     cout << "Frac saddles recalculated: " << DiffusionReaction::totalSP/(double)DiffusionReaction::counterAllRate*100 << " %" << endl;
     cout << "Average time in saddleFunc: " << DiffusionReaction::totalTime/DiffusionReaction::totalSP*1E6 << " µs" << endl;
-#endif
 
 }
 
@@ -452,6 +450,8 @@ void KMCSolver::getRateVariables()
 
 uint KMCSolver::getReactionChoice(double R)
 {
+
+    KMCDebugger_Assert(accuAllRates.size(), !=, 0, "No active reactions.");
 
     uint imax = accuAllRates.size() - 1;
     uint MAX = imax;

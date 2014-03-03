@@ -110,14 +110,6 @@ void Reaction::loadConfig(const Setting &setting)
 void Reaction::selectTriumphingUpdateFlag()
 {
 
-    //This means the last activated site had no direct impact on this previosuly affected site.
-    if (m_updateFlags.empty())
-    {
-        return;
-    }
-    m_updateFlag = m_updateFlags.at(m_updateFlags.size()-1);
-    return;
-
     m_updateFlag = *std::min_element(m_updateFlags.begin(), m_updateFlags.end());
 
     KMCDebugger_Assert(m_updateFlag, !=, UNSET_UPDATE_FLAG, "Update flag was not initialized correctly.", info());

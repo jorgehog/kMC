@@ -50,11 +50,6 @@ public:
         return m_destinationSite;
     }
 
-    const bool & hasUnitRate()
-    {
-        return m_hasUnitRate;
-    }
-
     const uint & xD () const;
 
     const uint & yD () const;
@@ -80,8 +75,6 @@ public:
 
 
 private:
-
-    bool m_hasUnitRate;
 
     static double rPower;
     static double scale;
