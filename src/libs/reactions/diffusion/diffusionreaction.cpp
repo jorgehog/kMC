@@ -18,8 +18,6 @@ DiffusionReaction::DiffusionReaction(Site * currentSite, Site *destinationSite) 
 
     neighborSetIntersectionPoints = getSaddleOverlapMatrix(path);
 
-
-
 }
 
 
@@ -55,8 +53,7 @@ void DiffusionReaction::loadConfig(const Setting &setting)
 
     m_saddlePotential.set_size(3, 3, 3);
 
-    uint i, j, k, ci, cj, ck;
-    int di, dj, dk;
+    uint i, j, k;
     double dx, dy, dz, r;
 
     for (int x = -1; x <= 1; ++x)
@@ -65,9 +62,10 @@ void DiffusionReaction::loadConfig(const Setting &setting)
         {
             for (int z = -1; z <= 1; ++z)
             {
-                if (x == 0 && y == 0 && z == 0)
+                if ((x == 0) && (y == 0) && (z == 0))
                 {
-                    m_saddlePotential(x, y, z).reset();
+                    m_saddlePotential(1, 1, 1).reset();
+                    continue;
                 }
 
                 i = x + 1;
@@ -76,39 +74,40 @@ void DiffusionReaction::loadConfig(const Setting &setting)
 
                 umat overlapBox = getSaddleOverlapMatrix({x, y, z});
 
+
                 m_saddlePotential(i, j, k).set_size(overlapBox(0, 1) - overlapBox(0, 0),
                                                     overlapBox(1, 1) - overlapBox(1, 0),
                                                     overlapBox(2, 1) - overlapBox(2, 0));
 
+                KMCDebugger_Assert(m_saddlePotential.n_elem, !=, 0, "illegal box size.");
+                KMCDebugger_Assert(m_saddlePotential.n_elem, !=, arma::prod(overlapBox.col(1)-overlapBox.col(0)), "saddle mat fail.");
 
-
-                ci = 0;
-                for (uint xn = overlapBox(0, 0); xn < overlapBox(0, 1); ++xn, ++ci)
+                for (uint xn = overlapBox(0, 0); xn < overlapBox(0, 1); ++xn)
                 {
 
-                    di = (int)xn - (int)Site::nNeighborsLimit();
-                    dx = x + di;
+                    dx = x/2.0 + (int)xn - (int)Site::nNeighborsLimit();
 
-                    cj = 0;
-                    for (uint yn = overlapBox(1, 0); yn < overlapBox(1, 1); ++yn, ++cj)
+                    for (uint yn = overlapBox(1, 0); yn < overlapBox(1, 1); ++yn)
                     {
 
-                        dj = (int)yn - (int)Site::nNeighborsLimit();
-                        dy = y + dj;
+                        dy = y/2.0 + (int)yn - (int)Site::nNeighborsLimit();
 
-                        ck = 0;
-                        for (uint zn = overlapBox(2, 0); zn < overlapBox(2, 1); ++zn, ++ck)
+                        for (uint zn = overlapBox(2, 0); zn < overlapBox(2, 1); ++zn)
                         {
-                            dk = (int)zn - (int)Site::nNeighborsLimit();
-                            dz = z + dk;
+
+                            dz = z/2.0 + (int)zn - (int)Site::nNeighborsLimit();
 
                             r = sqrt(dx*dx + dy*dy + dz*dz);
 
-                            m_saddlePotential(i, j, k)(ci, cj, ck) = scale/pow(r, rPower);
+                            m_saddlePotential(i, j, k)(xn - overlapBox(0, 0),
+                                                       yn - overlapBox(1, 0),
+                                                       zn - overlapBox(2, 0)) = 1.0/pow(r, rPower);
 
                         }
                     }
                 }
+
+                m_saddlePotential(i, j, k) *= scale;
 
             }
         }
@@ -119,7 +118,6 @@ void DiffusionReaction::loadConfig(const Setting &setting)
 
     //rescale the potential to avoid exploding rates for some choices of parameters.
     //    scale = 1.0/accu(m_potential);
-
     m_potential *= scale;
 
 }
@@ -233,9 +231,9 @@ double DiffusionReaction::getSaddleEnergy()
 
     Site * targetSite;
 
-//    double xs = ((x() + xD())%NX)/2.0;
-//    double ys = ((y() + yD())%NY)/2.0;
-//    double zs = ((z() + zD())%NZ)/2.0;
+    //    double xs = ((x() + xD())%NX)/2.0;
+    //    double ys = ((y() + yD())%NY)/2.0;
+    //    double zs = ((z() + zD())%NZ)/2.0;
 
     double Esp = 0;
 
@@ -258,33 +256,35 @@ double DiffusionReaction::getSaddleEnergy()
                     continue;
                 }
 
-//                double dx = fabs(xs - targetSite->x());
-//                double dy = fabs(ys - targetSite->y());
-//                double dz = fabs(zs - targetSite->z());
+                //                double dx = fabs(xs - targetSite->x());
+                //                double dy = fabs(ys - targetSite->y());
+                //                double dz = fabs(zs - targetSite->z());
 
-//                if (dx > Site::nNeighborsLimit())
-//                {
-//                    dx = NX - dx;
-//                }
+                //                if (dx > Site::nNeighborsLimit())
+                //                {
+                //                    dx = NX - dx;
+                //                }
 
-//                if (dy > Site::nNeighborsLimit())
-//                {
-//                    dy = NY - dy;
-//                }
+                //                if (dy > Site::nNeighborsLimit())
+                //                {
+                //                    dy = NY - dy;
+                //                }
 
-//                if (dz > Site::nNeighborsLimit())
-//                {
-//                    dz = NZ - dz;
-//                }
+                //                if (dz > Site::nNeighborsLimit())
+                //                {
+                //                    dz = NZ - dz;
+                //                }
 
-//                double r = sqrt(dx*dx + dy*dy + dz*dz);
+                //                double r = sqrt(dx*dx + dy*dy + dz*dz);
 
-//                assert(r >= 1/2. && "Saddle point is atleast this distance from another site.");
-//                Esp += scale/pow(r, rPower);
+                //                assert(r >= 1/2. && "Saddle point is atleast this distance from another site.");
+                //                Esp += scale/pow(r, rPower);
 
-                Esp += m_saddlePotential(path(0) + 1, path(1) + 1, path(2) + 1)(xn - neighborSetIntersectionPoints(0, 0),
-                                                                                yn - neighborSetIntersectionPoints(1, 0),
-                                                                                zn - neighborSetIntersectionPoints(2, 0));
+
+                const cube & saddlePot = m_saddlePotential(path(0) + 1, path(1) + 1, path(2) + 1);
+                Esp += saddlePot(xn - neighborSetIntersectionPoints(0, 0),
+                                 yn - neighborSetIntersectionPoints(1, 0),
+                                 zn - neighborSetIntersectionPoints(2, 0));
 
             }
         }

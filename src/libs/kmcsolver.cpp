@@ -47,7 +47,6 @@ KMCSolver::KMCSolver(const Setting & root) :
 
     DiffusionReaction::loadConfig(getSetting(root, {"Reactions", "Diffusion"}));
 
-
     nCycles = getSurfaceSetting<uint>(SolverSettings, "nCycles");
 
     cyclesPerOutput = getSurfaceSetting<uint>(SolverSettings, "cyclesPerOutput");
