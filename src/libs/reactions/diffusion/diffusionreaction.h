@@ -16,9 +16,7 @@ public:
 
     DiffusionReaction(Site *currentSite, Site *destinationSite);
 
-    ~DiffusionReaction() {
-
-    }
+    ~DiffusionReaction();
 
 
     double getSaddleEnergy();
@@ -90,7 +88,7 @@ private:
     static field<cube> m_saddlePotential;
 
 
-    Site* m_destinationSite;
+    Site* m_destinationSite = NULL;
 
     enum SpecificUpdateFlags
     {

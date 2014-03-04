@@ -5,9 +5,10 @@
 
 #include "../debugger/kmcdebugger.h"
 
-Reaction::Reaction(string name):
+Reaction::Reaction(Site *currentSite, const string name):
     name(name),
     m_ID(IDcount++),
+    m_reactionSite(currentSite),
     m_rate(UNSET_RATE),
     m_updateFlag(UNSET_UPDATE_FLAG)
 {
@@ -16,7 +17,7 @@ Reaction::Reaction(string name):
 
 Reaction::~Reaction()
 {
-
+    m_reactionSite = NULL;
 }
 
 const string Reaction::info(int xr, int yr, int zr, string desc) const

@@ -35,16 +35,18 @@ public:
     static Reaction * currentReaction;
     static Reaction * lastCurrentReaction;
 
-    static std::string reactionString;
+    static string reactionString;
 
-    static std::string traceFileName;
-    static std::string traceFilePath;
+    static string traceFileName;
+    static string traceFilePath;
 
     static wall_clock timer;
 
     static set<Site*> affectedUnion;
 
     //CALLED FROM MACROS
+    static void setFilename(const string &filename);
+    static void setFilepath(const string &filepath);
     static void setEnabledTo(bool state);
     static void pushTraces();
     static void pushImplication(Site *site, const char *_pre, const char *_new);

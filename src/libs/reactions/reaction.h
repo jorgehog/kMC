@@ -13,7 +13,7 @@ class Reaction
 {
 public:
 
-    Reaction(string name = "Reaction");
+    Reaction(Site * currentSite, const string name = "Reaction");
 
     virtual ~Reaction();
 
@@ -57,12 +57,6 @@ public:
     const static double & linearRateScale()
     {
         return m_linearRateScale;
-    }
-
-
-    void setSite(Site* site)
-    {
-        m_reactionSite = site;
     }
 
     const set<int> & updateFlags() const
@@ -147,7 +141,7 @@ protected:
 
     uint m_ID;
 
-    Site* m_reactionSite;
+    Site* m_reactionSite = NULL;
 
 
     double m_rate;
