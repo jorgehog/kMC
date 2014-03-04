@@ -15,18 +15,18 @@
 #define KMCDebugger_Init() \
     KMCDebugger::initialize()
 
-#define KMCDebugger_Finalize \
-    KMCDebugger::reset
+#define KMCDebugger_Finalize() \
+    KMCDebugger::reset()
 
 #define KMCDebugger_IsEnabled \
     KMCDebugger::enabled
 
 
 #define KMCDebugger_SetFilename(filename) \
-    KMCDebugger::traceFileName = filename
+    KMCDebugger::setFilename(filename)
 
 #define KMCDebugger_SetPath(path) \
-    KMCDebugger::traceFilePath = path
+    KMCDebugger::setFilepath(path)
 
 
 #define KMCDebugger_Assert(A, OP, B, ...) \

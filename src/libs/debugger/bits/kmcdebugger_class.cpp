@@ -20,20 +20,30 @@ std::vector<double>      KMCDebugger::timerData;
 std::set<Site*>          KMCDebugger::affectedUnion;
 
 
-std::string KMCDebugger::implications = _KMCDebugger_INITIAL_IMPLICATION_MSG;
-std::string KMCDebugger::reactionString = _KMCDebugger_INITIAL_REACTION_STR;
+std::string KMCDebugger::implications;
+std::string KMCDebugger::reactionString;
 
-Reaction* KMCDebugger::currentReaction = NULL;
-Reaction* KMCDebugger::lastCurrentReaction = NULL;
+Reaction* KMCDebugger::currentReaction;
+Reaction* KMCDebugger::lastCurrentReaction;
 
-uint KMCDebugger::traceCount = 0;
-uint KMCDebugger::implicationCount = 0;
+uint KMCDebugger::traceCount;
+uint KMCDebugger::implicationCount;
 
 std::string KMCDebugger::traceFileName = "";
 std::string KMCDebugger::traceFilePath = "";
 
 wall_clock KMCDebugger::timer;
 
+
+void KMCDebugger::setFilename(const string & filename)
+{
+    KMCDebugger::traceFileName = filename;
+}
+
+void KMCDebugger::setFilepath(const string & filepath)
+{
+    KMCDebugger::traceFilePath = filepath;
+}
 
 void KMCDebugger::setEnabledTo(bool state)
 {
@@ -62,7 +72,9 @@ void KMCDebugger::pushTraces()
 
     s << addFlagsToImplications();
 
-    implications += s.str();
+    string full_str = s.str();
+
+    implications += full_str;
 
     implicationTrace.push_back(implications);
 
@@ -126,7 +138,9 @@ void KMCDebugger::markPartialStep(const char * msg)
 
     s << addFlagsToImplications();
 
-    implications += s.str();
+    string full_string = s.str();
+
+    implications += full_string;
 
     implicationCount = 0;
 
@@ -145,6 +159,20 @@ void KMCDebugger::setActiveReaction(Reaction *reaction)
 void KMCDebugger::initialize()
 {
     if (!enabled) return;
+
+    reset();
+
+    currentReaction = NULL;
+    lastCurrentReaction = NULL;
+
+    implications = _KMCDebugger_INITIAL_IMPLICATION_MSG;
+    reactionString = _KMCDebugger_INITIAL_REACTION_STR;
+
+    traceCount = 0;
+    implicationCount = 0;
+
+    (void)timer.toc();
+
     timer.tic();
 }
 
@@ -396,17 +424,6 @@ void KMCDebugger::reset()
     timerData.clear();
 
     affectedUnion.clear();
-
-    currentReaction = NULL;
-    lastCurrentReaction = NULL;
-
-    implications = _KMCDebugger_INITIAL_IMPLICATION_MSG;
-    reactionString = _KMCDebugger_INITIAL_REACTION_STR;
-
-    traceCount = 0;
-    implicationCount = 0;
-
-    (void)timer.toc();
 
 }
 

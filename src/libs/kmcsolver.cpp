@@ -96,7 +96,7 @@ KMCSolver::~KMCSolver()
         cout << "Static member variables of objects IN USE by living solver WILL BE FREED." << endl;
     }
 
-    for (uint i = 0; i < 5; ++i)
+    for (uint i = 0; i < NX; ++i)
     {
         for (uint j = 0; j < NY; ++j)
         {
@@ -284,7 +284,8 @@ void KMCSolver::initializeDiffusionReactions()
                             //This menas we are not at the current site.
                             if(destination != currentSite)
                             {
-                                currentSite->addReaction(new DiffusionReaction(currentSite, destination));
+                                DiffusionReaction* diffusionReaction = new DiffusionReaction(currentSite, destination);
+                                currentSite->addReaction(diffusionReaction);
                             }
 
                             else

@@ -20,10 +20,15 @@ Site::Site(uint _x, uint _y, uint _z) :
 
 Site::~Site()
 {
-    for (uint i = 0; i < neighborhoodLength(); ++i)
+    for (uint i = 0; i < m_neighborhoodLength; ++i)
     {
-        for (uint j = 0; j < neighborhoodLength(); ++j)
+        for (uint j = 0; j < m_neighborhoodLength; ++j)
         {
+            for (uint k = 0; k < m_neighborhoodLength; ++k)
+            {
+                m_neighborHood[i][j][k] = NULL;
+            }
+
             delete [] m_neighborHood[i][j];
         }
 
@@ -820,7 +825,9 @@ const string Site::info(int xr, int yr, int zr, string desc) const
 
     s_full << s;
 
-    return s_full.str();
+    string full_string = s_full.str();
+
+    return full_string;
 
 }
 

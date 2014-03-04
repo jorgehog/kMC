@@ -4,13 +4,11 @@
 #include "../../debugger/kmcdebugger.h"
 
 DiffusionReaction::DiffusionReaction(Site * currentSite, Site *destinationSite) :
-    Reaction("DiffusionReaction"),
+    Reaction(currentSite, "DiffusionReaction"),
     lastUsedEnergy(UNSET_ENERGY),
     lastUsedEsp(UNSET_ENERGY),
     m_destinationSite(destinationSite)
 {
-
-    setSite(currentSite);
 
     m_reactionSite->distanceTo(destinationSite, path(0), path(1), path(2));
 
@@ -18,6 +16,11 @@ DiffusionReaction::DiffusionReaction(Site * currentSite, Site *destinationSite) 
 
     saddleFieldIndices = conv_to<uvec>::from(path + 1);
 
+}
+
+DiffusionReaction::~DiffusionReaction()
+{
+    m_destinationSite = NULL;
 }
 
 
@@ -53,8 +56,9 @@ void DiffusionReaction::loadConfig(const Setting &setting)
 
     m_saddlePotential.set_size(3, 3, 3);
 
-    uint i, j, k;
+    umat overlapBox;
     ivec _path;
+    uint i, j, k;
     double dx, dy, dz, r;
 
     for (int x = -1; x <= 1; ++x)
@@ -73,7 +77,7 @@ void DiffusionReaction::loadConfig(const Setting &setting)
                 k = z + 1;
 
                 _path = {x, y, z};
-                umat overlapBox = getSaddleOverlapMatrix(_path);
+                overlapBox = getSaddleOverlapMatrix(_path);
 
 
                 m_saddlePotential(i, j, k).set_size(overlapBox(0, 1) - overlapBox(0, 0),
@@ -423,7 +427,9 @@ const string DiffusionReaction::info(int xr, int yr, int zr, string desc) const
 
     s << "\nPath: " << X << " " << Y << " " << Z << endl;
 
-    return s.str();
+    string full_string = s.str();
+
+    return full_string;
 
 }
 
