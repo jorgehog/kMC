@@ -961,7 +961,9 @@ void testBed::testKnownCase()
     const Setting & root = cfg.getRoot();
 
     solver = new KMCSolver(root);
-
+    NX = solver->NX;
+    NY = solver->NY;
+    NZ = solver->NZ;
 
     bool make = false;
 

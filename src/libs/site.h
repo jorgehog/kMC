@@ -50,14 +50,7 @@ public:
 
     static uint findLevel(uint i, uint j, uint k);
 
-    static void resetAll()
-    {
-        m_totalActiveSites = 0;
-        m_totalEnergy = 0;
-        m_levelMatrix.reset();
-        m_originTransformVector.reset();
-        m_affectedSites.clear();
-    }
+    static void resetAll();
 
     /*
      * Non-trivial functions
@@ -268,6 +261,10 @@ private:
     static uint NX;
     static uint NY;
     static uint NZ;
+
+    static ivec deltax;
+    static ivec deltay;
+    static ivec deltaz;
 
     static double m_totalEnergy;
 
