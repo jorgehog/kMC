@@ -19,3 +19,8 @@ Periodic::Periodic(uint orientation)
         break;
     }
 }
+
+Periodic::~Periodic()
+{
+
+}

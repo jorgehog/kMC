@@ -12,6 +12,11 @@ Boundary::Boundary()
 
 }
 
+Boundary::~Boundary()
+{
+
+}
+
 void Boundary::setMainSolver(KMCSolver *solver)
 {
 
@@ -20,6 +25,8 @@ void Boundary::setMainSolver(KMCSolver *solver)
     m_NX = solver->getNX();
     m_NY = solver->getNY();
     m_NZ = solver->getNZ();
+
+    m_NXYZ = {m_NX, m_NY, m_NZ};
 
     BLOCKED_COORDINATE = 2*max(uvec{m_NX, m_NY, m_NZ}) + 1;
 
@@ -38,11 +45,33 @@ bool Boundary::isCompatible(const int type1, const int type2, bool reverse)
 
 }
 
-int  Boundary::BLOCKED_COORDINATE;
+void Boundary::setupLocations(const uint x, const uint y, const uint z, uvec3 &loc)
+{
+
+    uvec xyz = {x, y, z};
+
+    for (uint i = 0; i < 3; ++i)
+    {
+        if (xyz(i) >= m_NXYZ(i))
+        {
+            loc(i) = 1;
+        }
+
+        else
+        {
+            loc(i) = 0;
+        }
+    }
+
+}
+
+uint Boundary::BLOCKED_COORDINATE;
 
 uint Boundary::m_NX;
 uint Boundary::m_NY;
 uint Boundary::m_NZ;
+
+uvec Boundary::m_NXYZ;
 
 KMCSolver* Boundary::m_mainSolver;
 

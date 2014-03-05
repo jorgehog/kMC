@@ -607,36 +607,58 @@ void Site::introduceNeighborhood()
     assert(m_nNeighborsLimit != 0);
 
     uint xTrans, yTrans, zTrans;
+    uvec3 loc;
+
+    Boundary::setupLocations(m_x, m_y, m_z, loc);
+
+    const Boundary * xBoundary = m_boundaries(0, loc(0));
+    const Boundary * yBoundary = m_boundaries(1, loc(1));
+    const Boundary * zBoundary = m_boundaries(2, loc(2));
+
 
     m_nNeighbors.set_size(m_nNeighborsLimit);
     m_nNeighbors.zeros();
 
     m_neighborHood = new Site***[m_neighborhoodLength];
 
+
     for (uint i = 0; i < m_neighborhoodLength; ++i)
     {
-        xTrans = (m_x + m_originTransformVector(i) + NX)%NX;
+
+        xTrans = xBoundary->transformCoordinate(m_x + m_originTransformVector(i));
 
         m_neighborHood[i] = new Site**[m_neighborhoodLength];
 
         for (uint j = 0; j < m_neighborhoodLength; ++j)
         {
-            yTrans = (m_y + m_originTransformVector(j) + NY)%NY;
+
+            yTrans = yBoundary->transformCoordinate(m_y + m_originTransformVector(j));
 
             m_neighborHood[i][j] = new Site*[m_neighborhoodLength];
 
             for (uint k = 0; k < m_neighborhoodLength; ++k)
             {
-                //%use transboundary class here. Determine cleverly weather left or right.
-                zTrans = (m_z + m_originTransformVector(k) + NZ)%NZ;
 
-                //%if x || y || z blocked add else nada. Remember not to add to allneighbors.
-                m_neighborHood[i][j][k] = mainSolver->getSite(xTrans, yTrans, zTrans);
+                zTrans = zBoundary->transformCoordinate(m_z + m_originTransformVector(k));
 
-                if (m_neighborHood[i][j][k] != this)
+                if (Boundary::isBlocked(xTrans) ||
+                    Boundary::isBlocked(yTrans) ||
+                    Boundary::isBlocked(zTrans))
                 {
-                    m_allNeighbors.push_back(m_neighborHood[i][j][k]);
+                    m_neighborHood[i][j][k] = NULL;
                 }
+
+                else
+                {
+
+                    m_neighborHood[i][j][k] = mainSolver->getSite(xTrans, yTrans, zTrans);
+
+                    if (m_neighborHood[i][j][k] != this)
+                    {
+                        m_allNeighbors.push_back(m_neighborHood[i][j][k]);
+                    }
+                }
+
             }
         }
     }
