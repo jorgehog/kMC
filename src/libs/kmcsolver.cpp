@@ -39,8 +39,8 @@ KMCSolver::KMCSolver(const Setting & root) :
     NY = BoxSize[1];
     NZ = BoxSize[2];
 
-    Site::loadConfig(SystemSettings);
     Site::setSolverPtr(this);
+    Site::loadConfig(SystemSettings);
 
     Reaction::loadConfig(getSurfaceSetting(root, "Reactions"));
     Reaction::setSolverPtr(this);

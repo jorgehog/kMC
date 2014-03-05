@@ -263,6 +263,12 @@ void Site::loadConfig(const Setting &setting)
 
     const uint  &limit = getSurfaceSetting<uint>(setting, "nNeighborsLimit");
 
+    if (limit >= min(uvec({NX, NY, NZ}))/2)
+    {
+        cerr << "Neighbor reach must be lower than half the minimum box dimension to avoid sites directly affecting themselves." << endl;
+        exit(1);
+    }
+
     m_nNeighborsLimit = limit;
     m_neighborhoodLength = 2*m_nNeighborsLimit + 1;
 
@@ -340,11 +346,43 @@ void Site::calculateRates()
 void Site::setSolverPtr(KMCSolver *solver)
 {
 
+    mainSolver = solver;
+
     NX = solver->getNX();
     NY = solver->getNY();
     NZ = solver->getNZ();
 
-    mainSolver = solver;
+    deltax.set_size(NX);
+    deltay.set_size(NY);
+    deltaz.set_size(NZ);
+
+    for(uint i = 0; i < NX; ++i)
+    {
+        deltax(i) = i;
+        if (i > NX/2)
+        {
+            deltax(i) = -(int)(NX - i);
+        }
+    }
+
+    for(uint i = 0; i < NY; ++i)
+    {
+        deltay(i) = i;
+        if (i > NY/2)
+        {
+            deltay(i) = -(int)(NY - i);
+        }
+    }
+
+    for(uint i = 0; i < NZ; ++i)
+    {
+        deltaz(i) = i;
+        if (i > NZ/2)
+        {
+            deltaz(i) = -(int)(NZ - i);
+        }
+    }
+
 
 }
 
@@ -352,22 +390,26 @@ void Site::setSolverPtr(KMCSolver *solver)
 void Site::distanceTo(const Site *other, int &dx, int &dy, int &dz, bool absolutes) const
 {
 
-    dx = (other->x() + NX - m_x)%NX;
-    dy = (other->y() + NY - m_y)%NY;
-    dz = (other->z() + NZ - m_z)%NZ;
+    dx = deltax((other->x() + (NX - m_x))%NX);
+    dy = deltay((other->y() + (NY - m_y))%NY);
+    dz = deltaz((other->z() + (NZ - m_z))%NZ);
+
+    //    dx = (other->x() + NX - m_x)%NX;
+    //    dy = (other->y() + NY - m_y)%NY;
+    //    dz = (other->z() + NZ - m_z)%NZ;
 
 
-    if ((uint)abs(dx) > NX/2) {
-        dx = -(int)(NX - dx);
-    }
+    //    if ((uint)abs(dx) > NX/2) {
+    //        dx = -(int)(NX - dx);
+    //    }
 
-    if ((uint)abs(dy) > NY/2) {
-        dy = -(int)(NY - dy);
-    }
+    //    if ((uint)abs(dy) > NY/2) {
+    //        dy = -(int)(NY - dy);
+    //    }
 
-    if ((uint)abs(dz) > NZ/2) {
-        dz = -(int)(NZ - dz);
-    }
+    //    if ((uint)abs(dz) > NZ/2) {
+    //        dz = -(int)(NZ - dz);
+    //    }
 
 
     if (absolutes) {
@@ -692,6 +734,20 @@ uint Site::findLevel(uint i, uint j, uint k)
 
 }
 
+void Site::resetAll()
+{
+
+    deltax.clear();
+    deltay.clear();
+    deltaz.clear();
+    m_totalActiveSites = 0;
+    m_totalEnergy = 0;
+    m_levelMatrix.reset();
+    m_originTransformVector.reset();
+    m_affectedSites.clear();
+
+}
+
 
 const string Site::info(int xr, int yr, int zr, string desc) const
 {
@@ -843,6 +899,10 @@ KMCSolver* Site::mainSolver;
 uint       Site::NX;
 uint       Site::NY;
 uint       Site::NZ;
+
+ivec       Site::deltax;
+ivec       Site::deltay;
+ivec       Site::deltaz;
 
 uint       Site::m_nNeighborsLimit;
 

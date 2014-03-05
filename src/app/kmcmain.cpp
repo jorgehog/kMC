@@ -19,6 +19,7 @@ int main()
     KMCSolver* solver = new KMCSolver(root);
 
     wall_clock t;
+
     t.tic();
     solver->run();
     cout << "Simulation ended after " << t.toc() << " seconds" << endl;
