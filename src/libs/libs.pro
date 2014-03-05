@@ -12,7 +12,9 @@ HEADERS = RNG/kMCRNG.h \
     debugger/bits/intrinsicmacros.h \
     debugger/bits/debug_api.h \
     debugger/debugger.h \
-    debugger/bits/debugger_class.h
+    debugger/bits/debugger_class.h \
+    boundary/boundary.h \
+    boundary/periodic/periodic.h
 
 SOURCES += \
     reactions/reaction.cpp \
@@ -20,7 +22,9 @@ SOURCES += \
     site.cpp \
     reactions/diffusion/diffusionreaction.cpp \
     RNG/kMCRNG.cpp \
-    debugger/bits/debugger_class.cpp
+    debugger/bits/debugger_class.cpp \
+    boundary/boundary.cpp \
+    boundary/periodic/periodic.cpp
 
 RNG_ZIG {
 
