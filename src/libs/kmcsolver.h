@@ -12,6 +12,10 @@
 using namespace arma;
 
 
+namespace kMC
+{
+
+
 class Reaction;
 
 class KMCSolver
@@ -25,6 +29,12 @@ public:
 
 
     void run();
+
+    void initializeCrystal();
+
+    void getRateVariables();
+
+    uint getReactionChoice(double R);
 
 
     uint nNeighbors(uint & x, uint & y, uint & z)
@@ -57,7 +67,20 @@ public:
         return NZ;
     }
 
-    friend class testBed;
+    const vector<double> & accuAllRates() const
+    {
+        return m_accuAllRates;
+    }
+
+    const vector<Reaction*> & allReactions() const
+    {
+        return m_allReactions;
+    }
+
+    const double & kTot() const
+    {
+        return m_kTot;
+    }
 
 
 private:
@@ -74,31 +97,24 @@ private:
     uint NZ;
 
 
-    double kTot;
-    std::vector<double> accuAllRates;
+    double m_kTot;
+    vector<double> m_accuAllRates;
 
-    std::vector<Reaction*> allReactions;
+    vector<Reaction*> m_allReactions;
 
     double totalTime;
 
-    uint nCycles;
+    uint m_nCycles;
     uint cycle;
 
     uint cyclesPerOutput;
     uint outputCounter;
 
 
-    void initializeCrystal();
 
     void initializeDiffusionReactions();
 
     void initializeSites();
-
-
-    void getRateVariables();
-
-    uint getReactionChoice(double R);
-
 
 
     void dumpXYZ();
@@ -108,3 +124,5 @@ private:
     static uint ptrCount;
 
 };
+
+}

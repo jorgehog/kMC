@@ -6,6 +6,11 @@
 
 #include <libconfig_utils/libconfig_utils.h>
 
+
+namespace kMC
+{
+
+
 class Site;
 class KMCSolver;
 
@@ -69,6 +74,11 @@ public:
         return m_updateFlag;
     }
 
+    void forceUpdateFlag(int flag)
+    {
+        m_updateFlag = flag;
+    }
+
     const uint & ID() const
     {
         return m_ID;
@@ -124,7 +134,7 @@ public:
         defaultUpdateFlag = 0
     };
 
-    friend class testBed;
+
 
 protected:
 
@@ -152,5 +162,7 @@ protected:
 
 };
 
-ostream & operator << (ostream& os, const Reaction& ss);
+}
+
+ostream & operator << (ostream& os, const kMC::Reaction& ss);
 

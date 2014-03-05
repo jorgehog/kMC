@@ -10,4 +10,4 @@
 
 #include "kmcsolver.h"
 
-#include "debugger/kmcdebugger.h"
+#include "debugger/debugger.h"

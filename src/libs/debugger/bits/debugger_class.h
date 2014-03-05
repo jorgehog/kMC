@@ -11,13 +11,18 @@
 
 #include <armadillo>
 using arma::wall_clock;
+using namespace std;
+
+
+namespace kMC
+{
+
 
 class Reaction;
 class Site;
 
-using namespace std;
 
-class KMCDebugger
+class Debugger
 {
 public:
 
@@ -137,3 +142,5 @@ public:
 
 
 };
+
+}

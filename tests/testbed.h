@@ -1,5 +1,7 @@
-#ifndef TESTBED_H
-#define TESTBED_H
+#pragma once
+
+
+#include <kMC>
 
 #include <sys/types.h>
 
@@ -8,8 +10,7 @@
 #include <libconfig.h++>
 
 using namespace libconfig;
-
-class KMCSolver;
+using namespace kMC;
 
 class testBed
 {
@@ -66,5 +67,3 @@ public:
     KMCSolver* solver;
     Setting* root;
 };
-
-#endif // TESTBED_H

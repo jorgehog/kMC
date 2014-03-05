@@ -1,8 +1,6 @@
 include(../../defaults.pri) 
+include(../../app_defaults.pri)
 
-TEMPLATE = app 
 SOURCES = kmcmain.cpp
-
-LIBS += -L$$TOP_OUT_PWD/src/libs -lkMC
 
 

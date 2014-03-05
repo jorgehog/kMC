@@ -4,7 +4,7 @@
 #include <libconfig_utils/libconfig_utils.h>
 
 using namespace libconfig;
-
+using namespace kMC;
 
 int main()
 {

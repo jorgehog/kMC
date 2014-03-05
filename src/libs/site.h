@@ -10,6 +10,11 @@
 
 using namespace arma;
 
+
+namespace kMC
+{
+
+
 class KMCSolver;
 class Reaction;
 class DiffusionReaction;
@@ -124,9 +129,9 @@ public:
         return m_neighborhoodLength;
     }
 
-    static const ucube &levelMatrix()
+    static const uint &levelMatrix(const uint i, const uint j, const uint k)
     {
-        return m_levelMatrix;
+        return m_levelMatrix(i, j, k);
     }
 
     static const ivec &originTransformVector()
@@ -246,7 +251,7 @@ public:
         return s.str();
     }
 
-    friend class testBed;
+
 
 private:
 
@@ -295,6 +300,6 @@ private:
 
 };
 
+}
 
-ostream& operator<<(ostream& os, const Site& ss);
-
+ostream& operator<<(ostream& os, const kMC::Site& ss);

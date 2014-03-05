@@ -2,9 +2,9 @@
 
 #ifndef KMC_NO_DEBUG
 
-#include "../kmcdebugger.h"
+#include "../debugger.h"
 
-#include "kmcdebugger_class.h"
+#include "debugger_class.h"
 
 #include "intrinsicmacros.h"
 
@@ -13,26 +13,26 @@
 
 //MISC
 #define KMCDebugger_Init() \
-    KMCDebugger::initialize()
+    kMC::Debugger::initialize()
 
 #define KMCDebugger_Finalize() \
-    KMCDebugger::reset()
+    kMC::Debugger::reset()
 
 #define KMCDebugger_IsEnabled \
-    KMCDebugger::enabled
+    kMC::Debugger::enabled
 
 
 #define KMCDebugger_SetFilename(filename) \
-    KMCDebugger::setFilename(filename)
+    kMC::Debugger::setFilename(filename)
 
 #define KMCDebugger_SetPath(path) \
-    KMCDebugger::setFilepath(path)
+    kMC::Debugger::setFilepath(path)
 
 
 #define KMCDebugger_Assert(A, OP, B, ...) \
     (((A) OP (B)) \
     ? static_cast<void>(0) \
-    : KMCDebugger::_assert(A, B, #OP, #A, #B, \
+    : kMC::Debugger::_assert(A, B, #OP, #A, #B, \
     __FILE__, \
     __PRETTY_FUNCTION__, \
     __LINE__, ##__VA_ARGS__))
@@ -47,34 +47,34 @@
 
 
 #define KMCDebugger_SetEnabledTo(state) \
-    KMCDebugger::setEnabledTo(state)
+    kMC::Debugger::setEnabledTo(state)
 
 
 //TRACE OUTPUT/FETCH FUNCTIONS
-#define KMCDebugger_SearchReactionTraceBefore(i) _KMCDebugger_TRACE_SEARCH(KMCDebugger::reactionTraceBefore, i)
-#define KMCDebugger_SearchReactionTraceAfter(i)  _KMCDebugger_TRACE_SEARCH(KMCDebugger::reactionTraceAfter, i)
-#define KMCDebugger_SearchImplicationTrace(i)    _KMCDebugger_TRACE_SEARCH(KMCDebugger::implicationTrace, i)
+#define KMCDebugger_SearchReactionTraceBefore(i) _KMCDebugger_TRACE_SEARCH(kMC::Debugger::reactionTraceBefore, i)
+#define KMCDebugger_SearchReactionTraceAfter(i)  _KMCDebugger_TRACE_SEARCH(kMC::Debugger::reactionTraceAfter, i)
+#define KMCDebugger_SearchImplicationTrace(i)    _KMCDebugger_TRACE_SEARCH(kMC::Debugger::implicationTrace, i)
 
 
 //TRACE DUMP CALLERS
 #define KMCDebugger_DumpFullTrace(...) \
-    KMCDebugger::dumpFullTrace(__LINE__, __FILE__, ##__VA_ARGS__)
+    kMC::Debugger::dumpFullTrace(__LINE__, __FILE__, ##__VA_ARGS__)
 
 #define KMCDebugger_DumpTrace(i) \
-    KMCDebugger::dumpPartialTrace(i)
+    kMC::Debugger::dumpPartialTrace(i)
 
 
 //DEBUGGER FEEDER FUNCTIONS
 #define KMCDebugger_SetActiveReaction(reaction) \
-    KMCDebugger::setActiveReaction(reaction)
+    kMC::Debugger::setActiveReaction(reaction)
 
 #define KMCDebugger_MarkPartialStep(_msg) \
-    KMCDebugger::markPartialStep(_msg)
+    kMC::Debugger::markPartialStep(_msg)
 
 #define KMCDebugger_PushImplication(site, _pre, _new) \
-    KMCDebugger::pushImplication(site, _pre, _new)
+    kMC::Debugger::pushImplication(site, _pre, _new)
 
 #define KMCDebugger_PushTraces() \
-    KMCDebugger::pushTraces()
+    kMC::Debugger::pushTraces()
 
 #endif

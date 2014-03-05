@@ -1,7 +1,10 @@
 #include "diffusionreaction.h"
 #include "../../kmcsolver.h"
 
-#include "../../debugger/kmcdebugger.h"
+#include "../../debugger/debugger.h"
+
+
+using namespace kMC;
 
 DiffusionReaction::DiffusionReaction(Site * currentSite, Site *destinationSite) :
     Reaction(currentSite, "DiffusionReaction"),
@@ -152,7 +155,7 @@ string DiffusionReaction::getFinalizingDebugMessage() const
 {
 #ifndef KMC_NO_DEBUG
 
-    if (!KMCDebugger::enabled) return "";
+    if (!Debugger::enabled) return "";
 
     int X, Y, Z;
     X = 0;
@@ -163,7 +166,7 @@ string DiffusionReaction::getFinalizingDebugMessage() const
 
     s << Reaction::getFinalizingDebugMessage();
 
-    const Reaction * lastReaction = KMCDebugger::lastCurrentReaction;
+    const Reaction * lastReaction = Debugger::lastCurrentReaction;
 
     if (lastReaction != NULL)
     {

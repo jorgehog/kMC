@@ -9,6 +9,11 @@
 
 using namespace arma;
 
+
+namespace kMC
+{
+
+
 class DiffusionReaction : public Reaction
 {
 public:
@@ -76,7 +81,7 @@ public:
     static double totalTime;
 
 
-    friend class testBed;
+
 
 
 private:
@@ -126,3 +131,5 @@ public:
     }
 
 };
+
+}

@@ -1,4 +1,4 @@
-#include "kmcdebugger_class.h"
+#include "debugger_class.h"
 
 #ifndef KMC_NO_DEBUG
 
@@ -10,42 +10,46 @@
 
 #include "intrinsicmacros.h"
 
-bool KMCDebugger::enabled = true;
 
-std::vector<std::string> KMCDebugger::reactionTraceBefore;
-std::vector<std::string> KMCDebugger::reactionTraceAfter;
-std::vector<std::string> KMCDebugger::implicationTrace;
-std::vector<double>      KMCDebugger::timerData;
-
-std::set<Site*>          KMCDebugger::affectedUnion;
+using namespace kMC;
 
 
-std::string KMCDebugger::implications;
-std::string KMCDebugger::reactionString;
+bool Debugger::enabled = true;
 
-Reaction* KMCDebugger::currentReaction;
-Reaction* KMCDebugger::lastCurrentReaction;
+std::vector<std::string> Debugger::reactionTraceBefore;
+std::vector<std::string> Debugger::reactionTraceAfter;
+std::vector<std::string> Debugger::implicationTrace;
+std::vector<double>      Debugger::timerData;
 
-uint KMCDebugger::traceCount;
-uint KMCDebugger::implicationCount;
-
-std::string KMCDebugger::traceFileName = "";
-std::string KMCDebugger::traceFilePath = "";
-
-wall_clock KMCDebugger::timer;
+std::set<Site*>          Debugger::affectedUnion;
 
 
-void KMCDebugger::setFilename(const string & filename)
+std::string Debugger::implications;
+std::string Debugger::reactionString;
+
+Reaction* Debugger::currentReaction;
+Reaction* Debugger::lastCurrentReaction;
+
+uint Debugger::traceCount;
+uint Debugger::implicationCount;
+
+std::string Debugger::traceFileName = "";
+std::string Debugger::traceFilePath = "";
+
+wall_clock Debugger::timer;
+
+
+void Debugger::setFilename(const string & filename)
 {
-    KMCDebugger::traceFileName = filename;
+    Debugger::traceFileName = filename;
 }
 
-void KMCDebugger::setFilepath(const string & filepath)
+void Debugger::setFilepath(const string & filepath)
 {
-    KMCDebugger::traceFilePath = filepath;
+    Debugger::traceFilePath = filepath;
 }
 
-void KMCDebugger::setEnabledTo(bool state)
+void Debugger::setEnabledTo(bool state)
 {
     enabled = state;
 
@@ -60,7 +64,7 @@ void KMCDebugger::setEnabledTo(bool state)
     }
 }
 
-void KMCDebugger::pushTraces()
+void Debugger::pushTraces()
 {
     if (!enabled) return;
 
@@ -100,7 +104,7 @@ void KMCDebugger::pushTraces()
 
 }
 
-void KMCDebugger::pushImplication(Site * site, const char * _pre, const char * _new)
+void Debugger::pushImplication(Site * site, const char * _pre, const char * _new)
 {
 
     if (!enabled) return;
@@ -125,7 +129,7 @@ void KMCDebugger::pushImplication(Site * site, const char * _pre, const char * _
 
 }
 
-void KMCDebugger::markPartialStep(const char * msg)
+void Debugger::markPartialStep(const char * msg)
 {
 
     if (!enabled) return;
@@ -146,7 +150,7 @@ void KMCDebugger::markPartialStep(const char * msg)
 
 }
 
-void KMCDebugger::setActiveReaction(Reaction *reaction)
+void Debugger::setActiveReaction(Reaction *reaction)
 {
 
     if (!enabled) return;
@@ -156,7 +160,7 @@ void KMCDebugger::setActiveReaction(Reaction *reaction)
     reactionString = _KMCDebugger_REACTION_STR();
 }
 
-void KMCDebugger::initialize()
+void Debugger::initialize()
 {
     if (!enabled) return;
 
@@ -176,7 +180,7 @@ void KMCDebugger::initialize()
     timer.tic();
 }
 
-std::string KMCDebugger::setupAffectedUnion()
+std::string Debugger::setupAffectedUnion()
 {
     using namespace std;
 
@@ -235,7 +239,7 @@ std::string KMCDebugger::setupAffectedUnion()
 
 }
 
-std::string KMCDebugger::addFlagsToImplications()
+std::string Debugger::addFlagsToImplications()
 {
 
 #ifdef KMC_VERBOSE_DEBUG
@@ -297,7 +301,7 @@ std::string KMCDebugger::addFlagsToImplications()
 
 }
 
-void KMCDebugger::dumpFullTrace(int line, const char * filename, const string additionalInfo)
+void Debugger::dumpFullTrace(int line, const char * filename, const string additionalInfo)
 {
     if (!enabled) return;
 
@@ -342,7 +346,7 @@ void KMCDebugger::dumpFullTrace(int line, const char * filename, const string ad
 
 }
 
-void KMCDebugger::dumpPartialTrace(const int &i)
+void Debugger::dumpPartialTrace(const int &i)
 {
 
     if (!enabled) return;
@@ -355,7 +359,7 @@ void KMCDebugger::dumpPartialTrace(const int &i)
 }
 
 
-string KMCDebugger::fullTrace(int line, const string filename, const string additionalInfo)
+string Debugger::fullTrace(int line, const string filename, const string additionalInfo)
 {
     using namespace std;
 
@@ -389,7 +393,7 @@ string KMCDebugger::fullTrace(int line, const string filename, const string addi
 
 }
 
-string KMCDebugger::partialTrace(const uint &i)
+string Debugger::partialTrace(const uint &i)
 {
     using namespace std;
 
@@ -415,7 +419,7 @@ string KMCDebugger::partialTrace(const uint &i)
 
 }
 
-void KMCDebugger::reset()
+void Debugger::reset()
 {
 
     reactionTraceBefore.clear();

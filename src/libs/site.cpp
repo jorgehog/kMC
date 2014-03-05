@@ -2,7 +2,9 @@
 #include "reactions/reaction.h"
 #include "reactions/diffusion/diffusionreaction.h"
 #include "kmcsolver.h"
-#include "debugger/kmcdebugger.h"
+#include "debugger/debugger.h"
+
+using namespace kMC;
 
 Site::Site(uint _x, uint _y, uint _z) :
     m_nNeighborsSum(0),

@@ -7,7 +7,7 @@
 #include "reactions/reaction.h"
 #include "reactions/diffusion/diffusionreaction.h"
 
-#include "debugger/kmcdebugger.h"
+#include "debugger/debugger.h"
 
 #include <sys/time.h>
 
@@ -20,7 +20,7 @@
 
 using namespace arma;
 using namespace std;
-
+using namespace kMC;
 
 KMCSolver::KMCSolver(const Setting & root) :
     totalTime(0),
@@ -47,7 +47,7 @@ KMCSolver::KMCSolver(const Setting & root) :
 
     DiffusionReaction::loadConfig(getSetting(root, {"Reactions", "Diffusion"}));
 
-    nCycles = getSurfaceSetting<uint>(SolverSettings, "nCycles");
+    m_nCycles = getSurfaceSetting<uint>(SolverSettings, "nCycles");
 
     cyclesPerOutput = getSurfaceSetting<uint>(SolverSettings, "cyclesPerOutput");
 
@@ -113,7 +113,7 @@ KMCSolver::~KMCSolver()
 
     delete [] sites;
 
-    allReactions.clear();
+    m_allReactions.clear();
 
     Site::resetAll();
     Reaction::resetAll();
@@ -138,18 +138,18 @@ void KMCSolver::run()
 
     initializeCrystal();
 
-    while(cycle < nCycles)
+    while(cycle < m_nCycles)
     {
 
         getRateVariables();
 
         double r = KMC_RNG_UNIFORM();
 
-        R = kTot*r;
+        R = m_kTot*r;
 
         choice = getReactionChoice(R);
 
-        selectedReaction = allReactions.at(choice);
+        selectedReaction = m_allReactions.at(choice);
         KMCDebugger_SetActiveReaction(selectedReaction);
 
         selectedReaction->execute();
@@ -163,7 +163,7 @@ void KMCSolver::run()
         }
 
 
-        totalTime += Reaction::linearRateScale()/kTot;
+        totalTime += Reaction::linearRateScale()/m_kTot;
         cycle++;
 
     }
@@ -244,7 +244,7 @@ void KMCSolver::dumpOutput()
 {
 
     cout << setw(5) << right << setprecision(1) << fixed
-         << (double)cycle/nCycles*100 << "%   "
+         << (double)cycle/m_nCycles*100 << "%   "
          << outputCounter
          << endl;
     cout << setprecision(6);
@@ -424,9 +424,9 @@ void KMCSolver::initializeCrystal()
 void KMCSolver::getRateVariables()
 {
 
-    kTot = 0;
-    accuAllRates.clear();
-    allReactions.clear();
+    m_kTot = 0;
+    m_accuAllRates.clear();
+    m_allReactions.clear();
 
     Site::updateAffectedSites();
 
@@ -439,9 +439,9 @@ void KMCSolver::getRateVariables()
                 for (Reaction* reaction : sites[x][y][z]->activeReactions())
                 {
                     assert(reaction->rate() != Reaction::UNSET_RATE);
-                    kTot += reaction->rate();
-                    accuAllRates.push_back(kTot);
-                    allReactions.push_back(reaction);
+                    m_kTot += reaction->rate();
+                    m_accuAllRates.push_back(m_kTot);
+                    m_allReactions.push_back(reaction);
                 }
             }
         }
@@ -453,9 +453,9 @@ void KMCSolver::getRateVariables()
 uint KMCSolver::getReactionChoice(double R)
 {
 
-    KMCDebugger_Assert(accuAllRates.size(), !=, 0, "No active reactions.");
+    KMCDebugger_Assert(m_accuAllRates.size(), !=, 0, "No active reactions.");
 
-    uint imax = accuAllRates.size() - 1;
+    uint imax = m_accuAllRates.size() - 1;
     uint MAX = imax;
     uint imin = 0;
     uint imid = 1;
@@ -468,7 +468,7 @@ uint KMCSolver::getReactionChoice(double R)
         imid = imin + (imax - imin)/2;
 
         //Is the upper limit above mid?
-        if (R > accuAllRates.at(imid))
+        if (R > m_accuAllRates.at(imid))
         {
 
             if (imid == MAX)
@@ -477,7 +477,7 @@ uint KMCSolver::getReactionChoice(double R)
             }
 
             //Are we just infront of the limit?
-            else if (R < accuAllRates.at(imid + 1))
+            else if (R < m_accuAllRates.at(imid + 1))
             {
                 //yes we were! Returning current mid + 1.
                 //If item i in accuAllrates > R, then reaction i is selected.

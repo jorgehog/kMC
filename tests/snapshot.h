@@ -1,10 +1,10 @@
 #pragma once
 
-
 #include <kMC>
 #include <vector>
 
 using namespace std;
+using namespace kMC;
 
 class SnapShot
 {

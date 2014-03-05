@@ -3,7 +3,9 @@
 #include "../kmcsolver.h"
 #include "site.h"
 
-#include "../debugger/kmcdebugger.h"
+#include "../debugger/debugger.h"
+
+using namespace kMC;
 
 Reaction::Reaction(Site *currentSite, const string name):
     name(name),
@@ -63,7 +65,7 @@ string Reaction::getFinalizingDebugMessage() const
 {
 #ifndef KMC_NO_DEBUG
 
-    if (!KMCDebugger::enabled) return "";
+    if (!Debugger::enabled) return "";
 
     int X, Y, Z;
     X = 0;
@@ -72,7 +74,7 @@ string Reaction::getFinalizingDebugMessage() const
 
     stringstream s;
 
-    const Reaction * lastReaction = KMCDebugger::lastCurrentReaction;
+    const Reaction * lastReaction = Debugger::lastCurrentReaction;
 
     if (lastReaction != NULL)
     {
