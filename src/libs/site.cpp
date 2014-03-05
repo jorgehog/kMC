@@ -276,7 +276,7 @@ void Site::loadConfig(const Setting &setting)
         for (uint j = 0; j < 2; ++j)
         {
 
-            boundaryTypes(j) = boundariesConfig[XYZ][j];
+            boundaryTypes(j) = getSurfaceSetting(boundariesConfig, "types")[XYZ][j];
 
             switch (boundaryTypes(j))
             {
@@ -293,6 +293,8 @@ void Site::loadConfig(const Setting &setting)
             default:
                 break;
             }
+
+            m_boundaries(XYZ, j)->loadConfig(getSurfaceSetting(boundariesConfig, "configs")[XYZ][j]);
 
         }
 

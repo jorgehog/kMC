@@ -22,6 +22,11 @@ public:
 
     virtual uint transformCoordinate(const int xi) const = 0;
 
+    virtual int getDistanceBetween(int x1, int x2)
+    {
+        return x1 - x2;
+    }
+
     virtual void loadConfig(const Setting& setting)
     {
         (void) setting;
@@ -35,6 +40,7 @@ public:
     {
         return xi == BLOCKED_COORDINATE;
     }
+
 
     static bool isCompatible(const int type1, const int type2, bool reverse = true);
 

@@ -297,11 +297,6 @@ void KMCSolver::initializeDiffusionReactions()
                                 }
                             }
 
-                            else
-                            {
-                                //% assert that it is really blocked.
-                            }
-
                         }
                     }
                 }
