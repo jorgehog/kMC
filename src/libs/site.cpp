@@ -396,24 +396,6 @@ void Site::distanceTo(const Site *other, int &dx, int &dy, int &dz, bool absolut
     dy = deltay((other->y() + (NY - m_y))%NY);
     dz = deltaz((other->z() + (NZ - m_z))%NZ);
 
-    //    dx = (other->x() + NX - m_x)%NX;
-    //    dy = (other->y() + NY - m_y)%NY;
-    //    dz = (other->z() + NZ - m_z)%NZ;
-
-
-    //    if ((uint)abs(dx) > NX/2) {
-    //        dx = -(int)(NX - dx);
-    //    }
-
-    //    if ((uint)abs(dy) > NY/2) {
-    //        dy = -(int)(NY - dy);
-    //    }
-
-    //    if ((uint)abs(dz) > NZ/2) {
-    //        dz = -(int)(NZ - dz);
-    //    }
-
-
     if (absolutes) {
         dx = abs(dx);
         dy = abs(dy);

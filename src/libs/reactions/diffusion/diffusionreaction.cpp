@@ -400,10 +400,6 @@ const string DiffusionReaction::info(int xr, int yr, int zr, string desc) const
     int Y = path(1);
     int Z = path(2);
 
-    assert((x() + NX() + X)%NX() == m_destinationSite->x());
-    assert((y() + NY() + Y)%NY() == m_destinationSite->y());
-    assert((z() + NZ() + Z)%NZ() == m_destinationSite->z());
-
     stringstream s;
     s << Reaction::info(X, Y, Z, "D");
 
