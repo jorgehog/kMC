@@ -9,6 +9,7 @@ using namespace kMC;
 
 Boundary::Boundary()
 {
+
 }
 
 void Boundary::setMainSolver(KMCSolver *solver)
@@ -20,11 +21,24 @@ void Boundary::setMainSolver(KMCSolver *solver)
     m_NY = solver->getNY();
     m_NZ = solver->getNZ();
 
-    BLOCKED_COORDINATE = max(uvec{m_NX, m_NY, m_NZ}) + 1;
+    BLOCKED_COORDINATE = 2*max(uvec{m_NX, m_NY, m_NZ}) + 1;
 
 }
 
-uint Boundary::BLOCKED_COORDINATE;
+bool Boundary::isCompatible(const int type1, const int type2, bool reverse)
+{
+    bool compatible = !(type1 == Periodic && type2 != Periodic);
+
+    if (reverse)
+    {
+        compatible = (compatible && isCompatible(type2, type1, false));
+    }
+
+    return compatible;
+
+}
+
+int  Boundary::BLOCKED_COORDINATE;
 
 uint Boundary::m_NX;
 uint Boundary::m_NY;

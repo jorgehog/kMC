@@ -9,7 +9,26 @@ namespace kMC
 class Periodic : public Boundary
 {
 public:
-    Periodic();
+    Periodic(uint orientation);
+
+    // Boundary interface
+public:
+    uint transformCoordinate(const int xi)
+    {
+        return (xi + span)%span;
+    }
+
+private:
+
+    uint span;
+
+    enum Orientations
+    {
+        X,
+        Y,
+        Z
+    };
+
 };
 
 }

@@ -18,14 +18,15 @@ public:
 
     static void setMainSolver(KMCSolver * solver);
 
-    static bool isBlocked(const uint xi)
+    static bool isBlocked(const int xi)
     {
         return xi != BLOCKED_COORDINATE;
     }
 
+    static bool isCompatible(const int type1, const int type2, bool reverse = true);
 
 
-    virtual uint transformCoordinate(const uint xi) = 0;
+    virtual uint transformCoordinate(const int xi) = 0;
 
     virtual void loadConfig(const Setting& setting)
     {
@@ -34,9 +35,19 @@ public:
 
     virtual void update() {}
 
+
+
+    enum BoundaryTypes
+    {
+        Periodic,
+        Wall,
+        ConsentrationWall
+    };
+
+
 private:
 
-    static uint BLOCKED_COORDINATE;
+    static int BLOCKED_COORDINATE;
 
     static uint m_NX;
     static uint m_NY;
@@ -49,6 +60,21 @@ protected:
     static KMCSolver * mainSolver()
     {
         return m_mainSolver;
+    }
+
+    const uint & NX() const
+    {
+        return m_NX;
+    }
+
+    const uint & NY() const
+    {
+        return m_NY;
+    }
+
+    const uint & NZ() const
+    {
+        return m_NZ;
     }
 
 };

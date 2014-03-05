@@ -1,10 +1,12 @@
 #include "site.h"
+#include "kmcsolver.h"
 #include "reactions/reaction.h"
 #include "reactions/diffusion/diffusionreaction.h"
-#include "kmcsolver.h"
+#include "boundary/periodic/periodic.h"
 #include "debugger/debugger.h"
 
 using namespace kMC;
+
 
 Site::Site(uint _x, uint _y, uint _z) :
     m_nNeighborsSum(0),
@@ -263,6 +265,47 @@ bool Site::isLegalToSpawn()
 void Site::loadConfig(const Setting &setting)
 {
 
+    m_boundaries.set_size(3, 2);
+
+    const Setting & boundariesConfig = getSurfaceSetting(setting, "Boundaries");
+
+    ivec boundaryTypes(2);
+
+    for (uint XYZ = 0; XYZ < 3; ++XYZ)
+    {
+        for (uint j = 0; j < 2; ++j)
+        {
+
+            boundaryTypes(j) = boundariesConfig[XYZ][j];
+
+            switch (boundaryTypes(j))
+            {
+            case Boundary::Periodic:
+                m_boundaries(XYZ, j) = new Periodic(XYZ);
+
+                break;
+            case Boundary::Wall:
+
+                break;
+            case Boundary::ConsentrationWall:
+
+                break;
+            default:
+                break;
+            }
+
+        }
+
+        if (!Boundary::isCompatible(boundaryTypes(0), boundaryTypes(1)))
+        {
+            cerr << "Mismatch in boundaries for " << XYZ << "'th dimension: " << boundaryTypes.t();
+            exit(1);
+        }
+
+
+    }
+
+
     const uint  &limit = getSurfaceSetting<uint>(setting, "nNeighborsLimit");
 
     if (limit >= min(uvec({NX, NY, NZ}))/2)
@@ -345,7 +388,7 @@ void Site::calculateRates()
 }
 
 
-void Site::setSolverPtr(KMCSolver *solver)
+void Site::setMainSolver(KMCSolver *solver)
 {
 
     mainSolver = solver;
@@ -905,6 +948,7 @@ double     Site::m_totalEnergy = 0;
 
 set<Site*> Site::m_affectedSites;
 
+field<Boundary*> Site::m_boundaries;
 
 const vector<string> ParticleStates::names = {"crystal", "solution", "surface"};
 const vector<string> ParticleStates::shortNames = {"C", "P", "S"};

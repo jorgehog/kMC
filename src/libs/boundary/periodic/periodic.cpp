@@ -3,6 +3,19 @@
 
 using namespace kMC;
 
-Periodic::Periodic()
+Periodic::Periodic(uint orientation)
 {
+    switch (orientation) {
+    case X:
+        span = NX();
+        break;
+    case Y:
+        span = NY();
+        break;
+    case Z:
+        span = NZ();
+        break;
+    default:
+        break;
+    }
 }

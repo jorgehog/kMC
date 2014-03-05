@@ -7,6 +7,8 @@
 #include "reactions/reaction.h"
 #include "reactions/diffusion/diffusionreaction.h"
 
+#include "boundary/boundary.h"
+
 #include "debugger/debugger.h"
 
 #include <sys/time.h>
@@ -39,11 +41,13 @@ KMCSolver::KMCSolver(const Setting & root) :
     NY = BoxSize[1];
     NZ = BoxSize[2];
 
-    Site::setSolverPtr(this);
+    Boundary::setMainSolver(this);
+
+    Site::setMainSolver(this);
     Site::loadConfig(SystemSettings);
 
-    Reaction::loadConfig(getSurfaceSetting(root, "Reactions"));
     Reaction::setMainSolver(this);
+    Reaction::loadConfig(getSurfaceSetting(root, "Reactions"));
 
     DiffusionReaction::loadConfig(getSetting(root, {"Reactions", "Diffusion"}));
 
