@@ -358,6 +358,7 @@ void Site::setSolverPtr(KMCSolver *solver)
     deltay.set_size(NY);
     deltaz.set_size(NZ);
 
+    //%find out what to do with deltavec
     for(uint i = 0; i < NX; ++i)
     {
         deltax(i) = i;
@@ -392,6 +393,7 @@ void Site::setSolverPtr(KMCSolver *solver)
 void Site::distanceTo(const Site *other, int &dx, int &dy, int &dz, bool absolutes) const
 {
 
+    //%Use transformation here as well and find out what to do with the delta vec.
     dx = deltax((other->x() + (NX - m_x))%NX);
     dy = deltay((other->y() + (NY - m_y))%NY);
     dz = deltaz((other->z() + (NZ - m_z))%NZ);
@@ -582,8 +584,10 @@ void Site::introduceNeighborhood()
 
             for (uint k = 0; k < m_neighborhoodLength; ++k)
             {
+                //%use transboundary class here. Determine cleverly weather left or right.
                 zTrans = (m_z + m_originTransformVector(k) + NZ)%NZ;
 
+                //%if x || y || z blocked add else nada. Remember not to add to allneighbors.
                 m_neighborHood[i][j][k] = mainSolver->getSite(xTrans, yTrans, zTrans);
 
                 if (m_neighborHood[i][j][k] != this)

@@ -277,16 +277,25 @@ void KMCSolver::initializeDiffusionReactions()
                                                                     Site::nNeighborsLimit() - 1 + j,
                                                                     Site::nNeighborsLimit() - 1 + k);
 
-                            //This menas we are not at the current site.
-                            if(destination != currentSite)
+                            //This means that the destination is blocked by boundaries
+                            if (destination != NULL)
                             {
-                                DiffusionReaction* diffusionReaction = new DiffusionReaction(currentSite, destination);
-                                currentSite->addReaction(diffusionReaction);
+                                //This menas we are not at the current site.
+                                if(destination != currentSite)
+                                {
+                                    DiffusionReaction* diffusionReaction = new DiffusionReaction(currentSite, destination);
+                                    currentSite->addReaction(diffusionReaction);
+                                }
+
+                                else
+                                {
+                                    assert((i == 1) && (j == 1) && (k == 1));
+                                }
                             }
 
                             else
                             {
-                                assert((i == 1) && (j == 1) && (k == 1));
+                                //% assert that it is really blocked.
                             }
 
                         }
