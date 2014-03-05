@@ -8,12 +8,11 @@ using namespace kMC;
 
 DiffusionReaction::DiffusionReaction(Site * currentSite, Site *destinationSite) :
     Reaction(currentSite, "DiffusionReaction"),
-    lastUsedEnergy(UNSET_ENERGY),
-    lastUsedEsp(UNSET_ENERGY),
+    m_lastUsedEsp(UNSET_ENERGY),
     m_destinationSite(destinationSite)
 {
 
-    m_reactionSite->distanceTo(destinationSite, path(0), path(1), path(2));
+    reactionSite()->distanceTo(destinationSite, path(0), path(1), path(2));
 
     neighborSetIntersectionPoints = getSaddleOverlapMatrix(path);
 
@@ -171,11 +170,11 @@ string DiffusionReaction::getFinalizingDebugMessage() const
     if (lastReaction != NULL)
     {
         const Site* dest = static_cast<const DiffusionReaction*>(lastReaction)->destinationSite();
-        m_reactionSite->distanceTo(dest, X, Y, Z);
+        reactionSite()->distanceTo(dest, X, Y, Z);
     }
 
     s << "\nDestination of last active reaction site marked on current site:\n\n";
-    s << m_reactionSite->info(X, Y, Z);
+    s << reactionSite()->info(X, Y, Z);
 
     return s.str();
 #else
@@ -190,9 +189,9 @@ void DiffusionReaction::setDirectUpdateFlags(const Site *changedSite)
     uint d_maxDistance, r_maxDistance;
 
 
-    if (m_rate == UNSET_RATE || changedSite == m_reactionSite)
+    if (rate() == UNSET_RATE || changedSite == reactionSite())
     {
-        setImplicitUpdateFlags();
+        addUpdateFlag(defaultUpdateFlag);
     }
 
     else
@@ -204,7 +203,7 @@ void DiffusionReaction::setDirectUpdateFlags(const Site *changedSite)
 
         if (r_maxDistance == 1)
         {
-            setImplicitUpdateFlags();
+            addUpdateFlag(defaultUpdateFlag);
         }
 
         else
@@ -215,17 +214,17 @@ void DiffusionReaction::setDirectUpdateFlags(const Site *changedSite)
             if (d_maxDistance > Site::nNeighborsLimit())
             {
                 KMCDebugger_Assert(Site::nNeighborsLimit() + 1, ==,  d_maxDistance);
-                m_updateFlags.insert(updateKeepSaddle);
+                addUpdateFlag(updateKeepSaddle);
             }
 
             else
             {
-                setImplicitUpdateFlags();
+                addUpdateFlag(defaultUpdateFlag);
             }
         }
 
 
-        KMCDebugger_AssertBool(!m_updateFlags.empty(), "Updateflag should not be empty!", info());
+        KMCDebugger_AssertBool(!updateFlags().empty(), "Updateflag should not be empty!", info());
     }
 
 
@@ -234,13 +233,10 @@ void DiffusionReaction::setDirectUpdateFlags(const Site *changedSite)
 double DiffusionReaction::getSaddleEnergy()
 {
 
-    if (m_reactionSite->nNeighborsSum() == 0 || m_destinationSite->nNeighborsSum() == 1)
+    if (reactionSite()->nNeighborsSum() == 0 || m_destinationSite->nNeighborsSum() == 1)
     {
         return 0;
     }
-
-
-    timer.tic();
 
     Site * targetSite;
 
@@ -256,14 +252,14 @@ double DiffusionReaction::getSaddleEnergy()
         {
             for (uint zn = neighborSetIntersectionPoints(2, 0); zn < neighborSetIntersectionPoints(2, 1); ++zn)
             {
-                targetSite = m_reactionSite->neighborHood(xn, yn, zn);
+                targetSite = reactionSite()->neighborHood(xn, yn, zn);
 
                 if (!targetSite->isActive())
                 {
                     continue;
                 }
 
-                else if (targetSite == m_reactionSite)
+                else if (targetSite == reactionSite())
                 {
                     continue;
                 }
@@ -283,7 +279,6 @@ double DiffusionReaction::getSaddleEnergy()
         }
     }
 
-    totalTime += timer.toc();
 
     return Esp;
 
@@ -293,7 +288,7 @@ double DiffusionReaction::getSaddleEnergyContributionFrom(const Site *site)
 {
     int X, Y, Z;
 
-    m_reactionSite->distanceTo(site, X, Y, Z);
+    reactionSite()->distanceTo(site, X, Y, Z);
 
     return getSaddleEnergyContributionFromNeighborAt(X + Site::nNeighborsLimit(),
                                                      Y + Site::nNeighborsLimit(),
@@ -350,44 +345,32 @@ umat::fixed<3, 2> DiffusionReaction::getSaddleOverlapMatrix(const ivec & relCoor
 void DiffusionReaction::calcRate()
 {
 
-    counterAllRate++;
+    double newRate = 0;
 
-    if (m_updateFlag == defaultUpdateFlag)
+    if (updateFlag() == defaultUpdateFlag)
     {
 
         double Esp = getSaddleEnergy();
 
-        m_rate = m_linearRateScale*exp(-beta*(m_reactionSite->energy()- Esp));
+        newRate = linearRateScale()*exp(-beta()*(reactionSite()->energy()- Esp));
 
-        if (Esp != 0)
-        {
-
-            if (fabs(lastUsedEsp - Esp) < 1E-10)
-            {
-                //                KMCDebugger_AssertBool(false, "should never happen.", getFinalizingDebugMessage());
-                counterEqSP++;
-            }
-
-        }
-
-        totalSP++;
-        lastUsedEsp = Esp;
+        m_lastUsedEsp = Esp;
     }
 
     else //m_udateFlag = updateKeepSaddle
     {
 
-        KMCDebugger_Assert(m_rate, !=, UNSET_RATE ,"Saddle can't update when the rate has not been calculated.", getFinalizingDebugMessage());
-        KMCDebugger_Assert(m_updateFlag, ==, updateKeepSaddle, "Errorous updateFlag.", getFinalizingDebugMessage());
-        KMCDebugger_Assert(lastUsedEnergy, !=, UNSET_ENERGY, "energy never calculated before.", getFinalizingDebugMessage());
+        KMCDebugger_Assert(rate(), !=, UNSET_RATE ,"Saddle can't update when the rate has not been calculated.", getFinalizingDebugMessage());
+        KMCDebugger_Assert(updateFlag(), ==, updateKeepSaddle, "Errorous updateFlag.", getFinalizingDebugMessage());
+        KMCDebugger_Assert(lastUsedEnergy(), !=, UNSET_ENERGY, "energy never calculated before.", getFinalizingDebugMessage());
 
-        m_rate *= exp(-beta*(reactionSite()->energy() - lastUsedEnergy));
+        newRate = rate()*exp(-beta()*(reactionSite()->energy() - lastUsedEnergy()));
 
-        KMCDebugger_AssertClose(getSaddleEnergy(), lastUsedEsp, 1E-10, "Saddle energy was not conserved as assumed by flag. ", getFinalizingDebugMessage());
+        KMCDebugger_AssertClose(getSaddleEnergy(), m_lastUsedEsp, 1E-10, "Saddle energy was not conserved as assumed by flag. ", getFinalizingDebugMessage());
 
     }
 
-    lastUsedEnergy = m_reactionSite->energy();
+    setRate(newRate);
 
 }
 
@@ -400,7 +383,7 @@ bool DiffusionReaction::isNotBlocked() const
 
 void DiffusionReaction::execute()
 {
-    m_reactionSite->deactivate();
+    reactionSite()->deactivate();
     m_destinationSite->activate();
 
 }
@@ -417,9 +400,9 @@ const string DiffusionReaction::info(int xr, int yr, int zr, string desc) const
     int Y = path(1);
     int Z = path(2);
 
-    assert((x() + NX + X)%NX == m_destinationSite->x());
-    assert((y() + NY + Y)%NY == m_destinationSite->y());
-    assert((z() + NZ + Z)%NZ == m_destinationSite->z());
+    assert((x() + NX() + X)%NX() == m_destinationSite->x());
+    assert((y() + NY() + Y)%NY() == m_destinationSite->y());
+    assert((z() + NZ() + Z)%NZ() == m_destinationSite->z());
 
     stringstream s;
     s << Reaction::info(X, Y, Z, "D");
@@ -455,17 +438,9 @@ bool DiffusionReaction::allowedAtSite()
 
 }
 
-const
-double        DiffusionReaction::UNSET_ENERGY = -1;
 
 double        DiffusionReaction::rPower;
 double        DiffusionReaction::scale;
 
 cube          DiffusionReaction::m_potential;
 field<cube>   DiffusionReaction::m_saddlePotential;
-
-uint          DiffusionReaction::totalSP = 0;
-uint          DiffusionReaction::counterEqSP = 0;
-uint          DiffusionReaction::counterAllRate = 0;
-double        DiffusionReaction::totalTime = 0;
-wall_clock    DiffusionReaction::timer;

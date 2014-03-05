@@ -11,6 +11,7 @@ Reaction::Reaction(Site *currentSite, const string name):
     name(name),
     m_ID(IDcount++),
     m_reactionSite(currentSite),
+    m_lastUsedEnergy(UNSET_ENERGY),
     m_rate(UNSET_RATE),
     m_updateFlag(UNSET_UPDATE_FLAG)
 {
@@ -90,13 +91,19 @@ string Reaction::getFinalizingDebugMessage() const
 #endif
 }
 
+void Reaction::setRate(const double rate)
+{
+    m_lastUsedEnergy = m_reactionSite->energy();
+    m_rate = rate;
+}
+
 
 void Reaction::setSolverPtr(KMCSolver *solver)
 {
 
-    NX = solver->getNX();
-    NY = solver->getNY();
-    NZ = solver->getNZ();
+    m_NX = solver->getNX();
+    m_NY = solver->getNY();
+    m_NZ = solver->getNZ();
 
     mainSolver = solver;
 
@@ -105,7 +112,7 @@ void Reaction::setSolverPtr(KMCSolver *solver)
 void Reaction::loadConfig(const Setting &setting)
 {
 
-    beta              = getSurfaceSetting<double>(setting, "beta");
+    m_beta              = getSurfaceSetting<double>(setting, "beta");
     m_linearRateScale = getSurfaceSetting<double>(setting, "scale");
 
 }
@@ -122,15 +129,16 @@ void Reaction::selectTriumphingUpdateFlag()
 }
 
 const double   Reaction::UNSET_RATE = -1.337;
+const double   Reaction::UNSET_ENERGY = -1;
 
 KMCSolver*     Reaction::mainSolver;
 
-double         Reaction::beta;
+double         Reaction::m_beta;
 double         Reaction::m_linearRateScale;
 
-uint           Reaction::NX;
-uint           Reaction::NY;
-uint           Reaction::NZ;
+uint           Reaction::m_NX;
+uint           Reaction::m_NY;
+uint           Reaction::m_NZ;
 
 uint           Reaction::IDcount = 0;
 

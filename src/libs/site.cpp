@@ -701,7 +701,7 @@ void Site::queueAffectedSites()
 
             for (Reaction * reaction : neighbor->siteReactions())
             {
-                reaction->setImplicitUpdateFlags();
+                reaction->addUpdateFlag(Reaction::defaultUpdateFlag);
             }
 
             m_affectedSites.insert(neighbor);
