@@ -263,6 +263,12 @@ void Site::loadConfig(const Setting &setting)
 
     const uint  &limit = getSurfaceSetting<uint>(setting, "nNeighborsLimit");
 
+    if (limit >= min(uvec({NX, NY, NZ}))/2)
+    {
+        cerr << "Neighbor reach must be lower than half the minimum box dimension to avoid sites directly affecting themselves." << endl;
+        exit(1);
+    }
+
     m_nNeighborsLimit = limit;
     m_neighborhoodLength = 2*m_nNeighborsLimit + 1;
 

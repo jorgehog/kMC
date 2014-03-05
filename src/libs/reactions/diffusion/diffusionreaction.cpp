@@ -197,6 +197,7 @@ void DiffusionReaction::setDirectUpdateFlags(const Site *changedSite)
 
         r_maxDistance = reactionSite()->maxDistanceTo(changedSite);
 
+        KMCDebugger_Assert(r_maxDistance, !=, 0, "This should be handled by other test.", getFinalizingDebugMessage());
 
         if (r_maxDistance == 1)
         {
@@ -216,7 +217,6 @@ void DiffusionReaction::setDirectUpdateFlags(const Site *changedSite)
 
             else
             {
-                KMCDebugger_Assert(r_maxDistance, ==, Site::nNeighborsLimit());
                 setImplicitUpdateFlags();
             }
         }
