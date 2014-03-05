@@ -15,12 +15,17 @@ class Boundary
 {
 public:
 
-    Boundary();
+    Boundary(const uint dimension, const uint orientation);
 
     virtual ~Boundary();
 
 
-    virtual uint transformCoordinate(const int xi) const = 0;
+    virtual uint transformCoordinate(const int xi) const
+    {
+        return (((xi > (int)m_span) || (xi < 0)) ? BLOCKED_COORDINATE : xi);
+
+
+    }
 
     virtual int getDistanceBetween(int x1, int x2)
     {
@@ -34,6 +39,10 @@ public:
 
     virtual void update() {}
 
+    virtual void initialize()
+    {
+
+    }
 
 
     static bool isBlocked(const uint xi)
@@ -77,6 +86,11 @@ private:
 
     static KMCSolver * m_mainSolver;
 
+
+    uint m_span;
+    uint m_orientation;
+
+
 protected:
 
     static KMCSolver * mainSolver()
@@ -103,6 +117,24 @@ protected:
     {
         return m_NXYZ;
     }
+
+    const uint & span() const
+    {
+        return m_span;
+    }
+
+    const uint & orientation() const
+    {
+        return m_orientation;
+    }
+
+    enum Orientations
+    {
+        X,
+        Y,
+        Z
+    };
+
 
 };
 

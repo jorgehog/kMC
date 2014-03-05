@@ -4,11 +4,30 @@
 
 #include <armadillo>
 
+
+
 using namespace arma;
 using namespace kMC;
 
-Boundary::Boundary()
+
+Boundary::Boundary(const uint dimension, const uint orientation)
 {
+
+    switch (dimension) {
+    case X:
+        m_span = m_NX;
+        break;
+    case Y:
+        m_span = m_NY;
+        break;
+    case Z:
+        m_span = m_NZ;
+        break;
+    default:
+        break;
+    }
+
+    m_orientation = orientation;
 
 }
 

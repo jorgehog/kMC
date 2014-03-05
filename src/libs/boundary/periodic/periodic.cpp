@@ -3,30 +3,18 @@
 
 using namespace kMC;
 
-Periodic::Periodic(uint orientation)
+Periodic::Periodic(const uint dimension, const uint orientation) :
+    Boundary(dimension, orientation)
 {
-    switch (orientation) {
-    case X:
-        span = NX();
-        break;
-    case Y:
-        span = NY();
-        break;
-    case Z:
-        span = NZ();
-        break;
-    default:
-        break;
-    }
 
-    delta.set_size(span);
+    delta.set_size(span());
 
-    for(uint i = 0; i < span; ++i)
+    for(uint i = 0; i < span(); ++i)
     {
         delta(i) = i;
-        if (i > span/2)
+        if (i > span()/2)
         {
-            delta(i) = -(int)(span - i);
+            delta(i) = -(int)(span() - i);
         }
     }
 

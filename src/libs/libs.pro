@@ -14,7 +14,8 @@ HEADERS = RNG/kMCRNG.h \
     debugger/debugger.h \
     debugger/bits/debugger_class.h \
     boundary/boundary.h \
-    boundary/periodic/periodic.h
+    boundary/periodic/periodic.h \
+    boundary/concentrationwall/concentrationwall.h
 
 SOURCES += \
     reactions/reaction.cpp \
@@ -24,7 +25,8 @@ SOURCES += \
     RNG/kMCRNG.cpp \
     debugger/bits/debugger_class.cpp \
     boundary/boundary.cpp \
-    boundary/periodic/periodic.cpp
+    boundary/periodic/periodic.cpp \
+    boundary/concentrationwall/concentrationwall.cpp
 
 RNG_ZIG {
 

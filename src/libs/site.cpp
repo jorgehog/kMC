@@ -2,7 +2,11 @@
 #include "kmcsolver.h"
 #include "reactions/reaction.h"
 #include "reactions/diffusion/diffusionreaction.h"
+
+#include "boundary/boundary.h"
+#include "boundary/concentrationwall/concentrationwall.h"
 #include "boundary/periodic/periodic.h"
+
 #include "debugger/debugger.h"
 
 using namespace kMC;
@@ -273,28 +277,30 @@ void Site::loadConfig(const Setting &setting)
 
     for (uint XYZ = 0; XYZ < 3; ++XYZ)
     {
-        for (uint j = 0; j < 2; ++j)
+        for (uint orientation = 0; orientation < 2; ++orientation)
         {
 
-            boundaryTypes(j) = getSurfaceSetting(boundariesConfig, "types")[XYZ][j];
+            boundaryTypes(orientation) = getSurfaceSetting(boundariesConfig, "types")[XYZ][orientation];
 
-            switch (boundaryTypes(j))
+            switch (boundaryTypes(orientation))
             {
             case Boundary::Periodic:
-                m_boundaries(XYZ, j) = new Periodic(XYZ);
+                m_boundaries(XYZ, orientation) = new Periodic(XYZ, orientation);
 
                 break;
             case Boundary::Wall:
+                m_boundaries(XYZ, orientation) = new Boundary(XYZ, orientation);
 
                 break;
             case Boundary::ConsentrationWall:
+                m_boundaries(XYZ, orientation) = new ConcentrationWall(XYZ, orientation);
 
                 break;
             default:
                 break;
             }
 
-            m_boundaries(XYZ, j)->loadConfig(getSurfaceSetting(boundariesConfig, "configs")[XYZ][j]);
+            m_boundaries(XYZ, orientation)->loadConfig(getSurfaceSetting(boundariesConfig, "configs")[XYZ][orientation]);
 
         }
 
