@@ -1,12 +1,17 @@
 include(../defaults.pri)
+include(../app_defaults.pri)
 
 TARGET = kMC-tests
 
-TEMPLATE = app
-CONFIG += console
-CONFIG -= app_bundle
-CONFIG -= qt
+LIBS += -lunittest++
 
-LIBS += -lunittest++ -L$$TOP_OUT_PWD/src/libs -lkMC
+SOURCES = testmain.cpp \
+    testbed.cpp \
+    snapshot.cpp
 
-SOURCES = testmain.cpp
+HEADERS += \
+    testbed.h \
+    snapshot.h
+
+OTHER_FILES += \
+    ../infiles/knowncase.cfg

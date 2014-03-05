@@ -1,5 +1,7 @@
-#ifndef KMCRNG_H
-#define KMCRNG_H
+#pragma once
+
+
+#include <exception>
 
 #ifdef KMC_RNG_ZIG
 
@@ -10,13 +12,50 @@
 
 #define KMC_RNG_UNIFORM DRan_MWC8222
 
-#define KMC_INIT_RNG(seed)                       \
-    int inseed = seed;                       \
-    int cseed = 100;                         \
-    int seed2 = inseed * 3;                  \
-    RanSetSeed_MWC8222(&seed2, cseed);       \
-    RanNormalSetSeedZig32(&inseed, 5)       \
+typedef int seed_type;
+
+#define KMC_INIT_RNG(seed)                  \
+    kMC::Seed::initialSeed = seed;          \
+    int inseed = static_cast<int>(seed);    \
+    int cseed = 100;                        \
+    int seed2 = inseed * 3;                 \
+    RanSetSeed_MWC8222(&seed2, cseed);      \
+    RanNormalSetSeedZig32(&inseed, 5)
+
+#define KMC_RESET_RNG() \
+    RanSetSeed_MWC8222(&seed2, cseed);      \
+    RanNormalSetSeedZig32(&inseed, 5)
 
 #endif
 
-#endif //KMCRNG_H
+
+namespace kMC
+{
+
+
+struct Seed
+{
+
+    enum SeedState
+    {
+        fromTime,
+        specific
+    };
+
+
+    static seed_type initialSeed;
+
+
+    class SeedNotSetException : public std::exception
+    {
+    public:
+        virtual const char* what() const throw()
+        {
+            return "Seed not set.";
+        }
+    } static seedNotSetException;
+
+
+};
+
+}

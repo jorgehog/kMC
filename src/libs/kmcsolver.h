@@ -1,100 +1,129 @@
-#ifndef KMC_SOLVER_H
-#define KMC_SOLVER_H
+#pragma once
+
 
 #include <sys/types.h>
-
 #include <armadillo>
+
+#include <libconfig_utils/libconfig_utils.h>
+
+#include "site.h"
+
+
 using namespace arma;
 
+
+namespace kMC
+{
+
+
 class Reaction;
-class Site;
 
 class KMCSolver
 {
 public:
 
-    const uint NX;
-    const uint NY;
-    const uint NZ;
 
-    KMCSolver(uint NX, uint NY, uint NZ);
+    KMCSolver(const Setting & root);
+
+    ~KMCSolver();
+
 
     void run();
 
-    //REACTION API
-    void activateSite(Site *site);
-    void deactivateSite(Site *site);
+    void initializeCrystal();
 
-    uint nNeighbours(uint & x, uint & y, uint & z) {
-        return neighbours(x, y)(z).n_rows;
+    void getRateVariables();
+
+    uint getReactionChoice(double R);
+
+
+    uint nNeighbors(uint & x, uint & y, uint & z)
+    {
+        return sites[x][y][z]->nNeighbors(0);
     }
 
-    uint nNextNeighbours(uint & x, uint & y, uint & z) {
-        return nextNeighbours(x, y)(z).n_rows;
+    uint nNextNeighbors(uint & x, uint & y, uint & z)
+    {
+        return sites[x][y][z]->nNeighbors(1);
     }
 
-    void addReaction(Reaction* reaction) {
-        allReactions.push_back(reaction);
+    Site* getSite(const uint & i, const uint & j, const uint & k) const
+    {
+        return sites[i][j][k];
+    }
+
+    const uint &getNX ()
+    {
+        return NX;
+    }
+
+    const uint &getNY ()
+    {
+        return NY;
+    }
+
+    const uint &getNZ ()
+    {
+        return NZ;
+    }
+
+    const vector<double> & accuAllRates() const
+    {
+        return m_accuAllRates;
+    }
+
+    const vector<Reaction*> & allReactions() const
+    {
+        return m_allReactions;
+    }
+
+    const double & kTot() const
+    {
+        return m_kTot;
     }
 
 
 private:
 
+    double saturation;
+
+    double RelativeSeedSize;
+
+
     Site**** sites;
 
-    std::vector<double> accuAllRates;
+    uint NX;
+    uint NY;
+    uint NZ;
 
-    std::vector<Site*> reactionAffectedSites;
 
-    std::vector<Reaction*> allReactions;
+    double m_kTot;
+    vector<double> m_accuAllRates;
 
-    ivec delta = {-1, 0, 1};
+    vector<Reaction*> m_allReactions;
 
-    double t = 0;
-    double kTot;
+    double totalTime;
 
-    int counter=0;
-    int counter2 = 0;
 
-    uint nTot = 0;
-    field<field<umat>> neighbours;
-    field<field<umat>> nextNeighbours;
-    field<field<umat>> vacantNeighbours;
+    uint m_nCycles;
+    uint cycle;
+
+    uint cyclesPerOutput;
+    uint outputCounter;
+
+
+
+    void initializeDiffusionReactions();
+
+    void initializeSites();
+
 
     void dumpXYZ();
 
-    void getNeighbours(uint i, uint j, uint k);
-    inline void getAllNeighbours();
+    void dumpOutput();
 
-    void updateNextNeighbour(uint &x, uint &y, uint &z, const urowvec &newRow, bool activate);
-
-    void updateNeighbourLists(field<field<umat> > &A, field<field<umat> > &B,
-                              Site *site, bool activate = false);
-
-
-    void setDiffusionReactions();
-
-    Reaction *getChosenReaction(uint choice);
-    uint getReactionChoice(double R);
-
-
-    void getRateVariables();
-    void updateRates();
-
-    bool pushToRateQueue(Site* affectedSite);
+    static uint ptrCount;
 
 };
 
-inline void KMCSolver::getAllNeighbours() {
-
-    for (uint i = 0; i < NX; ++i) {
-        for (uint j = 0; j < NY; ++j) {
-            for (uint k = 0; k < NZ; ++k) {
-                getNeighbours(i, j, k);
-            }
-        }
-    }
 }
-
-
-#endif // SOLVER_H

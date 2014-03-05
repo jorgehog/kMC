@@ -1,562 +1,447 @@
 #include "kmcsolver.h"
+
 #include "RNG/kMCRNG.h"
 
 #include "site.h"
+
 #include "reactions/reaction.h"
 #include "reactions/diffusion/diffusionreaction.h"
+
+#include "debugger/debugger.h"
 
 #include <sys/time.h>
 
 #include <armadillo>
-using namespace arma;
 
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 
-using namespace std;
 
-KMCSolver::KMCSolver(uint NX, uint NY, uint NZ) :
-    NX(NX),
-    NY(NY),
-    NZ(NZ)
+using namespace arma;
+using namespace std;
+using namespace kMC;
+
+KMCSolver::KMCSolver(const Setting & root) :
+    totalTime(0),
+    cycle(0),
+    outputCounter(0)
 {
 
-    KMC_INIT_RNG(time(NULL));
+    const Setting & SystemSettings = getSurfaceSetting(root, "System");
+    const Setting & SolverSettings = getSurfaceSetting(root, "Solver");
+    const Setting & InitializationSettings = getSurfaceSetting(root, "Initialization");
 
-    neighbours.set_size(NX, NY);
-    nextNeighbours.set_size(NX, NY);
-    vacantNeighbours.set_size(NX, NY);
+    const Setting & BoxSize = getSurfaceSetting(SystemSettings, "BoxSize");
 
-    sites = new Site***[NX];
 
-    for (uint x = 0; x < NX; ++x) {
+    NX = BoxSize[0];
+    NY = BoxSize[1];
+    NZ = BoxSize[2];
 
-        sites[x] = new Site**[NY];
-        for (uint y = 0; y < NY; ++y) {
+    Site::setSolverPtr(this);
+    Site::loadConfig(SystemSettings);
 
-            neighbours(x, y).set_size(NZ);
-            nextNeighbours(x, y).set_size(NZ);
-            vacantNeighbours(x, y).set_size(NZ);
-            sites[x][y] = new Site*[NZ];
+    Reaction::loadConfig(getSurfaceSetting(root, "Reactions"));
+    Reaction::setSolverPtr(this);
 
-            for (uint z = 0; z < NZ; ++z) {
+    DiffusionReaction::loadConfig(getSetting(root, {"Reactions", "Diffusion"}));
 
-                sites[x][y][z] = new Site(x, y, z, this);
-            }
-        }
+    m_nCycles = getSurfaceSetting<uint>(SolverSettings, "nCycles");
+
+    cyclesPerOutput = getSurfaceSetting<uint>(SolverSettings, "cyclesPerOutput");
+
+
+    Seed::SeedState seedState = static_cast<Seed::SeedState>(getSurfaceSetting<uint>(SolverSettings, "seedType"));
+
+    seed_type seed = -1;
+    switch (seedState)
+    {
+    case Seed::specific:
+        seed = getSurfaceSetting<seed_type>(SolverSettings, "specificSeed");
+        break;
+    case Seed::fromTime:
+        seed = static_cast<seed_type>(time(NULL));
+        break;
+    default:
+        cout << "SEED NOT SPECIFIED." << endl;
+        throw Seed::seedNotSetException;
+        break;
     }
+
+    cout << "initializing seed : " << seed << endl;
+    KMC_INIT_RNG(seed);
+
+
+    saturation = getSurfaceSetting<double>(InitializationSettings, "SaturationLevel");
+    RelativeSeedSize = getSurfaceSetting<double>(InitializationSettings, "RelativeSeedSize");
+
+    KMCDebugger_Assert(RelativeSeedSize, <, 1.0, "The seed size cannot exceed the box size.");
+
+
+    initializeSites();
+
+    initializeDiffusionReactions();
+
+    ptrCount++;
 
 }
 
-void KMCSolver::run(){
+KMCSolver::~KMCSolver()
+{
 
+    if (ptrCount > 1)
+    {
+        cout << "WARNING: Several solver objects alive when freeing.";
+        cout << "Static member variables of objects IN USE by living solver WILL BE FREED." << endl;
+    }
+
+    for (uint i = 0; i < NX; ++i)
+    {
+        for (uint j = 0; j < NY; ++j)
+        {
+            for (uint k = 0; k < NZ; ++k)
+            {
+                delete sites[i][j][k];
+            }
+
+            delete [] sites[i][j];
+        }
+
+        delete [] sites[i];
+    }
+
+    delete [] sites;
+
+    m_allReactions.clear();
+
+    Site::resetAll();
+    Reaction::resetAll();
+    DiffusionReaction::resetAll();
+
+    KMCDebugger_Finalize();
+
+    ptrCount--;
+
+}
+
+
+
+void KMCSolver::run()
+{
+
+    KMCDebugger_Init();
+
+    Reaction * selectedReaction;
     uint choice;
+    double R;
 
-    nTot = 0;
+    initializeCrystal();
 
-    for (uint i = 0; i < NX; ++i) {
-        for (uint j = 0; j < NY; ++j) {
-            for (uint k = 0; k < NZ; ++k) {
-                if (KMC_RNG_UNIFORM() > 0.9) {
+    while(cycle < m_nCycles)
+    {
 
-                    sites[i][j][k]->activate();
-                    nTot++;
-                }
-            }
-        }
-    }
-
-
-    int D = 10;
-    for (uint i = NX/2 - D; i < NX/2 + D; ++i) {
-        for (uint j = NY/2 - D; j < NY/2 + D; ++j) {
-            for (uint k = NZ/2 - D; k < NZ/2 + D; ++k) {
-                if (!sites[i][j][k]->active()){
-                    sites[i][j][k]->activate();
-                    nTot++;
-                }
-            }
-        }
-    }
-
-    getAllNeighbours();
-
-    cout << nTot << endl;
-
-    dumpXYZ();
-
-    setDiffusionReactions();
-
-//    wall_clock wc;
-//    double t1 = 0;
-    while(counter < 100000) {
-//        wc.tic();
         getRateVariables();
 
-        double R = kTot*KMC_RNG_UNIFORM();
+        double r = KMC_RNG_UNIFORM();
+
+        R = m_kTot*r;
 
         choice = getReactionChoice(R);
 
-        Reaction* chosenReaction = allReactions[choice];
+        selectedReaction = m_allReactions.at(choice);
+        KMCDebugger_SetActiveReaction(selectedReaction);
 
-        reactionAffectedSites.clear();
-        chosenReaction->execute();
+        selectedReaction->execute();
+        KMCDebugger_PushTraces();
 
-        updateRates();
 
-        counter2++;
-
-        if (counter2%250 == 0){
-            cout << counter << endl;
+        if (cycle%cyclesPerOutput == 0)
+        {
+            dumpOutput();
             dumpXYZ();
         }
 
 
-        t += 1.0/kTot;
-//        t1 += wc.toc();
+        totalTime += Reaction::linearRateScale()/m_kTot;
+        cycle++;
 
     }
 
+    cout << "Frac equal saddles calculated:" << DiffusionReaction::counterEqSP/(double)DiffusionReaction::totalSP*100 << " %" << endl;
+    cout << "Frac saddles recalculated: " << DiffusionReaction::totalSP/(double)DiffusionReaction::counterAllRate*100 << " %" << endl;
+    cout << "Average time in saddleFunc: " << DiffusionReaction::totalTime/DiffusionReaction::totalSP*1E6 << " µs" << endl;
+
 }
+
+
 
 
 
 void KMCSolver::dumpXYZ()
 {
-    ofstream o;
+
     stringstream s;
-    s << "kMC" << counter++ << ".xyz";
+    s << "kMC" << outputCounter++ << ".xyz";
+
+    ofstream o;
     o.open("outfiles/" + s.str());
 
-    o << nTot << "\n - ";
-    uint COUNT = 0;
-    for (uint i = 0; i < NX; ++i) {
-        for (uint j = 0; j < NY; ++j) {
-            for (uint k = 0; k < NZ; ++k) {
-                if (sites[i][j][k]->active()) {
-                    o << "\nC " << i << " " << j << " " << k << " " << neighbours(i, j)(k).n_rows;
-                    COUNT++;
+
+
+    stringstream surface;
+    stringstream crystal;
+    stringstream solution;
+
+    uint nLines = 0;
+    s.str(string());
+
+    Site* currentSite;
+
+    for (uint i = 0; i < NX; ++i)
+    {
+        for (uint j = 0; j < NY; ++j)
+        {
+            for (uint k = 0; k < NZ; ++k)
+            {
+
+                currentSite = sites[i][j][k];
+
+                bool isSurface = currentSite->isSurface();
+
+                if (currentSite->isActive() || isSurface)
+                {
+                    s << "\n" << ParticleStates::shortNames.at(sites[i][j][k]->particleState()) << " " << i << " " << j << " " << k << " " << sites[i][j][k]->nNeighbors();
+
+                    if (isSurface)
+                    {
+                        surface << s.str();
+                    }
+
+                    else if (currentSite->isCrystal())
+                    {
+                        crystal << s.str();
+                    }
+
+                    else
+                    {
+                        solution << s.str();
+                    }
+
+                    s.str(string());
+                    nLines++;
                 }
             }
         }
     }
-    if (COUNT != nTot) {
-        cout << "FAIL FAIL FAIL "<< COUNT << "  " << nTot << endl;
-        exit(1);
-    }
+
+    o << nLines << "\n - " << surface.str() << crystal.str() << solution.str();
     o.close();
 
 }
 
-void KMCSolver::getNeighbours(uint i, uint j, uint k)
+void KMCSolver::dumpOutput()
 {
-    //Count neighbours
-    uint n = 0;
 
-    //Count vacant neighbours
-    uint nf = 0;
-
-    //Count next neighbours
-    uint nn = 0;
-
-    //Create maximal size matrices. Reshape them based on above integers post.
-    umat localNeighbours(27, 3);
-    umat localVacantNeighbours(27, 3);
-    umat localNextNeighbours(98, 3);
+    cout << setw(5) << right << setprecision(1) << fixed
+         << (double)cycle/m_nCycles*100 << "%   "
+         << outputCounter
+         << endl;
+    cout << setprecision(6);
+}
 
 
+void KMCSolver::initializeDiffusionReactions()
+{
 
-    //Find closest neighbours and vacancies
-    for (uint ci = 0; ci < 3; ++ci) {
-        uint inp = (i + delta(ci) + NX)%NX;
+    Site* currentSite;
+    Site* destination;
 
-        for (uint cj = 0; cj < 3; ++cj) {
-            uint jnp = (j + delta(cj) + NY)%NY;
+    //Loop over all sites
+    for (uint x = 0; x < NX; ++x)
+    {
+        for (uint y = 0; y < NY; ++y)
+        {
+            for (uint z = 0; z < NZ; ++z)
+            {
 
-            for (uint ck = 0; ck < 3; ++ck) {
+                currentSite = sites[x][y][z];
 
-                if((ci == 1) && (cj == 1) && (ck == 1)) {
-                    continue;
+                assert(currentSite->siteReactions().size() == 0 && "Sitereactions are already set");
+
+                //For each site, loop over all neightbours
+                for (uint i = 0; i < 3; ++i)
+                {
+                    for (uint j = 0; j < 3; ++j)
+                    {
+                        for (uint k = 0; k < 3; ++k)
+                        {
+
+                            destination = currentSite->neighborHood(Site::nNeighborsLimit() - 1 + i,
+                                                                    Site::nNeighborsLimit() - 1 + j,
+                                                                    Site::nNeighborsLimit() - 1 + k);
+
+                            //This menas we are not at the current site.
+                            if(destination != currentSite)
+                            {
+                                DiffusionReaction* diffusionReaction = new DiffusionReaction(currentSite, destination);
+                                currentSite->addReaction(diffusionReaction);
+                            }
+
+                            else
+                            {
+                                assert((i == 1) && (j == 1) && (k == 1));
+                            }
+
+                        }
+                    }
                 }
-
-                uint knp = (k + delta(ck) + NZ)%NZ;
-
-
-                if (sites[inp][jnp][knp]->active()) {
-                    localNeighbours(n, 0) = inp;
-                    localNeighbours(n, 1) = jnp;
-                    localNeighbours(n, 2) = knp;
-                    n++;
-                } else {
-                    localVacantNeighbours(nf, 0) = inp;
-                    localVacantNeighbours(nf, 1) = jnp;
-                    localVacantNeighbours(nf, 2) = knp;
-                    nf++;
-                }
-
             }
         }
-    }
-
-
-
-
-    //Find next neighbours
-    uint X, Y, Z;
-    uint X0 = (i - 2 + NX) % NX;
-    uint Y0 = (j - 2 + NY) % NY;
-    uint Z0 = (k - 2 + NZ) % NZ;
-
-    uint X1 = (i + 2 + NX) % NX;
-    uint Y1 = (j + 2 + NY) % NY;
-    uint Z1 = (k + 2 + NZ) % NZ;
-
-    //TOP AND BOTTOM LAYER
-    for (uint ci = 0; ci < 5; ++ci) {
-
-        X = (X0 + ci + NX)%NX;
-        for (uint cj = 0; cj < 5; ++cj) {
-
-            Y = (Y0 + cj + NY)%NY;
-
-            if (sites[X][Y][Z0]->active()){
-                localNextNeighbours(nn, 0) = X;
-                localNextNeighbours(nn, 1) = Y;
-                localNextNeighbours(nn, 2) = Z0;
-
-                nn++;
-            }
-
-            if (sites[X][Y][Z1]->active()){
-                localNextNeighbours(nn, 0) = X;
-                localNextNeighbours(nn, 1) = Y;
-                localNextNeighbours(nn, 2) = Z1;
-
-                nn++;
-            }
-
-        }
-    }
-
-
-
-    //LEFT AND RIGHT LAYER
-    for (uint ci = 0; ci < 5; ++ci){
-
-        X = (X0 + ci + NX)%NX;
-        for (uint ck = 1; ck < 4; ++ck) {
-
-            Z = (Z0 + ck + NZ)%NZ;
-
-            if (sites[X][Y0][Z]->active()){
-                localNextNeighbours(nn, 0) = X;
-                localNextNeighbours(nn, 1) = Y0;
-                localNextNeighbours(nn, 2) = Z;
-
-                nn++;
-            }
-
-            if (sites[X][Y1][Z]->active()){
-                localNextNeighbours(nn, 0) = X;
-                localNextNeighbours(nn, 1) = Y1;
-                localNextNeighbours(nn, 2) = Z;
-
-                nn++;
-            }
-        }
-    }
-
-
-    //BACK AND FRONT LAYER
-    for (uint cj = 1; cj < 4; ++cj){
-
-        Y = (Y0 + cj + NY)%NY;
-        for (uint ck = 1; ck < 4; ++ck) {
-
-            Z = (Z0 + ck + NZ)%NZ;
-
-            if (sites[X0][Y][Z]->active()){
-                localNextNeighbours(nn, 0) = X0;
-                localNextNeighbours(nn, 1) = Y;
-                localNextNeighbours(nn, 2) = Z;
-
-                nn++;
-            }
-
-            if (sites[X1][Y][Z]->active()){
-                localNextNeighbours(nn, 0) = X1;
-                localNextNeighbours(nn, 1) = Y;
-                localNextNeighbours(nn, 2) = Z;
-
-                nn++;
-            }
-
-        }
-    }
-
-
-
-    //Resize matrices mased on the integer count value and fill the neighbour list.
-    if (n != 0) {
-        neighbours(i, j)(k) = localNeighbours(span(0, n-1), span::all);
-    } else {
-        neighbours(i, j)(k).reset();
-    }
-
-    if (nf != 0) {
-        vacantNeighbours(i, j)(k) = localVacantNeighbours(span(0, nf-1), span::all);
-    } else {
-        vacantNeighbours(i, j)(k).reset();
-    }
-
-    if (nn != 0) {
-        nextNeighbours(i, j)(k) = localNextNeighbours(span(0, nn-1), span::all);
-    } else {
-        nextNeighbours(i, j)(k).reset();
     }
 
 }
 
-void KMCSolver::setDiffusionReactions()
+void KMCSolver::initializeSites()
 {
-    //Loop over all sites
-    for (uint x = 0; x < NX; ++x) {
-        for (uint y = 0; y < NY; ++y) {
-            for (uint z = 0; z < NZ; ++z) {
 
-                //For each site, loop over all neightbours
-                for (uint dx_i = 0; dx_i < 3; ++dx_i) {
-                    uint x1 = (x + delta(dx_i) + NX)%NX;
+    sites = new Site***[NX];
 
-                    for (uint dy_i = 0; dy_i < 3; ++dy_i) {
-                        uint y1 = (y + delta(dy_i) + NY)%NY;
+    for (uint x = 0; x < NX; ++x)
+    {
+        sites[x] = new Site**[NY];
 
-                        for (uint dz_i = 0; dz_i < 3; ++dz_i) {
+        for (uint y = 0; y < NY; ++y)
+        {
+            sites[x][y] = new Site*[NZ];
 
-                            //This menas we are at the current site.
-                            if((dx_i == 1) && (dy_i == 1) && (dz_i == 1)) {
-                                continue;
+            for (uint z = 0; z < NZ; ++z)
+            {
+                sites[x][y][z] = new Site(x, y, z);
+            }
+        }
+    }
+
+
+    for (uint x = 0; x < NX; ++x)
+    {
+        for (uint y = 0; y < NY; ++y)
+        {
+            for (uint z = 0; z < NZ; ++z)
+            {
+                sites[x][y][z]->introduceNeighborhood();
+            }
+        }
+    }
+
+}
+
+
+void KMCSolver::initializeCrystal()
+{
+
+    bool enabled = KMCDebugger_IsEnabled;
+    KMCDebugger_SetEnabledTo(false);
+
+    sites[NX/2][NY/2][NZ/2]->spawnAsFixedCrystal();
+    KMCDebugger_PushTraces();
+
+    uint crystalSizeX = round(NX*RelativeSeedSize);
+    uint crystalSizeY = round(NY*RelativeSeedSize);
+    uint crystalSizeZ = round(NZ*RelativeSeedSize);
+
+    uint crystalStartX = NX/2 - crystalSizeX/2;
+    uint crystalStartY = NY/2 - crystalSizeY/2;
+    uint crystalStartZ = NZ/2 - crystalSizeZ/2;
+
+    uint crystalEndX = crystalStartX + crystalSizeX;
+    uint crystalEndY = crystalStartY + crystalSizeY;
+    uint crystalEndZ = crystalStartZ + crystalSizeZ;
+
+    uint solutionEndX = crystalStartX - Site::nNeighborsLimit();
+    uint solutionEndY = crystalStartY - Site::nNeighborsLimit();
+    uint solutionEndZ = crystalStartZ - Site::nNeighborsLimit();
+
+    uint solutionStartX = crystalEndX + Site::nNeighborsLimit();
+    uint solutionStartY = crystalEndY + Site::nNeighborsLimit();
+    uint solutionStartZ = crystalEndZ + Site::nNeighborsLimit();
+
+    for (uint i = 0; i < NX; ++i)
+    {
+        for (uint j = 0; j < NY; ++j)
+        {
+            for (uint k = 0; k < NZ; ++k)
+            {
+
+                if (i >= crystalStartX && i < crystalEndX)
+                {
+                    if (j >= crystalStartY && j < crystalEndY)
+                    {
+                        if (k >= crystalStartZ && k < crystalEndZ)
+                        {
+                            if (!((i == NX/2 && j == NY/2 && k == NZ/2)))
+                            {
+                                sites[i][j][k]->activate();
+                                KMCDebugger_PushTraces();
                             }
-                            uint z1 = (z + delta(dz_i)+ NZ)%NZ;
 
-                            //And add diffusion reactions
-                            sites[x][y][z]->addReaction(new DiffusionReaction(sites[x1][y1][z1]));
+                            continue;
 
                         }
                     }
                 }
 
-                //Then we update the site reactions based on the current setup
-                sites[x][y][z]->updateReactions();
-
-                //And calculate the process rates (only dependent on other sites, not reactions)
-                sites[x][y][z]->calculateRates();
-
-            }
-        }
-    }
-}
-
-void KMCSolver::updateNextNeighbour(uint & x, uint& y, uint &z, const urowvec & newRow, bool activate)
-{
-
-
-    bool notUpdated = pushToRateQueue(sites[x][y][z]);
-
-    if (!notUpdated) {
-        return;
-    }
-
-    uint xnew = newRow(0);
-    uint ynew = newRow(1);
-    uint znew = newRow(2);
-
-
-    //activate=true means the particle at (i j k) needs to be added to all surrounding neighbour lists
-    if (activate) {
-        nextNeighbours(x, y)(z).insert_rows(0, newRow);
-    } else {
-        for (uint l = 0; l < nextNeighbours(x, y)(z).n_rows; ++l) {
-
-            uint & i = nextNeighbours(x, y)(z)(l, 0);
-            uint & j = nextNeighbours(x, y)(z)(l, 1);
-            uint & k = nextNeighbours(x, y)(z)(l, 2);
-
-            if ((xnew == i) && (ynew==j) && (znew == k)) {
-                nextNeighbours(x, y)(z).shed_row(l);
-                return;
-            }
-        }
-    }
-}
-
-void KMCSolver::activateSite(Site* site)
-{
-
-    if (site->active()) {
-        cout << "fail. activating active site... rate should be zero." << endl;
-        exit(1);
-    }
-
-
-    //create the new site
-    site->activate();
-    nTot++;
-
-    updateNeighbourLists(neighbours, vacantNeighbours, site, true);
-
-}
-
-void KMCSolver::deactivateSite(Site* site)
-{
-
-    if (!site->active()) {
-        cout << "fail2. Deactivating deactivated site.. rate should be zero." << endl;
-        exit(1);
-    }
-
-    site->deactivate();
-    nTot--;
-
-    updateNeighbourLists(vacantNeighbours, neighbours, site);
-
-}
-
-void KMCSolver::updateNeighbourLists(field<field<umat>> & A, field<field<umat>> & B,
-                                     Site* site, bool activate)
-{
-
-    uint i = site->x();
-    uint j = site->y();
-    uint k = site->z();
-
-    urowvec newRow = {i, j, k};
-
-    //All comments works mirrored if we remove a particle
-
-    //loop over the box surrounding the new site and
-    //add the site as neighbours to surrounding sites
-    //and then also remove it from the vacancy lists
-    for (uint ci = 0; ci < 3; ++ci) {
-        uint inp = (i + delta(ci) + NX)%NX;
-
-        for (uint cj = 0; cj < 3; ++cj) {
-            uint jnp = (j + delta(cj) + NY)%NY;
-
-            for (uint ck = 0; ck < 3; ++ck) {
-
-                if((ci == 1) && (cj == 1) && (ck == 1)) {
-                    continue;
-                }
-
-                uint knp = (k + delta(ck) + NZ)%NZ;
-
-
-                bool notUpdated = pushToRateQueue(sites[inp][jnp][knp]);
-
-                if (!notUpdated) {
-                    continue;
-                }
-
-                //add the new site as neighbour to surrounding site
-                A(inp, jnp)(knp).insert_rows(0, newRow);
-
-                //remove the site from the vacancy list of the surrounding site
-                for(uint l = 0; l < B(inp, jnp)(knp).n_rows; ++l){
-
-                    uint & x = B(inp, jnp)(knp)(l, 0);
-                    uint & y = B(inp, jnp)(knp)(l, 1);
-                    uint & z = B(inp, jnp)(knp)(l, 2);
-
-                    if ((x == i) && (y==j) && (z == k)) {
-                        B(inp, jnp)(knp).shed_row(l);
-                        break;
+                if ((i < solutionEndX) || (i >= solutionStartX) || (j < solutionEndY) || (j >= solutionStartY) || (k < solutionEndZ) || (k >= solutionStartZ))
+                {
+                    if (KMC_RNG_UNIFORM() < saturation)
+                    {
+                        if(sites[i][j][k]->isLegalToSpawn())
+                        {
+                            sites[i][j][k]->activate();
+                            KMCDebugger_PushTraces();
+                        }
                     }
-                    //                    if (l == B(inp, jnp)(knp).n_rows - 1) {
-                    //                        cout << "SHOULD NEVER GET HERE" << endl;
-                    //                        cout << i << " " << j << " " << k << endl;
-                    //                        cout <<     B(inp, jnp)(knp) << endl;
-                    //                        exit(1);
-                    //                    }
                 }
-
-
             }
         }
     }
 
+    cout << "Initialized "
+         << Site::totalActiveSites()
+         << " active sites."
+         << endl;
 
-    uint X, Y, Z;
-    uint X0 = (i - 2 + NX) % NX;
-    uint Y0 = (j - 2 + NY) % NY;
-    uint Z0 = (k - 2 + NZ) % NZ;
-
-    uint X1 = (i + 2 + NX) % NX;
-    uint Y1 = (j + 2 + NY) % NY;
-    uint Z1 = (k + 2 + NZ) % NZ;
-
-    //TOP AND BOTTOM LAYER
-    for (uint ci = 0; ci < 5; ++ci) {
-
-        X = (X0 + ci + NX)%NX;
-        for (uint cj = 0; cj < 5; ++cj) {
-
-            Y = (Y0 + cj + NY)%NY;
-
-            updateNextNeighbour(X, Y, Z0, newRow, activate);
-            updateNextNeighbour(X, Y, Z1, newRow, activate);
-
-        }
-    }
+    dumpXYZ();
 
 
-
-    //LEFT AND RIGHT LAYER
-    for (uint ci = 0; ci < 5; ++ci){
-
-        X = (X0 + ci + NX)%NX;
-        for (uint ck = 1; ck < 4; ++ck) {
-
-            Z = (Z0 + ck + NZ)%NZ;
-
-            updateNextNeighbour(X, Y0, Z, newRow, activate);
-            updateNextNeighbour(X, Y1, Z, newRow, activate);
-
-        }
-    }
-
-
-    //BACK AND FRONT LAYER
-    for (uint cj = 1; cj < 4; ++cj){
-
-        Y = (Y0 + cj + NY)%NY;
-        for (uint ck = 1; ck < 4; ++ck) {
-
-            Z = (Z0 + ck + NZ)%NZ;
-
-            updateNextNeighbour(X0, Y, Z, newRow, activate);
-            updateNextNeighbour(X1, Y, Z, newRow, activate);
-
-        }
-    }
-
+    KMCDebugger_SetEnabledTo(enabled);
 
 }
+
+
+
 
 void KMCSolver::getRateVariables()
 {
 
-    kTot = 0;
-    accuAllRates.clear();
-    allReactions.clear();
+    m_kTot = 0;
+    m_accuAllRates.clear();
+    m_allReactions.clear();
 
-    for (uint x = 0; x < NX; ++x) {
-        for (uint y = 0; y < NY; ++y) {
-            for (uint z = 0; z < NZ; ++z) {
-                for (Reaction* reaction : sites[x][y][z]->activeReactions()) {
-                    kTot += reaction->rate();
-                    accuAllRates.push_back(kTot);
-                    allReactions.push_back(reaction);
+    Site::updateAffectedSites();
+
+    for (uint x = 0; x < NX; ++x)
+    {
+        for (uint y = 0; y < NY; ++y)
+        {
+            for (uint z = 0; z < NZ; ++z)
+            {
+                for (Reaction* reaction : sites[x][y][z]->activeReactions())
+                {
+                    assert(reaction->rate() != Reaction::UNSET_RATE);
+                    m_kTot += reaction->rate();
+                    m_accuAllRates.push_back(m_kTot);
+                    m_allReactions.push_back(reaction);
                 }
             }
         }
@@ -564,93 +449,68 @@ void KMCSolver::getRateVariables()
 
 }
 
-
-void KMCSolver::updateRates()
-{
-
-    for (Site* affectedSite : reactionAffectedSites) {
-        affectedSite->updateReactions();
-        affectedSite->calculateRates();
-    }
-
-}
-
-Reaction* KMCSolver::getChosenReaction(uint choice)
-{
-    uint K = 0;
-
-    for (uint x = 0; x < NX; ++x) {
-        for (uint y = 0; y < NY; ++y) {
-            for (uint z = 0; z < NZ; ++z) {
-
-                for (Reaction* reaction : sites[x][y][z]->activeReactions()) {
-
-                    if (K == choice) {
-                        return reaction;
-                    }
-
-                    K++;
-                }
-
-            }
-        }
-    }
-
-    cout << "FAIL AT CHOOSING REACTION" << endl;
-    exit(1);
-}
 
 uint KMCSolver::getReactionChoice(double R)
 {
 
-    uint imax = accuAllRates.size();
+    KMCDebugger_Assert(m_accuAllRates.size(), !=, 0, "No active reactions.");
+
+    uint imax = m_accuAllRates.size() - 1;
+    uint MAX = imax;
     uint imin = 0;
     uint imid = 1;
 
     // continue searching while imax != imin + 1
     while (imid != imin)
     {
+
         // calculate the midpoint for roughly equal partition
         imid = imin + (imax - imin)/2;
 
-        if (imid == imin) {
-            return imid;
+        //Is the upper limit above mid?
+        if (R > m_accuAllRates.at(imid))
+        {
+
+            if (imid == MAX)
+            {
+                return MAX;
+            }
+
+            //Are we just infront of the limit?
+            else if (R < m_accuAllRates.at(imid + 1))
+            {
+                //yes we were! Returning current mid + 1.
+                //If item i in accuAllrates > R, then reaction i is selected.
+                //This because there is no zero at the start of accuAllrates.
+
+                return imid + 1;
+            }
+
+            //No we're not there yet, so we search above us.
+            else
+            {
+                imin = imid + 1;
+            }
         }
 
-        //perform two tests due to integer division
-        else if (accuAllRates.at(imid - 1) < R && accuAllRates.at(imid) > R) {
-            return imid-1;
-        }
-        else if (accuAllRates.at(imid) < R && accuAllRates.at(imid + 1) > R) {
-            return imid;
-        }
+        //No it's not. Starting new search below mid!
+        else
+        {
 
-        else if (accuAllRates.at(imid) < R) {
-            imin = imid + 1;
-        } else {
-            imax = imid - 1;
+            if (imid == 0)
+            {
+                return 0;
+            }
+
+            imax = imid;
         }
 
 
     }
 
-    cout << "FAILED" << endl;
-    return 0;
+    return imid + 1;
 
 }
 
-bool KMCSolver::pushToRateQueue(Site *affectedSite)
-{
-    for (const Site * prevAffectedSite : reactionAffectedSites) {
 
-        //Skip out of the function in the site is already queued
-        if (prevAffectedSite == affectedSite) {
-            return false;
-        }
-    }
-
-    reactionAffectedSites.push_back(affectedSite);
-
-    return true;
-}
-
+uint KMCSolver::ptrCount = 0;

@@ -1,12 +1,29 @@
 
-#include <kmcsolver.h>
+#include <kMC>
+
+#include <libconfig_utils/libconfig_utils.h>
+
+using namespace libconfig;
+using namespace kMC;
 
 int main()
 {
 
-    KMCSolver* solver = new KMCSolver(40, 40, 40);
+    Config cfg;
+
+    cfg.readFile("infiles/config.cfg");
+
+    const Setting & root = cfg.getRoot();
+
+    KMCDebugger_SetFilename("sameSaddleProblem");
+    KMCSolver* solver = new KMCSolver(root);
+
+    wall_clock t;
+
+    t.tic();
     solver->run();
+    cout << "Simulation ended after " << t.toc() << " seconds" << endl;
+
 
     return 0;
 }
-

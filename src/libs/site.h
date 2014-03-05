@@ -1,16 +1,78 @@
-#ifndef SITE_H
-#define SITE_H
+#pragma once
 
 #include <vector>
+#include <set>
 #include <sys/types.h>
+#include <armadillo>
+#include <assert.h>
+
+#include <libconfig_utils/libconfig_utils.h>
+
+using namespace arma;
+
+
+namespace kMC
+{
+
 
 class KMCSolver;
 class Reaction;
+class DiffusionReaction;
+
+struct ParticleStates
+{
+    enum
+    {
+        crystal,
+        solution,
+        surface
+    };
+
+    const static vector<string> names;
+    const static vector<string> shortNames;
+
+};
 
 class Site
 {
 public:
-    Site(uint _x, uint _y, uint _z, KMCSolver* solver);
+
+    Site(uint _x, uint _y, uint _z);
+
+    ~Site();
+
+    /*
+     * Static non-trivial functions
+     */
+
+    static void setSolverPtr(KMCSolver* solver);
+
+    static void loadConfig(const Setting & setting);
+
+    static void updateAffectedSites();
+
+    static void selectUpdateFlags();
+
+    static uint findLevel(uint i, uint j, uint k);
+
+    static void resetAll();
+
+    /*
+     * Non-trivial functions
+     */
+
+    void setParticleState(int state);
+
+
+    bool isLegalToSpawn();
+
+    void spawnAsFixedCrystal();
+
+
+    void activate();
+
+    void deactivate();
+
 
     void addReaction(Reaction* reaction);
 
@@ -19,59 +81,225 @@ public:
     void calculateRates();
 
 
-    uint nNeighbours();
+    void introduceNeighborhood();
 
-    uint nNextNeighbours();
+    bool hasNeighboring(int state) const;
 
-    void activate() {
-        m_active = true;
+    void propagateToNeighbors(int reqOldState, int newState);
+
+    void informNeighborhoodOnChange(int change);
+
+
+    void distanceTo(const Site * other, int &dx, int &dy, int &dz, bool absolutes = false) const;
+
+    uint maxDistanceTo(const Site * other) const;
+
+    double potentialBetween(const Site * other);
+
+    void setDirectUpdateFlags();
+
+    void queueAffectedSites();
+
+    void setZeroEnergy();
+
+    void reset()
+    {
+        m_nNeighbors.zeros();
+        m_totalEnergy -= m_energy;
+        m_energy = 0;
+        m_nNeighborsSum = 0;
     }
 
-    void deactivate() {
-        m_active = false;
+
+    const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const;
+
+
+    /*
+     * Misc. trivial functions
+     */
+
+
+    static const uint &nNeighborsLimit()
+    {
+        return m_nNeighborsLimit;
     }
 
-    bool active() {
+    static const uint &neighborhoodLength()
+    {
+        return m_neighborhoodLength;
+    }
+
+    static const uint &levelMatrix(const uint i, const uint j, const uint k)
+    {
+        return m_levelMatrix(i, j, k);
+    }
+
+    static const ivec &originTransformVector()
+    {
+        return m_originTransformVector;
+    }
+
+    static const uint & totalActiveSites()
+    {
+        return m_totalActiveSites;
+    }
+
+    static const double & totalEnergy()
+    {
+        return m_totalEnergy;
+    }
+
+
+    const int & particleState() const
+    {
+        return m_particleState;
+    }
+
+    string particleStateName() const
+    {
+        return ParticleStates::names.at(m_particleState);
+    }
+
+    string particleStateShortName() const
+    {
+        return ParticleStates::shortNames.at(m_particleState);
+    }
+
+    uint nNeighbors(uint level = 0) const
+    {
+        return m_nNeighbors(level);
+    }
+
+    uint nNeighborsSum() const;
+
+    bool isCrystal() const
+    {
+        return m_particleState == ParticleStates::crystal;
+    }
+
+    bool isSurface() const
+    {
+        return m_particleState == ParticleStates::surface;
+    }
+
+    const bool & isActive() const
+    {
         return m_active;
     }
 
-    uint x()
+
+    const uint & x() const
     {
         return m_x;
     }
 
-    uint y()
+    const uint & y() const
     {
         return m_y;
     }
 
-    uint z()
+    const uint & z() const
     {
         return m_z;
     }
 
-    std::vector<Reaction*> activeReactions() {
+
+    const vector<Reaction*> & activeReactions() const
+    {
         return m_activeReactions;
     }
 
-    //TEMPORARY SOLUTIONS
-    double E;
-    double En = 2;
-    double Enn = 1.7;
+    const vector<Reaction*> & siteReactions() const
+    {
+        return m_siteReactions;
+    }
+
+    const vector<Site*> & allNeighbors() const
+    {
+        return m_allNeighbors;
+    }
+
+    const static set<Site*> & affectedSites()
+    {
+        return m_affectedSites;
+    }
+
+    Site* neighborHood(const uint x, const uint y, const uint z) const
+    {
+        return m_neighborHood[x][y][z];
+    }
+
+    double energy() const
+    {
+        return m_energy;
+    }
+
+    const bool & isFixedCrystalSeed()
+    {
+        return m_isFixedCrystalSeed;
+    }
+
+    bool operator == (const Site & other) const
+    {
+        return this == &other;
+    }
+
+    const string str() const
+    {
+        stringstream s;
+        s << "Site@(" << x() << ", " << y() << ", " << z() << ")";
+        return s.str();
+    }
+
+
 
 private:
 
-    KMCSolver* mainSolver;
+    static uint m_nNeighborsLimit;
+    static uint m_neighborhoodLength;
+
+    static ucube m_levelMatrix;
+    static ivec m_originTransformVector;
+
+    static uint m_totalActiveSites;
+
+    static uint NX;
+    static uint NY;
+    static uint NZ;
+
+    static ivec deltax;
+    static ivec deltay;
+    static ivec deltaz;
+
+    static double m_totalEnergy;
+
+    static set<Site*> m_affectedSites;
+
+    static KMCSolver* mainSolver;
+
+    Site**** m_neighborHood;
+    vector<Site*> m_allNeighbors;
+    uvec m_nNeighbors;
+    uint m_nNeighborsSum;
+
+    bool m_active;
+
+    bool m_isFixedCrystalSeed;
 
     uint m_x;
     uint m_y;
     uint m_z;
 
-    bool m_active = false;
+    double m_energy;
 
-    std::vector<Reaction*> m_activeReactions;
-    std::vector<Reaction*> m_siteReactions;
+    int m_particleState = ParticleStates::solution;
+
+    vector<Reaction*> m_siteReactions;
+
+    vector<Reaction*> m_activeReactions;
 
 };
 
-#endif // SITE_H
+}
+
+ostream& operator<<(ostream& os, const kMC::Site& ss);
