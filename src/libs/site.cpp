@@ -438,10 +438,9 @@ void Site::setMainSolver(KMCSolver *solver)
 void Site::distanceTo(const Site *other, int &dx, int &dy, int &dz, bool absolutes) const
 {
 
-    //%Use transformation here as well and find out what to do with the delta vec.
-    dx = deltax((other->x() + (NX - m_x))%NX);
-    dy = deltay((other->y() + (NY - m_y))%NY);
-    dz = deltaz((other->z() + (NZ - m_z))%NZ);
+    dx = m_boundaries(0)->getDistanceBetween(other->x(), m_x);
+    dy = m_boundaries(1)->getDistanceBetween(other->y(), m_y);
+    dz = m_boundaries(2)->getDistanceBetween(other->z(), m_z);
 
     if (absolutes) {
         dx = abs(dx);

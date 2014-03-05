@@ -18,9 +18,21 @@ Periodic::Periodic(uint orientation)
     default:
         break;
     }
+
+    delta.set_size(span);
+
+    for(uint i = 0; i < span; ++i)
+    {
+        delta(i) = i;
+        if (i > span/2)
+        {
+            delta(i) = -(int)(span - i);
+        }
+    }
+
 }
 
 Periodic::~Periodic()
 {
-
+    delta.clear();
 }
