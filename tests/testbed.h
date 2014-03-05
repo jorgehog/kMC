@@ -5,6 +5,10 @@
 
 #define MIN(x, y) x < y ? x : y
 
+#include <libconfig.h++>
+
+using namespace libconfig;
+
 class KMCSolver;
 
 class testBed
@@ -12,18 +16,21 @@ class testBed
 public:
     testBed();
 
+    KMCSolver * makeSolver();
+
     ~testBed();
 
     void testDistanceTo();
+
+    void testDiffusionSiteMatrixSetup();
 
     void testNeighbors();
 
     void testRNG();
 
-    void testBinarySearchChoise(uint LIM);
+    void testBinarySearchChoise();
 
-
-    void testReactionChoise(uint LIM);
+    void testReactionChoise();
 
     void testRateCalculation();
 
@@ -36,6 +43,10 @@ public:
     void testInitializationOfCrystal();
 
     void testInitialReactionSetup();
+
+    void testSequential();
+
+    void testKnownCase();
 
     uint failCount;
     uint winCount;
@@ -53,6 +64,7 @@ public:
     uint NZ;
 
     KMCSolver* solver;
+    Setting* root;
 };
 
 #endif // TESTBED_H

@@ -1,13 +1,13 @@
-#ifndef KMC_H
-#define KMC_H
+#pragma once
+
 
 #include "RNG/kMCRNG.h"
 
-#include "kmcsolver.h"
+#include "site.h"
 
 #include "reactions/reaction.h"
 #include "reactions/diffusion/diffusionreaction.h"
 
-#include "site.h"
+#include "kmcsolver.h"
 
-#endif
+#include "debugger/kmcdebugger.h"

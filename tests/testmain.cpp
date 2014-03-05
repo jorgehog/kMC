@@ -4,82 +4,38 @@
 #include <sys/types.h>
 #include "testbed.h"
 
-#include <math.h>
+#include "../../src/libs/debugger/kmcdebugger.h"
 
+#include <math.h>
 
 using namespace std;
 
-
-TEST(RNG_CHECK) {
-
-    testBed test;
-
-    test.testRNG();
-
+#define UBERTEST(which)                                 \
+TEST(which)                                             \
+{                                                       \
+    cout << "Testing: " << #which << endl;              \
+    testBed test;                                       \
+    test.test##which();                                 \
+    cout << "------------------------------\n" << endl; \
 }
 
-TEST(NEIGHBORS_SETUP) {
-    testBed test;
-    test.testEnergyAndNeighborSetup();
-}
-
-TEST(NEIGHBOUR_CHECK) {
-
-    testBed test;
-
-    test.testNeighbors();
-
-}
-
-TEST(DISTANCE_TO) {
-    testBed test;
-
-    test.testDistanceTo();
-
-}
-
-TEST(BINARYSEARCH) {
-
-    testBed test;
-
-    test.testBinarySearchChoise(10000);
-
-}
-
-TEST(UPDATE_NEIGHBORS) {
-    testBed test;
-    test.testUpdateNeigbors();
-}
-
-TEST(RATECALC) {
-    testBed test;
-    test.testRateCalculation();
-}
-
-TEST(REACTIONCHOISE) {
-
-    testBed test;
-
-    test.testReactionChoise(1);
-}
-
-TEST(CRYSTALSTUFF1) {
-    testBed test;
-    test.testHasCrystalNeighbor();
-}
-
-TEST(INITCRYSTAL) {
-    testBed test;
-    test.testInitializationOfCrystal();
-}
-
-TEST(INITREACTIONS)
-{
-    testBed test;
-    test.testInitialReactionSetup();
-}
+UBERTEST(RNG)
+UBERTEST(EnergyAndNeighborSetup)
+UBERTEST(DiffusionSiteMatrixSetup)
+UBERTEST(Neighbors)
+UBERTEST(DistanceTo)
+UBERTEST(BinarySearchChoise)
+UBERTEST(UpdateNeigbors)
+UBERTEST(RateCalculation)
+UBERTEST(ReactionChoise)
+UBERTEST(HasCrystalNeighbor)
+UBERTEST(InitializationOfCrystal)
+UBERTEST(InitialReactionSetup)
+UBERTEST(Sequential)
+UBERTEST(KnownCase)
 
 int main()
 {
+    KMCDebugger_SetFilename("testTrace");
     return UnitTest::RunAllTests();
 }

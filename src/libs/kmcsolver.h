@@ -1,5 +1,5 @@
-#ifndef KMC_SOLVER_H
-#define KMC_SOLVER_H
+#pragma once
+
 
 #include <sys/types.h>
 #include <armadillo>
@@ -8,7 +8,9 @@
 
 #include "site.h"
 
+
 using namespace arma;
+
 
 class Reaction;
 
@@ -21,36 +23,37 @@ public:
 
     ~KMCSolver();
 
+
     void run();
 
 
-    uint nNeighbors(uint & x, uint & y, uint & z) {
+    uint nNeighbors(uint & x, uint & y, uint & z)
+    {
         return sites[x][y][z]->nNeighbors(0);
     }
 
-    uint nNextNeighbors(uint & x, uint & y, uint & z) {
+    uint nNextNeighbors(uint & x, uint & y, uint & z)
+    {
         return sites[x][y][z]->nNeighbors(1);
     }
 
-
-    void addReaction(Reaction* reaction) {
-        allReactions.push_back(reaction);
+    Site* getSite(const uint & i, const uint & j, const uint & k) const
+    {
+        return sites[i][j][k];
     }
 
-
-    Site**** getSites() {
-        return sites;
-    }
-
-    uint getNX () {
+    const uint &getNX ()
+    {
         return NX;
     }
 
-    uint getNY () {
+    const uint &getNY ()
+    {
         return NY;
     }
 
-    uint getNZ () {
+    const uint &getNZ ()
+    {
         return NZ;
     }
 
@@ -59,20 +62,24 @@ public:
 
 private:
 
+    double saturation;
+
+    double RelativeSeedSize;
+
+
+    Site**** sites;
+
     uint NX;
     uint NY;
     uint NZ;
 
-    Site**** sites;
 
-
+    double kTot;
     std::vector<double> accuAllRates;
 
     std::vector<Reaction*> allReactions;
 
-
-    double kTot;
-    double totalTime = 0;
+    double totalTime;
 
     uint nCycles;
     uint cycle;
@@ -80,16 +87,13 @@ private:
     uint cyclesPerOutput;
     uint outputCounter;
 
-    double saturation;
-    double RelativeSeedSize;
 
     void initializeCrystal();
-
-    void spawnCrystalSeed();
 
     void initializeDiffusionReactions();
 
     void initializeSites();
+
 
     void getRateVariables();
 
@@ -101,7 +105,6 @@ private:
 
     void dumpOutput();
 
+    static uint ptrCount;
 
 };
-
-#endif // SOLVER_H
