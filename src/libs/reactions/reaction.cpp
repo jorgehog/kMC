@@ -98,14 +98,14 @@ void Reaction::setRate(const double rate)
 }
 
 
-void Reaction::setSolverPtr(KMCSolver *solver)
+void Reaction::setMainSolver(KMCSolver *solver)
 {
 
     m_NX = solver->getNX();
     m_NY = solver->getNY();
     m_NZ = solver->getNZ();
 
-    mainSolver = solver;
+    m_mainSolver = solver;
 
 }
 
@@ -131,7 +131,7 @@ void Reaction::selectTriumphingUpdateFlag()
 const double   Reaction::UNSET_RATE = -1.337;
 const double   Reaction::UNSET_ENERGY = -1;
 
-KMCSolver*     Reaction::mainSolver;
+KMCSolver*     Reaction::m_mainSolver;
 
 double         Reaction::m_beta;
 double         Reaction::m_linearRateScale;

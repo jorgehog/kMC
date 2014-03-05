@@ -32,7 +32,7 @@ public:
 
     void selectTriumphingUpdateFlag();
 
-    static void setSolverPtr(KMCSolver * solver);
+    static void setMainSolver(KMCSolver * solver);
 
     static void loadConfig(const Setting & setting);
 
@@ -145,7 +145,7 @@ public:
 
 private:
 
-    static KMCSolver* mainSolver;
+    static KMCSolver* m_mainSolver;
 
     static uint m_NX;
     static uint m_NY;
@@ -170,6 +170,11 @@ private:
 protected:
 
     void setRate(const double rate);
+
+    static KMCSolver * mainSolver()
+    {
+        return m_mainSolver;
+    }
 
     Site * reactionSite() const
     {

@@ -43,7 +43,7 @@ KMCSolver::KMCSolver(const Setting & root) :
     Site::loadConfig(SystemSettings);
 
     Reaction::loadConfig(getSurfaceSetting(root, "Reactions"));
-    Reaction::setSolverPtr(this);
+    Reaction::setMainSolver(this);
 
     DiffusionReaction::loadConfig(getSetting(root, {"Reactions", "Diffusion"}));
 
