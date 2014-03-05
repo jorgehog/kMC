@@ -399,39 +399,6 @@ void Site::setMainSolver(KMCSolver *solver)
     NY = solver->getNY();
     NZ = solver->getNZ();
 
-    deltax.set_size(NX);
-    deltay.set_size(NY);
-    deltaz.set_size(NZ);
-
-    //%find out what to do with deltavec
-    for(uint i = 0; i < NX; ++i)
-    {
-        deltax(i) = i;
-        if (i > NX/2)
-        {
-            deltax(i) = -(int)(NX - i);
-        }
-    }
-
-    for(uint i = 0; i < NY; ++i)
-    {
-        deltay(i) = i;
-        if (i > NY/2)
-        {
-            deltay(i) = -(int)(NY - i);
-        }
-    }
-
-    for(uint i = 0; i < NZ; ++i)
-    {
-        deltaz(i) = i;
-        if (i > NZ/2)
-        {
-            deltaz(i) = -(int)(NZ - i);
-        }
-    }
-
-
 }
 
 
@@ -791,14 +758,20 @@ uint Site::findLevel(uint i, uint j, uint k)
 void Site::resetAll()
 {
 
-    deltax.clear();
-    deltay.clear();
-    deltaz.clear();
     m_totalActiveSites = 0;
     m_totalEnergy = 0;
     m_levelMatrix.reset();
     m_originTransformVector.reset();
     m_affectedSites.clear();
+
+    for (uint i = 0; i < 3; ++i)
+    {
+        for (uint j = 0; j < 2; ++j) {
+            delete m_boundaries(i, j);
+        }
+    }
+
+    m_boundaries.clear();
 
 }
 
@@ -953,10 +926,6 @@ KMCSolver* Site::mainSolver;
 uint       Site::NX;
 uint       Site::NY;
 uint       Site::NZ;
-
-ivec       Site::deltax;
-ivec       Site::deltay;
-ivec       Site::deltaz;
 
 uint       Site::m_nNeighborsLimit;
 

@@ -122,6 +122,7 @@ KMCSolver::~KMCSolver()
     Site::resetAll();
     Reaction::resetAll();
     DiffusionReaction::resetAll();
+    Boundary::resetAll();
 
     KMCDebugger_Finalize();
 

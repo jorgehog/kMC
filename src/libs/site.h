@@ -275,10 +275,6 @@ private:
     static uint NY;
     static uint NZ;
 
-    static ivec deltax;
-    static ivec deltay;
-    static ivec deltaz;
-
     static double m_totalEnergy;
 
     static set<Site*> m_affectedSites;

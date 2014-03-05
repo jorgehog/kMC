@@ -48,7 +48,7 @@ public:
 
     static void setMainSolver(KMCSolver * solver);
 
-    static void reset()
+    static void resetAll()
 
     {
         m_NXYZ.clear();
