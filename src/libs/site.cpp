@@ -297,6 +297,10 @@ void Site::loadConfig(const Setting &setting)
 
                 break;
             default:
+
+                cerr << "Unknown boundary type " << boundaryTypes(orientation) << endl;
+                exit(1);
+
                 break;
             }
 
@@ -350,9 +354,26 @@ void Site::loadConfig(const Setting &setting)
 
 }
 
+void Site::initializeBoundaries()
+{
+    for (uint i = 0; i < 3; ++i) {
+        for (uint j = 0; j < 2; ++j) {
+            m_boundaries(i, j)->initialize();
+        }
+    }
+}
 
-void Site::
-addReaction(Reaction *reaction)
+void Site::updateBoundaries()
+{
+    for (uint i = 0; i < 3; ++i) {
+        for (uint j = 0; j < 2; ++j) {
+            m_boundaries(i, j)->update();
+        }
+    }
+}
+
+
+void Site::addReaction(Reaction *reaction)
 {
     m_siteReactions.push_back(reaction);
 }

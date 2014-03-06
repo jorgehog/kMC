@@ -18,3 +18,8 @@ void ConcentrationWall::update()
 {
 
 }
+
+void ConcentrationWall::initialize()
+{
+
+}

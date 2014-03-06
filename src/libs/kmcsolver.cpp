@@ -87,6 +87,9 @@ KMCSolver::KMCSolver(const Setting & root) :
 
     initializeDiffusionReactions();
 
+    KMCDebugger_Init();
+    Site::initializeBoundaries();
+
     ptrCount++;
 
 }
@@ -135,8 +138,6 @@ KMCSolver::~KMCSolver()
 void KMCSolver::run()
 {
 
-    KMCDebugger_Init();
-
     Reaction * selectedReaction;
     uint choice;
     double R;
@@ -170,6 +171,9 @@ void KMCSolver::run()
 
         totalTime += Reaction::linearRateScale()/m_kTot;
         cycle++;
+
+
+        Site::updateBoundaries();
 
     }
 

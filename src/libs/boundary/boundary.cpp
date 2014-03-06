@@ -2,6 +2,8 @@
 
 #include "../kmcsolver.h"
 
+#include "../debugger/debugger.h"
+
 #include <armadillo>
 
 
@@ -10,29 +12,62 @@ using namespace arma;
 using namespace kMC;
 
 
-Boundary::Boundary(const uint dimension, const uint orientation)
+Boundary::Boundary(const uint dimension, const uint orientation) :
+    m_span(m_NXYZ(dimension)),
+    m_dimension(dimension),
+    m_orientation(orientation)
 {
-
-    switch (dimension) {
-    case X:
-        m_span = m_NX;
-        break;
-    case Y:
-        m_span = m_NY;
-        break;
-    case Z:
-        m_span = m_NZ;
-        break;
-    default:
-        break;
-    }
-
-    m_orientation = orientation;
 
 }
 
 Boundary::~Boundary()
 {
+
+}
+
+void Boundary::initialize()
+{
+    uint xi = 0;
+
+    if (orientation() == 1)
+    {
+        xi = span();
+    }
+
+    if (dimension() == X)
+    {
+
+        for (uint y = 0; y < NY(); ++y) {
+            for (uint z = 0; z < NZ(); ++z) {
+                mainSolver()->getSite(xi, y, z)->spawnAsFixedCrystal();
+            }
+        }
+
+    }
+
+    else if (dimension() == Y)
+    {
+
+        for (uint x = 0; x < NX(); ++x) {
+            for (uint z = 0; z < NZ(); ++z) {
+                mainSolver()->getSite(x, xi, z)->spawnAsFixedCrystal();
+            }
+        }
+
+    }
+
+    else
+    {
+        KMCDebugger_Assert(dimension(), ==, Z, "This else should always correspond to dim=2");
+
+        for (uint x = 0; x < NX(); ++x) {
+            for (uint y = 0; y < NY(); ++y) {
+                mainSolver()->getSite(x, y, xi)->spawnAsFixedCrystal();
+            }
+        }
+
+    }
+
 
 }
 

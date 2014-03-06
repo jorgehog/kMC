@@ -50,6 +50,10 @@ public:
 
     static void loadConfig(const Setting & setting);
 
+    static void initializeBoundaries();
+
+    static void updateBoundaries();
+
     static void updateAffectedSites();
 
     static void selectUpdateFlags();

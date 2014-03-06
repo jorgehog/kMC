@@ -39,10 +39,7 @@ public:
 
     virtual void update() {}
 
-    virtual void initialize()
-    {
-
-    }
+    virtual void initialize();
 
 
     static bool isBlocked(const uint xi)
@@ -87,8 +84,9 @@ private:
     static KMCSolver * m_mainSolver;
 
 
-    uint m_span;
-    uint m_orientation;
+    const uint m_span;
+    const uint m_dimension;
+    const uint m_orientation;
 
 
 protected:
@@ -113,9 +111,9 @@ protected:
         return m_NZ;
     }
 
-    const uvec & NXYZ() const
+    uint NXYZ(const uint i) const
     {
-        return m_NXYZ;
+        return m_NXYZ(i);
     }
 
     const uint & span() const
@@ -126,6 +124,11 @@ protected:
     const uint & orientation() const
     {
         return m_orientation;
+    }
+
+    const uint & dimension() const
+    {
+        return m_dimension;
     }
 
     enum Orientations
