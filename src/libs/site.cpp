@@ -403,7 +403,14 @@ void Site::spawnAsFixedCrystal()
 {
     m_particleState = ParticleStates::surface;
     m_isFixedCrystalSeed = true;
+
+    for (Reaction * reaction : m_siteReactions)
+    {
+        delete reaction;
+    }
+
     m_siteReactions.clear();
+
     activate();
 }
 
@@ -641,8 +648,8 @@ void Site::introduceNeighborhood()
                 zTrans = zBoundary->transformCoordinate((int)m_z + m_originTransformVector(k));
 
                 if (Boundary::isBlocked(xTrans) ||
-                    Boundary::isBlocked(yTrans) ||
-                    Boundary::isBlocked(zTrans))
+                        Boundary::isBlocked(yTrans) ||
+                        Boundary::isBlocked(zTrans))
                 {
                     m_neighborHood[i][j][k] = NULL;
                 }
