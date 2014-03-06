@@ -7,6 +7,8 @@
 #include "reactions/reaction.h"
 #include "reactions/diffusion/diffusionreaction.h"
 
+#include "boundary/boundary.h"
+
 #include "debugger/debugger.h"
 
 #include <sys/time.h>
@@ -39,11 +41,13 @@ KMCSolver::KMCSolver(const Setting & root) :
     NY = BoxSize[1];
     NZ = BoxSize[2];
 
-    Site::setSolverPtr(this);
+    Boundary::setMainSolver(this);
+
+    Site::setMainSolver(this);
     Site::loadConfig(SystemSettings);
 
+    Reaction::setMainSolver(this);
     Reaction::loadConfig(getSurfaceSetting(root, "Reactions"));
-    Reaction::setSolverPtr(this);
 
     DiffusionReaction::loadConfig(getSetting(root, {"Reactions", "Diffusion"}));
 
@@ -83,6 +87,9 @@ KMCSolver::KMCSolver(const Setting & root) :
 
     initializeDiffusionReactions();
 
+    KMCDebugger_Init();
+    Site::initializeBoundaries();
+
     ptrCount++;
 
 }
@@ -118,6 +125,7 @@ KMCSolver::~KMCSolver()
     Site::resetAll();
     Reaction::resetAll();
     DiffusionReaction::resetAll();
+    Boundary::resetAll();
 
     KMCDebugger_Finalize();
 
@@ -129,8 +137,6 @@ KMCSolver::~KMCSolver()
 
 void KMCSolver::run()
 {
-
-    KMCDebugger_Init();
 
     Reaction * selectedReaction;
     uint choice;
@@ -166,11 +172,10 @@ void KMCSolver::run()
         totalTime += Reaction::linearRateScale()/m_kTot;
         cycle++;
 
-    }
 
-    cout << "Frac equal saddles calculated:" << DiffusionReaction::counterEqSP/(double)DiffusionReaction::totalSP*100 << " %" << endl;
-    cout << "Frac saddles recalculated: " << DiffusionReaction::totalSP/(double)DiffusionReaction::counterAllRate*100 << " %" << endl;
-    cout << "Average time in saddleFunc: " << DiffusionReaction::totalTime/DiffusionReaction::totalSP*1E6 << " µs" << endl;
+        Site::updateBoundaries();
+
+    }
 
 }
 
@@ -281,16 +286,20 @@ void KMCSolver::initializeDiffusionReactions()
                                                                     Site::nNeighborsLimit() - 1 + j,
                                                                     Site::nNeighborsLimit() - 1 + k);
 
-                            //This menas we are not at the current site.
-                            if(destination != currentSite)
+                            //This means that the destination is blocked by boundaries
+                            if (destination != NULL)
                             {
-                                DiffusionReaction* diffusionReaction = new DiffusionReaction(currentSite, destination);
-                                currentSite->addReaction(diffusionReaction);
-                            }
+                                //This menas we are not at the current site.
+                                if(destination != currentSite)
+                                {
+                                    DiffusionReaction* diffusionReaction = new DiffusionReaction(currentSite, destination);
+                                    currentSite->addReaction(diffusionReaction);
+                                }
 
-                            else
-                            {
-                                assert((i == 1) && (j == 1) && (k == 1));
+                                else
+                                {
+                                    assert((i == 1) && (j == 1) && (k == 1));
+                                }
                             }
 
                         }

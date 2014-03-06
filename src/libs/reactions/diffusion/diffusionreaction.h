@@ -30,17 +30,12 @@ public:
 
     double getSaddleEnergyContributionFromNeighborAt(const uint &i, const uint &j, const uint &k);
 
-    static const double UNSET_ENERGY;
-
     static umat::fixed<3, 2> getSaddleOverlapMatrix(const ivec &relCoor);
 
     static void loadConfig(const Setting & setting);
 
     static void resetAll()
     {
-        counterAllRate = 0;
-        counterEqSP = 0;
-        totalSP = 0;
         m_potential.reset();
     }
 
@@ -60,6 +55,11 @@ public:
         return m_destinationSite;
     }
 
+    const double & lastUsedEsp() const
+    {
+        return m_lastUsedEsp;
+    }
+
     const uint & xD () const;
 
     const uint & yD () const;
@@ -67,21 +67,6 @@ public:
     const uint & zD () const;
 
     string getFinalizingDebugMessage() const;
-
-    //tmp
-    double lastUsedEnergy;
-    double lastUsedEsp;
-
-    static uint counterEqSP;
-    static uint totalSP;
-
-    static uint counterAllRate;
-
-    static wall_clock timer;
-    static double totalTime;
-
-
-
 
 
 private:
@@ -92,6 +77,8 @@ private:
     static cube m_potential;
     static field<cube> m_saddlePotential;
 
+
+    double m_lastUsedEsp;
 
     Site* m_destinationSite = NULL;
 

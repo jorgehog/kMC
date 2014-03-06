@@ -161,7 +161,7 @@ void testBed::testDiffusionSiteMatrixSetup()
 
                     currentDiffReaction = (DiffusionReaction*)r;
 
-                    const Site & site = *(currentDiffReaction->reactionSite());
+                    const Site & site = *(currentDiffReaction->getReactionSite());
                     const Site & dest  = *(currentDiffReaction->destinationSite());
 
                     CHECK_EQUAL(currentSite, site);
@@ -451,14 +451,14 @@ void testBed::testRateCalculation () {
                 for (Reaction* r : solver->getSite(i, j, k)->activeReactions()) {
 
                     //                    double RATE = r->rate();
-                    double E = ((DiffusionReaction*)r)->lastUsedEnergy;
-                    double Esp = ((DiffusionReaction*)r)->lastUsedEsp;
+                    double E = ((DiffusionReaction*)r)->lastUsedEnergy();
+                    double Esp = ((DiffusionReaction*)r)->lastUsedEsp();
                     r->forceUpdateFlag(Reaction::defaultUpdateFlag);
                     r->calcRate();
 
-                    CHECK_EQUAL(E, ((DiffusionReaction*)r)->lastUsedEnergy);
+                    CHECK_EQUAL(E, ((DiffusionReaction*)r)->lastUsedEnergy());
 
-                    CHECK_EQUAL(Esp, ((DiffusionReaction*)r)->lastUsedEsp);
+                    CHECK_EQUAL(Esp, ((DiffusionReaction*)r)->lastUsedEsp());
 
                     //                    CHECK_EQUAL(r->rate(), RATE);
 

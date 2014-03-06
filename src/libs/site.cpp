@@ -1,10 +1,16 @@
 #include "site.h"
+#include "kmcsolver.h"
 #include "reactions/reaction.h"
 #include "reactions/diffusion/diffusionreaction.h"
-#include "kmcsolver.h"
+
+#include "boundary/boundary.h"
+#include "boundary/concentrationwall/concentrationwall.h"
+#include "boundary/periodic/periodic.h"
+
 #include "debugger/debugger.h"
 
 using namespace kMC;
+
 
 Site::Site(uint _x, uint _y, uint _z) :
     m_nNeighborsSum(0),
@@ -263,6 +269,55 @@ bool Site::isLegalToSpawn()
 void Site::loadConfig(const Setting &setting)
 {
 
+    m_boundaries.set_size(3, 2);
+
+    const Setting & boundariesConfig = getSurfaceSetting(setting, "Boundaries");
+
+    ivec boundaryTypes(2);
+
+    for (uint XYZ = 0; XYZ < 3; ++XYZ)
+    {
+        for (uint orientation = 0; orientation < 2; ++orientation)
+        {
+
+            boundaryTypes(orientation) = getSurfaceSetting(boundariesConfig, "types")[XYZ][orientation];
+
+            switch (boundaryTypes(orientation))
+            {
+            case Boundary::Periodic:
+                m_boundaries(XYZ, orientation) = new Periodic(XYZ, orientation);
+
+                break;
+            case Boundary::Wall:
+                m_boundaries(XYZ, orientation) = new Boundary(XYZ, orientation);
+
+                break;
+            case Boundary::ConsentrationWall:
+                m_boundaries(XYZ, orientation) = new ConcentrationWall(XYZ, orientation);
+
+                break;
+            default:
+
+                cerr << "Unknown boundary type " << boundaryTypes(orientation) << endl;
+                exit(1);
+
+                break;
+            }
+
+            m_boundaries(XYZ, orientation)->loadConfig(getSurfaceSetting(boundariesConfig, "configs")[XYZ][orientation]);
+
+        }
+
+        if (!Boundary::isCompatible(boundaryTypes(0), boundaryTypes(1)))
+        {
+            cerr << "Mismatch in boundaries for " << XYZ << "'th dimension: " << boundaryTypes.t();
+            exit(1);
+        }
+
+
+    }
+
+
     const uint  &limit = getSurfaceSetting<uint>(setting, "nNeighborsLimit");
 
     if (limit >= min(uvec({NX, NY, NZ}))/2)
@@ -299,9 +354,26 @@ void Site::loadConfig(const Setting &setting)
 
 }
 
+void Site::initializeBoundaries()
+{
+    for (uint i = 0; i < 3; ++i) {
+        for (uint j = 0; j < 2; ++j) {
+            m_boundaries(i, j)->initialize();
+        }
+    }
+}
 
-void Site::
-addReaction(Reaction *reaction)
+void Site::updateBoundaries()
+{
+    for (uint i = 0; i < 3; ++i) {
+        for (uint j = 0; j < 2; ++j) {
+            m_boundaries(i, j)->update();
+        }
+    }
+}
+
+
+void Site::addReaction(Reaction *reaction)
 {
     m_siteReactions.push_back(reaction);
 }
@@ -331,6 +403,14 @@ void Site::spawnAsFixedCrystal()
 {
     m_particleState = ParticleStates::surface;
     m_isFixedCrystalSeed = true;
+
+    for (Reaction * reaction : m_siteReactions)
+    {
+        delete reaction;
+    }
+
+    m_siteReactions.clear();
+
     activate();
 }
 
@@ -345,7 +425,7 @@ void Site::calculateRates()
 }
 
 
-void Site::setSolverPtr(KMCSolver *solver)
+void Site::setMainSolver(KMCSolver *solver)
 {
 
     mainSolver = solver;
@@ -354,65 +434,15 @@ void Site::setSolverPtr(KMCSolver *solver)
     NY = solver->getNY();
     NZ = solver->getNZ();
 
-    deltax.set_size(NX);
-    deltay.set_size(NY);
-    deltaz.set_size(NZ);
-
-    for(uint i = 0; i < NX; ++i)
-    {
-        deltax(i) = i;
-        if (i > NX/2)
-        {
-            deltax(i) = -(int)(NX - i);
-        }
-    }
-
-    for(uint i = 0; i < NY; ++i)
-    {
-        deltay(i) = i;
-        if (i > NY/2)
-        {
-            deltay(i) = -(int)(NY - i);
-        }
-    }
-
-    for(uint i = 0; i < NZ; ++i)
-    {
-        deltaz(i) = i;
-        if (i > NZ/2)
-        {
-            deltaz(i) = -(int)(NZ - i);
-        }
-    }
-
-
 }
 
 
 void Site::distanceTo(const Site *other, int &dx, int &dy, int &dz, bool absolutes) const
 {
 
-    dx = deltax((other->x() + (NX - m_x))%NX);
-    dy = deltay((other->y() + (NY - m_y))%NY);
-    dz = deltaz((other->z() + (NZ - m_z))%NZ);
-
-    //    dx = (other->x() + NX - m_x)%NX;
-    //    dy = (other->y() + NY - m_y)%NY;
-    //    dz = (other->z() + NZ - m_z)%NZ;
-
-
-    //    if ((uint)abs(dx) > NX/2) {
-    //        dx = -(int)(NX - dx);
-    //    }
-
-    //    if ((uint)abs(dy) > NY/2) {
-    //        dy = -(int)(NY - dy);
-    //    }
-
-    //    if ((uint)abs(dz) > NZ/2) {
-    //        dz = -(int)(NZ - dz);
-    //    }
-
+    dx = m_boundaries(0)->getDistanceBetween(other->x(), m_x);
+    dy = m_boundaries(1)->getDistanceBetween(other->y(), m_y);
+    dz = m_boundaries(2)->getDistanceBetween(other->z(), m_z);
 
     if (absolutes) {
         dx = abs(dx);
@@ -447,7 +477,7 @@ double Site::potentialBetween(const Site *other)
 
 void Site::setDirectUpdateFlags()
 {
-    uint C = 0;
+
     for (Site * neighbor : m_allNeighbors)
     {
         if (neighbor->isActive())
@@ -458,15 +488,12 @@ void Site::setDirectUpdateFlags()
             for (Reaction * reaction : neighbor->siteReactions())
             {
                 reaction->setDirectUpdateFlags(this);
-                C++;
             }
 
             m_affectedSites.insert(neighbor);
 
         }
     }
-
-    KMCDebugger_Assert(C, ==, sum(m_nNeighbors)*26, "Not every site had every reaction updated.");
 
 }
 
@@ -481,16 +508,22 @@ bool Site::hasNeighboring(int state) const
         {
             for (uint k = 0; k < 3; ++k)
             {
-                if (i == 1 && j == 1 && k == 1)
-                {
-                    continue;
-                }
 
                 nextNeighbor = m_neighborHood[i + Site::nNeighborsLimit() - 1]
                         [j + Site::nNeighborsLimit() - 1]
                         [k + Site::nNeighborsLimit() - 1];
 
-                if (nextNeighbor->particleState() == state)
+                if (nextNeighbor == NULL)
+                {
+                    continue;
+                }
+
+                else if (nextNeighbor == this)
+                {
+                    continue;
+                }
+
+                else if (nextNeighbor->particleState() == state)
                 {
                     return true;
                 }
@@ -580,34 +613,58 @@ void Site::introduceNeighborhood()
     assert(m_nNeighborsLimit != 0);
 
     uint xTrans, yTrans, zTrans;
+    uvec3 loc;
+
+    Boundary::setupLocations(m_x, m_y, m_z, loc);
+
+    const Boundary * xBoundary = m_boundaries(0, loc(0));
+    const Boundary * yBoundary = m_boundaries(1, loc(1));
+    const Boundary * zBoundary = m_boundaries(2, loc(2));
+
 
     m_nNeighbors.set_size(m_nNeighborsLimit);
     m_nNeighbors.zeros();
 
     m_neighborHood = new Site***[m_neighborhoodLength];
 
+
     for (uint i = 0; i < m_neighborhoodLength; ++i)
     {
-        xTrans = (m_x + m_originTransformVector(i) + NX)%NX;
+
+        xTrans = xBoundary->transformCoordinate((int)m_x + m_originTransformVector(i));
 
         m_neighborHood[i] = new Site**[m_neighborhoodLength];
 
         for (uint j = 0; j < m_neighborhoodLength; ++j)
         {
-            yTrans = (m_y + m_originTransformVector(j) + NY)%NY;
+
+            yTrans = yBoundary->transformCoordinate((int)m_y + m_originTransformVector(j));
 
             m_neighborHood[i][j] = new Site*[m_neighborhoodLength];
 
             for (uint k = 0; k < m_neighborhoodLength; ++k)
             {
-                zTrans = (m_z + m_originTransformVector(k) + NZ)%NZ;
 
-                m_neighborHood[i][j][k] = mainSolver->getSite(xTrans, yTrans, zTrans);
+                zTrans = zBoundary->transformCoordinate((int)m_z + m_originTransformVector(k));
 
-                if (m_neighborHood[i][j][k] != this)
+                if (Boundary::isBlocked(xTrans) ||
+                        Boundary::isBlocked(yTrans) ||
+                        Boundary::isBlocked(zTrans))
                 {
-                    m_allNeighbors.push_back(m_neighborHood[i][j][k]);
+                    m_neighborHood[i][j][k] = NULL;
                 }
+
+                else
+                {
+
+                    m_neighborHood[i][j][k] = mainSolver->getSite(xTrans, yTrans, zTrans);
+
+                    if (m_neighborHood[i][j][k] != this)
+                    {
+                        m_allNeighbors.push_back(m_neighborHood[i][j][k]);
+                    }
+                }
+
             }
         }
     }
@@ -630,7 +687,12 @@ void Site::propagateToNeighbors(int reqOldState, int newState)
                         [j + Site::nNeighborsLimit() - 1]
                         [k + Site::nNeighborsLimit() - 1];
 
-                if (nextNeighbor == this)
+                if (nextNeighbor == NULL)
+                {
+                    continue;
+                }
+
+                else if (nextNeighbor == this)
                 {
                     assert(i == j && j == k && k == 1);
                     continue;
@@ -664,7 +726,12 @@ void Site::informNeighborhoodOnChange(int change)
 
                 neighbor = m_neighborHood[i][j][k];
 
-                if (neighbor == this) {
+                if (neighbor == NULL)
+                {
+                    continue;
+                }
+
+                else if (neighbor == this) {
                     assert(i == j && j == k && k == m_nNeighborsLimit);
                     continue;
                 }
@@ -701,7 +768,7 @@ void Site::queueAffectedSites()
 
             for (Reaction * reaction : neighbor->siteReactions())
             {
-                reaction->setImplicitUpdateFlags();
+                reaction->addUpdateFlag(Reaction::defaultUpdateFlag);
             }
 
             m_affectedSites.insert(neighbor);
@@ -739,14 +806,20 @@ uint Site::findLevel(uint i, uint j, uint k)
 void Site::resetAll()
 {
 
-    deltax.clear();
-    deltay.clear();
-    deltaz.clear();
     m_totalActiveSites = 0;
     m_totalEnergy = 0;
     m_levelMatrix.reset();
     m_originTransformVector.reset();
     m_affectedSites.clear();
+
+    for (uint i = 0; i < 3; ++i)
+    {
+        for (uint j = 0; j < 2; ++j) {
+            delete m_boundaries(i, j);
+        }
+    }
+
+    m_boundaries.clear();
 
 }
 
@@ -780,9 +853,11 @@ const string Site::info(int xr, int yr, int zr, string desc) const
 
     s_full << "\n";
 
+    uint _min = ParticleStates::surface + 1;
+
     ucube nN;
     nN.copy_size(m_levelMatrix);
-    nN.fill(7);
+    nN.fill(_min);
 
     Site * currentSite;
     for (uint i = 0; i < m_neighborhoodLength; ++i)
@@ -794,19 +869,20 @@ const string Site::info(int xr, int yr, int zr, string desc) const
 
                 currentSite = m_neighborHood[i][j][k];
 
-                if (currentSite->isFixedCrystalSeed())
+
+                if (currentSite == NULL)
                 {
-                    assert((currentSite->isCrystal() && currentSite->isActive()) || (currentSite->isSurface() && !currentSite->isActive()));
+                    nN(i, j, k) = _min + 1;
                 }
 
-                if (currentSite == this)
+                else if (currentSite == this)
                 {
-                    nN(i, j, k) = 9;
+                    nN(i, j, k) = _min + 2;
                 }
 
                 else if ((i == Site::nNeighborsLimit() + xr) && (j == Site::nNeighborsLimit() + yr) && (k == Site::nNeighborsLimit() + zr))
                 {
-                    nN(i, j, k) = 8;
+                    nN(i, j, k) = _min + 3;
                 }
 
                 else if (currentSite->isActive())
@@ -863,23 +939,24 @@ const string Site::info(int xr, int yr, int zr, string desc) const
 
     };
 
-    auto typeSearchRepl = [&s, &searchRepl] (int pType)
+    auto numberSearchRepl = [&s, &searchRepl] (int number, string desc)
     {
         stringstream type;
-        type << pType;
-        searchRepl(type.str(), ParticleStates::shortNames.at(pType));
+        type << number;
+        searchRepl(type.str(), desc);
     };
 
 
     searchRepl("        ", "  ");
 
-    typeSearchRepl(ParticleStates::crystal);
-    typeSearchRepl(ParticleStates::surface);
-    typeSearchRepl(ParticleStates::solution);
+    numberSearchRepl(ParticleStates::crystal,  ParticleStates::shortNames.at(ParticleStates::crystal));
+    numberSearchRepl(ParticleStates::surface,  ParticleStates::shortNames.at(ParticleStates::surface));
+    numberSearchRepl(ParticleStates::solution, ParticleStates::shortNames.at(ParticleStates::solution));
 
-    searchRepl("9 ", particleStateShortName() + "^");
-    searchRepl("8", desc);
-    searchRepl("7", ".");
+    numberSearchRepl(_min+0, ".");
+    numberSearchRepl(_min+1, " ");
+    numberSearchRepl(_min+2, particleStateShortName() + "^");
+    numberSearchRepl(_min+3, desc);
 
     s_full << s;
 
@@ -902,10 +979,6 @@ uint       Site::NX;
 uint       Site::NY;
 uint       Site::NZ;
 
-ivec       Site::deltax;
-ivec       Site::deltay;
-ivec       Site::deltaz;
-
 uint       Site::m_nNeighborsLimit;
 
 uint       Site::m_neighborhoodLength;
@@ -919,6 +992,7 @@ double     Site::m_totalEnergy = 0;
 
 set<Site*> Site::m_affectedSites;
 
+field<Boundary*> Site::m_boundaries;
 
 const vector<string> ParticleStates::names = {"crystal", "solution", "surface"};
 const vector<string> ParticleStates::shortNames = {"C", "P", "S"};

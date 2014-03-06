@@ -25,22 +25,19 @@ public:
     const string name;
 
 
-    const static double UNSET_RATE;
+    void addUpdateFlag(int flag)
+    {
+        m_updateFlags.insert(flag);
+    }
 
+    void selectTriumphingUpdateFlag();
 
-    static void setSolverPtr(KMCSolver * solver);
+    static void setMainSolver(KMCSolver * solver);
 
     static void loadConfig(const Setting & setting);
 
 
     virtual void setDirectUpdateFlags(const Site * changedSite) = 0;
-
-    virtual void setImplicitUpdateFlags()
-    {
-        m_updateFlags.insert(defaultUpdateFlag);
-    }
-
-    void selectTriumphingUpdateFlag();
 
     virtual bool isNotBlocked() const = 0;
 
@@ -62,6 +59,11 @@ public:
     const static double & linearRateScale()
     {
         return m_linearRateScale;
+    }
+
+    const double & lastUsedEnergy() const
+    {
+        return m_lastUsedEnergy;
     }
 
     const set<int> & updateFlags() const
@@ -89,22 +91,26 @@ public:
         return m_rate;
     }
 
+    const double & beta() const
+    {
+        return m_beta;
+    }
+
     const uint & x() const;
 
     const uint & y() const;
 
     const uint & z() const;
 
-    const Site * reactionSite() const
-    {
-        return m_reactionSite;
-    }
-
     bool isType(const string name) const
     {
         return name.compare(this->name) == 0;
     }
 
+    const Site * getReactionSite() const
+    {
+        return m_reactionSite;
+    }
 
     virtual string getFinalizingDebugMessage() const;
 
@@ -134,17 +140,18 @@ public:
         defaultUpdateFlag = 0
     };
 
+    const static double UNSET_RATE;
+    static const double UNSET_ENERGY;
 
+private:
 
-protected:
+    static KMCSolver* m_mainSolver;
 
-    static KMCSolver* mainSolver;
+    static uint m_NX;
+    static uint m_NY;
+    static uint m_NZ;
 
-    static uint NX;
-    static uint NY;
-    static uint NZ;
-
-    static double beta;
+    static double m_beta;
     static double m_linearRateScale;
 
     static uint IDcount;
@@ -153,12 +160,41 @@ protected:
 
     Site* m_reactionSite = NULL;
 
+    double m_lastUsedEnergy;
 
     double m_rate;
 
     set<int> m_updateFlags;
     int      m_updateFlag;
 
+protected:
+
+    void setRate(const double rate);
+
+    static KMCSolver * mainSolver()
+    {
+        return m_mainSolver;
+    }
+
+    Site * reactionSite() const
+    {
+        return m_reactionSite;
+    }
+
+    const uint & NX() const
+    {
+        return m_NX;
+    }
+
+    const uint & NY() const
+    {
+        return m_NY;
+    }
+
+    const uint & NZ() const
+    {
+        return m_NZ;
+    }
 
 };
 

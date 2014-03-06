@@ -18,6 +18,7 @@ namespace kMC
 class KMCSolver;
 class Reaction;
 class DiffusionReaction;
+class Boundary;
 
 struct ParticleStates
 {
@@ -45,9 +46,13 @@ public:
      * Static non-trivial functions
      */
 
-    static void setSolverPtr(KMCSolver* solver);
+    static void setMainSolver(KMCSolver* solver);
 
     static void loadConfig(const Setting & setting);
+
+    static void initializeBoundaries();
+
+    static void updateBoundaries();
 
     static void updateAffectedSites();
 
@@ -147,6 +152,11 @@ public:
     static const double & totalEnergy()
     {
         return m_totalEnergy;
+    }
+
+    static const Boundary * boundaries(const uint xyz, const uint loc)
+    {
+        return m_boundaries(xyz, loc);
     }
 
 
@@ -255,6 +265,8 @@ public:
 
 private:
 
+    static field<Boundary*> m_boundaries;
+
     static uint m_nNeighborsLimit;
     static uint m_neighborhoodLength;
 
@@ -266,10 +278,6 @@ private:
     static uint NX;
     static uint NY;
     static uint NZ;
-
-    static ivec deltax;
-    static ivec deltay;
-    static ivec deltaz;
 
     static double m_totalEnergy;
 
@@ -297,6 +305,7 @@ private:
     vector<Reaction*> m_siteReactions;
 
     vector<Reaction*> m_activeReactions;
+
 
 };
 
