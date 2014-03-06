@@ -943,6 +943,9 @@ const string Site::info(int xr, int yr, int zr, string desc) const
     {
         stringstream type;
         type << number;
+        for (uint i = 1; i < desc.size(); ++i) {
+            type << " ";
+        }
         searchRepl(type.str(), desc);
     };
 
