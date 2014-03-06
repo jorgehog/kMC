@@ -403,6 +403,7 @@ void Site::spawnAsFixedCrystal()
 {
     m_particleState = ParticleStates::surface;
     m_isFixedCrystalSeed = true;
+    m_siteReactions.clear();
     activate();
 }
 
@@ -469,7 +470,7 @@ double Site::potentialBetween(const Site *other)
 
 void Site::setDirectUpdateFlags()
 {
-    uint C = 0;
+
     for (Site * neighbor : m_allNeighbors)
     {
         if (neighbor->isActive())
@@ -480,15 +481,12 @@ void Site::setDirectUpdateFlags()
             for (Reaction * reaction : neighbor->siteReactions())
             {
                 reaction->setDirectUpdateFlags(this);
-                C++;
             }
 
             m_affectedSites.insert(neighbor);
 
         }
     }
-
-    KMCDebugger_Assert(C, ==, sum(m_nNeighbors)*26, "Not every site had every reaction updated.");
 
 }
 
@@ -503,16 +501,22 @@ bool Site::hasNeighboring(int state) const
         {
             for (uint k = 0; k < 3; ++k)
             {
-                if (i == 1 && j == 1 && k == 1)
-                {
-                    continue;
-                }
 
                 nextNeighbor = m_neighborHood[i + Site::nNeighborsLimit() - 1]
                         [j + Site::nNeighborsLimit() - 1]
                         [k + Site::nNeighborsLimit() - 1];
 
-                if (nextNeighbor->particleState() == state)
+                if (nextNeighbor == NULL)
+                {
+                    continue;
+                }
+
+                else if (nextNeighbor == this)
+                {
+                    continue;
+                }
+
+                else if (nextNeighbor->particleState() == state)
                 {
                     return true;
                 }
@@ -620,21 +624,21 @@ void Site::introduceNeighborhood()
     for (uint i = 0; i < m_neighborhoodLength; ++i)
     {
 
-        xTrans = xBoundary->transformCoordinate(m_x + m_originTransformVector(i));
+        xTrans = xBoundary->transformCoordinate((int)m_x + m_originTransformVector(i));
 
         m_neighborHood[i] = new Site**[m_neighborhoodLength];
 
         for (uint j = 0; j < m_neighborhoodLength; ++j)
         {
 
-            yTrans = yBoundary->transformCoordinate(m_y + m_originTransformVector(j));
+            yTrans = yBoundary->transformCoordinate((int)m_y + m_originTransformVector(j));
 
             m_neighborHood[i][j] = new Site*[m_neighborhoodLength];
 
             for (uint k = 0; k < m_neighborhoodLength; ++k)
             {
 
-                zTrans = zBoundary->transformCoordinate(m_z + m_originTransformVector(k));
+                zTrans = zBoundary->transformCoordinate((int)m_z + m_originTransformVector(k));
 
                 if (Boundary::isBlocked(xTrans) ||
                     Boundary::isBlocked(yTrans) ||
@@ -676,7 +680,12 @@ void Site::propagateToNeighbors(int reqOldState, int newState)
                         [j + Site::nNeighborsLimit() - 1]
                         [k + Site::nNeighborsLimit() - 1];
 
-                if (nextNeighbor == this)
+                if (nextNeighbor == NULL)
+                {
+                    continue;
+                }
+
+                else if (nextNeighbor == this)
                 {
                     assert(i == j && j == k && k == 1);
                     continue;
@@ -710,7 +719,12 @@ void Site::informNeighborhoodOnChange(int change)
 
                 neighbor = m_neighborHood[i][j][k];
 
-                if (neighbor == this) {
+                if (neighbor == NULL)
+                {
+                    continue;
+                }
+
+                else if (neighbor == this) {
                     assert(i == j && j == k && k == m_nNeighborsLimit);
                     continue;
                 }
@@ -832,9 +846,11 @@ const string Site::info(int xr, int yr, int zr, string desc) const
 
     s_full << "\n";
 
+    uint _min = ParticleStates::surface + 1;
+
     ucube nN;
     nN.copy_size(m_levelMatrix);
-    nN.fill(7);
+    nN.fill(_min);
 
     Site * currentSite;
     for (uint i = 0; i < m_neighborhoodLength; ++i)
@@ -846,19 +862,20 @@ const string Site::info(int xr, int yr, int zr, string desc) const
 
                 currentSite = m_neighborHood[i][j][k];
 
-                if (currentSite->isFixedCrystalSeed())
+
+                if (currentSite == NULL)
                 {
-                    assert((currentSite->isCrystal() && currentSite->isActive()) || (currentSite->isSurface() && !currentSite->isActive()));
+                    nN(i, j, k) = _min + 1;
                 }
 
-                if (currentSite == this)
+                else if (currentSite == this)
                 {
-                    nN(i, j, k) = 9;
+                    nN(i, j, k) = _min + 2;
                 }
 
                 else if ((i == Site::nNeighborsLimit() + xr) && (j == Site::nNeighborsLimit() + yr) && (k == Site::nNeighborsLimit() + zr))
                 {
-                    nN(i, j, k) = 8;
+                    nN(i, j, k) = _min + 3;
                 }
 
                 else if (currentSite->isActive())
@@ -915,23 +932,24 @@ const string Site::info(int xr, int yr, int zr, string desc) const
 
     };
 
-    auto typeSearchRepl = [&s, &searchRepl] (int pType)
+    auto numberSearchRepl = [&s, &searchRepl] (int number, string desc)
     {
         stringstream type;
-        type << pType;
-        searchRepl(type.str(), ParticleStates::shortNames.at(pType));
+        type << number;
+        searchRepl(type.str(), desc);
     };
 
 
     searchRepl("        ", "  ");
 
-    typeSearchRepl(ParticleStates::crystal);
-    typeSearchRepl(ParticleStates::surface);
-    typeSearchRepl(ParticleStates::solution);
+    numberSearchRepl(ParticleStates::crystal,  ParticleStates::shortNames.at(ParticleStates::crystal));
+    numberSearchRepl(ParticleStates::surface,  ParticleStates::shortNames.at(ParticleStates::surface));
+    numberSearchRepl(ParticleStates::solution, ParticleStates::shortNames.at(ParticleStates::solution));
 
-    searchRepl("9 ", particleStateShortName() + "^");
-    searchRepl("8", desc);
-    searchRepl("7", ".");
+    numberSearchRepl(_min+0, ".");
+    numberSearchRepl(_min+1, " ");
+    numberSearchRepl(_min+2, particleStateShortName() + "^");
+    numberSearchRepl(_min+3, desc);
 
     s_full << s;
 

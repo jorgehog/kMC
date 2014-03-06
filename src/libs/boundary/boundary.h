@@ -22,7 +22,7 @@ public:
 
     virtual uint transformCoordinate(const int xi) const
     {
-        return (((xi > (int)m_span) || (xi < 0)) ? BLOCKED_COORDINATE : xi);
+        return (((xi >= (int)m_span) || (xi < 0)) ? BLOCKED_COORDINATE : xi);
 
 
     }

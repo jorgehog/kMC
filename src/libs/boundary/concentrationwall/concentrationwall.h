@@ -16,6 +16,7 @@ public:
 public:
     void loadConfig(const Setting &setting);
     void update();
+    void initialize();
 };
 
 }

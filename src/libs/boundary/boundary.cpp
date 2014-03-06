@@ -31,7 +31,7 @@ void Boundary::initialize()
 
     if (orientation() == 1)
     {
-        xi = span();
+        xi = span() - 1;
     }
 
     if (dimension() == X)
@@ -39,7 +39,11 @@ void Boundary::initialize()
 
         for (uint y = 0; y < NY(); ++y) {
             for (uint z = 0; z < NZ(); ++z) {
-                mainSolver()->getSite(xi, y, z)->spawnAsFixedCrystal();
+                if (!mainSolver()->getSite(xi, y, z)->isActive())
+                {
+
+                    mainSolver()->getSite(xi, y, z)->spawnAsFixedCrystal();
+                }
             }
         }
 
@@ -50,7 +54,10 @@ void Boundary::initialize()
 
         for (uint x = 0; x < NX(); ++x) {
             for (uint z = 0; z < NZ(); ++z) {
-                mainSolver()->getSite(x, xi, z)->spawnAsFixedCrystal();
+                if (!mainSolver()->getSite(x, xi, z)->isActive())
+                {
+                    mainSolver()->getSite(x, xi, z)->spawnAsFixedCrystal();
+                }
             }
         }
 
@@ -62,7 +69,10 @@ void Boundary::initialize()
 
         for (uint x = 0; x < NX(); ++x) {
             for (uint y = 0; y < NY(); ++y) {
-                mainSolver()->getSite(x, y, xi)->spawnAsFixedCrystal();
+                if (!mainSolver()->getSite(x, y, xi)->isActive())
+                {
+                    mainSolver()->getSite(x, y, xi)->spawnAsFixedCrystal();
+                }
             }
         }
 

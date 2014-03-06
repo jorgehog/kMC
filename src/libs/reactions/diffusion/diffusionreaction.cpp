@@ -254,7 +254,12 @@ double DiffusionReaction::getSaddleEnergy()
             {
                 targetSite = reactionSite()->neighborHood(xn, yn, zn);
 
-                if (!targetSite->isActive())
+                if (targetSite == NULL)
+                {
+                    continue;
+                }
+
+                else if (!targetSite->isActive())
                 {
                     continue;
                 }
