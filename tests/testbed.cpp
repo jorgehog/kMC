@@ -678,7 +678,7 @@ void testBed::testHasCrystalNeighbor()
                 if (neighbor == initCrystal) {
                     assert(i == j && j == k && k == Site::nNeighborsLimit());
 
-                    CHECK_EQUAL(ParticleStates::crystal, neighbor->particleState());
+                    CHECK_EQUAL(ParticleStates::fixedCrystal, neighbor->particleState());
 
                     //it should not have any crystal neighbors
                     CHECK_EQUAL(false, neighbor->hasNeighboring(ParticleStates::crystal));
@@ -705,6 +705,7 @@ void testBed::testHasCrystalNeighbor()
     }
 
     //deactivating the seed should bring everything to solutions except init seed which is surface.
+    initCrystal->setParticleState(ParticleStates::crystal);
     initCrystal->deactivate();
 
     //we now activate all neighbors. This should not make anything crystals.
@@ -730,15 +731,13 @@ void testBed::testHasCrystalNeighbor()
         for (uint j = 0; j < 3; ++j) {
 
             for (uint k = 0; k < 3; ++k) {
-                neighbor = initCrystal->neighborHood(Site::nNeighborsLimit() - 1 + i, Site::nNeighborsLimit() - 1 + j, Site::nNeighborsLimit() - 1 + k);
+                neighbor = initCrystal->neighborHood(Site::nNeighborsLimit() - 1 + i,
+                                                     Site::nNeighborsLimit() - 1 + j,
+                                                     Site::nNeighborsLimit() - 1 + k);
 
-                if (neighbor == initCrystal) {
-                    CHECK_EQUAL(ParticleStates::surface, neighbor->particleState());
-                }
-                else
-                {
-                    CHECK_EQUAL(ParticleStates::solution, neighbor->particleState());
-                }
+
+                CHECK_EQUAL(ParticleStates::solution, neighbor->particleState());
+
             }
 
         }
@@ -746,6 +745,7 @@ void testBed::testHasCrystalNeighbor()
     }
 
     //activating the seed. Should make closest neighbors crystals.
+    initCrystal->setParticleState(ParticleStates::surface);
     initCrystal->activate();
     Site::updateAffectedSites();
 

@@ -25,12 +25,15 @@ struct ParticleStates
     enum
     {
         crystal,
+        fixedCrystal,
         solution,
         surface
     };
 
     const static vector<string> names;
     const static vector<string> shortNames;
+
+    static int equalAs(int state);
 
 };
 
@@ -184,7 +187,7 @@ public:
 
     bool isCrystal() const
     {
-        return m_particleState == ParticleStates::crystal;
+        return (m_particleState == ParticleStates::crystal || m_particleState == ParticleStates::fixedCrystal);
     }
 
     bool isSurface() const

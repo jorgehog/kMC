@@ -126,15 +126,9 @@ void Site::setParticleState(int state)
             break;
 
             //Crystal -> surface
-        case ParticleStates::crystal:
+        case (ParticleStates::crystal):
 
-            if (m_isFixedCrystalSeed)
-            {
-                m_particleState = ParticleStates::surface;
-                KMCDebugger_PushImplication(this, "fixedcrystal", "surface");
-            }
-
-            else if (hasNeighboring(ParticleStates::crystal))
+            if (hasNeighboring(ParticleStates::crystal))
             {
                 m_particleState = ParticleStates::surface;
                 KMCDebugger_PushImplication(this, "crystal", "surface");
@@ -158,7 +152,7 @@ void Site::setParticleState(int state)
             break;
 
         default:
-            cout << "invalid transition"
+            cout << "invalid transition "
                  << ParticleStates::names.at(m_particleState)
                  << "->"
                  << ParticleStates::names.at(state) << endl;
@@ -183,6 +177,14 @@ void Site::setParticleState(int state)
             KMCDebugger_PushImplication(this, "surface", "crystal");
             propagateToNeighbors(ParticleStates::solution, ParticleStates::surface);
 
+            break;
+
+            //fixedCrystal -> crystal
+        case ParticleStates::fixedCrystal:
+
+            cout << "Warning: Making fixed crystal seed into standard crystal." << endl;
+            m_particleState = ParticleStates::crystal;
+            KMCDebugger_PushImplication(this, "fixedcrystal", "crystal");
             break;
 
         default:
@@ -220,6 +222,7 @@ void Site::setParticleState(int state)
 
             break;
 
+
         default:
             cout << "invalid transition "
                  << ParticleStates::names.at(m_particleState)
@@ -229,6 +232,7 @@ void Site::setParticleState(int state)
             break;
         }
         break;
+
 
 
     default:
@@ -412,6 +416,9 @@ void Site::spawnAsFixedCrystal()
     m_siteReactions.clear();
 
     activate();
+
+    m_particleState = ParticleStates::fixedCrystal;
+
 }
 
 
@@ -523,7 +530,8 @@ bool Site::hasNeighboring(int state) const
                     continue;
                 }
 
-                else if (nextNeighbor->particleState() == state)
+                else if (nextNeighbor->particleState() == state ||
+                         nextNeighbor->particleState() == ParticleStates::equalAs(state))
                 {
                     return true;
                 }
@@ -997,12 +1005,25 @@ set<Site*> Site::m_affectedSites;
 
 field<Boundary*> Site::m_boundaries;
 
-const vector<string> ParticleStates::names = {"crystal", "solution", "surface"};
-const vector<string> ParticleStates::shortNames = {"C", "P", "S"};
+const vector<string> ParticleStates::names = {"crystal", "fixedcrystal", "solution", "surface"};
+const vector<string> ParticleStates::shortNames = {"C", "F", "P", "S"};
 
 
 ostream & operator << (ostream& os, const Site& ss)
 {
     os << ss.str();
     return os;
+}
+
+
+int ParticleStates::equalAs(int state)
+{
+    switch (state) {
+    case ParticleStates::crystal:
+        return ParticleStates::fixedCrystal;
+        break;
+    default:
+        return state;
+        break;
+    }
 }
