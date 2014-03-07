@@ -32,12 +32,36 @@ void DiffusionReaction::loadConfig(const Setting &setting)
 
     separation = getSurfaceSetting<uint>(setting, "separation");
 
-    allowanceFunction = [] (const DiffusionReaction* reaction)
+    if (separation != 0)
     {
-        return (reaction->destinationSite()->isSurface() ||
-                reaction->destinationSite()->nNeighbors() == (reaction->reactionSite()->isActive() ? 1 : 0));
-    };
+        allowanceFunction = [] (const DiffusionReaction* reaction)
+        {
 
+            if (reaction->destinationSite()->nNeighbors() != reaction->reactionSite()->isActive() ? 1 : 0)
+            {
+                return reaction->destinationSite()->isSurface();
+            }
+
+            for (uint i = 1; i < separation; ++i)
+            {
+                 if (reaction->destinationSite()->nNeighbors(i) != 0)
+                 {
+                     return reaction->destinationSite()->isSurface();
+                 }
+            }
+
+            return true;
+        };
+    }
+
+    else
+    {
+        allowanceFunction = [] (const DiffusionReaction* reaction)
+        {
+            (void) reaction;
+            return true;
+        };
+    }
 
 
 
