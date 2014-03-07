@@ -82,6 +82,11 @@ public:
         return m_kTot;
     }
 
+    void setNumberOfCycles(uint nc)
+    {
+        m_nCycles = nc;
+    }
+
 
 private:
 

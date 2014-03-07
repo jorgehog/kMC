@@ -100,13 +100,11 @@ public:
 
     void calcRate();
 
-    bool isNotBlocked() const;
-
     void execute();
 
     const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const;
 
-    bool allowedAtSite();
+    bool isAllowed() const;
 
     string getInfoSnippet() const
     {

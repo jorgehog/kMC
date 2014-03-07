@@ -259,7 +259,7 @@ bool Site::isLegalToSpawn()
 
     for (Reaction * r : m_siteReactions)
     {
-        if (!r->allowedAtSite())
+        if (!r->isAllowed())
         {
             return false;
         }
@@ -403,7 +403,7 @@ void Site::updateReactions()
 
     for (Reaction* reaction : m_siteReactions)
     {
-        if (reaction->isNotBlocked())
+        if (reaction->isAllowed())
         {
             m_activeReactions.push_back(reaction);
         }

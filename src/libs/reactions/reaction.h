@@ -39,9 +39,7 @@ public:
 
     virtual void setDirectUpdateFlags(const Site * changedSite) = 0;
 
-    virtual bool isNotBlocked() const = 0;
-
-    virtual bool allowedAtSite() = 0;
+    virtual bool isAllowed() const = 0;
 
     virtual void calcRate() = 0;
 
@@ -53,7 +51,12 @@ public:
 
     static void resetAll()
     {
-        IDcount = 0;
+        m_IDCount = 0;
+    }
+
+    const uint & IDCount()
+    {
+        return m_IDCount;
     }
 
     const static double & linearRateScale()
@@ -153,6 +156,10 @@ private:
 
     static double m_beta;
     static double m_linearRateScale;
+
+    static uint m_IDCount;
+
+    const uint m_ID;
 
     Site* m_reactionSite = NULL;
 

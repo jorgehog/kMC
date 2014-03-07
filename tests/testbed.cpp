@@ -855,7 +855,7 @@ void testBed::testInitialReactionSetup()
                                            "DEACTIVE SITE SHOULD HAVE NO REACTIONS",
                                            solver->getSite(i, j, k)->info());
 
-                    KMCDebugger_AssertBool(r->isNotBlocked(),
+                    KMCDebugger_AssertBool(r->isAllowed(),
                                            "REACTION NOT DEACTIVATED PROPERLY:",
                                            r->info());
 
@@ -922,6 +922,9 @@ void testBed::testInitialReactionSetup()
 void testBed::testSequential()
 {
 
+    uint nc = 100;
+
+    solver->setNumberOfCycles(nc);
     solver->run();
     SnapShot s1(solver);
 
@@ -932,6 +935,7 @@ void testBed::testSequential()
     KMCSolver* newSolver = makeSolver();
     KMC_INIT_RNG(seed);
 
+    newSolver->setNumberOfCycles(nc);
     newSolver->run();
     SnapShot s2(newSolver);
 

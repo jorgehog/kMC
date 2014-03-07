@@ -9,6 +9,7 @@ using namespace kMC;
 
 Reaction::Reaction(Site *currentSite, const string name):
     name(name),
+    m_ID(m_IDCount++),
     m_reactionSite(currentSite),
     m_lastUsedEnergy(UNSET_ENERGY),
     m_rate(UNSET_RATE),
@@ -36,7 +37,7 @@ const string Reaction::info(int xr, int yr, int zr, string desc) const
 
     s << "  ";
     s << "Selected flag: " << m_updateFlag << "  ";
-    s << "Blocked? " << !isNotBlocked() << "\n";
+    s << "Blocked? " << !isAllowed() << "\n";
     s << "@";
     s << m_reactionSite->info(xr, yr, zr, desc);
     s << "\n";
@@ -138,6 +139,8 @@ double         Reaction::m_linearRateScale;
 uint           Reaction::m_NX;
 uint           Reaction::m_NY;
 uint           Reaction::m_NZ;
+
+uint           Reaction::m_IDCount = 0;
 
 
 ostream & operator << (ostream& os, const Reaction& ss)

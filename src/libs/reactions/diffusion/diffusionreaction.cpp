@@ -379,13 +379,6 @@ void DiffusionReaction::calcRate()
 
 }
 
-bool DiffusionReaction::isNotBlocked() const
-{
-
-    return !m_destinationSite->isActive() && (m_destinationSite->isSurface() || (m_destinationSite->nNeighbors() == 1));
-
-}
-
 void DiffusionReaction::execute()
 {
     reactionSite()->deactivate();
@@ -420,22 +413,12 @@ const string DiffusionReaction::info(int xr, int yr, int zr, string desc) const
 
 }
 
-bool DiffusionReaction::allowedAtSite()
+bool DiffusionReaction::isAllowed() const
 {
 
-    //Diffusion reactions may occur to surfaces
-    if (m_destinationSite->isSurface())
-    {
-        return true;
-    }
-
-    //if were not on a surface, we check if te destination is close to other particles.
-    else
-    {
-        return m_destinationSite->nNeighbors() == 0;
-    }
-
-    return true;
+    return !m_destinationSite->isActive() &&
+           (m_destinationSite->isSurface() ||
+            m_destinationSite->nNeighbors() == reactionSite()->isActive() ? 1 : 0);
 
 }
 

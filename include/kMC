@@ -1,13 +1,12 @@
 #pragma once
 
+#include "../src/libs/RNG/kMCRNG.h"
 
-#include "RNG/kMCRNG.h"
+#include "../src/libs/site.h"
 
-#include "site.h"
+#include "../src/libs/reactions/reaction.h"
+#include "../src/libs/reactions/diffusion/diffusionreaction.h"
 
-#include "reactions/reaction.h"
-#include "reactions/diffusion/diffusionreaction.h"
+#include "../src/libs/kmcsolver.h"
 
-#include "kmcsolver.h"
-
-#include "debugger/debugger.h"
+#include "../src/libs/debugger/debugger.h"

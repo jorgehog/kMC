@@ -262,7 +262,7 @@ std::string Debugger::addFlagsToImplications()
                 reacss << flag << " ";
             }
 
-            if (!r->isNotBlocked())
+            if (!r->isAllowed())
             {
                 reacss << " (blocked)";
             }

@@ -4,7 +4,7 @@
 #include <sys/types.h>
 #include "testbed.h"
 
-#include "../../src/libs/debugger/debugger.h"
+#include "../src/libs/debugger/debugger.h"
 
 #include <math.h>
 

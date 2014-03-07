@@ -1,6 +1,7 @@
 TEMPLATE = app
 CONFIG += console
 
-LIBS += -L$$TOP_OUT_PWD/lib -lkMC
+INCLUDEPATH += $$PWD/include
 
-INCLUDEPATH += $$TOP_PWD/include
+LIBS += -L$$shadowed($$PWD)/lib -lkMC
+
