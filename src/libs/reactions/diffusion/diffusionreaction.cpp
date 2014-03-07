@@ -33,6 +33,11 @@ void DiffusionReaction::loadConfig(const Setting &setting)
 
     separation = getSurfaceSetting<uint>(setting, "separation");
 
+    if (separation > Site::nNeighborsLimit())
+    {
+        cerr << "Forced particle separation cannot exceed the site neighborlimit." << endl;
+        exit(1);
+    }
 
     rPower = getSurfaceSetting<double>(setting, "rPower");
     scale  = getSurfaceSetting<double>(setting, "scale");
