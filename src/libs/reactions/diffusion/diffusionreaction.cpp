@@ -29,6 +29,18 @@ DiffusionReaction::~DiffusionReaction()
 void DiffusionReaction::loadConfig(const Setting &setting)
 {
 
+
+    separation = getSurfaceSetting<uint>(setting, "separation");
+
+    allowanceFunction = [] (const DiffusionReaction* reaction)
+    {
+        return (reaction->destinationSite()->isSurface() ||
+                reaction->destinationSite()->nNeighbors() == (reaction->reactionSite()->isActive() ? 1 : 0));
+    };
+
+
+
+
     rPower = getSurfaceSetting<double>(setting, "rPower");
     scale  = getSurfaceSetting<double>(setting, "scale");
 
@@ -416,9 +428,7 @@ const string DiffusionReaction::info(int xr, int yr, int zr, string desc) const
 bool DiffusionReaction::isAllowed() const
 {
 
-    return !m_destinationSite->isActive() &&
-           (m_destinationSite->isSurface() ||
-            m_destinationSite->nNeighbors() == reactionSite()->isActive() ? 1 : 0);
+    return !m_destinationSite->isActive() && allowanceFunction(this);
 
 }
 
@@ -426,5 +436,9 @@ bool DiffusionReaction::isAllowed() const
 double        DiffusionReaction::rPower;
 double        DiffusionReaction::scale;
 
+uint          DiffusionReaction::separation;
+
 cube          DiffusionReaction::m_potential;
 field<cube>   DiffusionReaction::m_saddlePotential;
+
+function<bool (const DiffusionReaction*)> DiffusionReaction::allowanceFunction;

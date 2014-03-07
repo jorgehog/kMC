@@ -30,6 +30,9 @@ public:
 
     double getSaddleEnergyContributionFromNeighborAt(const uint &i, const uint &j, const uint &k);
 
+
+    static function<bool (const DiffusionReaction*)> allowanceFunction;
+
     static umat::fixed<3, 2> getSaddleOverlapMatrix(const ivec &relCoor);
 
     static void loadConfig(const Setting & setting);
@@ -74,6 +77,8 @@ private:
     static double rPower;
     static double scale;
 
+    static uint separation;
+
     static cube m_potential;
     static field<cube> m_saddlePotential;
 
@@ -102,9 +107,9 @@ public:
 
     void execute();
 
-    const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const;
-
     bool isAllowed() const;
+
+    const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const;
 
     string getInfoSnippet() const
     {
