@@ -9,7 +9,6 @@ using namespace kMC;
 
 Reaction::Reaction(Site *currentSite, const string name):
     name(name),
-    m_ID(IDcount++),
     m_reactionSite(currentSite),
     m_lastUsedEnergy(UNSET_ENERGY),
     m_rate(UNSET_RATE),
@@ -26,7 +25,7 @@ Reaction::~Reaction()
 const string Reaction::info(int xr, int yr, int zr, string desc) const
 {
     stringstream s;
-    s << "[" << name << " " << m_ID << "/" << IDcount << "]:" << "\n";
+    s << "[" << name << "]:" << "\n";
     s << "   rate: " << m_rate << "  ";
     s << "updateFlags: ";
 
@@ -139,8 +138,6 @@ double         Reaction::m_linearRateScale;
 uint           Reaction::m_NX;
 uint           Reaction::m_NY;
 uint           Reaction::m_NZ;
-
-uint           Reaction::IDcount = 0;
 
 
 ostream & operator << (ostream& os, const Reaction& ss)

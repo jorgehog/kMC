@@ -140,7 +140,7 @@ public:
         defaultUpdateFlag = 0
     };
 
-    const static double UNSET_RATE;
+    static const double UNSET_RATE;
     static const double UNSET_ENERGY;
 
 private:
@@ -153,10 +153,6 @@ private:
 
     static double m_beta;
     static double m_linearRateScale;
-
-    static uint IDcount;
-
-    uint m_ID;
 
     Site* m_reactionSite = NULL;
 
