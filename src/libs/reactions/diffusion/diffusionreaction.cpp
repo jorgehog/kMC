@@ -1,3 +1,4 @@
+
 #include "diffusionreaction.h"
 #include "../../kmcsolver.h"
 
@@ -31,38 +32,6 @@ void DiffusionReaction::loadConfig(const Setting &setting)
 
 
     separation = getSurfaceSetting<uint>(setting, "separation");
-
-    if (separation != 0)
-    {
-        allowanceFunction = [] (const DiffusionReaction* reaction)
-        {
-
-            if (reaction->destinationSite()->nNeighbors() != reaction->reactionSite()->isActive() ? 1 : 0)
-            {
-                return reaction->destinationSite()->isSurface();
-            }
-
-            for (uint i = 1; i < separation; ++i)
-            {
-                 if (reaction->destinationSite()->nNeighbors(i) != 0)
-                 {
-                     return reaction->destinationSite()->isSurface();
-                 }
-            }
-
-            return true;
-        };
-    }
-
-    else
-    {
-        allowanceFunction = [] (const DiffusionReaction* reaction)
-        {
-            (void) reaction;
-            return true;
-        };
-    }
-
 
 
     rPower = getSurfaceSetting<double>(setting, "rPower");
@@ -216,6 +185,41 @@ string DiffusionReaction::getFinalizingDebugMessage() const
 #else
     return "";
 #endif
+}
+
+bool DiffusionReaction::allowedGivenNotBlocked() const
+{
+
+    if (separation != 0)
+    {
+        uint lim;
+        if (reactionSite()->isActive())
+        {
+            lim = 1;
+        }
+
+        else
+        {
+            lim = 0;
+        }
+
+        if (destinationSite()->nNeighbors() != lim)
+        {
+            return destinationSite()->isSurface();
+        }
+
+        for (uint i = 1; i < separation; ++i)
+        {
+            if (destinationSite()->nNeighbors(i) != 0)
+            {
+                return destinationSite()->isSurface();
+            }
+        }
+
+    }
+
+    return true;
+
 }
 
 
@@ -451,9 +455,7 @@ const string DiffusionReaction::info(int xr, int yr, int zr, string desc) const
 
 bool DiffusionReaction::isAllowed() const
 {
-
-    return !m_destinationSite->isActive() && allowanceFunction(this);
-
+    return !m_destinationSite->isActive() && allowedGivenNotBlocked();
 }
 
 
@@ -464,5 +466,3 @@ uint          DiffusionReaction::separation;
 
 cube          DiffusionReaction::m_potential;
 field<cube>   DiffusionReaction::m_saddlePotential;
-
-function<bool (const DiffusionReaction*)> DiffusionReaction::allowanceFunction;

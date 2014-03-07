@@ -31,7 +31,6 @@ public:
     double getSaddleEnergyContributionFromNeighborAt(const uint &i, const uint &j, const uint &k);
 
 
-    static function<bool (const DiffusionReaction*)> allowanceFunction;
 
     static umat::fixed<3, 2> getSaddleOverlapMatrix(const ivec &relCoor);
 
@@ -97,6 +96,7 @@ private:
     uvec::fixed<3> saddleFieldIndices;
 
 
+    bool allowedGivenNotBlocked() const;
 
     // Reaction interface
 public:
