@@ -30,6 +30,8 @@ public:
 
     void initialize() {}
 
+    void update() {}
+
 
 private:
 

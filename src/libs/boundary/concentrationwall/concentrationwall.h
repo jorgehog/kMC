@@ -10,7 +10,7 @@ class ConcentrationWall : public Boundary
 {
 public:
     ConcentrationWall(const uint dimension, const uint orientation);
-
+    ~ConcentrationWall();
 
     // Boundary interface
 public:

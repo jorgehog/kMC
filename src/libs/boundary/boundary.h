@@ -37,9 +37,9 @@ public:
         (void) setting;
     }
 
-    virtual void update() {}
+    virtual void update() = 0;
 
-    virtual void initialize();
+    virtual void initialize() = 0;
 
 
     static bool isBlocked(const uint xi)
@@ -66,6 +66,7 @@ public:
     enum BoundaryTypes
     {
         Periodic,
+        Edge,
         Wall,
         ConsentrationWall
     };

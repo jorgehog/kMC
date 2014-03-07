@@ -3,9 +3,10 @@
 #include "reactions/reaction.h"
 #include "reactions/diffusion/diffusionreaction.h"
 
-#include "boundary/boundary.h"
-#include "boundary/concentrationwall/concentrationwall.h"
 #include "boundary/periodic/periodic.h"
+#include "boundary/edge/edge.h"
+#include "boundary/wall/wall.h"
+#include "boundary/concentrationwall/concentrationwall.h"
 
 #include "debugger/debugger.h"
 
@@ -292,14 +293,22 @@ void Site::loadConfig(const Setting &setting)
                 m_boundaries(XYZ, orientation) = new Periodic(XYZ, orientation);
 
                 break;
-            case Boundary::Wall:
-                m_boundaries(XYZ, orientation) = new Boundary(XYZ, orientation);
+
+            case Boundary::Edge:
+                m_boundaries(XYZ, orientation) = new Edge(XYZ, orientation);
 
                 break;
+
+            case Boundary::Wall:
+                m_boundaries(XYZ, orientation) = new Wall(XYZ, orientation);
+
+                break;
+
             case Boundary::ConsentrationWall:
                 m_boundaries(XYZ, orientation) = new ConcentrationWall(XYZ, orientation);
 
                 break;
+
             default:
 
                 cerr << "Unknown boundary type " << boundaryTypes(orientation) << endl;

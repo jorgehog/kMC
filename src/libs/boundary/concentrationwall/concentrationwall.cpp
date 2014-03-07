@@ -9,6 +9,11 @@ ConcentrationWall::ConcentrationWall(const uint dimension, const uint orientatio
 
 }
 
+ConcentrationWall::~ConcentrationWall()
+{
+
+}
+
 void ConcentrationWall::loadConfig(const Setting &setting)
 {
     (void) setting;
