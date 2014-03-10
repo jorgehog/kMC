@@ -31,6 +31,10 @@ public:
     double getSaddleEnergyContributionFromNeighborAt(const uint &i, const uint &j, const uint &k);
 
 
+    static uint separation()
+    {
+        return m_separation;
+    }
 
     static umat::fixed<3, 2> getSaddleOverlapMatrix(const ivec &relCoor);
 
@@ -76,7 +80,7 @@ private:
     static double rPower;
     static double scale;
 
-    static uint separation;
+    static uint m_separation;
 
     static cube m_potential;
     static field<cube> m_saddlePotential;

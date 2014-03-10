@@ -113,7 +113,7 @@ void Site::setParticleState(int state)
             {
                 m_particleState  = ParticleStates::crystal;
                 KMCDebugger_PushImplication(this, "solution", "crystal");
-                propagateToNeighbors(ParticleStates::solution, ParticleStates::surface);
+                propagateToNeighbors(ParticleStates::solution, ParticleStates::surface, DiffusionReaction::separation());
             }
 
             else
@@ -141,7 +141,7 @@ void Site::setParticleState(int state)
                 KMCDebugger_PushImplication(this, "crystal", "solution");
             }
 
-            propagateToNeighbors(ParticleStates::surface, ParticleStates::solution);
+            propagateToNeighbors(ParticleStates::surface, ParticleStates::solution, DiffusionReaction::separation());
             queueAffectedSites();
 
             break;
@@ -176,7 +176,7 @@ void Site::setParticleState(int state)
             //Which will remove access surface.
             m_particleState  = ParticleStates::crystal;
             KMCDebugger_PushImplication(this, "surface", "crystal");
-            propagateToNeighbors(ParticleStates::solution, ParticleStates::surface);
+            propagateToNeighbors(ParticleStates::solution, ParticleStates::surface, DiffusionReaction::separation());
 
             break;
 
@@ -688,21 +688,23 @@ void Site::introduceNeighborhood()
 
 }
 
-void Site::propagateToNeighbors(int reqOldState, int newState)
+void Site::propagateToNeighbors(int reqOldState, int newState, int range)
 {
 
     Site *nextNeighbor;
 
-    for (uint i = 0; i < 3; ++i)
+    KMCDebugger_Assert(range, <=, (int)Site::nNeighborsLimit(), "cannot propagate information beyond neighbor limit.");
+
+    for (int i = -range; i <= range; ++i)
     {
-        for (uint j = 0; j < 3; ++j)
+        for (int j = -range; j <= range; ++j)
         {
-            for (uint k = 0; k < 3; ++k)
+            for (int k = -range; k <= range; ++k)
             {
 
-                nextNeighbor = m_neighborHood[i + Site::nNeighborsLimit() - 1]
-                        [j + Site::nNeighborsLimit() - 1]
-                        [k + Site::nNeighborsLimit() - 1];
+                nextNeighbor = m_neighborHood[i + Site::nNeighborsLimit()]
+                        [j + Site::nNeighborsLimit()]
+                        [k + Site::nNeighborsLimit()];
 
                 if (nextNeighbor == NULL)
                 {
@@ -711,7 +713,7 @@ void Site::propagateToNeighbors(int reqOldState, int newState)
 
                 else if (nextNeighbor == this)
                 {
-                    assert(i == j && j == k && k == 1);
+                    assert(i == j && j == k && k == 0);
                     continue;
                 }
 

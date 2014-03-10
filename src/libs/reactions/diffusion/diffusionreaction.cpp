@@ -31,9 +31,9 @@ void DiffusionReaction::loadConfig(const Setting &setting)
 {
 
 
-    separation = getSurfaceSetting<uint>(setting, "separation");
+    m_separation = getSurfaceSetting<uint>(setting, "separation");
 
-    if (separation > Site::nNeighborsLimit())
+    if (m_separation > Site::nNeighborsLimit())
     {
         cerr << "Forced particle separation cannot exceed the site neighborlimit." << endl;
         exit(1);
@@ -195,7 +195,7 @@ string DiffusionReaction::getFinalizingDebugMessage() const
 bool DiffusionReaction::allowedGivenNotBlocked() const
 {
 
-    if (separation != 0)
+    if (m_separation != 0)
     {
         uint lim;
         if (reactionSite()->isActive())
@@ -213,7 +213,7 @@ bool DiffusionReaction::allowedGivenNotBlocked() const
             return destinationSite()->isSurface();
         }
 
-        for (uint i = 1; i < separation; ++i)
+        for (uint i = 1; i < m_separation; ++i)
         {
             //NEI NEI tell krystallnaboer!!
             if (destinationSite()->nNeighbors(i) != 0)
@@ -468,7 +468,7 @@ bool DiffusionReaction::isAllowed() const
 double        DiffusionReaction::rPower;
 double        DiffusionReaction::scale;
 
-uint          DiffusionReaction::separation;
+uint          DiffusionReaction::m_separation;
 
 cube          DiffusionReaction::m_potential;
 field<cube>   DiffusionReaction::m_saddlePotential;
