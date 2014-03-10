@@ -316,7 +316,7 @@ void Debugger::dumpFullTrace(int line, const char * filename, const string addit
     stringstream path;
 
 
-    if (currentReaction != NULL || (traceCount == 0 && !implications.empty()))
+    if (currentReaction != NULL || !implications.empty())
     {
         pushTraces();
     }
