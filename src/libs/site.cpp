@@ -210,7 +210,7 @@ bool Site::isLegalToSpawn()
 bool Site::qualifiesAsCrystal()
 {
 
-    return isSurface() || hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation());
+    return isFixedCrystalSeed() || nNeighbors() >= m_nNeighborsToCrystallize;
 
 }
 
