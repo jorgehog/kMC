@@ -210,8 +210,7 @@ bool Site::isLegalToSpawn()
 bool Site::qualifiesAsCrystal()
 {
 
-    return isFixedCrystalSeed() ||
-            (countNeighboring(ParticleStates::crystal, DiffusionReaction::separation()) >= m_nNeighborsToCrystallize);
+    return isFixedCrystalSeed() || nNeighbors() >= m_nNeighborsToCrystallize;
 
 }
 
@@ -400,6 +399,8 @@ void Site::stripFixedCrystalProperty()
 void Site::crystallize()
 {
 
+    KMCDebugger_AssertBool(isActive(), "should not attempt to crystallize an unactive site.", info());
+
     if (qualifiesAsCrystal())
     {
         //No need to test if it has neigh crystals because
@@ -412,6 +413,7 @@ void Site::crystallize()
     }
     else
     {
+        m_particleState = ParticleStates::solution;
         KMCDebugger_PushImplication(this, particleStateName().c_str());
     }
 }

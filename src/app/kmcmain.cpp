@@ -19,6 +19,7 @@ int main()
     wall_clock t;
 
     KMCDebugger_SetFilename("kMCrun");
+    KMCDebugger_SetEnabledTo(getSurfaceSetting<int>(root, "buildTrace") == 0 ? false : true);
 
     t.tic();
     solver->run();

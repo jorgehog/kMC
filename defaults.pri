@@ -3,6 +3,8 @@ CONFIG -= app_bundle
 CONFIG -= qt
 CONFIG += RNG_ZIG
 
+QMAKE_CXX = gcc
+
 QMAKE_LFLAGS_DEBUG += -g
 
 COMMON_CXXFLAGS = -std=c++0x
