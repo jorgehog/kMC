@@ -144,6 +144,8 @@ void testBed::testDistanceTo()
 
 void testBed::testDeactivateSurface()
 {
+    if (Site::nNeighborsToCrystallize() != 1) return;
+
     Site * orig = solver->getSite(NX/2, NY/2, NZ/2);
     Site * origNeighbor = solver->getSite(NX/2+1, NY/2, NZ/2);
     Site * origNextNeighbor = solver->getSite(NX/2+1+DiffusionReaction::separation(), NY/2, NZ/2);
