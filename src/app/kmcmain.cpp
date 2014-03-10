@@ -18,6 +18,8 @@ int main()
 
     wall_clock t;
 
+    KMCDebugger_SetFilename("kMCrun");
+
     t.tic();
     solver->run();
     cout << "Simulation ended after " << t.toc() << " seconds" << endl;

@@ -203,7 +203,7 @@ public:
 
     bool isCrystal() const
     {
-        return (m_particleState == ParticleStates::crystal || m_particleState == ParticleStates::fixedCrystal);
+        return ((m_particleState == ParticleStates::crystal) || (m_particleState == ParticleStates::fixedCrystal));
     }
 
     bool isSurface() const

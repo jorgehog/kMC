@@ -3,6 +3,8 @@
 #define _KMCDebugger_IGNORE(expr) static_cast<void>(expr)
 
 //Ignore everything if we are not debugging.
+#define KMCDebugger_MarkPre(pre) \
+    _KMCDebugger_IGNORE(pre)
 #define KMCDebugger_SetEnabledTo(state) \
     _KMCDebugger_IGNORE(state)
 #define KMCDebugger_IsEnabled \
@@ -39,7 +41,6 @@
     _KMCDebugger_IGNORE(i)
 #define KMCDebugger_PushTraces() \
     _KMCDebugger_IGNORE(0)
-#define KMCDebugger_PushImplication(site, _pre, _new) \
+#define KMCDebugger_PushImplication(site, _new) \
     _KMCDebugger_IGNORE(site); \
-    _KMCDebugger_IGNORE(_pre); \
     _KMCDebugger_IGNORE(_new)
