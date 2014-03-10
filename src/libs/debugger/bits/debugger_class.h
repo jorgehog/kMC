@@ -42,6 +42,8 @@ public:
 
     static string reactionString;
 
+    static string _pre;
+
     static string traceFileName;
     static string traceFilePath;
 
@@ -54,7 +56,7 @@ public:
     static void setFilepath(const string &filepath);
     static void setEnabledTo(bool state);
     static void pushTraces();
-    static void pushImplication(Site *site, const char *_pre, const char *_new);
+    static void pushImplication(Site *site, const char *_new);
     static void markPartialStep(const char * msg);
     static void setActiveReaction(Reaction * reaction);
     static void initialize();
@@ -62,6 +64,16 @@ public:
     static string fullTrace(int line, const string filename, const string additionalInfo = "");
     static string partialTrace(const uint & i);
     //
+
+    template<typename T>
+    static void queuePre(const T & val)
+    {
+        stringstream s;
+        s << val;
+
+        _pre = s.str();
+
+    }
 
     static string setupAffectedUnion();
 
@@ -135,6 +147,7 @@ public:
 
 
         dumpFullTrace(line, file, additionalInfo);
+        exit(1);
 
     }
 

@@ -58,21 +58,24 @@
 
 //TRACE DUMP CALLERS
 #define KMCDebugger_DumpFullTrace(...) \
-    kMC::Debugger::dumpFullTrace(__LINE__, __FILE__, ##__VA_ARGS__)
+    kMC::Debugger::dumpFullTrace(__LINE__, __FILE__, #__VA_ARGS__)
 
 #define KMCDebugger_DumpTrace(i) \
     kMC::Debugger::dumpPartialTrace(i)
 
 
 //DEBUGGER FEEDER FUNCTIONS
+#define KMCDebugger_MarkPre(pre) \
+    kMC::Debugger::queuePre(pre);
+
 #define KMCDebugger_SetActiveReaction(reaction) \
     kMC::Debugger::setActiveReaction(reaction)
 
 #define KMCDebugger_MarkPartialStep(_msg) \
     kMC::Debugger::markPartialStep(_msg)
 
-#define KMCDebugger_PushImplication(site, _pre, _new) \
-    kMC::Debugger::pushImplication(site, _pre, _new)
+#define KMCDebugger_PushImplication(site, _new) \
+    kMC::Debugger::pushImplication(site,  _new)
 
 #define KMCDebugger_PushTraces() \
     kMC::Debugger::pushTraces()

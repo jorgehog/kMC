@@ -259,9 +259,6 @@ void KMCSolver::dumpOutput()
 void KMCSolver::initializeDiffusionReactions()
 {
 
-    Site* currentSite;
-    Site* destination;
-
     //Loop over all sites
     for (uint x = 0; x < NX; ++x)
     {
@@ -270,41 +267,8 @@ void KMCSolver::initializeDiffusionReactions()
             for (uint z = 0; z < NZ; ++z)
             {
 
-                currentSite = sites[x][y][z];
+                sites[x][y][z]->initializeDiffusionReactions();
 
-                assert(currentSite->siteReactions().size() == 0 && "Sitereactions are already set");
-
-                //For each site, loop over all neightbours
-                for (uint i = 0; i < 3; ++i)
-                {
-                    for (uint j = 0; j < 3; ++j)
-                    {
-                        for (uint k = 0; k < 3; ++k)
-                        {
-
-                            destination = currentSite->neighborHood(Site::nNeighborsLimit() - 1 + i,
-                                                                    Site::nNeighborsLimit() - 1 + j,
-                                                                    Site::nNeighborsLimit() - 1 + k);
-
-                            //This means that the destination is blocked by boundaries
-                            if (destination != NULL)
-                            {
-                                //This menas we are not at the current site.
-                                if(destination != currentSite)
-                                {
-                                    DiffusionReaction* diffusionReaction = new DiffusionReaction(currentSite, destination);
-                                    currentSite->addReaction(diffusionReaction);
-                                }
-
-                                else
-                                {
-                                    assert((i == 1) && (j == 1) && (k == 1));
-                                }
-                            }
-
-                        }
-                    }
-                }
             }
         }
     }

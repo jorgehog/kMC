@@ -26,6 +26,8 @@ std::set<Site*>          Debugger::affectedUnion;
 
 std::string Debugger::implications;
 std::string Debugger::reactionString;
+std::string Debugger::_pre = "";
+
 
 Reaction* Debugger::currentReaction;
 Reaction* Debugger::lastCurrentReaction;
@@ -104,7 +106,7 @@ void Debugger::pushTraces()
 
 }
 
-void Debugger::pushImplication(Site * site, const char * _pre, const char * _new)
+void Debugger::pushImplication(Site * site, const char * _new)
 {
 
     if (!enabled) return;
@@ -117,6 +119,7 @@ void Debugger::pushImplication(Site * site, const char * _pre, const char * _new
     if (currentReaction == NULL) s << " (standalone)";
     s << " " << implicationCount << "]\n";
     s << _KMCDebugger_MAKE_IMPLICATION_MESSAGE(site, _pre, _new);
+    _pre = "";
 
     s << setupAffectedUnion();
 
@@ -171,6 +174,7 @@ void Debugger::initialize()
 
     implications = _KMCDebugger_INITIAL_IMPLICATION_MSG;
     reactionString = _KMCDebugger_INITIAL_REACTION_STR;
+    _pre = "";
 
     traceCount = 0;
     implicationCount = 0;
@@ -249,7 +253,7 @@ std::string Debugger::addFlagsToImplications()
     {
         bool addSite = false;
 
-        sitess << "   " << site->str() << "\n";
+        sitess << "\n" << site->info() << "\n";
         for (Reaction * r : site->siteReactions())
         {
 
@@ -341,8 +345,6 @@ void Debugger::dumpFullTrace(int line, const char * filename, const string addit
     file.close();
 
     cout << "Trace saved to " << path.str() << endl;
-
-    exit(1);
 
 }
 

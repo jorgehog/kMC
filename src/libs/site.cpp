@@ -93,156 +93,91 @@ void Site::selectUpdateFlags()
 }
 
 
-void Site::setParticleState(int state)
+void Site::setParticleState(int newState)
 {
 
-    //If we try to propagate a surface onto an existing active site
-    //The site is crystallized, which propagates the surface furhter.
-    switch (state)
+    KMCDebugger_MarkPre(particleStateName());
+
+
+    KMCDebugger_Assert(newState, !=, m_particleState, "switching particle states to same state...", info());
+
+    /* ################## crystal -> surface | solution ################### */
+    if (m_particleState == ParticleStates::crystal)
     {
-    case ParticleStates::surface:
 
-        switch (m_particleState)
+        decrystallize();
+
+        queueAffectedSites();
+
+    }
+    /* #################################################################### */
+
+    else if (m_particleState == ParticleStates::surface)
+    {
+
+
+        /* ##################     surface -> crystal      ################### */
+        if (newState == ParticleStates::crystal)
         {
 
-        //solution->surface
-        case ParticleStates::solution:
+            KMCDebugger_AssertBool(isActive());
 
-            //if a particle is present, we crystallize it immidiately.
-            if (m_active)
-            {
-                m_particleState  = ParticleStates::crystal;
-                KMCDebugger_PushImplication(this, "solution", "crystal");
-                propagateToNeighbors(ParticleStates::solution, ParticleStates::surface, DiffusionReaction::separation());
-            }
+            crystallize();
 
-            else
-            {
-                m_particleState = ParticleStates::surface;
-                queueAffectedSites();
-                KMCDebugger_PushImplication(this, "solution", "surface");
-            }
+        }
+        /* ################################################################## */
 
 
-            break;
 
-            //Crystal -> surface
-        case (ParticleStates::crystal):
 
-            if (hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation()))
-            {
-                m_particleState = ParticleStates::surface;
-                KMCDebugger_PushImplication(this, "crystal", "surface");
-            }
+        /* ##################     surface -> solution     ################### */
+        else if (newState == ParticleStates::solution)
+        {
 
-            else
+            KMCDebugger_AssertBool(!isActive(), "surface should not be active.", info());
+
+            if (!qualifiesAsSurface())
             {
                 m_particleState = ParticleStates::solution;
-                KMCDebugger_PushImplication(this, "crystal", "solution");
+                queueAffectedSites();
             }
 
-            propagateToNeighbors(ParticleStates::surface, ParticleStates::solution, DiffusionReaction::separation());
+
+            KMCDebugger_PushImplication(this, particleStateName().c_str());
+        }
+        /* ################################################################## */
+
+
+
+    }
+
+    else if (m_particleState == ParticleStates::solution)
+    {
+
+
+        KMCDebugger_Assert(newState, !=, ParticleStates::crystal, "should never happen.", info());
+        KMCDebugger_Assert(newState, ==, ParticleStates::surface, "should allways happen.", info());
+
+
+        /* ##################     solution -> surface     ################### */
+
+        //if a particle is present, we crystallize it
+        if (m_active)
+        {
+            crystallize();
+        }
+
+        else
+        {
+            m_particleState = ParticleStates::surface;
+
+            KMCDebugger_PushImplication(this, particleStateName().c_str());
+
             queueAffectedSites();
-
-            break;
-
-            //surface -> surface
-        case ParticleStates::surface:
-            //Nothing to do here.
-            KMCDebugger_PushImplication(this, "surface", "surface");
-            break;
-
-        default:
-            cout << "invalid transition "
-                 << ParticleStates::names.at(m_particleState)
-                 << "->"
-                 << ParticleStates::names.at(state) << endl;
-            exit(1);
-            break;
         }
-
-        break;
-
-    case ParticleStates::crystal:
-
-        switch (m_particleState)
-        {
-
-        //surface -> crystal
-        case ParticleStates::surface:
-
-            //No need to test if it has neigh crystals because
-            //diffusion reactions deactivates old spot before activating new spot.
-            //Which will remove access surface.
-            m_particleState  = ParticleStates::crystal;
-            KMCDebugger_PushImplication(this, "surface", "crystal");
-            propagateToNeighbors(ParticleStates::solution, ParticleStates::surface, DiffusionReaction::separation());
-
-            break;
-
-            //fixedCrystal -> crystal
-        case ParticleStates::fixedCrystal:
-
-            cout << "Warning: Making fixed crystal seed into standard crystal." << endl;
-            m_particleState = ParticleStates::crystal;
-            KMCDebugger_PushImplication(this, "fixedcrystal", "crystal");
-            break;
-
-        default:
-            cout << "invalid transition "
-                 << ParticleStates::names.at(m_particleState)
-                 << "->"
-                 << ParticleStates::names.at(state) << endl;
-            exit(1);
-            break;
-        }
-
-        break;
+        /* ################################################################## */
 
 
-    case ParticleStates::solution:
-
-        switch (m_particleState)
-        {
-
-        //surface -> solution
-        case ParticleStates::surface:
-
-            if (!(hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation()) || m_isFixedCrystalSeed))
-            {
-                m_particleState = ParticleStates::solution;
-                KMCDebugger_PushImplication(this, "surface", "solution");
-                queueAffectedSites();
-            }
-#ifndef KMC_NO_DEBUG
-            else
-            {
-                KMCDebugger_PushImplication(this, "surface", "surface");
-            }
-#endif
-
-            break;
-
-
-        default:
-            cout << "invalid transition "
-                 << ParticleStates::names.at(m_particleState)
-                 << "->"
-                 << ParticleStates::names.at(state) << endl;
-            exit(1);
-            break;
-        }
-        break;
-
-
-
-    default:
-        cout << "invalid transition "
-             << ParticleStates::names.at(m_particleState)
-             << "->"
-             << ParticleStates::names.at(state) << endl;
-        exit(1);
-        break;
     }
 
 }
@@ -268,6 +203,18 @@ bool Site::isLegalToSpawn()
 
     return true;
 
+}
+
+bool Site::qualifiesAsCrystal()
+{
+
+    return isSurface() || hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation());
+
+}
+
+bool Site::qualifiesAsSurface()
+{
+    return !isActive() && hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation());
 }
 
 
@@ -430,6 +377,60 @@ void Site::spawnAsFixedCrystal()
 
 }
 
+void Site::stripFixedCrystalProperty()
+{
+    if (!m_isFixedCrystalSeed)
+    {
+        return;
+    }
+
+    m_isFixedCrystalSeed = false;
+
+    m_particleState = ParticleStates::crystal;
+
+    initializeDiffusionReactions();
+
+}
+
+void Site::crystallize()
+{
+
+    if (qualifiesAsCrystal())
+    {
+        //No need to test if it has neigh crystals because
+        //diffusion reactions deactivates old spot before activating new spot.
+        //Which will remove access surface.
+        m_particleState  = ParticleStates::crystal;
+
+        KMCDebugger_PushImplication(this, particleStateName().c_str());
+        propagateToNeighbors(ParticleStates::solution, ParticleStates::surface, DiffusionReaction::separation());
+    }
+    else
+    {
+        KMCDebugger_PushImplication(this, particleStateName().c_str());
+    }
+}
+
+void Site::decrystallize()
+{
+
+    if (qualifiesAsSurface())
+    {
+        m_particleState = ParticleStates::surface;
+        propagateToNeighbors(ParticleStates::any, ParticleStates::solution, DiffusionReaction::separation());
+    }
+
+    else if (!qualifiesAsCrystal())
+    {
+        m_particleState = ParticleStates::solution;
+        propagateToNeighbors(ParticleStates::any, ParticleStates::solution, DiffusionReaction::separation());
+    }
+
+
+    KMCDebugger_PushImplication(this, particleStateName().c_str());
+
+}
+
 
 void Site::calculateRates()
 {
@@ -437,6 +438,46 @@ void Site::calculateRates()
     {
         reaction->selectTriumphingUpdateFlag();
         reaction->calcRate();
+    }
+}
+
+void Site::initializeDiffusionReactions()
+{
+
+    Site * destination;
+
+    assert(m_siteReactions.size() == 0 && "Sitereactions are already set");
+
+    //For each site, loop over all closest neighbors
+    for (uint i = 0; i < 3; ++i)
+    {
+        for (uint j = 0; j < 3; ++j)
+        {
+            for (uint k = 0; k < 3; ++k)
+            {
+
+                destination = neighborHood(Site::nNeighborsLimit() - 1 + i,
+                                           Site::nNeighborsLimit() - 1 + j,
+                                           Site::nNeighborsLimit() - 1 + k);
+
+                //This means that the destination is blocked by boundaries
+                if (destination != NULL)
+                {
+                    //This menas we are not at the current site.
+                    if(destination != this)
+                    {
+                        DiffusionReaction* diffusionReaction = new DiffusionReaction(this, destination);
+                        addReaction(diffusionReaction);
+                    }
+
+                    else
+                    {
+                        assert((i == 1) && (j == 1) && (k == 1));
+                    }
+                }
+
+            }
+        }
     }
 }
 
@@ -571,7 +612,7 @@ void Site::activate()
     }
     else
     {
-        KMCDebugger_PushImplication(this, "deactiveSolution", "activeSolution");
+        KMCDebugger_PushImplication(this, "activation");
     }
 
     setDirectUpdateFlags();
@@ -597,6 +638,7 @@ void Site::deactivate()
 
     m_active = false;
 
+
     informNeighborhoodOnChange(-1);
 
     //if we deactivate a crystal site, we have to potentially
@@ -604,13 +646,29 @@ void Site::deactivate()
     //Site will change only if it is not surrounded by any crystals.
     if (isCrystal())
     {
+        KMCDebugger_Assert(particleState(), !=, ParticleStates::surface);
+        KMCDebugger_Assert(particleState(), !=, ParticleStates::solution);
+
         setParticleState(ParticleStates::surface);
+    }
+
+
+    else if (qualifiesAsSurface())
+    {
+
+        KMCDebugger_Assert(particleState(), ==, ParticleStates::solution);
+
+        m_particleState = ParticleStates::surface;
+
+        KMCDebugger_MarkPre("surfaceSolution");
+        KMCDebugger_PushImplication(this, "surface");
     }
 
     else
     {
-        KMCDebugger_PushImplication(this, "activeSolution", "deactiveSolution");
+        KMCDebugger_PushImplication(this, "deactivation");
     }
+
 
     setDirectUpdateFlags();
 
@@ -695,6 +753,8 @@ void Site::propagateToNeighbors(int reqOldState, int newState, int range)
 
     KMCDebugger_Assert(range, <=, (int)Site::nNeighborsLimit(), "cannot propagate information beyond neighbor limit.");
 
+    bool acceptAnything = reqOldState == ParticleStates::any;
+
     for (int i = -range; i <= range; ++i)
     {
         for (int j = -range; j <= range; ++j)
@@ -717,9 +777,12 @@ void Site::propagateToNeighbors(int reqOldState, int newState, int range)
                     continue;
                 }
 
-                KMCDebugger_AssertBool(!(newState == ParticleStates::solution && nextNeighbor->particleState() == ParticleStates::solution),
-                                       "Solution asked to go to solution.", info());
-                if (nextNeighbor->particleState() == reqOldState)
+                else if (nextNeighbor->particleState() == newState)
+                {
+                    continue;
+                }
+
+                else if (nextNeighbor->particleState() == reqOldState || acceptAnything)
                 {
                     nextNeighbor->setParticleState(newState);
                 }

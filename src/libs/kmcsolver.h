@@ -47,7 +47,7 @@ public:
         return sites[x][y][z]->nNeighbors(1);
     }
 
-    Site* getSite(const uint & i, const uint & j, const uint & k) const
+    Site* getSite(const uint i, const uint j, const uint k) const
     {
         return sites[i][j][k];
     }
@@ -87,6 +87,8 @@ public:
         m_nCycles = nc;
     }
 
+    void dumpXYZ();
+
 
 private:
 
@@ -123,7 +125,6 @@ private:
     void initializeSites();
 
 
-    void dumpXYZ();
 
     void dumpOutput();
 

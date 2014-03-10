@@ -171,6 +171,8 @@ void testBed::testDeactivateSurface()
     CHECK_EQUAL(false, origNextNeighbor->hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation()));
     CHECK_EQUAL(ParticleStates::solution, origNextNeighbor->particleState());
 
+    solver->dumpXYZ();
+
 }
 
 void testBed::testDiffusionSiteMatrixSetup()
@@ -736,7 +738,7 @@ void testBed::testHasCrystalNeighbor()
     }
 
     //deactivating the seed should bring everything to solutions except init seed which is surface.
-    initCrystal->setParticleState(ParticleStates::crystal);
+    initCrystal->stripFixedCrystalProperty();
     initCrystal->deactivate();
 
     //we now activate all neighbors. This should not make anything crystals.
@@ -776,8 +778,7 @@ void testBed::testHasCrystalNeighbor()
     }
 
     //activating the seed. Should make closest neighbors crystals.
-    initCrystal->setParticleState(ParticleStates::surface);
-    initCrystal->activate();
+    initCrystal->spawnAsFixedCrystal();
     Site::updateAffectedSites();
 
     uint nActives = 0;
@@ -1006,7 +1007,7 @@ void testBed::testKnownCase()
 
     else
     {
-        o.open("knowncase.txt");
+        o.open("infiles/knowncase.txt");
 
         if (!o.good())
         {
@@ -1059,7 +1060,7 @@ void testBed::testKnownCase()
         CHECK_EQUAL(NX*NY*NZ, winCount);
         if (winCount != NX*NY*NZ)
         {
-            KMCDebugger_DumpFullTrace("");
+            KMCDebugger_DumpFullTrace();
             exit(1);
         }
     }
