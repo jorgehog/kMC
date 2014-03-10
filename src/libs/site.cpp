@@ -210,7 +210,7 @@ bool Site::isLegalToSpawn()
 bool Site::qualifiesAsCrystal()
 {
 
-    return isFixedCrystalSeed() || nNeighbors() >= m_nNeighborsToCrystallize;
+    return isSurface() || hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation());
 
 }
 
@@ -414,6 +414,7 @@ void Site::crystallize()
     else
     {
         m_particleState = ParticleStates::solution;
+        KMCDebugger_Assert(Site::nNeighborsToCrystallize(), >, 1);
         KMCDebugger_PushImplication(this, particleStateName().c_str());
     }
 }
