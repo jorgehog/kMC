@@ -23,6 +23,8 @@ public:
 
     void testDistanceTo();
 
+    void testDeactivateSurface();
+
     void testDiffusionSiteMatrixSetup();
 
     void testNeighbors();
