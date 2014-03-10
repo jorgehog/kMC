@@ -180,6 +180,8 @@ void Site::setParticleState(int newState)
 
     }
 
+    KMCDebugger_AssertBool(isSurface() && isActive(), "surface should not be active.", info());
+
 }
 
 

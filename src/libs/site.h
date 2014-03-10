@@ -146,6 +146,10 @@ public:
      * Misc. trivial functions
      */
 
+    static const uint &nNeighborsToCrystallize()
+    {
+        return m_nNeighborsToCrystallize;
+    }
 
     static const uint &nNeighborsLimit()
     {
