@@ -19,6 +19,7 @@ TEST(which)                                             \
     cout << "------------------------------\n" << endl; \
 }
 
+UBERTEST(DeactivateSurface)
 UBERTEST(RNG)
 UBERTEST(EnergyAndNeighborSetup)
 UBERTEST(DiffusionSiteMatrixSetup)

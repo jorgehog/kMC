@@ -22,12 +22,13 @@ class Boundary;
 
 struct ParticleStates
 {
-    enum
+    enum AllStates
     {
         crystal,
         fixedCrystal,
         solution,
-        surface
+        surface,
+        any
     };
 
     const static vector<string> names;
@@ -69,14 +70,25 @@ public:
      * Non-trivial functions
      */
 
-    void setParticleState(int state);
+    void setParticleState(int newState);
 
 
     bool isLegalToSpawn();
 
+
     bool shouldCrystallize();
 
+    bool qualifiesAsSurface();
+
+
     void spawnAsFixedCrystal();
+
+    void stripFixedCrystalProperty();
+
+
+    void crystallize();
+
+    void decrystallize();
 
 
     void activate();
@@ -90,6 +102,8 @@ public:
 
     void calculateRates();
 
+
+    void initializeDiffusionReactions();
 
     void introduceNeighborhood();
 

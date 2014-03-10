@@ -142,6 +142,40 @@ void testBed::testDistanceTo()
 
 }
 
+void testBed::testDeactivateSurface()
+{
+    Site * orig = solver->getSite(NX/2, NY/2, NZ/2);
+    Site * origNeighbor = solver->getSite(NX/2+1, NY/2, NZ/2);
+    Site * origNextNeighbor = solver->getSite(NX/2+1+DiffusionReaction::separation(), NY/2, NZ/2);
+
+    orig->spawnAsFixedCrystal();
+
+    CHECK_EQUAL(ParticleStates::fixedCrystal, orig->particleState());
+    CHECK_EQUAL(ParticleStates::surface, origNeighbor->particleState());
+
+    origNeighbor->activate();
+
+    CHECK_EQUAL(ParticleStates::crystal, origNeighbor->particleState());
+    CHECK_EQUAL(ParticleStates::surface, origNextNeighbor->particleState());
+
+
+    origNextNeighbor->activate();
+
+    CHECK_EQUAL(ParticleStates::crystal, origNextNeighbor->particleState());
+
+    origNeighbor->deactivate();
+
+    CHECK_EQUAL(ParticleStates::fixedCrystal, orig->particleState());
+    CHECK_EQUAL(ParticleStates::surface, origNeighbor->particleState());
+
+    CHECK_EQUAL(false, origNextNeighbor->hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation()));
+    CHECK_EQUAL(ParticleStates::solution, origNextNeighbor->particleState());
+
+    solver->dumpXYZ();
+
+
+}
+
 void testBed::testDiffusionSiteMatrixSetup()
 {
 
@@ -705,7 +739,7 @@ void testBed::testHasCrystalNeighbor()
     }
 
     //deactivating the seed should bring everything to solutions except init seed which is surface.
-    initCrystal->setParticleState(ParticleStates::crystal);
+    initCrystal->stripFixedCrystalProperty();
     initCrystal->deactivate();
 
     //we now activate all neighbors. This should not make anything crystals.
@@ -745,8 +779,7 @@ void testBed::testHasCrystalNeighbor()
     }
 
     //activating the seed. Should make closest neighbors crystals.
-    initCrystal->setParticleState(ParticleStates::surface);
-    initCrystal->activate();
+    initCrystal->spawnAsFixedCrystal();
     Site::updateAffectedSites();
 
     uint nActives = 0;
