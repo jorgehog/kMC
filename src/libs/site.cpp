@@ -208,7 +208,8 @@ bool Site::isLegalToSpawn()
 bool Site::qualifiesAsCrystal()
 {
 
-    return isSurface() || hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation());
+    return isFixedCrystalSeed() ||
+            (countNeighboring(ParticleStates::crystal, DiffusionReaction::separation()) >= m_nNeighborsToCrystallize);
 
 }
 
@@ -285,6 +286,8 @@ void Site::loadConfig(const Setting &setting)
         cerr << "Neighbor reach must be lower than half the minimum box dimension to avoid sites directly affecting themselves." << endl;
         exit(1);
     }
+
+    m_nNeighborsToCrystallize = getSurfaceSetting<uint>(setting, "nNeighboursToCrystallize");
 
     m_nNeighborsLimit = limit;
     m_neighborhoodLength = 2*m_nNeighborsLimit + 1;
@@ -591,6 +594,48 @@ bool Site::hasNeighboring(int state, int range) const
     }
 
     return false;
+
+}
+
+
+uint Site::countNeighboring(int state, int range) const
+{
+
+    Site * nextNeighbor;
+    uint count = 0;
+
+    for (int i = -range; i <= range; ++i)
+    {
+        for (int j = -range; j <= range; ++j)
+        {
+            for (int k = -range; k <= range; ++k)
+            {
+
+                nextNeighbor = m_neighborHood[i + Site::nNeighborsLimit()]
+                        [j + Site::nNeighborsLimit()]
+                        [k + Site::nNeighborsLimit()];
+
+                if (nextNeighbor == NULL)
+                {
+                    continue;
+                }
+
+                else if (nextNeighbor == this)
+                {
+                    continue;
+                }
+
+                else if (nextNeighbor->particleState() == state ||
+                         nextNeighbor->particleState() == ParticleStates::equalAs(state))
+                {
+                    count++;
+                }
+
+            }
+        }
+    }
+
+    return count;
 
 }
 
@@ -1066,6 +1111,8 @@ KMCSolver* Site::mainSolver;
 uint       Site::NX;
 uint       Site::NY;
 uint       Site::NZ;
+
+uint       Site::m_nNeighborsToCrystallize;
 
 uint       Site::m_nNeighborsLimit;
 
