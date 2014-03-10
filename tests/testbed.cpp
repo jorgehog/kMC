@@ -681,7 +681,7 @@ void testBed::testHasCrystalNeighbor()
                     CHECK_EQUAL(ParticleStates::fixedCrystal, neighbor->particleState());
 
                     //it should not have any crystal neighbors
-                    CHECK_EQUAL(false, neighbor->hasNeighboring(ParticleStates::crystal));
+                    CHECK_EQUAL(false, neighbor->hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation()));
                     continue;
                 }
 
@@ -690,14 +690,14 @@ void testBed::testHasCrystalNeighbor()
                 //The first layer should now be a surface, which should be unblocked with a crystal neighbor.
                 if (level == 0) {
                     CHECK_EQUAL(ParticleStates::surface, neighbor->particleState());
-                    CHECK_EQUAL(true, neighbor->hasNeighboring(ParticleStates::crystal));
+                    CHECK_EQUAL(true, neighbor->hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation()));
                 }
 
                 //The second layer should be blocked because of the shell at distance 3, should be standard solution particles
                 //without a crystal neighbor.
                 else if (level == 1) {
                     CHECK_EQUAL(ParticleStates::solution, neighbor->particleState());
-                    CHECK_EQUAL(false, neighbor->hasNeighboring(ParticleStates::crystal));
+                    CHECK_EQUAL(false, neighbor->hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation()));
                 }
 
             }
@@ -805,7 +805,7 @@ void testBed::testInitializationOfCrystal()
                 case ParticleStates::surface:
 
                     CHECK_EQUAL(true, !currentSite->isActive());
-                    CHECK_EQUAL(true, currentSite->hasNeighboring(ParticleStates::crystal));
+                    CHECK_EQUAL(true, currentSite->hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation()));
                     CHECK_EQUAL(true, currentSite->nNeighbors() > 0);
 
                     break;

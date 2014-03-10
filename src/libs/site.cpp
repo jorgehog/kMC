@@ -129,7 +129,7 @@ void Site::setParticleState(int state)
             //Crystal -> surface
         case (ParticleStates::crystal):
 
-            if (hasNeighboring(ParticleStates::crystal))
+            if (hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation()))
             {
                 m_particleState = ParticleStates::surface;
                 KMCDebugger_PushImplication(this, "crystal", "surface");
@@ -208,7 +208,7 @@ void Site::setParticleState(int state)
         //surface -> solution
         case ParticleStates::surface:
 
-            if (!(hasNeighboring(ParticleStates::crystal) || m_isFixedCrystalSeed))
+            if (!(hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation()) || m_isFixedCrystalSeed))
             {
                 m_particleState = ParticleStates::solution;
                 KMCDebugger_PushImplication(this, "surface", "solution");
@@ -513,21 +513,21 @@ void Site::setDirectUpdateFlags()
 
 }
 
-bool Site::hasNeighboring(int state) const
+bool Site::hasNeighboring(int state, int range) const
 {
 
-    Site *nextNeighbor;
+    Site * nextNeighbor;
 
-    for (uint i = 0; i < 3; ++i)
+    for (int i = -range; i <= range; ++i)
     {
-        for (uint j = 0; j < 3; ++j)
+        for (int j = -range; j <= range; ++j)
         {
-            for (uint k = 0; k < 3; ++k)
+            for (int k = -range; k <= range; ++k)
             {
 
-                nextNeighbor = m_neighborHood[i + Site::nNeighborsLimit() - 1]
-                        [j + Site::nNeighborsLimit() - 1]
-                        [k + Site::nNeighborsLimit() - 1];
+                nextNeighbor = m_neighborHood[i + Site::nNeighborsLimit()]
+                        [j + Site::nNeighborsLimit()]
+                        [k + Site::nNeighborsLimit()];
 
                 if (nextNeighbor == NULL)
                 {
@@ -717,7 +717,8 @@ void Site::propagateToNeighbors(int reqOldState, int newState, int range)
                     continue;
                 }
 
-                assert(!(newState == ParticleStates::solution && nextNeighbor->particleState() == ParticleStates::solution));
+                KMCDebugger_AssertBool(!(newState == ParticleStates::solution && nextNeighbor->particleState() == ParticleStates::solution),
+                                       "Solution asked to go to solution.", info());
                 if (nextNeighbor->particleState() == reqOldState)
                 {
                     nextNeighbor->setParticleState(newState);
@@ -849,20 +850,21 @@ const string Site::info(int xr, int yr, int zr, string desc) const
     stringstream s_full;
 
     s_full << str();
-    s_full << "[" << NX << " x " << NY << " x " << NZ << "] *";
+    s_full << "[" << NX << " x " << NY << " x " << NZ << "] * ";
 
-    s_full << "  Currently ";
     if (m_active)
     {
-        s_full << "active";
+        s_full << "Active";
     }
 
     else
     {
-        s_full << "deactive";
+        s_full << "Deactive";
     }
 
-    s_full << " * nNeighbors: ";
+    s_full << " " << ParticleStates::names.at(particleState());
+
+    s_full << " * Neighbors: ";
 
     for (uint n : m_nNeighbors)
     {
@@ -971,9 +973,10 @@ const string Site::info(int xr, int yr, int zr, string desc) const
 
     searchRepl("        ", "  ");
 
-    numberSearchRepl(ParticleStates::crystal,  ParticleStates::shortNames.at(ParticleStates::crystal));
-    numberSearchRepl(ParticleStates::surface,  ParticleStates::shortNames.at(ParticleStates::surface));
-    numberSearchRepl(ParticleStates::solution, ParticleStates::shortNames.at(ParticleStates::solution));
+    numberSearchRepl(ParticleStates::crystal,      ParticleStates::shortNames.at(ParticleStates::crystal));
+    numberSearchRepl(ParticleStates::fixedCrystal, ParticleStates::shortNames.at(ParticleStates::fixedCrystal));
+    numberSearchRepl(ParticleStates::surface,      ParticleStates::shortNames.at(ParticleStates::surface));
+    numberSearchRepl(ParticleStates::solution,     ParticleStates::shortNames.at(ParticleStates::solution));
 
     numberSearchRepl(_min+0, ".");
     numberSearchRepl(_min+1, " ");

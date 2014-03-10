@@ -91,7 +91,7 @@ public:
 
     void introduceNeighborhood();
 
-    bool hasNeighboring(int state) const;
+    bool hasNeighboring(int state, int range) const;
 
     void propagateToNeighbors(int reqOldState, int newState, int range);
 
