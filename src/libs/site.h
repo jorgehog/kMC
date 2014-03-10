@@ -107,7 +107,11 @@ public:
 
     void introduceNeighborhood();
 
+
     bool hasNeighboring(int state, int range) const;
+
+    uint countNeighboring(int state, int range) const;
+
 
     void propagateToNeighbors(int reqOldState, int newState, int range);
 
@@ -288,6 +292,8 @@ private:
 
     static uint m_nNeighborsLimit;
     static uint m_neighborhoodLength;
+
+    static uint m_nNeighborsToCrystallize;
 
     static ucube m_levelMatrix;
     static ivec m_originTransformVector;
