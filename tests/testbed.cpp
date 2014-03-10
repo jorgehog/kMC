@@ -1061,7 +1061,8 @@ void testBed::testKnownCase()
         CHECK_EQUAL(NX*NY*NZ, winCount);
         if (winCount != NX*NY*NZ)
         {
-            KMCDebugger_DumpFullTrace("");
+            KMCDebugger_DumpFullTrace();
+            exit(1);
         }
     }
 

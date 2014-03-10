@@ -147,6 +147,7 @@ public:
 
 
         dumpFullTrace(line, file, additionalInfo);
+        exit(1);
 
     }
 

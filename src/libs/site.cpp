@@ -180,8 +180,6 @@ void Site::setParticleState(int newState)
 
     }
 
-
-
 }
 
 
@@ -207,14 +205,10 @@ bool Site::isLegalToSpawn()
 
 }
 
-bool Site::shouldCrystallize()
+bool Site::qualifiesAsCrystal()
 {
 
-    KMCDebugger_AssertBool(isActive(), "only active particles should crystallize.", info());
-    KMCDebugger_AssertBool(particleState() != ParticleStates::crystal, "only solution/surface particles should crystallize.", info());
-
-    //Dummy
-    return true;
+    return isSurface() || hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation());
 
 }
 
@@ -401,7 +395,7 @@ void Site::stripFixedCrystalProperty()
 void Site::crystallize()
 {
 
-    if (shouldCrystallize())
+    if (qualifiesAsCrystal())
     {
         //No need to test if it has neigh crystals because
         //diffusion reactions deactivates old spot before activating new spot.
@@ -420,18 +414,21 @@ void Site::crystallize()
 void Site::decrystallize()
 {
 
-    if (!qualifiesAsSurface())
-    {
-        m_particleState = ParticleStates::solution;
-    }
-    else
+    if (qualifiesAsSurface())
     {
         m_particleState = ParticleStates::surface;
+        propagateToNeighbors(ParticleStates::any, ParticleStates::solution, DiffusionReaction::separation());
     }
+
+    else if (!qualifiesAsCrystal())
+    {
+        m_particleState = ParticleStates::solution;
+        propagateToNeighbors(ParticleStates::any, ParticleStates::solution, DiffusionReaction::separation());
+    }
+
 
     KMCDebugger_PushImplication(this, particleStateName().c_str());
 
-    propagateToNeighbors(ParticleStates::any, ParticleStates::solution, DiffusionReaction::separation());
 }
 
 
@@ -641,6 +638,7 @@ void Site::deactivate()
 
     m_active = false;
 
+
     informNeighborhoodOnChange(-1);
 
     //if we deactivate a crystal site, we have to potentially
@@ -653,6 +651,7 @@ void Site::deactivate()
 
         setParticleState(ParticleStates::surface);
     }
+
 
     else if (qualifiesAsSurface())
     {

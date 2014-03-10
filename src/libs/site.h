@@ -76,7 +76,7 @@ public:
     bool isLegalToSpawn();
 
 
-    bool shouldCrystallize();
+    bool qualifiesAsCrystal();
 
     bool qualifiesAsSurface();
 

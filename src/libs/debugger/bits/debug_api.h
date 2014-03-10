@@ -58,7 +58,7 @@
 
 //TRACE DUMP CALLERS
 #define KMCDebugger_DumpFullTrace(...) \
-    kMC::Debugger::dumpFullTrace(__LINE__, __FILE__, ##__VA_ARGS__)
+    kMC::Debugger::dumpFullTrace(__LINE__, __FILE__, #__VA_ARGS__)
 
 #define KMCDebugger_DumpTrace(i) \
     kMC::Debugger::dumpPartialTrace(i)

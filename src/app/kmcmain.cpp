@@ -24,6 +24,8 @@ int main()
     solver->run();
     cout << "Simulation ended after " << t.toc() << " seconds" << endl;
 
+    KMCDebugger_DumpFullTrace();
+    delete solver;
 
     return 0;
 }

@@ -346,8 +346,6 @@ void Debugger::dumpFullTrace(int line, const char * filename, const string addit
 
     cout << "Trace saved to " << path.str() << endl;
 
-    exit(1);
-
 }
 
 void Debugger::dumpPartialTrace(const int &i)
