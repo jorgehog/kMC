@@ -108,12 +108,15 @@ void Site::setParticleState(int state)
         //solution->surface
         case ParticleStates::solution:
 
-            //if a particle is present, we crystallize it immidiately.
+            //if a particle is present, we crystallize it if it fulfills the crystallizaton criteria.
             if (m_active)
             {
-                m_particleState  = ParticleStates::crystal;
-                KMCDebugger_PushImplication(this, "solution", "crystal");
-                propagateToNeighbors(ParticleStates::solution, ParticleStates::surface, DiffusionReaction::separation());
+                if (shouldCrystallize())
+                {
+                    m_particleState  = ParticleStates::crystal;
+                    KMCDebugger_PushImplication(this, "solution", "crystal");
+                    propagateToNeighbors(ParticleStates::solution, ParticleStates::surface, DiffusionReaction::separation());
+                }
             }
 
             else
@@ -273,8 +276,7 @@ bool Site::isLegalToSpawn()
 bool Site::shouldCrystallize()
 {
 
-    KMCDebugger_Assert(isActive(), ==, true, "Asking deactive site if it should crystallize.", info());
-    KMCDebugger_Assert(particleState(), ==, ParticleStates::surface, "Asking non surface if it should crystallize.", info());
+    KMCDebugger_AssertBool((isActive() == true) && (particleState() == ParticleStates::solution), "only active solution particles should crystallize.", info());
 
     //Dummy
     return true;
