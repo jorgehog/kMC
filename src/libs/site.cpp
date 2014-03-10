@@ -270,6 +270,17 @@ bool Site::isLegalToSpawn()
 
 }
 
+bool Site::shouldCrystallize()
+{
+
+    KMCDebugger_Assert(isActive(), ==, true, "Asking deactive site if it should crystallize.", info());
+    KMCDebugger_Assert(particleState(), ==, ParticleStates::surface, "Asking non surface if it should crystallize.", info());
+
+    //Dummy
+    return true;
+
+}
+
 
 void Site::loadConfig(const Setting &setting)
 {

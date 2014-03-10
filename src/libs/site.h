@@ -74,6 +74,8 @@ public:
 
     bool isLegalToSpawn();
 
+    bool shouldCrystallize();
+
     void spawnAsFixedCrystal();
 
 

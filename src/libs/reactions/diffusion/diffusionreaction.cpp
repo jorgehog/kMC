@@ -215,7 +215,6 @@ bool DiffusionReaction::allowedGivenNotBlocked() const
 
         for (uint i = 1; i < m_separation; ++i)
         {
-            //NEI NEI tell krystallnaboer!!
             if (destinationSite()->nNeighbors(i) != 0)
             {
                 return destinationSite()->isSurface();
