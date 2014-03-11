@@ -672,7 +672,6 @@ void Site::introduceNeighborhood()
 
     m_neighborHood = new Site***[m_neighborhoodLength];
 
-
     for (uint i = 0; i < m_neighborhoodLength; ++i)
     {
 
@@ -706,6 +705,7 @@ void Site::introduceNeighborhood()
 
                     if (m_neighborHood[i][j][k] != this)
                     {
+                        KMCDebugger_AssertBool(!(m_neighborHood[i][j][k]->x() == x() && m_neighborHood[i][j][k]->y() == y() && m_neighborHood[i][j][k]->z() == z()));
                         m_allNeighbors.push_back(m_neighborHood[i][j][k]);
                     }
                 }
@@ -713,6 +713,8 @@ void Site::introduceNeighborhood()
             }
         }
     }
+
+    cout << m_allNeighbors.size() << endl;
 
 }
 

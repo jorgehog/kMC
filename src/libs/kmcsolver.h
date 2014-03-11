@@ -95,7 +95,7 @@ public:
 
     //Set functions
 
-    void setBoxSize(const uvec3 &boxSize);
+    void setBoxSize(const uvec3 boxSize);
 
     void setNumberOfCycles(const uint nCycles)
     {
@@ -142,9 +142,9 @@ private:
 
     Site**** sites;
 
-    uint m_NX = 0;
-    uint m_NY = 0;
-    uint m_NZ = 0;
+    uint m_NX;
+    uint m_NY;
+    uint m_NZ;
 
     uvec3 m_N;
 

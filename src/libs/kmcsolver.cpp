@@ -21,12 +21,12 @@ using namespace std;
 using namespace kMC;
 
 KMCSolver::KMCSolver(const Setting & root) :
-    totalTime(0),
-    cycle(0),
-    outputCounter(0),
     m_NX(UNSET_UINT),
     m_NY(UNSET_UINT),
-    m_NZ(UNSET_UINT)
+    m_NZ(UNSET_UINT),
+    totalTime(0),
+    cycle(0),
+    outputCounter(0)
 {
 
     const Setting & SystemSettings = getSurfaceSetting(root, "System");
@@ -94,7 +94,7 @@ KMCSolver::~KMCSolver()
 
     if (ptrCount > 1)
     {
-        cout << "WARNING: Several solver objects alive when freeing.";
+        cout << "WARNING: "<< ptrCount << " solver objects alive when freeing.\n";
         cout << "Static member variables of objects IN USE by living solver WILL BE FREED." << endl;
     }
 
@@ -492,7 +492,7 @@ uint KMCSolver::getReactionChoice(double R)
 
 }
 
-void KMCSolver::setBoxSize(const uvec3 &boxSize)
+void KMCSolver::setBoxSize(const uvec3 boxSize)
 {
 
     if (m_NX != UNSET_UINT && m_NY != UNSET_UINT && m_NZ != UNSET_UINT)

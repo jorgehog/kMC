@@ -1064,6 +1064,59 @@ void testBed::testKnownCase()
 
 void testBed::testBoxSizes()
 {
+    uvec N = {10, 20, 30};
+
+    uvec3 boxSize;
+    set<Site*> allSites;
+
+    Site* currentSite;
+
+    for (uint i = 0; i < N.n_elem; ++i) {
+
+        for (uint j = 0; j < N.n_elem; ++j) {
+
+            for (uint k = 0; k < N.n_elem; ++k) {
+
+                uint nx = N(i);
+                uint ny = N(j);
+                uint nz = N(k);
+
+                allSites.clear();
+
+                boxSize = {nx, ny, nz};
+
+                solver->setBoxSize(boxSize);
+
+                CHECK_EQUAL(nx, NX());
+                CHECK_EQUAL(ny, NY());
+                CHECK_EQUAL(nz, NZ());
+
+                cout << nx << " " << ny << " " << nz << endl;
+
+                for (uint x = 0; x < NX(); ++x)
+                {
+                    for (uint y = 0; y < NY(); ++y)
+                    {
+                        for (uint z = 0; z < NZ(); ++z)
+                        {
+
+                            currentSite = solver->getSite(x, y, z);
+
+                            CHECK_EQUAL(pow(Site::neighborhoodLength(), 3) - 1, currentSite->allNeighbors().size());
+
+                            for (Site * neighbor : currentSite->allNeighbors())
+                            {
+                                allSites.insert(neighbor);
+                            }
+                        }
+                    }
+                }
+
+                CHECK_EQUAL(nx*ny*nz, allSites.size());
+
+            }
+        }
+    }
 
 }
 
