@@ -84,9 +84,20 @@ public:
         nTrials = 0;
     }
 
-    uint NX;
-    uint NY;
-    uint NZ;
+    const uint &NX () const
+    {
+        return solver->NX();
+    }
+
+    const uint &NY () const
+    {
+        return solver->NY();
+    }
+
+    const uint &NZ () const
+    {
+        return solver->NZ();
+    }
 
     KMCSolver* solver;
     Setting* root;
