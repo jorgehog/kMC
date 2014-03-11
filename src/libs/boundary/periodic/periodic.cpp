@@ -27,4 +27,5 @@ void Periodic::initialize()
             delta(i) = -(int)(span() - i);
         }
     }
+
 }

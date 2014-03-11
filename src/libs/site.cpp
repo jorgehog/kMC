@@ -705,7 +705,12 @@ void Site::introduceNeighborhood()
 
                     if (m_neighborHood[i][j][k] != this)
                     {
+
+                        KMCDebugger_AssertBool(!(i == Site::nNeighborsLimit() && j == Site::nNeighborsLimit() && k == Site::nNeighborsLimit()));
                         KMCDebugger_AssertBool(!(m_neighborHood[i][j][k]->x() == x() && m_neighborHood[i][j][k]->y() == y() && m_neighborHood[i][j][k]->z() == z()));
+                        KMCDebugger_AssertBool(!(xTrans == x() && yTrans == y() && zTrans == z()));
+
+
                         m_allNeighbors.push_back(m_neighborHood[i][j][k]);
                     }
                 }
@@ -713,8 +718,6 @@ void Site::introduceNeighborhood()
             }
         }
     }
-
-    cout << m_allNeighbors.size() << endl;
 
 }
 

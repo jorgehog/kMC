@@ -288,6 +288,13 @@ public:
         return s.str();
     }
 
+    const static uint & NX();
+
+    const static uint & NY();
+
+    const static uint & NZ();
+
+
     //Static setters:
 
     static void setNNeighborsLimit(const uint & nNeighborsLimit);
@@ -344,12 +351,6 @@ private:
 
     vector<Reaction*> m_activeReactions;
 
-
-    const static uint & NX();
-
-    const static uint & NY();
-
-    const static uint & NZ();
 
 
 };

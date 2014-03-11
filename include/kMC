@@ -10,3 +10,5 @@
 #include "../src/libs/kmcsolver.h"
 
 #include "../src/libs/debugger/debugger.h"
+
+#include "../src/libs/boundary/boundary.h"

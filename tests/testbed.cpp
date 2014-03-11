@@ -1064,7 +1064,7 @@ void testBed::testKnownCase()
 
 void testBed::testBoxSizes()
 {
-    uvec N = {10, 20, 30};
+    uvec N = {10, 15, 20};
 
     uvec3 boxSize;
     set<Site*> allSites;
@@ -1091,7 +1091,17 @@ void testBed::testBoxSizes()
                 CHECK_EQUAL(ny, NY());
                 CHECK_EQUAL(nz, NZ());
 
-                cout << nx << " " << ny << " " << nz << endl;
+                CHECK_EQUAL(nx, Boundary::NX());
+                CHECK_EQUAL(ny, Boundary::NY());
+                CHECK_EQUAL(nz, Boundary::NZ());
+
+                CHECK_EQUAL(nx, Site::NX());
+                CHECK_EQUAL(ny, Site::NY());
+                CHECK_EQUAL(nz, Site::NZ());
+
+                CHECK_EQUAL(nx, Reaction::NX());
+                CHECK_EQUAL(ny, Reaction::NY());
+                CHECK_EQUAL(nz, Reaction::NZ());
 
                 for (uint x = 0; x < NX(); ++x)
                 {

@@ -146,6 +146,12 @@ public:
     static const double UNSET_RATE;
     static const double UNSET_ENERGY;
 
+    const static uint & NX();
+
+    const static uint & NY();
+
+    const static uint & NZ();
+
 private:
 
     static KMCSolver* m_solver;
@@ -180,11 +186,6 @@ protected:
         return m_reactionSite;
     }
 
-    const static uint & NX();
-
-    const static uint & NY();
-
-    const static uint & NZ();
 
 
 };

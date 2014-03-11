@@ -71,6 +71,15 @@ public:
     };
 
 
+    const static uint & NX();
+
+    const static uint & NY();
+
+    const static uint & NZ();
+
+    static uint N(const uint i);
+
+
 private:
 
     static uint BLOCKED_COORDINATE;
@@ -88,17 +97,9 @@ protected:
         return m_solver;
     }
 
-    const static uint & NX();
-
-    const static uint & NY();
-
-    const static uint & NZ();
-
-    static uint N(const uint i);
-
     uint span() const
     {
-        return N(m_orientation);
+        return N(m_dimension);
     }
 
     const uint & orientation() const
