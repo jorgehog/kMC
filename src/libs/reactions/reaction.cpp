@@ -97,16 +97,25 @@ void Reaction::setRate(const double rate)
     m_rate = rate;
 }
 
+const uint &Reaction::NX()
+{
+    return m_solver->NX();
+}
+
+const uint &Reaction::NY()
+{
+    return m_solver->NY();
+}
+
+const uint &Reaction::NZ()
+{
+    return m_solver->NZ();
+}
+
 
 void Reaction::setMainSolver(KMCSolver *solver)
 {
-
-    m_NX = solver->getNX();
-    m_NY = solver->getNY();
-    m_NZ = solver->getNZ();
-
-    m_mainSolver = solver;
-
+    m_solver = solver;
 }
 
 void Reaction::loadConfig(const Setting &setting)
@@ -131,14 +140,10 @@ void Reaction::selectTriumphingUpdateFlag()
 const double   Reaction::UNSET_RATE = -1.337;
 const double   Reaction::UNSET_ENERGY = -1;
 
-KMCSolver*     Reaction::m_mainSolver;
+KMCSolver*     Reaction::m_solver;
 
 double         Reaction::m_beta;
 double         Reaction::m_linearRateScale;
-
-uint           Reaction::m_NX;
-uint           Reaction::m_NY;
-uint           Reaction::m_NZ;
 
 uint           Reaction::m_IDCount = 0;
 

@@ -317,15 +317,11 @@ private:
 
     static uint m_totalActiveSites;
 
-    static uint NX;
-    static uint NY;
-    static uint NZ;
-
     static double m_totalEnergy;
 
     static set<Site*> m_affectedSites;
 
-    static KMCSolver* mainSolver;
+    static KMCSolver* m_solver;
 
     Site**** m_neighborHood;
     vector<Site*> m_allNeighbors;
@@ -347,6 +343,13 @@ private:
     vector<Reaction*> m_siteReactions;
 
     vector<Reaction*> m_activeReactions;
+
+
+    const static uint & NX();
+
+    const static uint & NY();
+
+    const static uint & NZ();
 
 
 };

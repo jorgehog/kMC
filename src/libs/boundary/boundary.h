@@ -22,7 +22,7 @@ public:
 
     virtual uint transformCoordinate(const int xi) const
     {
-        return (((xi >= (int)m_span) || (xi < 0)) ? BLOCKED_COORDINATE : xi);
+        return (((xi >= (int)span()) || (xi < 0)) ? BLOCKED_COORDINATE : xi);
 
 
     }
@@ -57,8 +57,7 @@ public:
     static void resetAll()
 
     {
-        m_NXYZ.clear();
-        m_mainSolver = NULL;
+        solver = NULL;
     }
 
 
@@ -76,16 +75,8 @@ private:
 
     static uint BLOCKED_COORDINATE;
 
-    static uint m_NX;
-    static uint m_NY;
-    static uint m_NZ;
+    static KMCSolver * solver;
 
-    static uvec m_NXYZ;
-
-    static KMCSolver * m_mainSolver;
-
-
-    const uint m_span;
     const uint m_dimension;
     const uint m_orientation;
 
@@ -94,32 +85,20 @@ protected:
 
     static KMCSolver * mainSolver()
     {
-        return m_mainSolver;
+        return solver;
     }
 
-    const uint & NX() const
-    {
-        return m_NX;
-    }
+    const static uint & NX();
 
-    const uint & NY() const
-    {
-        return m_NY;
-    }
+    const static uint & NY();
 
-    const uint & NZ() const
-    {
-        return m_NZ;
-    }
+    const static uint & NZ();
 
-    uint NXYZ(const uint i) const
-    {
-        return m_NXYZ(i);
-    }
+    static uint N(const uint i);
 
-    const uint & span() const
+    uint span() const
     {
-        return m_span;
+        return N(m_orientation);
     }
 
     const uint & orientation() const

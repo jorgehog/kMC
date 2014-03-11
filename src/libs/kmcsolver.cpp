@@ -96,11 +96,11 @@ KMCSolver::~KMCSolver()
         cout << "Static member variables of objects IN USE by living solver WILL BE FREED." << endl;
     }
 
-    for (uint i = 0; i < NX; ++i)
+    for (uint i = 0; i < m_NX; ++i)
     {
-        for (uint j = 0; j < NY; ++j)
+        for (uint j = 0; j < m_NY; ++j)
         {
-            for (uint k = 0; k < NZ; ++k)
+            for (uint k = 0; k < m_NZ; ++k)
             {
                 delete sites[i][j][k];
             }
@@ -198,11 +198,11 @@ void KMCSolver::dumpXYZ()
 
     Site* currentSite;
 
-    for (uint i = 0; i < NX; ++i)
+    for (uint i = 0; i < m_NX; ++i)
     {
-        for (uint j = 0; j < NY; ++j)
+        for (uint j = 0; j < m_NY; ++j)
         {
-            for (uint k = 0; k < NZ; ++k)
+            for (uint k = 0; k < m_NZ; ++k)
             {
 
                 currentSite = sites[i][j][k];
@@ -255,11 +255,11 @@ void KMCSolver::initializeDiffusionReactions()
 {
 
     //Loop over all sites
-    for (uint x = 0; x < NX; ++x)
+    for (uint x = 0; x < m_NX; ++x)
     {
-        for (uint y = 0; y < NY; ++y)
+        for (uint y = 0; y < m_NY; ++y)
         {
-            for (uint z = 0; z < NZ; ++z)
+            for (uint z = 0; z < m_NZ; ++z)
             {
 
                 sites[x][y][z]->initializeDiffusionReactions();
@@ -273,17 +273,17 @@ void KMCSolver::initializeDiffusionReactions()
 void KMCSolver::initializeSites()
 {
 
-    sites = new Site***[NX];
+    sites = new Site***[m_NX];
 
-    for (uint x = 0; x < NX; ++x)
+    for (uint x = 0; x < m_NX; ++x)
     {
-        sites[x] = new Site**[NY];
+        sites[x] = new Site**[m_NY];
 
-        for (uint y = 0; y < NY; ++y)
+        for (uint y = 0; y < m_NY; ++y)
         {
-            sites[x][y] = new Site*[NZ];
+            sites[x][y] = new Site*[m_NZ];
 
-            for (uint z = 0; z < NZ; ++z)
+            for (uint z = 0; z < m_NZ; ++z)
             {
                 sites[x][y][z] = new Site(x, y, z);
             }
@@ -291,11 +291,11 @@ void KMCSolver::initializeSites()
     }
 
 
-    for (uint x = 0; x < NX; ++x)
+    for (uint x = 0; x < m_NX; ++x)
     {
-        for (uint y = 0; y < NY; ++y)
+        for (uint y = 0; y < m_NY; ++y)
         {
-            for (uint z = 0; z < NZ; ++z)
+            for (uint z = 0; z < m_NZ; ++z)
             {
                 sites[x][y][z]->introduceNeighborhood();
             }
@@ -311,16 +311,16 @@ void KMCSolver::initializeCrystal()
     bool enabled = KMCDebugger_IsEnabled;
     KMCDebugger_SetEnabledTo(false);
 
-    sites[NX/2][NY/2][NZ/2]->spawnAsFixedCrystal();
+    sites[m_NX/2][m_NY/2][m_NZ/2]->spawnAsFixedCrystal();
     KMCDebugger_PushTraces();
 
-    uint crystalSizeX = round(NX*m_relativeSeedSize);
-    uint crystalSizeY = round(NY*m_relativeSeedSize);
-    uint crystalSizeZ = round(NZ*m_relativeSeedSize);
+    uint crystalSizeX = round(m_NX*m_relativeSeedSize);
+    uint crystalSizeY = round(m_NY*m_relativeSeedSize);
+    uint crystalSizeZ = round(m_NZ*m_relativeSeedSize);
 
-    uint crystalStartX = NX/2 - crystalSizeX/2;
-    uint crystalStartY = NY/2 - crystalSizeY/2;
-    uint crystalStartZ = NZ/2 - crystalSizeZ/2;
+    uint crystalStartX = m_NX/2 - crystalSizeX/2;
+    uint crystalStartY = m_NY/2 - crystalSizeY/2;
+    uint crystalStartZ = m_NZ/2 - crystalSizeZ/2;
 
     uint crystalEndX = crystalStartX + crystalSizeX;
     uint crystalEndY = crystalStartY + crystalSizeY;
@@ -334,11 +334,11 @@ void KMCSolver::initializeCrystal()
     uint solutionStartY = crystalEndY + Site::nNeighborsLimit();
     uint solutionStartZ = crystalEndZ + Site::nNeighborsLimit();
 
-    for (uint i = 0; i < NX; ++i)
+    for (uint i = 0; i < m_NX; ++i)
     {
-        for (uint j = 0; j < NY; ++j)
+        for (uint j = 0; j < m_NY; ++j)
         {
-            for (uint k = 0; k < NZ; ++k)
+            for (uint k = 0; k < m_NZ; ++k)
             {
 
                 if (i >= crystalStartX && i < crystalEndX)
@@ -347,7 +347,7 @@ void KMCSolver::initializeCrystal()
                     {
                         if (k >= crystalStartZ && k < crystalEndZ)
                         {
-                            if (!((i == NX/2 && j == NY/2 && k == NZ/2)))
+                            if (!((i == m_NX/2 && j == m_NY/2 && k == m_NZ/2)))
                             {
                                 sites[i][j][k]->activate();
                                 KMCDebugger_PushTraces();
@@ -398,11 +398,11 @@ void KMCSolver::getRateVariables()
 
     Site::updateAffectedSites();
 
-    for (uint x = 0; x < NX; ++x)
+    for (uint x = 0; x < m_NX; ++x)
     {
-        for (uint y = 0; y < NY; ++y)
+        for (uint y = 0; y < m_NY; ++y)
         {
-            for (uint z = 0; z < NZ; ++z)
+            for (uint z = 0; z < m_NZ; ++z)
             {
                 for (Reaction* reaction : sites[x][y][z]->activeReactions())
                 {
@@ -482,9 +482,13 @@ uint KMCSolver::getReactionChoice(double R)
 
 void KMCSolver::setBoxSize(const Setting &boxSize)
 {
-    NX = boxSize[0];
-    NY = boxSize[1];
-    NZ = boxSize[2];
+
+    m_NX = boxSize[0];
+    m_NY = boxSize[1];
+    m_NZ = boxSize[2];
+
+    m_N = {m_NX, m_NY, m_NZ};
+
 }
 
 void KMCSolver::setRNGSeed(uint seedState, int defaultSeed = 0)

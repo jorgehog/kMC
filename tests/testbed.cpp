@@ -11,9 +11,9 @@ testBed::testBed()
 
     solver = makeSolver();
 
-    NX = solver->getNX();
-    NY = solver->getNY();
-    NZ = solver->getNZ();
+    NX = solver->NX();
+    NY = solver->NY();
+    NZ = solver->NZ();
 
 
 }
@@ -346,6 +346,7 @@ void testBed::testRNG()
         setu.push_back(KMC_RNG_UNIFORM());
         setn.push_back(KMC_RNG_NORMAL());
     }
+
 
     solver->setRNGSeed(Seed::specific, Seed::initialSeed);
 
@@ -992,9 +993,9 @@ void testBed::testKnownCase()
     const Setting & root = cfg.getRoot();
 
     solver = new KMCSolver(root);
-    NX = solver->getNX();
-    NY = solver->getNY();
-    NZ = solver->getNZ();
+    NX = solver->NX();
+    NY = solver->NY();
+    NZ = solver->NZ();
 
     bool make = false;
 
@@ -1068,6 +1069,51 @@ void testBed::testKnownCase()
     }
 
 
+
+}
+
+void testBed::testBoxSizes()
+{
+
+}
+
+void testBed::testnNeiborsLimit()
+{
+
+}
+
+void testBed::testnNeighborsToCrystallize()
+{
+
+}
+
+void testBed::testPeriodicBoundaries()
+{
+
+}
+
+void testBed::testOpenBoundaries()
+{
+
+}
+
+void testBed::testWallBoundaries()
+{
+
+}
+
+void testBed::testConcentrationBoundaries()
+{
+
+}
+
+void testBed::testMixedboundaries()
+{
+
+}
+
+void testBed::testDiffusionSeparation()
+{
 
 }
 

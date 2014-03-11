@@ -53,19 +53,24 @@ public:
         return sites[i][j][k];
     }
 
-    const uint &getNX ()
+    const uint &NX () const
     {
-        return NX;
+        return m_NX;
     }
 
-    const uint &getNY ()
+    const uint &NY () const
     {
-        return NY;
+        return m_NY;
     }
 
-    const uint &getNZ ()
+    const uint &NZ () const
     {
-        return NZ;
+        return m_NZ;
+    }
+
+    const uint &N(const uint i) const
+    {
+        return m_N(i);
     }
 
     const vector<double> & accuAllRates() const
@@ -133,9 +138,11 @@ private:
 
     Site**** sites;
 
-    uint NX;
-    uint NY;
-    uint NZ;
+    uint m_NX;
+    uint m_NY;
+    uint m_NZ;
+
+    uvec3 m_N;
 
 
     double m_kTot;

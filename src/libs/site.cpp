@@ -418,13 +418,7 @@ void Site::initializeDiffusionReactions()
 
 void Site::setMainSolver(KMCSolver *solver)
 {
-
-    mainSolver = solver;
-
-    NX = solver->getNX();
-    NY = solver->getNY();
-    NZ = solver->getNZ();
-
+    m_solver = solver;
 }
 
 
@@ -708,7 +702,7 @@ void Site::introduceNeighborhood()
                 else
                 {
 
-                    m_neighborHood[i][j][k] = mainSolver->getSite(xTrans, yTrans, zTrans);
+                    m_neighborHood[i][j][k] = m_solver->getSite(xTrans, yTrans, zTrans);
 
                     if (m_neighborHood[i][j][k] != this)
                     {
@@ -889,7 +883,7 @@ const string Site::info(int xr, int yr, int zr, string desc) const
     stringstream s_full;
 
     s_full << str();
-    s_full << "[" << NX << " x " << NY << " x " << NZ << "] * ";
+    s_full << "[" << NX() << " x " << NY() << " x " << NZ() << "] * ";
 
     if (m_active)
     {
@@ -1038,7 +1032,7 @@ uint Site::nNeighborsSum() const
 
 void Site::setNNeighborsLimit(const uint &nNeighborsLimit)
 {
-    if (nNeighborsLimit >= min(uvec({NX, NY, NZ}))/2)
+    if (nNeighborsLimit >= min(uvec({NX(), NY(), NZ()}))/2)
     {
         cerr << "Neighbor reach must be lower than half the minimum box dimension to avoid sites directly affecting themselves." << endl;
         exit(1);
@@ -1153,6 +1147,20 @@ void Site::setBoundaries(const Setting & boundariesConfig)
 
 
 
+const uint &Site::NX()
+{
+    return m_solver->NX();
+}
+
+const uint &Site::NY()
+{
+    return m_solver->NY();
+}
+
+const uint &Site::NZ()
+{
+    return m_solver->NZ();
+}
 
 
 
@@ -1160,18 +1168,7 @@ void Site::setBoundaries(const Setting & boundariesConfig)
 
 
 
-
-
-
-
-
-
-
-KMCSolver* Site::mainSolver;
-
-uint       Site::NX;
-uint       Site::NY;
-uint       Site::NZ;
+KMCSolver* Site::m_solver;
 
 uint       Site::m_nNeighborsToCrystallize;
 

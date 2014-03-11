@@ -51,6 +51,28 @@ public:
 
     void testKnownCase();
 
+    void testBoxSizes();
+
+    void testnNeiborsLimit();
+
+    void testnNeighborsToCrystallize();
+
+    void testPeriodicBoundaries();
+
+    void testOpenBoundaries();
+
+    void testWallBoundaries();
+
+    void testConcentrationBoundaries();
+
+    void testMixedboundaries();
+
+    void testDiffusionSeparation();
+
+
+
+
+
     uint failCount;
     uint winCount;
     uint nTrials;

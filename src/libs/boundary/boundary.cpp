@@ -2,6 +2,8 @@
 
 #include "../kmcsolver.h"
 
+#include <climits>
+
 #include <armadillo>
 
 
@@ -11,7 +13,6 @@ using namespace kMC;
 
 
 Boundary::Boundary(const uint dimension, const uint orientation) :
-    m_span(m_NXYZ(dimension)),
     m_dimension(dimension),
     m_orientation(orientation)
 {
@@ -27,15 +28,7 @@ Boundary::~Boundary()
 void Boundary::setMainSolver(KMCSolver *solver)
 {
 
-    m_mainSolver = solver;
-
-    m_NX = solver->getNX();
-    m_NY = solver->getNY();
-    m_NZ = solver->getNZ();
-
-    m_NXYZ = {m_NX, m_NY, m_NZ};
-
-    BLOCKED_COORDINATE = 2*max(uvec{m_NX, m_NY, m_NZ}) + 1;
+    Boundary::solver = solver;
 
 }
 
@@ -59,7 +52,7 @@ void Boundary::setupLocations(const uint x, const uint y, const uint z, uvec3 &l
 
     for (uint i = 0; i < 3; ++i)
     {
-        if (xyz(i) >= m_NXYZ(i))
+        if (xyz(i) >= N(i))
         {
             loc(i) = 1;
         }
@@ -72,14 +65,30 @@ void Boundary::setupLocations(const uint x, const uint y, const uint z, uvec3 &l
 
 }
 
-uint Boundary::BLOCKED_COORDINATE;
 
-uint Boundary::m_NX;
-uint Boundary::m_NY;
-uint Boundary::m_NZ;
+const uint & Boundary::NX()
+{
+    return solver->NX();
+}
 
-uvec Boundary::m_NXYZ;
+const uint & Boundary::NY()
+{
+    return solver->NY();
+}
 
-KMCSolver* Boundary::m_mainSolver;
+const uint & Boundary::NZ()
+{
+    return solver->NZ();
+}
+
+uint Boundary::N(const uint i)
+{
+    return solver->N(i);
+}
+
+
+uint Boundary::BLOCKED_COORDINATE = (uint)ULLONG_MAX;
+
+KMCSolver* Boundary::solver;
 
 

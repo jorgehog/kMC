@@ -7,7 +7,7 @@ SnapShot::SnapShot(KMCSolver *solver)
 
     timeWhenTaken = time(NULL);
 
-    siteBox.set_size(solver->getNX(), solver->getNY(), solver->getNZ());
+    siteBox.set_size(solver->NX(), solver->NY(), solver->NZ());
 
     Site* currentSite;
 
