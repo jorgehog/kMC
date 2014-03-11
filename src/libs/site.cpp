@@ -238,109 +238,9 @@ bool Site::qualifiesAsSurface()
 void Site::loadConfig(const Setting &setting)
 {
 
-    m_boundaries.set_size(3, 2);
+    setNNeighborsToCrystallize(getSurfaceSetting<uint>(setting, "nNeighboursToCrystallize"));
 
-    const Setting & boundariesConfig = getSurfaceSetting(setting, "Boundaries");
-
-    ivec boundaryTypes(2);
-
-    for (uint XYZ = 0; XYZ < 3; ++XYZ)
-    {
-        for (uint orientation = 0; orientation < 2; ++orientation)
-        {
-
-            boundaryTypes(orientation) = getSurfaceSetting(boundariesConfig, "types")[XYZ][orientation];
-
-            switch (boundaryTypes(orientation))
-            {
-            case Boundary::Periodic:
-                m_boundaries(XYZ, orientation) = new Periodic(XYZ, orientation);
-
-                break;
-
-            case Boundary::Edge:
-                m_boundaries(XYZ, orientation) = new Edge(XYZ, orientation);
-
-                break;
-
-            case Boundary::Wall:
-                m_boundaries(XYZ, orientation) = new Wall(XYZ, orientation);
-
-                break;
-
-            case Boundary::ConsentrationWall:
-                m_boundaries(XYZ, orientation) = new ConcentrationWall(XYZ, orientation);
-
-                break;
-
-            default:
-
-                cerr << "Unknown boundary type " << boundaryTypes(orientation) << endl;
-                exit(1);
-
-                break;
-            }
-
-            m_boundaries(XYZ, orientation)->loadConfig(getSurfaceSetting(boundariesConfig, "configs")[XYZ][orientation]);
-
-        }
-
-        if (!Boundary::isCompatible(boundaryTypes(0), boundaryTypes(1)))
-        {
-            cerr << "Mismatch in boundaries for " << XYZ << "'th dimension: " << boundaryTypes.t();
-            exit(1);
-        }
-
-
-    }
-
-
-    m_nNeighborsLimit = getSurfaceSetting<uint>(setting, "nNeighborsLimit");
-
-    if (m_nNeighborsLimit >= min(uvec({NX, NY, NZ}))/2)
-    {
-        cerr << "Neighbor reach must be lower than half the minimum box dimension to avoid sites directly affecting themselves." << endl;
-        exit(1);
-    }
-
-    m_nNeighborsToCrystallize = getSurfaceSetting<uint>(setting, "nNeighboursToCrystallize");
-
-    if (m_nNeighborsToCrystallize == 0)
-    {
-        cerr << "With nNeighborsToCrystallize = 0, all particles will qualify as crystals." << endl;
-        exit(1);
-    }
-    else if (m_nNeighborsToCrystallize > 7)
-    {
-        cerr << "With nNeighboorsToCrystallize > 7, no particles except those hugging a fixed crystal will qualify as crystals." << endl;
-        exit(1);
-    }
-
-
-    m_neighborhoodLength = 2*m_nNeighborsLimit + 1;
-
-    m_levelMatrix.set_size(m_neighborhoodLength, m_neighborhoodLength, m_neighborhoodLength);
-
-    m_originTransformVector = linspace<ivec>(-(int)m_nNeighborsLimit, m_nNeighborsLimit, m_neighborhoodLength);
-
-    for (uint i = 0; i < m_neighborhoodLength; ++i)
-    {
-        for (uint j = 0; j < m_neighborhoodLength; ++j)
-        {
-            for (uint k = 0; k < m_neighborhoodLength; ++k)
-            {
-                if (i == m_nNeighborsLimit && j == m_nNeighborsLimit && k == m_nNeighborsLimit)
-                {
-                    m_levelMatrix(i, j, k) = m_nNeighborsLimit + 1;
-                    continue;
-                }
-
-                m_levelMatrix(i, j, k) = findLevel(std::abs(m_originTransformVector(i)),
-                                                   std::abs(m_originTransformVector(j)),
-                                                   std::abs(m_originTransformVector(k)));
-            }
-        }
-    }
+    setNNeighborsLimit(getSurfaceSetting<uint>(setting, "nNeighborsLimit"));
 
 }
 
@@ -1136,6 +1036,136 @@ uint Site::nNeighborsSum() const
     return m_nNeighborsSum;
 }
 
+void Site::setNNeighborsLimit(const uint &nNeighborsLimit)
+{
+    if (nNeighborsLimit >= min(uvec({NX, NY, NZ}))/2)
+    {
+        cerr << "Neighbor reach must be lower than half the minimum box dimension to avoid sites directly affecting themselves." << endl;
+        exit(1);
+    }
+
+    m_nNeighborsLimit = nNeighborsLimit;
+
+    m_neighborhoodLength = 2*m_nNeighborsLimit + 1;
+
+    m_levelMatrix.set_size(m_neighborhoodLength, m_neighborhoodLength, m_neighborhoodLength);
+
+    m_originTransformVector = linspace<ivec>(-(int)m_nNeighborsLimit, m_nNeighborsLimit, m_neighborhoodLength);
+
+    for (uint i = 0; i < m_neighborhoodLength; ++i)
+    {
+        for (uint j = 0; j < m_neighborhoodLength; ++j)
+        {
+            for (uint k = 0; k < m_neighborhoodLength; ++k)
+            {
+                if (i == m_nNeighborsLimit && j == m_nNeighborsLimit && k == m_nNeighborsLimit)
+                {
+                    m_levelMatrix(i, j, k) = m_nNeighborsLimit + 1;
+                    continue;
+                }
+
+                m_levelMatrix(i, j, k) = findLevel(std::abs(m_originTransformVector(i)),
+                                                   std::abs(m_originTransformVector(j)),
+                                                   std::abs(m_originTransformVector(k)));
+            }
+        }
+    }
+
+    DiffusionReaction::setupPotential();
+
+}
+
+void Site::setNNeighborsToCrystallize(const uint &nNeighborsToCrystallize)
+
+{
+    if (nNeighborsToCrystallize == 0)
+    {
+        cerr << "With nNeighborsToCrystallize = 0, all particles will qualify as crystals." << endl;
+        exit(1);
+    }
+    else if (nNeighborsToCrystallize > 7)
+    {
+        cerr << "With nNeighboorsToCrystallize > 7, no particles except those hugging a fixed crystal will qualify as crystals." << endl;
+        exit(1);
+    }
+
+    m_nNeighborsToCrystallize = nNeighborsToCrystallize;
+
+}
+
+void Site::setBoundaries(const Setting & boundariesConfig)
+{
+
+    m_boundaries.set_size(3, 2);
+
+    ivec boundaryTypes(2);
+
+    for (uint XYZ = 0; XYZ < 3; ++XYZ)
+    {
+        for (uint orientation = 0; orientation < 2; ++orientation)
+        {
+
+            boundaryTypes(orientation) = getSurfaceSetting(boundariesConfig, "types")[XYZ][orientation];
+
+            switch (boundaryTypes(orientation))
+            {
+            case Boundary::Periodic:
+                m_boundaries(XYZ, orientation) = new Periodic(XYZ, orientation);
+
+                break;
+
+            case Boundary::Edge:
+                m_boundaries(XYZ, orientation) = new Edge(XYZ, orientation);
+
+                break;
+
+            case Boundary::Wall:
+                m_boundaries(XYZ, orientation) = new Wall(XYZ, orientation);
+
+                break;
+
+            case Boundary::ConsentrationWall:
+                m_boundaries(XYZ, orientation) = new ConcentrationWall(XYZ, orientation);
+
+                break;
+
+            default:
+
+                cerr << "Unknown boundary type " << boundaryTypes(orientation) << endl;
+                exit(1);
+
+                break;
+            }
+
+            m_boundaries(XYZ, orientation)->loadConfig(getSurfaceSetting(boundariesConfig, "configs")[XYZ][orientation]);
+
+        }
+
+        if (!Boundary::isCompatible(boundaryTypes(0), boundaryTypes(1)))
+        {
+            cerr << "Mismatch in boundaries for " << XYZ << "'th dimension: " << boundaryTypes.t();
+            exit(1);
+        }
+
+
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 KMCSolver* Site::mainSolver;
 
@@ -1182,3 +1212,6 @@ int ParticleStates::equalAs(int state)
         break;
     }
 }
+
+
+

@@ -288,6 +288,19 @@ public:
         return s.str();
     }
 
+    //Static setters:
+
+    static void setNNeighborsLimit(const uint & nNeighborsLimit);
+
+    static void setBoundaries(const Setting & boundarySetup);
+
+    static void setNNeighborsToCrystallize(const uint & nNeighborsToCrystallize);
+
+
+    static void exit(int __status)
+    {
+        std::exit(__status);
+    }
 
 
 private:

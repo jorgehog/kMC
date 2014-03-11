@@ -30,17 +30,75 @@ DiffusionReaction::~DiffusionReaction()
 void DiffusionReaction::loadConfig(const Setting &setting)
 {
 
+    rPower = getSurfaceSetting<double>(setting, "rPower");
+    scale  = getSurfaceSetting<double>(setting, "scale");
 
-    m_separation = getSurfaceSetting<uint>(setting, "separation");
+}
 
-    if (m_separation > Site::nNeighborsLimit())
+const uint &DiffusionReaction::xD() const
+{
+    return m_destinationSite->x();
+}
+
+const uint &DiffusionReaction::yD() const
+{
+    return m_destinationSite->y();
+}
+
+const uint &DiffusionReaction::zD() const
+{
+    return m_destinationSite->z();
+}
+
+string DiffusionReaction::getFinalizingDebugMessage() const
+{
+#ifndef KMC_NO_DEBUG
+
+    if (!Debugger::enabled) return "";
+
+    int X, Y, Z;
+    X = 0;
+    Y = 0;
+    Z = 0;
+
+    stringstream s;
+
+    s << Reaction::getFinalizingDebugMessage();
+
+    const Reaction * lastReaction = Debugger::lastCurrentReaction;
+
+    if (lastReaction != NULL)
+    {
+        const Site* dest = static_cast<const DiffusionReaction*>(lastReaction)->destinationSite();
+        reactionSite()->distanceTo(dest, X, Y, Z);
+    }
+
+    s << "\nDestination of last active reaction site marked on current site:\n\n";
+    s << reactionSite()->info(X, Y, Z);
+
+    return s.str();
+#else
+    return "";
+#endif
+}
+
+void DiffusionReaction::setSeparation(const uint &separation)
+{
+
+    if (separation > Site::nNeighborsLimit())
     {
         cerr << "Forced particle separation cannot exceed the site neighborlimit." << endl;
         exit(1);
     }
 
-    rPower = getSurfaceSetting<double>(setting, "rPower");
-    scale  = getSurfaceSetting<double>(setting, "scale");
+    m_separation = separation;
+
+}
+
+void DiffusionReaction::setupPotential()
+{
+
+    KMCDebugger_Assert(scale, !=, 0, "Potential parameters not set.");
 
     m_potential.set_size(Site::neighborhoodLength(),
                          Site::neighborhoodLength(),
@@ -137,59 +195,7 @@ void DiffusionReaction::loadConfig(const Setting &setting)
     }
 
 
-
-
-    //rescale the potential to avoid exploding rates for some choices of parameters.
-    //    scale = 1.0/accu(m_potential);
     m_potential *= scale;
-
-}
-
-const uint &DiffusionReaction::xD() const
-{
-    return m_destinationSite->x();
-}
-
-const uint &DiffusionReaction::yD() const
-{
-    return m_destinationSite->y();
-}
-
-const uint &DiffusionReaction::zD() const
-{
-    return m_destinationSite->z();
-}
-
-string DiffusionReaction::getFinalizingDebugMessage() const
-{
-#ifndef KMC_NO_DEBUG
-
-    if (!Debugger::enabled) return "";
-
-    int X, Y, Z;
-    X = 0;
-    Y = 0;
-    Z = 0;
-
-    stringstream s;
-
-    s << Reaction::getFinalizingDebugMessage();
-
-    const Reaction * lastReaction = Debugger::lastCurrentReaction;
-
-    if (lastReaction != NULL)
-    {
-        const Site* dest = static_cast<const DiffusionReaction*>(lastReaction)->destinationSite();
-        reactionSite()->distanceTo(dest, X, Y, Z);
-    }
-
-    s << "\nDestination of last active reaction site marked on current site:\n\n";
-    s << reactionSite()->info(X, Y, Z);
-
-    return s.str();
-#else
-    return "";
-#endif
 }
 
 bool DiffusionReaction::allowedGivenNotBlocked() const
@@ -465,7 +471,7 @@ bool DiffusionReaction::isAllowed() const
 
 
 double        DiffusionReaction::rPower;
-double        DiffusionReaction::scale;
+double        DiffusionReaction::scale = 0;
 
 uint          DiffusionReaction::m_separation;
 

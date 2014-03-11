@@ -74,6 +74,11 @@ public:
 
     string getFinalizingDebugMessage() const;
 
+    //static setters
+    static void setSeparation(const uint & separation);
+
+    static void setupPotential();
+
 
 private:
 

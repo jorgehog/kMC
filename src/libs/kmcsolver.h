@@ -8,13 +8,14 @@
 
 #include "site.h"
 
+#include "RNG/kMCRNG.h"
+
 
 using namespace arma;
 
 
 namespace kMC
 {
-
 
 class Reaction;
 
@@ -82,19 +83,52 @@ public:
         return m_kTot;
     }
 
-    void setNumberOfCycles(uint nc)
+
+    //Set functions
+
+    void setBoxSize(const Setting & boxSize);
+
+    void setNumberOfCycles(const uint nCycles)
     {
-        m_nCycles = nc;
+        m_nCycles = nCycles;
     }
+
+    void setCyclesPerOutput(const uint cyclesPerOutput)
+    {
+        m_cyclesPerOutput = cyclesPerOutput;
+    }
+
+    void setRelativeSeedSize(const double relativeSeedSize)
+    {
+
+        if (relativeSeedSize > 1.0)
+        {
+            cerr << "The seed size cannot exceed the box size." << endl;
+            exit(1);
+        }
+
+        m_relativeSeedSize = relativeSeedSize;
+
+
+    }
+
+    void setSaturation(const double saturation)
+    {
+        m_saturation = saturation;
+    }
+
+    void setRNGSeed(uint seedState, int defaultSeed);
+
+
 
     void dumpXYZ();
 
 
 private:
 
-    double saturation;
+    double m_saturation;
 
-    double RelativeSeedSize;
+    double m_relativeSeedSize;
 
 
     Site**** sites;
@@ -115,7 +149,7 @@ private:
     uint m_nCycles;
     uint cycle;
 
-    uint cyclesPerOutput;
+    uint m_cyclesPerOutput;
     uint outputCounter;
 
 

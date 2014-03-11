@@ -1,9 +1,5 @@
 #include "kmcsolver.h"
 
-#include "RNG/kMCRNG.h"
-
-#include "site.h"
-
 #include "reactions/reaction.h"
 #include "reactions/diffusion/diffusionreaction.h"
 
@@ -33,62 +29,59 @@ KMCSolver::KMCSolver(const Setting & root) :
     const Setting & SystemSettings = getSurfaceSetting(root, "System");
     const Setting & SolverSettings = getSurfaceSetting(root, "Solver");
     const Setting & InitializationSettings = getSurfaceSetting(root, "Initialization");
+    const Setting & diffusionSettings = getSetting(root, {"Reactions", "Diffusion"});
 
-    const Setting & BoxSize = getSurfaceSetting(SystemSettings, "BoxSize");
 
+    setBoxSize(getSurfaceSetting(SystemSettings, "BoxSize"));
 
-    NX = BoxSize[0];
-    NY = BoxSize[1];
-    NZ = BoxSize[2];
 
     Boundary::setMainSolver(this);
 
-    Site::setMainSolver(this);
-    Site::loadConfig(SystemSettings);
-
     Reaction::setMainSolver(this);
+
+    Site::setMainSolver(this);
+
+
+
     Reaction::loadConfig(getSurfaceSetting(root, "Reactions"));
 
-    DiffusionReaction::loadConfig(getSetting(root, {"Reactions", "Diffusion"}));
+    DiffusionReaction::loadConfig(diffusionSettings);
 
-    m_nCycles = getSurfaceSetting<uint>(SolverSettings, "nCycles");
-
-    cyclesPerOutput = getSurfaceSetting<uint>(SolverSettings, "cyclesPerOutput");
+    Site::loadConfig(SystemSettings);
 
 
-    Seed::SeedState seedState = static_cast<Seed::SeedState>(getSurfaceSetting<uint>(SolverSettings, "seedType"));
 
-    seed_type seed = -1;
-    switch (seedState)
-    {
-    case Seed::specific:
-        seed = getSurfaceSetting<seed_type>(SolverSettings, "specificSeed");
-        break;
-    case Seed::fromTime:
-        seed = static_cast<seed_type>(time(NULL));
-        break;
-    default:
-        cout << "SEED NOT SPECIFIED." << endl;
-        throw Seed::seedNotSetException;
-        break;
-    }
+    setNumberOfCycles(
+                getSurfaceSetting<uint>(SolverSettings, "nCycles"));
 
-    cout << "initializing seed : " << seed << endl;
-    KMC_INIT_RNG(seed);
+    setCyclesPerOutput(
+                getSurfaceSetting<uint>(SolverSettings, "cyclesPerOutput"));
 
+    setSaturation(
+                getSurfaceSetting<double>(InitializationSettings, "SaturationLevel"));
 
-    saturation = getSurfaceSetting<double>(InitializationSettings, "SaturationLevel");
-    RelativeSeedSize = getSurfaceSetting<double>(InitializationSettings, "RelativeSeedSize");
+    setRelativeSeedSize(
+                getSurfaceSetting<double>(InitializationSettings, "RelativeSeedSize"));
 
-    KMCDebugger_Assert(RelativeSeedSize, <, 1.0, "The seed size cannot exceed the box size.");
+    setRNGSeed(
+                getSurfaceSetting<uint>(SolverSettings, "seedType"),
+                getSurfaceSetting<int>(SolverSettings, "specificSeed"));
+
+    Site::setBoundaries(
+                getSurfaceSetting(SystemSettings, "Boundaries"));
+
+    DiffusionReaction::setSeparation(
+                getSurfaceSetting<uint>(diffusionSettings, "separation"));
+
 
 
     initializeSites();
 
+    Site::initializeBoundaries();
+
     initializeDiffusionReactions();
 
-    KMCDebugger_Init();
-    Site::initializeBoundaries();
+
 
     ptrCount++;
 
@@ -138,6 +131,8 @@ KMCSolver::~KMCSolver()
 void KMCSolver::run()
 {
 
+    KMCDebugger_Init();
+
     Reaction * selectedReaction;
     uint choice;
     double R;
@@ -162,7 +157,7 @@ void KMCSolver::run()
         KMCDebugger_PushTraces();
 
 
-        if (cycle%cyclesPerOutput == 0)
+        if (cycle%m_cyclesPerOutput == 0)
         {
             dumpOutput();
             dumpXYZ();
@@ -319,9 +314,9 @@ void KMCSolver::initializeCrystal()
     sites[NX/2][NY/2][NZ/2]->spawnAsFixedCrystal();
     KMCDebugger_PushTraces();
 
-    uint crystalSizeX = round(NX*RelativeSeedSize);
-    uint crystalSizeY = round(NY*RelativeSeedSize);
-    uint crystalSizeZ = round(NZ*RelativeSeedSize);
+    uint crystalSizeX = round(NX*m_relativeSeedSize);
+    uint crystalSizeY = round(NY*m_relativeSeedSize);
+    uint crystalSizeZ = round(NZ*m_relativeSeedSize);
 
     uint crystalStartX = NX/2 - crystalSizeX/2;
     uint crystalStartY = NY/2 - crystalSizeY/2;
@@ -366,7 +361,7 @@ void KMCSolver::initializeCrystal()
 
                 if ((i < solutionEndX) || (i >= solutionStartX) || (j < solutionEndY) || (j >= solutionStartY) || (k < solutionEndZ) || (k >= solutionStartZ))
                 {
-                    if (KMC_RNG_UNIFORM() < saturation)
+                    if (KMC_RNG_UNIFORM() < m_saturation)
                     {
                         if(sites[i][j][k]->isLegalToSpawn())
                         {
@@ -482,6 +477,36 @@ uint KMCSolver::getReactionChoice(double R)
     }
 
     return imid + 1;
+
+}
+
+void KMCSolver::setBoxSize(const Setting &boxSize)
+{
+    NX = boxSize[0];
+    NY = boxSize[1];
+    NZ = boxSize[2];
+}
+
+void KMCSolver::setRNGSeed(uint seedState, int defaultSeed = 0)
+{
+
+    seed_type seed = -1;
+    switch (seedState)
+    {
+    case Seed::specific:
+        seed = static_cast<seed_type>(defaultSeed);
+        break;
+    case Seed::fromTime:
+        seed = static_cast<seed_type>(time(NULL));
+        break;
+    default:
+        cerr << "SEED NOT SPECIFIED." << endl;
+        throw Seed::seedNotSetException;
+        break;
+    }
+
+    cout << "initializing seed : " << seed << endl;
+    KMC_INIT_RNG(seed);
 
 }
 

@@ -339,7 +339,7 @@ void testBed::testRNG()
     vector<double> setn;
     vector<double> setu;
 
-    KMC_INIT_RNG(Seed::initialSeed);
+    solver->setRNGSeed(Seed::specific, Seed::initialSeed);
 
     for (uint i = 0; i < 1000000; ++i)
     {
@@ -347,7 +347,7 @@ void testBed::testRNG()
         setn.push_back(KMC_RNG_NORMAL());
     }
 
-    KMC_RESET_RNG();
+    solver->setRNGSeed(Seed::specific, Seed::initialSeed);
 
     for (uint i = 0; i < 1000000; ++i)
     {

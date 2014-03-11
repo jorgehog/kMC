@@ -112,7 +112,7 @@ void Reaction::setMainSolver(KMCSolver *solver)
 void Reaction::loadConfig(const Setting &setting)
 {
 
-    m_beta              = getSurfaceSetting<double>(setting, "beta");
+    m_beta            = getSurfaceSetting<double>(setting, "beta");
     m_linearRateScale = getSurfaceSetting<double>(setting, "scale");
 
 }
