@@ -314,7 +314,7 @@ void KMCSolver::initializeCrystal()
 {
 
     bool enabled = KMCDebugger_IsEnabled;
-    KMCDebugger_SetEnabledTo(true);
+    KMCDebugger_SetEnabledTo(false);
 
     sites[NX/2][NY/2][NZ/2]->spawnAsFixedCrystal();
     KMCDebugger_PushTraces();
@@ -356,7 +356,6 @@ void KMCSolver::initializeCrystal()
                             {
                                 sites[i][j][k]->activate();
                                 KMCDebugger_PushTraces();
-                                dumpXYZ();
                             }
 
                             continue;
@@ -373,7 +372,6 @@ void KMCSolver::initializeCrystal()
                         {
                             sites[i][j][k]->activate();
                             KMCDebugger_PushTraces();
-                            dumpXYZ();
                         }
                     }
                 }
