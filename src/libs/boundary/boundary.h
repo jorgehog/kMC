@@ -52,12 +52,12 @@ public:
 
     static void setupLocations(const uint x, const uint y, const uint z, uvec3 &loc);
 
-    static void setMainSolver(KMCSolver * solver);
+    static void setMainSolver(KMCSolver * m_solver);
 
     static void resetAll()
 
     {
-        solver = NULL;
+        m_solver = NULL;
     }
 
 
@@ -75,7 +75,7 @@ private:
 
     static uint BLOCKED_COORDINATE;
 
-    static KMCSolver * solver;
+    static KMCSolver * m_solver;
 
     const uint m_dimension;
     const uint m_orientation;
@@ -85,7 +85,7 @@ protected:
 
     static KMCSolver * mainSolver()
     {
-        return solver;
+        return m_solver;
     }
 
     const static uint & NX();

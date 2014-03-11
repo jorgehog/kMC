@@ -1,14 +1,16 @@
 #pragma once
 
 
-#include <sys/types.h>
-#include <armadillo>
-
-#include <libconfig_utils/libconfig_utils.h>
-
 #include "site.h"
 
 #include "RNG/kMCRNG.h"
+
+#include <sys/types.h>
+#include <armadillo>
+
+#include <climits>
+
+#include <libconfig_utils/libconfig_utils.h>
 
 
 using namespace arma;
@@ -27,6 +29,8 @@ public:
     KMCSolver(const Setting & root);
 
     ~KMCSolver();
+
+    const static uint UNSET_UINT = (uint)ULLONG_MAX;
 
 
     void run();
@@ -91,7 +95,7 @@ public:
 
     //Set functions
 
-    void setBoxSize(const Setting & boxSize);
+    void setBoxSize(const uvec3 &boxSize);
 
     void setNumberOfCycles(const uint nCycles)
     {
@@ -138,9 +142,9 @@ private:
 
     Site**** sites;
 
-    uint m_NX;
-    uint m_NY;
-    uint m_NZ;
+    uint m_NX = 0;
+    uint m_NY = 0;
+    uint m_NZ = 0;
 
     uvec3 m_N;
 
@@ -165,6 +169,9 @@ private:
 
     void initializeSites();
 
+    void initializeSiteNeighborhood();
+
+    void clearSites();
 
 
     void dumpOutput();

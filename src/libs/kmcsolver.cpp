@@ -23,16 +23,16 @@ using namespace kMC;
 KMCSolver::KMCSolver(const Setting & root) :
     totalTime(0),
     cycle(0),
-    outputCounter(0)
+    outputCounter(0),
+    m_NX(UNSET_UINT),
+    m_NY(UNSET_UINT),
+    m_NZ(UNSET_UINT)
 {
 
     const Setting & SystemSettings = getSurfaceSetting(root, "System");
     const Setting & SolverSettings = getSurfaceSetting(root, "Solver");
     const Setting & InitializationSettings = getSurfaceSetting(root, "Initialization");
     const Setting & diffusionSettings = getSetting(root, {"Reactions", "Diffusion"});
-
-
-    setBoxSize(getSurfaceSetting(SystemSettings, "BoxSize"));
 
 
     Boundary::setMainSolver(this);
@@ -75,11 +75,13 @@ KMCSolver::KMCSolver(const Setting & root) :
 
 
 
-    initializeSites();
+    uvec3 boxSize;
 
-    Site::initializeBoundaries();
+    boxSize(0) = getSurfaceSetting(SystemSettings, "BoxSize")[0];
+    boxSize(1) = getSurfaceSetting(SystemSettings, "BoxSize")[1];
+    boxSize(2) = getSurfaceSetting(SystemSettings, "BoxSize")[2];
 
-    initializeDiffusionReactions();
+    setBoxSize(boxSize);
 
 
 
@@ -96,22 +98,7 @@ KMCSolver::~KMCSolver()
         cout << "Static member variables of objects IN USE by living solver WILL BE FREED." << endl;
     }
 
-    for (uint i = 0; i < m_NX; ++i)
-    {
-        for (uint j = 0; j < m_NY; ++j)
-        {
-            for (uint k = 0; k < m_NZ; ++k)
-            {
-                delete sites[i][j][k];
-            }
-
-            delete [] sites[i][j];
-        }
-
-        delete [] sites[i];
-    }
-
-    delete [] sites;
+    clearSites();
 
     m_allReactions.clear();
 
@@ -291,6 +278,12 @@ void KMCSolver::initializeSites()
     }
 
 
+    initializeSiteNeighborhood();
+
+}
+
+void KMCSolver::initializeSiteNeighborhood()
+{
     for (uint x = 0; x < m_NX; ++x)
     {
         for (uint y = 0; y < m_NY; ++y)
@@ -301,7 +294,26 @@ void KMCSolver::initializeSites()
             }
         }
     }
+}
 
+void KMCSolver::clearSites()
+{
+    for (uint i = 0; i < m_NX; ++i)
+    {
+        for (uint j = 0; j < m_NY; ++j)
+        {
+            for (uint k = 0; k < m_NZ; ++k)
+            {
+                delete sites[i][j][k];
+            }
+
+            delete [] sites[i][j];
+        }
+
+        delete [] sites[i];
+    }
+
+    delete [] sites;
 }
 
 
@@ -480,14 +492,35 @@ uint KMCSolver::getReactionChoice(double R)
 
 }
 
-void KMCSolver::setBoxSize(const Setting &boxSize)
+void KMCSolver::setBoxSize(const uvec3 &boxSize)
 {
 
-    m_NX = boxSize[0];
-    m_NY = boxSize[1];
-    m_NZ = boxSize[2];
+    if (m_NX != UNSET_UINT && m_NY != UNSET_UINT && m_NZ != UNSET_UINT)
+    {
+        clearSites();
+    }
 
-    m_N = {m_NX, m_NY, m_NZ};
+    m_NX = boxSize(0);
+    m_NY = boxSize(1);
+    m_NZ = boxSize(2);
+
+
+    m_N = boxSize;
+
+    if (Site::nNeighborsLimit() != UNSET_UINT)
+    {
+        if (Site::nNeighborsLimit() >= min(m_N)/2)
+        {
+            cerr << "Neighbor reach must be lower than half the minimum box dimension to avoid sites directly affecting themselves." << endl;
+            exit(1);
+        }
+    }
+
+    initializeSites();
+
+    Site::initializeBoundaries();
+
+    initializeDiffusionReactions();
 
 }
 

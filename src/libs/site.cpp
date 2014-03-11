@@ -859,6 +859,10 @@ uint Site::findLevel(uint i, uint j, uint k)
 void Site::resetAll()
 {
 
+    m_nNeighborsToCrystallize = KMCSolver::UNSET_UINT;
+    m_nNeighborsLimit = KMCSolver::UNSET_UINT;
+    m_neighborhoodLength = KMCSolver::UNSET_UINT;
+
     m_totalActiveSites = 0;
     m_totalEnergy = 0;
     m_levelMatrix.reset();
@@ -1032,10 +1036,14 @@ uint Site::nNeighborsSum() const
 
 void Site::setNNeighborsLimit(const uint &nNeighborsLimit)
 {
-    if (nNeighborsLimit >= min(uvec({NX(), NY(), NZ()}))/2)
+
+    if (!(NX() == KMCSolver::UNSET_UINT && NY() == KMCSolver::UNSET_UINT && NZ() == KMCSolver::UNSET_UINT))
     {
-        cerr << "Neighbor reach must be lower than half the minimum box dimension to avoid sites directly affecting themselves." << endl;
-        exit(1);
+        if (nNeighborsLimit >= min(uvec({NX(), NY(), NZ()}))/2)
+        {
+            cerr << "Neighbor reach must be lower than half the minimum box dimension to avoid sites directly affecting themselves." << endl;
+            exit(1);
+        }
     }
 
     m_nNeighborsLimit = nNeighborsLimit;
@@ -1170,11 +1178,11 @@ const uint &Site::NZ()
 
 KMCSolver* Site::m_solver;
 
-uint       Site::m_nNeighborsToCrystallize;
+uint       Site::m_nNeighborsToCrystallize = KMCSolver::UNSET_UINT;
 
-uint       Site::m_nNeighborsLimit;
+uint       Site::m_nNeighborsLimit = KMCSolver::UNSET_UINT;
 
-uint       Site::m_neighborhoodLength;
+uint       Site::m_neighborhoodLength = KMCSolver::UNSET_UINT;
 
 ucube      Site::m_levelMatrix;
 ivec       Site::m_originTransformVector;

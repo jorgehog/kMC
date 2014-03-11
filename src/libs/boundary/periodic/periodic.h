@@ -28,7 +28,7 @@ public:
         return delta(transformCoordinate(Boundary::getDistanceBetween(x1, x2)));
     }
 
-    void initialize() {}
+    void initialize();
 
     void update() {}
 

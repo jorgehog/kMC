@@ -28,7 +28,7 @@ Boundary::~Boundary()
 void Boundary::setMainSolver(KMCSolver *solver)
 {
 
-    Boundary::solver = solver;
+    m_solver = solver;
 
 }
 
@@ -68,27 +68,27 @@ void Boundary::setupLocations(const uint x, const uint y, const uint z, uvec3 &l
 
 const uint & Boundary::NX()
 {
-    return solver->NX();
+    return m_solver->NX();
 }
 
 const uint & Boundary::NY()
 {
-    return solver->NY();
+    return m_solver->NY();
 }
 
 const uint & Boundary::NZ()
 {
-    return solver->NZ();
+    return m_solver->NZ();
 }
 
 uint Boundary::N(const uint i)
 {
-    return solver->N(i);
+    return m_solver->N(i);
 }
 
 
 uint Boundary::BLOCKED_COORDINATE = (uint)ULLONG_MAX;
 
-KMCSolver* Boundary::solver;
+KMCSolver* Boundary::m_solver;
 
 
