@@ -1133,6 +1133,48 @@ void testBed::testBoxSizes()
 void testBed::testnNeiborsLimit()
 {
 
+    set<Site*> allSites;
+
+    Site* currentSite;
+
+    uvec nNlims = {1, 2, 3};
+
+    uvec3 boxSize = {10, 10, 10};
+
+
+    Site::setBoundaries(zeros<umat>(3, 2) + Boundary::Periodic);
+
+    solver->setBoxSize(boxSize);
+
+
+    for (uint nNlim : nNlims)
+    {
+        allSites.clear();
+        Site::setNNeighborsLimit(nNlim);
+
+        for (uint x = 0; x < NX(); ++x)
+        {
+            for (uint y = 0; y < NY(); ++y)
+            {
+                for (uint z = 0; z < NZ(); ++z)
+                {
+
+                    currentSite = solver->getSite(x, y, z);
+
+                    allSites.insert(currentSite->allNeighbors().begin(), currentSite->allNeighbors().end());
+
+                    CHECK_EQUAL(pow(2*nNlim + 1, 3) - 1, currentSite->allNeighbors().size());
+
+                }
+            }
+        }
+
+        CHECK_EQUAL(NX()*NY()*NZ(), allSites.size());
+
+    }
+
+
+
 }
 
 void testBed::testnNeighborsToCrystallize()

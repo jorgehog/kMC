@@ -37,6 +37,8 @@ public:
 
     void initializeCrystal();
 
+    void initializeSiteNeighborhoods();
+
     void getRateVariables();
 
     uint getReactionChoice(double R);
@@ -169,7 +171,6 @@ private:
 
     void initializeSites();
 
-    void initializeSiteNeighborhood();
 
     void clearSites();
 

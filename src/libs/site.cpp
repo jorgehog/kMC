@@ -240,7 +240,7 @@ void Site::loadConfig(const Setting &setting)
 
     setNNeighborsToCrystallize(getSurfaceSetting<uint>(setting, "nNeighboursToCrystallize"));
 
-    setNNeighborsLimit(getSurfaceSetting<uint>(setting, "nNeighborsLimit"));
+    setNNeighborsLimit(getSurfaceSetting<uint>(setting, "nNeighborsLimit"), false);
 
 }
 
@@ -670,6 +670,8 @@ void Site::introduceNeighborhood()
     m_nNeighbors.set_size(m_nNeighborsLimit);
     m_nNeighbors.zeros();
 
+    m_allNeighbors.clear();
+
     m_neighborHood = new Site***[m_neighborhoodLength];
 
     for (uint i = 0; i < m_neighborhoodLength; ++i)
@@ -874,6 +876,14 @@ void Site::resetAll()
     m_originTransformVector.reset();
     m_affectedSites.clear();
 
+    resetBoundaries();
+
+    m_boundaryConfigs.clear();
+
+}
+
+void Site::resetBoundaries()
+{
     for (uint i = 0; i < 3; ++i)
     {
         for (uint j = 0; j < 2; ++j) {
@@ -882,7 +892,6 @@ void Site::resetAll()
     }
 
     m_boundaries.clear();
-
 }
 
 
@@ -1039,7 +1048,7 @@ uint Site::nNeighborsSum() const
     return m_nNeighborsSum;
 }
 
-void Site::setNNeighborsLimit(const uint &nNeighborsLimit)
+void Site::setNNeighborsLimit(const uint &nNeighborsLimit, bool init)
 {
 
     if (!(NX() == KMCSolver::UNSET_UINT && NY() == KMCSolver::UNSET_UINT && NZ() == KMCSolver::UNSET_UINT))
@@ -1080,6 +1089,11 @@ void Site::setNNeighborsLimit(const uint &nNeighborsLimit)
 
     DiffusionReaction::setupPotential();
 
+    if (init)
+    {
+        m_solver->initializeSiteNeighborhoods();
+    }
+
 }
 
 void Site::setNNeighborsToCrystallize(const uint &nNeighborsToCrystallize)
@@ -1100,8 +1114,33 @@ void Site::setNNeighborsToCrystallize(const uint &nNeighborsToCrystallize)
 
 }
 
-void Site::setBoundaries(const Setting & boundariesConfig)
+void Site::setInitialBoundaries(const Setting & boundariesConfig)
 {
+
+
+    umat boundaries(3, 2);
+    m_boundaryConfigs.set_size(3, 2);
+
+    for (uint XYZ = 0; XYZ < 3; ++XYZ)
+    {
+        for (uint orientation = 0; orientation < 2; ++orientation)
+        {
+            m_boundaryConfigs(XYZ, orientation) = &getSurfaceSetting(boundariesConfig, "configs")[XYZ][orientation];
+            boundaries(XYZ, orientation) = getSurfaceSetting(boundariesConfig, "types")[XYZ][orientation];
+        }
+    }
+
+    setBoundaries(boundaries, false);
+
+}
+
+void Site::setBoundaries(const umat &boundaryMatrix, bool reset)
+{
+
+    if (reset)
+    {
+        resetBoundaries();
+    }
 
     m_boundaries.set_size(3, 2);
 
@@ -1112,7 +1151,7 @@ void Site::setBoundaries(const Setting & boundariesConfig)
         for (uint orientation = 0; orientation < 2; ++orientation)
         {
 
-            boundaryTypes(orientation) = getSurfaceSetting(boundariesConfig, "types")[XYZ][orientation];
+            boundaryTypes(orientation) = boundaryMatrix(XYZ, orientation);
 
             switch (boundaryTypes(orientation))
             {
@@ -1144,7 +1183,7 @@ void Site::setBoundaries(const Setting & boundariesConfig)
                 break;
             }
 
-            m_boundaries(XYZ, orientation)->loadConfig(getSurfaceSetting(boundariesConfig, "configs")[XYZ][orientation]);
+            m_boundaries(XYZ, orientation)->loadConfig(*m_boundaryConfigs(XYZ, orientation));
 
         }
 
@@ -1153,8 +1192,6 @@ void Site::setBoundaries(const Setting & boundariesConfig)
             cerr << "Mismatch in boundaries for " << XYZ << "'th dimension: " << boundaryTypes.t();
             exit(1);
         }
-
-
     }
 }
 
@@ -1199,6 +1236,8 @@ double     Site::m_totalEnergy = 0;
 set<Site*> Site::m_affectedSites;
 
 field<Boundary*> Site::m_boundaries;
+
+field<const Setting*> Site::m_boundaryConfigs;
 
 const vector<string> ParticleStates::names = {"crystal", "fixedcrystal", "solution", "surface"};
 const vector<string> ParticleStates::shortNames = {"C", "F", "P", "S"};

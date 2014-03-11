@@ -66,6 +66,8 @@ public:
 
     static void resetAll();
 
+    static void resetBoundaries();
+
     /*
      * Non-trivial functions
      */
@@ -297,9 +299,11 @@ public:
 
     //Static setters:
 
-    static void setNNeighborsLimit(const uint & nNeighborsLimit);
+    static void setNNeighborsLimit(const uint & nNeighborsLimit, bool init = true);
 
-    static void setBoundaries(const Setting & boundarySetup);
+    static void setInitialBoundaries(const Setting & boundarySetup);
+
+    static void setBoundaries(const umat & boundaryMatrix, bool reset = true);
 
     static void setNNeighborsToCrystallize(const uint & nNeighborsToCrystallize);
 
@@ -313,6 +317,8 @@ public:
 private:
 
     static field<Boundary*> m_boundaries;
+
+    static field<const Setting*> m_boundaryConfigs;
 
     static uint m_nNeighborsLimit;
     static uint m_neighborhoodLength;

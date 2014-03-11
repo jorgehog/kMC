@@ -67,7 +67,7 @@ KMCSolver::KMCSolver(const Setting & root) :
                 getSurfaceSetting<uint>(SolverSettings, "seedType"),
                 getSurfaceSetting<int>(SolverSettings, "specificSeed"));
 
-    Site::setBoundaries(
+    Site::setInitialBoundaries(
                 getSurfaceSetting(SystemSettings, "Boundaries"));
 
     DiffusionReaction::setSeparation(
@@ -278,11 +278,11 @@ void KMCSolver::initializeSites()
     }
 
 
-    initializeSiteNeighborhood();
+    initializeSiteNeighborhoods();
 
 }
 
-void KMCSolver::initializeSiteNeighborhood()
+void KMCSolver::initializeSiteNeighborhoods()
 {
     for (uint x = 0; x < m_NX; ++x)
     {
