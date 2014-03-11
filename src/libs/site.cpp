@@ -295,9 +295,9 @@ void Site::loadConfig(const Setting &setting)
     }
 
 
-    const uint  &limit = getSurfaceSetting<uint>(setting, "nNeighborsLimit");
+    m_nNeighborsLimit = getSurfaceSetting<uint>(setting, "nNeighborsLimit");
 
-    if (limit >= min(uvec({NX, NY, NZ}))/2)
+    if (m_nNeighborsLimit >= min(uvec({NX, NY, NZ}))/2)
     {
         cerr << "Neighbor reach must be lower than half the minimum box dimension to avoid sites directly affecting themselves." << endl;
         exit(1);
@@ -305,7 +305,18 @@ void Site::loadConfig(const Setting &setting)
 
     m_nNeighborsToCrystallize = getSurfaceSetting<uint>(setting, "nNeighboursToCrystallize");
 
-    m_nNeighborsLimit = limit;
+    if (m_nNeighborsToCrystallize == 0)
+    {
+        cerr << "With nNeighborsToCrystallize = 0, all particles will qualify as crystals." << endl;
+        exit(1);
+    }
+    else if (m_nNeighborsToCrystallize > 7)
+    {
+        cerr << "With nNeighboorsToCrystallize > 7, no particles except those hugging a fixed crystal will qualify as crystals." << endl;
+        exit(1);
+    }
+
+
     m_neighborhoodLength = 2*m_nNeighborsLimit + 1;
 
     m_levelMatrix.set_size(m_neighborhoodLength, m_neighborhoodLength, m_neighborhoodLength);
