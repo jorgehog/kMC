@@ -210,7 +210,22 @@ bool Site::isLegalToSpawn()
 bool Site::qualifiesAsCrystal()
 {
 
-    return isFixedCrystalSeed() || nNeighbors() >= m_nNeighborsToCrystallize;
+    if (isFixedCrystalSeed())
+    {
+        return true;
+    }
+
+    else if (hasNeighboring(ParticleStates::fixedCrystal, 1))
+    {
+        return true;
+    }
+
+    else if (countNeighboring(ParticleStates::crystal, 1) >= m_nNeighborsToCrystallize)
+    {
+        return true;
+    }
+
+    return false;
 
 }
 
