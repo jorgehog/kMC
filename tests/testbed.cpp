@@ -1317,9 +1317,9 @@ void testBed::testBoundaries()
     Site::setBoundaries(zeros<umat>(3, 2) + Boundary::Periodic);
 
 
-    Site::setBoundaries(zeros<umat>(3, 2) + Boundary::Periodic);
-    Site::setBoundaries(zeros<umat>(3, 2) + Boundary::Periodic);
-    Site::setBoundaries(zeros<umat>(3, 2) + Boundary::Periodic);
+    Site::setBoundaries(zeros<umat>(3, 2) + Boundary::Edge);
+    Site::setBoundaries(zeros<umat>(3, 2) + Boundary::Surface);
+    Site::setBoundaries(zeros<umat>(3, 2) + Boundary::ConcentrationWall);
 
     umat boundaries(3, 2);
 
@@ -1337,6 +1337,100 @@ void testBed::testBoundaries()
 
 void testBed::testDiffusionSeparation()
 {
+
+    bool enabled = KMCDebugger_IsEnabled;
+    KMCDebugger_SetEnabledTo(false);
+
+    solver->setBoxSize({15, 15, 15});
+
+
+    Site * neighbor;
+    Site * destination;
+    Site * origin = solver->getSite(NX()/2, NY()/2, NZ()/2);
+
+    origin->activate();
+
+    uvec separations = {0, 1, 2, 3, 4, 5};
+
+    for (uint sep : separations)
+    {
+        Site::setNNeighborsLimit(sep + 1);
+        DiffusionReaction::setSeparation(sep);
+
+        for (uint i = 1; i <= sep + 2; ++i)
+        {
+
+            neighbor = solver->getSite(NX()/2 + i, NY()/2, NZ()/2);
+
+            bool allowed = neighbor->isLegalToSpawn();
+
+            //sites only allowed to spawn if no reactions are blocked.
+            //reaction blocked for up to sep + 1
+            CHECK_EQUAL(!allowed, i <= sep + 1);
+
+            if (i == sep + 2)
+            {
+                neighbor->activate();
+
+                neighbor->updateReactions();
+
+                CHECK_EQUAL(neighbor->activeReactions().size(), neighbor->siteReactions().size());
+
+                neighbor->deactivate();
+
+                destination = solver->getSite(NX()/2 + sep + 1, NY()/2, NZ()/2);
+                destination->activate();
+
+                destination->updateReactions();
+
+                if (sep == 0)
+                {
+                    CHECK_EQUAL(25, destination->activeReactions().size());
+                }
+
+                else
+                {
+
+                    CHECK_EQUAL(17, destination->activeReactions().size());
+
+
+                    destination->deactivate();
+
+                    destination = solver->getSite(NX()/2 + sep, NY()/2, NZ()/2);
+
+                    destination->activate();
+
+                    destination->updateReactions();
+
+                    CHECK_EQUAL(9, destination->activeReactions().size());
+
+
+                    if (sep > 1)
+                    {
+
+                        destination->deactivate();
+
+                        destination = solver->getSite(NX()/2 + sep - 1, NY()/2, NZ()/2);
+
+                        destination->activate();
+
+                        destination->updateReactions();
+
+                        CHECK_EQUAL(0, destination->activeReactions().size());
+
+                    }
+
+                }
+
+                destination->deactivate();
+
+            }
+
+        }
+
+    }
+
+    KMCDebugger_SetEnabledTo(enabled);
 
 }
 

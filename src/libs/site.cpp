@@ -342,10 +342,6 @@ void Site::decrystallize()
         m_particleState = ParticleStates::solution;
         propagateToNeighbors(ParticleStates::any, ParticleStates::solution, DiffusionReaction::separation());
     }
-//    else
-//    {
-//        KMCDebugger_AssertBreak("Unable to decrystallize site", info());
-//    }
 
     KMCDebugger_PushImplication(this, particleStateName().c_str());
 

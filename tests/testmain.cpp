@@ -11,7 +11,7 @@
 using namespace std;
 
 
-//#define focustest "nNeighborsToCrystallize"
+//#define focustest "DiffusionSeparation"
 
 
 #ifdef focustest
@@ -55,6 +55,5 @@ TESTWRAPPER(KnownCase)
 int main()
 {
     KMCDebugger_SetFilename("testTrace");
-
     return UnitTest::RunAllTests();
 }
