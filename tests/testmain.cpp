@@ -11,9 +11,7 @@
 using namespace std;
 
 
-#define focustest "nNeighborsToCrystallize"
-
-
+//#define focustest "nNeighborsToCrystallize"
 
 
 #ifdef focustest

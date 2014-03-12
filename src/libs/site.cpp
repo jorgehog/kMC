@@ -320,7 +320,7 @@ void Site::crystallize()
     }
     else
     {
-        KMCDebugger_AssertBool(!(DiffusionReaction::separation() == 1 && Site::nNeighborsToCrystallize() > 1), "With a single neighboring crystal needed, everything should crystallize if asked.", info());
+        KMCDebugger_AssertBool(!(DiffusionReaction::separation() == 1 && Site::nNeighborsToCrystallize() == 1), "With a single neighboring crystal needed, everything should crystallize if asked.", info());
 
         m_particleState = ParticleStates::solution;
 

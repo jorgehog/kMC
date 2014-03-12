@@ -1237,7 +1237,7 @@ void testBed::testnNeighborsToCrystallize()
 
     uint totCrystalNeighbors;
 
-
+    DiffusionReaction::setSeparation(1);
 
     initialSeedSite->spawnAsFixedCrystal();
 
