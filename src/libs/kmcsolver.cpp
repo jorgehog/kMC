@@ -161,6 +161,24 @@ void KMCSolver::run()
 
 }
 
+void KMCSolver::reset()
+{
+
+    KMCDebugger_Init();
+
+    clearSites();
+
+    initializeSites();
+
+    Site::initializeBoundaries();
+
+    initializeDiffusionReactions();
+
+    setRNGSeed(Seed::specific, Seed::initialSeed);
+
+
+}
+
 
 
 
@@ -312,6 +330,7 @@ void KMCSolver::initializeSiteNeighborhoods()
 
 void KMCSolver::clearSites()
 {
+
     for (uint i = 0; i < m_NX; ++i)
     {
         for (uint j = 0; j < m_NY; ++j)
@@ -328,6 +347,14 @@ void KMCSolver::clearSites()
     }
 
     delete [] sites;
+
+    KMCDebugger_AssertClose(Site::totalEnergy(), 0, 1E-5);
+
+    KMCDebugger_Assert(Site::totalActiveSites(), ==, 0);
+
+    Site::resetAffectedSites();
+    Site::setZeroTotalEnergy();
+
 }
 
 
@@ -400,10 +427,6 @@ void KMCSolver::initializeCrystal()
         }
     }
 
-    cout << "Initialized "
-         << Site::totalActiveSites()
-         << " active sites."
-         << endl;
 
     dumpXYZ();
 
@@ -556,7 +579,7 @@ void KMCSolver::setRNGSeed(uint seedState, int defaultSeed = 0)
         break;
     }
 
-    cout << "initializing seed : " << seed << endl;
+//    cout << "initializing seed : " << seed << endl;
     KMC_INIT_RNG(seed);
 
 }

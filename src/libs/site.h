@@ -68,6 +68,10 @@ public:
 
     static void resetBoundaries();
 
+    static void resetAffectedSites();
+
+    static void setZeroTotalEnergy();
+
     /*
      * Non-trivial functions
      */

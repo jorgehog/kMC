@@ -58,7 +58,7 @@ public:
 
     static void testDiffusionSeparation();
 
-    static void runAllBoundaryTests();
+    static void runAllBoundaryTests(const umat &boundaries);
 
     static KMCSolver* solver;
 

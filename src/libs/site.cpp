@@ -41,6 +41,11 @@ Site::~Site()
 
     m_siteReactions.clear();
 
+    if (isActive())
+    {
+        m_totalActiveSites--;
+    }
+
 }
 
 
@@ -912,8 +917,8 @@ void Site::resetAll()
     m_totalEnergy = 0;
     m_levelMatrix.reset();
     m_originTransformVector.reset();
-    m_affectedSites.clear();
 
+    resetAffectedSites();
     resetBoundaries();
 
     m_boundaryConfigs.clear();
@@ -931,6 +936,16 @@ void Site::resetBoundaries()
     }
 
     m_boundaries.clear();
+}
+
+void Site::resetAffectedSites()
+{
+    m_affectedSites.clear();
+}
+
+void Site::setZeroTotalEnergy()
+{
+    m_totalEnergy = 0;
 }
 
 

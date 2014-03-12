@@ -21,7 +21,6 @@ void testBed::makeSolver()
 
 void testBed::testDistanceTo()
 {
-    makeSolver();
 
     int dx, dy, dz, dx2, dy2, dz2;;
     uint adx, ady, adz;
@@ -88,13 +87,13 @@ void testBed::testDistanceTo()
                             if (dx != ((int)startSite->x() - (int)endSite->x()))
                             {
                                 CHECK_EQUAL(Site::boundaryTypes(0, 0), Boundary::Periodic);
-                                CHECK_EQUAL(dx, NX() - ((int)startSite->x() - (int)endSite->x()) );
+                                CHECK_EQUAL(dx, NX() - ((int)startSite->x() - (int)endSite->x()));
                             }
 
                             if (dy != ((int)startSite->y() - (int)endSite->y()))
                             {
                                 CHECK_EQUAL(Site::boundaryTypes(1, 0), Boundary::Periodic);
-                                CHECK_EQUAL(dy, NY() - ((int)startSite->y() - (int)endSite->y()) );
+                                CHECK_EQUAL(dy, NY() - ((int)startSite->y() - (int)endSite->y()));
                             }
 
                             if (dz != ((int)startSite->z() - (int)endSite->z()))
@@ -110,8 +109,6 @@ void testBed::testDistanceTo()
             }
         }
     }
-
-    delete solver;
 
 }
 
@@ -200,7 +197,6 @@ void testBed::testDeactivateSurface()
 
 void testBed::testDiffusionSiteMatrixSetup()
 {
-    makeSolver();
 
     DiffusionReaction * currentDiffReaction;
 
@@ -255,12 +251,10 @@ void testBed::testDiffusionSiteMatrixSetup()
         }
     }
 
-    delete solver;
 }
 
 void testBed::testNeighbors()
 {
-    makeSolver();
 
     Site* currentSite, *neighbor;
 
@@ -275,6 +269,7 @@ void testBed::testNeighbors()
 
                 currentSite = solver->getSite(x, y, z);
 
+
                 for(uint i = 0; i < Site::neighborhoodLength(); ++i)
                 {
                     for (uint j = 0; j < Site::neighborhoodLength(); ++j)
@@ -283,6 +278,11 @@ void testBed::testNeighbors()
                         {
 
                             neighbor = currentSite->neighborHood(i, j, k);
+
+                            if (neighbor == NULL)
+                            {
+                                continue;
+                            }
 
                             if ((i == Site::nNeighborsLimit())
                                     && (j == Site::nNeighborsLimit())
@@ -305,8 +305,6 @@ void testBed::testNeighbors()
             }
         }
     }
-
-    delete solver;
 }
 
 void testBed::testRNG()
@@ -540,7 +538,6 @@ void testBed::testRateCalculation()
 
 void testBed::testEnergyAndNeighborSetup()
 {
-    makeSolver();
 
     int dx, dy, dz;
     uint ldx, ldy, ldz;
@@ -631,13 +628,10 @@ void testBed::testEnergyAndNeighborSetup()
         }
     }
 
-    delete solver;
 }
 
 void testBed::testUpdateNeigbors()
 {
-    makeSolver();
-
 
     bool enabled = KMCDebugger_IsEnabled;
     KMCDebugger_SetEnabledTo(false);
@@ -698,8 +692,6 @@ void testBed::testUpdateNeigbors()
     CHECK_CLOSE(0, Site::totalEnergy(), 0.001);
 
     KMCDebugger_SetEnabledTo(enabled);
-
-    delete solver;
 
 }
 
@@ -874,8 +866,6 @@ void testBed::testHasCrystalNeighbor()
 void testBed::testInitializationOfCrystal()
 {
 
-    makeSolver();
-
     solver->initializeCrystal();
 
     Site* currentSite;
@@ -921,7 +911,6 @@ void testBed::testInitializationOfCrystal()
         }
     }
 
-    delete solver;
 }
 
 void testBed::testInitialReactionSetup()
@@ -1139,7 +1128,7 @@ void testBed::testKnownCase()
 
 void testBed::testBoxSizes()
 {
-    makeSolver;
+    makeSolver();
 
     uvec N = {10, 15, 20};
 
@@ -1259,7 +1248,7 @@ void testBed::testnNeiborsLimit()
 
 void testBed::testnNeighborsToCrystallize()
 {
-      makeSolver();
+    makeSolver();
 
     uvec nntcs = {1, 2, 3, 4, 5, 6, 7};
 
@@ -1447,21 +1436,35 @@ void testBed::testDiffusionSeparation()
     delete solver;
 }
 
-void testBed::runAllBoundaryTests()
+void testBed::runAllBoundaryTests(const umat & boundaries)
 {
     makeSolver();
 
+    Site::setBoundaries(boundaries);
     Site::setNNeighborsLimit(3);
     solver->setBoxSize({10, 10, 10});
 
-    testDistanceTo();
+//cout << "   Running test DistanceTo" << endl;
+//    testDistanceTo();
 
+    solver->reset();
+    cout << "   Running test EnergyAndNeighborSetup" << endl;
     testEnergyAndNeighborSetup();
+
+    solver->reset();
+    cout << "   Running test InitializationOfCrystal" << endl;
     testInitializationOfCrystal();
 
+    solver->reset();
+    cout << "   Running test DiffusionMatrixSetup" << endl;
     testDiffusionSiteMatrixSetup();
 
+    solver->reset();
+    cout << "   Running test Neighbors" << endl;
     testNeighbors();
+
+    solver->reset();
+    cout << "   Running test UpdateNeighbors" << endl;
     testUpdateNeigbors();
 
     delete solver;

@@ -35,6 +35,8 @@ public:
 
     void run();
 
+    void reset();
+
     void initializeCrystal();
 
     void initializeSiteNeighborhoods();

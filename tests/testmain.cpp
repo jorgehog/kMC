@@ -10,97 +10,66 @@
 
 using namespace std;
 
+#define TESTWRAPPER(which) TEST(which) {cout << "Running test " << #which << endl; testBed::test##which();}
+
 SUITE(Misc)
 {
+    TESTWRAPPER(RNG)
 
-    TEST(RNG)
-    {
-        testBed::testRNG();
-    }
-
-    TEST(BinarySearchChoise)
-    {
-        testBed::testBinarySearchChoise();
-    }
-
+    TESTWRAPPER(BinarySearchChoise)
 }
 
 SUITE(Reactions)
 {
-    TEST(RateCalculation)
-    {
-        testBed::testRateCalculation();
-    }
+    TESTWRAPPER(RateCalculation)
 
-    TEST(ReactionChoise)
-    {
-        testBed::testReactionChoise();
-    }
+    TESTWRAPPER(ReactionChoise)
 
-    TEST(InitialReactionSetup)
-    {
-        testBed::testInitialReactionSetup();
-    }
+    TESTWRAPPER(InitialReactionSetup)
 }
 
 SUITE(StateChanges)
 {
-    TEST(HasCrystalNeighbor)
-    {
-        testBed::testHasCrystalNeighbor();
-    }
+    TESTWRAPPER(HasCrystalNeighbor)
 
-    TEST(DeactivateSurface)
-    {
-        testBed::testDeactivateSurface();
-    }
+    TESTWRAPPER(DeactivateSurface)
 }
 
 SUITE(Parameters)
 {
-    TEST(BoxSizes)
-    {
-        testBed::testBoxSizes();
-    }
+    TESTWRAPPER(BoxSizes)
 
-    TEST(nNeiborsLimit)
-    {
-        testBed::testnNeiborsLimit();
-    }
+    TESTWRAPPER(nNeiborsLimit)
 
-    TEST(nNeighborsToCrystallize)
-    {
-        testBed::testnNeighborsToCrystallize();
-    }
+    TESTWRAPPER(nNeighborsToCrystallize)
 
-    TEST(DiffusionSeparation)
-    {
-        testBed::testDiffusionSeparation();
-    }
+    TESTWRAPPER(DiffusionSeparation)
+
 }
 
 SUITE(Boundaries)
 {
     TEST(Periodic)
     {
-        Site::setBoundaries(zeros<umat>(3, 2) + Boundary::Periodic);
-        testBed::runAllBoundaryTests();
+        cout << "Running test Periodic" << endl;
+        testBed::runAllBoundaryTests(zeros<umat>(3, 2) + Boundary::Periodic);
     }
 
     TEST(Edge)
     {
-            Site::setBoundaries(zeros<umat>(3, 2) + Boundary::Edge);
-        testBed::runAllBoundaryTests();
+        cout << "Running test Edge" << endl;
+        testBed::runAllBoundaryTests(zeros<umat>(3, 2) + Boundary::Edge);
     }
 
     TEST(Surface)
     {
-            Site::setBoundaries(zeros<umat>(3, 2) + Boundary::Surface);
-        testBed::runAllBoundaryTests();
+        cout << "Running test Surface" << endl;
+        //testBed::runAllBoundaryTests(zeros<umat>(3, 2) + Boundary::Surface);
     }
 
     TEST(Mixed)
     {
+        cout << "Running test Mixed" << endl;
         umat mixedBoundaries(3, 2);
 
         mixedBoundaries(0, 0) = Boundary::Periodic;
@@ -112,9 +81,7 @@ SUITE(Boundaries)
         mixedBoundaries(2, 0) = Boundary::Surface;
         mixedBoundaries(2, 1) = Boundary::ConcentrationWall;
 
-        Site::setBoundaries(mixedBoundaries);
-
-        testBed::runAllBoundaryTests();
+        //testBed::runAllBoundaryTests(mixedBoundaries);
 
     }
 
@@ -122,15 +89,9 @@ SUITE(Boundaries)
 
 SUITE(General)
 {
-    TEST(Sequential)
-    {
-        testBed::testSequential();
-    }
+    TESTWRAPPER(Sequential)
 
-    TEST(KnownCase)
-    {
-        testBed::testKnownCase();
-    }
+    TESTWRAPPER(KnownCase)
 }
 
 int main()
