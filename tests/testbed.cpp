@@ -1180,6 +1180,89 @@ void testBed::testnNeiborsLimit()
 void testBed::testnNeighborsToCrystallize()
 {
 
+    uvec nntcs = {1, 2, 3, 4, 5, 6, 7};
+
+    Site * crystallizingSite;
+
+    Site * initialSeedSite = solver->getSite(NX()/2, NY()/2, NZ()/2);
+
+    Site * trialSite = solver->getSite(NX()/2 + 2, NY()/2, NZ()/2);
+
+    uint totCrystalNeighbors;
+
+
+
+    initialSeedSite->spawnAsFixedCrystal();
+
+    trialSite->activate();
+
+
+    for (uint nnts : nntcs)
+    {
+
+        Site::setNNeighborsToCrystallize(nnts);
+        totCrystalNeighbors = 0;
+
+        //Fill a 3x3 surface with crystals.
+        for (int i = -1; i <= 1; ++i)
+        {
+            for (int j = -1; j <= 1; ++j)
+            {
+
+                crystallizingSite = solver->getSite(NX()/2 + 1, NY()/2 + i, NZ()/2 + j);
+
+                crystallizingSite->activate();
+
+                totCrystalNeighbors++;
+
+                CHECK_EQUAL(ParticleStates::crystal, crystallizingSite->particleState());
+
+
+                if (totCrystalNeighbors >= nnts)
+                {
+                    CHECK_EQUAL(ParticleStates::crystal, trialSite->particleState());
+                }
+
+                else
+                {
+                    CHECK_EQUAL(ParticleStates::solution, trialSite->particleState());
+                }
+
+
+            }
+        }
+
+        for (int i = -1; i <= 1; ++i)
+        {
+            for (int j = -1; j <= 1; ++j)
+            {
+
+                crystallizingSite = solver->getSite(NX()/2 + 1, NY()/2 + i, NZ()/2 + j);
+
+                crystallizingSite->deactivate();
+
+                totCrystalNeighbors--;
+
+                CHECK_EQUAL(ParticleStates::surface, crystallizingSite->particleState());
+
+
+                if (totCrystalNeighbors >= nnts)
+                {
+                    CHECK_EQUAL(ParticleStates::crystal, trialSite->particleState());
+                }
+
+                else
+                {
+                    CHECK_EQUAL(ParticleStates::solution, trialSite->particleState());
+                }
+
+            }
+        }
+
+    }
+
+
+
 }
 
 void testBed::testPeriodicBoundaries()

@@ -19,7 +19,7 @@ TEST(which)                                             \
     cout << "------------------------------\n" << endl; \
 }
 
-//UBERTEST(DeactivateSurface)
+UBERTEST(DeactivateSurface)
 //UBERTEST(RNG)
 //UBERTEST(EnergyAndNeighborSetup)
 //UBERTEST(DiffusionSiteMatrixSetup)
@@ -35,7 +35,7 @@ TEST(which)                                             \
 UBERTEST(Sequential)
 UBERTEST(BoxSizes)
 UBERTEST(nNeiborsLimit)
-//UBERTEST(nNeighborsToCrystallize)
+UBERTEST(nNeighborsToCrystallize)
 //UBERTEST(PeriodicBoundaries)
 //UBERTEST(OpenBoundaries)
 //UBERTEST(WallBoundaries)
