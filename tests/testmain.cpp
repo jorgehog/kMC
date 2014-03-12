@@ -32,16 +32,17 @@ TEST(which)                                             \
 //TESTWRAPPER(InitializationOfCrystal)
 //TESTWRAPPER(InitialReactionSetup)
 TESTWRAPPER(DeactivateSurface)
-TESTWRAPPER(Sequential)
-TESTWRAPPER(BoxSizes)
-TESTWRAPPER(nNeiborsLimit)
-TESTWRAPPER(nNeighborsToCrystallize)
-TESTWRAPPER(Boundaries)
-TESTWRAPPER(DiffusionSeparation)
-TESTWRAPPER(KnownCase)
+//TESTWRAPPER(Sequential)
+//TESTWRAPPER(BoxSizes)
+//TESTWRAPPER(nNeiborsLimit)
+//TESTWRAPPER(nNeighborsToCrystallize)
+//TESTWRAPPER(Boundaries)
+//TESTWRAPPER(DiffusionSeparation)
+//TESTWRAPPER(KnownCase)
 
 int main()
 {
     KMCDebugger_SetFilename("testTrace");
+
     return UnitTest::RunAllTests();
 }

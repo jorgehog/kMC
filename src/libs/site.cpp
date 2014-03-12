@@ -320,8 +320,10 @@ void Site::crystallize()
     }
     else
     {
+        KMCDebugger_AssertBool(!(DiffusionReaction::separation() == 1 && Site::nNeighborsToCrystallize() > 1), "With a single neighboring crystal needed, everything should crystallize if asked.", info());
+
         m_particleState = ParticleStates::solution;
-        KMCDebugger_Assert(Site::nNeighborsToCrystallize(), >, 1);
+
         KMCDebugger_PushImplication(this, particleStateName().c_str());
     }
 }
@@ -340,10 +342,10 @@ void Site::decrystallize()
         m_particleState = ParticleStates::solution;
         propagateToNeighbors(ParticleStates::any, ParticleStates::solution, DiffusionReaction::separation());
     }
-    else
-    {
-        KMCDebugger_AssertBreak("Unable to decrystallize site", info());
-    }
+//    else
+//    {
+//        KMCDebugger_AssertBreak("Unable to decrystallize site", info());
+//    }
 
     KMCDebugger_PushImplication(this, particleStateName().c_str());
 

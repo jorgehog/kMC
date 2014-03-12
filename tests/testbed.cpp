@@ -143,6 +143,7 @@ void testBed::testDeactivateSurface()
     Site * orig = solver->getSite(NX()/2, NY()/2, NZ()/2);
     Site * origNeighbor = solver->getSite(NX()/2+1, NY()/2, NZ()/2);
     Site * origNextNeighbor;
+    Site * inBetweenSite;
 
     orig->spawnAsFixedCrystal();
 
@@ -151,26 +152,54 @@ void testBed::testDeactivateSurface()
 
 
     uvec separations = {1, 2, 3};
+    solver->dumpXYZ();
 
     for (uint sep: separations)
     {
 
-        origNeighbor->activate();
-
-        CHECK_EQUAL(ParticleStates::crystal, origNeighbor->particleState());
-
         Site::setNNeighborsLimit(sep + 1);
         DiffusionReaction::setSeparation(sep);
+
+        orig->stripFixedCrystalProperty();
+        orig->deactivate();
+        orig->spawnAsFixedCrystal();
+
+        solver->dumpXYZ();
+
+        CHECK_EQUAL(ParticleStates::fixedCrystal, orig->particleState());
+        CHECK_EQUAL(ParticleStates::surface, origNeighbor->particleState());
+
+        origNeighbor->activate();
+        solver->dumpXYZ();
+
+        CHECK_EQUAL(ParticleStates::crystal, origNeighbor->particleState());
 
         origNextNeighbor = solver->getSite(NX()/2 + 1 + DiffusionReaction::separation(), NY()/2, NZ()/2);
 
         CHECK_EQUAL(ParticleStates::surface, origNextNeighbor->particleState());
 
         origNextNeighbor->activate();
+        solver->dumpXYZ();
+        //FILL EVERYTHING BETWEEN
+        for (uint i = 1; i < DiffusionReaction::separation(); ++i)
+        {
+            inBetweenSite = solver->getSite(NX()/2 + 1 + i, NY()/2, NZ()/2);
+            inBetweenSite->activate();
+            solver->dumpXYZ();
+        }
 
         CHECK_EQUAL(ParticleStates::crystal, origNextNeighbor->particleState());
 
+        //DEACTIVATE EVERYTHING BETWEEN
+        for (uint i = 1; i < DiffusionReaction::separation(); ++i)
+        {
+            inBetweenSite = solver->getSite(NX()/2 + 1 + i, NY()/2, NZ()/2);
+            inBetweenSite->deactivate();
+            solver->dumpXYZ();
+        }
+
         origNeighbor->deactivate();
+        solver->dumpXYZ();
 
         CHECK_EQUAL(ParticleStates::fixedCrystal, orig->particleState());
         CHECK_EQUAL(ParticleStates::surface, origNeighbor->particleState());
@@ -179,8 +208,11 @@ void testBed::testDeactivateSurface()
         CHECK_EQUAL(ParticleStates::solution, origNextNeighbor->particleState());
 
         origNextNeighbor->deactivate();
+        solver->dumpXYZ();
 
     }
+
+    solver->dumpXYZ();
 
 }
 
