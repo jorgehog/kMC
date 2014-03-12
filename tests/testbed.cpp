@@ -150,7 +150,7 @@ void testBed::testDeactivateSurface()
     CHECK_EQUAL(ParticleStates::surface, origNeighbor->particleState());
 
 
-    uvec separations = {0, 1, 2, 3};
+    uvec separations = {1, 2, 3};
 
     for (uint sep: separations)
     {
@@ -162,7 +162,7 @@ void testBed::testDeactivateSurface()
         Site::setNNeighborsLimit(sep + 1);
         DiffusionReaction::setSeparation(sep);
 
-        origNextNeighbor = solver->getSite(NX()/2 + 2 + DiffusionReaction::separation(), NY()/2, NZ()/2);
+        origNextNeighbor = solver->getSite(NX()/2 + 1 + DiffusionReaction::separation(), NY()/2, NZ()/2);
 
         CHECK_EQUAL(ParticleStates::surface, origNextNeighbor->particleState());
 

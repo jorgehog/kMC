@@ -212,8 +212,7 @@ bool Site::qualifiesAsCrystal()
 
 bool Site::qualifiesAsSurface()
 {
-    return !isActive() && (hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation()) ||
-                           hasNeighboring(ParticleStates::fixedCrystal, 1));
+    return !isActive() && hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation());
 }
 
 
@@ -705,6 +704,7 @@ void Site::introduceNeighborhood()
 
                         if (neighbor->isActive())
                         {
+
                             uint level = m_levelMatrix(i, j, k);
 
                             m_nNeighbors(level)++;
@@ -717,6 +717,7 @@ void Site::introduceNeighborhood()
                             m_energy += dE;
 
                             m_totalEnergy += dE;
+
                         }
 
                     }
