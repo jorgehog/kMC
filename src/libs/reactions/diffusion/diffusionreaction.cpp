@@ -117,9 +117,9 @@ void DiffusionReaction::setupPotential()
                     continue;
                 }
 
-                m_potential(i, j, k) = 1.0/pow(pow(Site::originTransformVector()(i), 2)
-                                               + pow(Site::originTransformVector()(j), 2)
-                                               + pow(Site::originTransformVector()(k), 2), rPower/2);
+                m_potential(i, j, k) = 1.0/pow(pow(Site::originTransformVector(i), 2)
+                                               + pow(Site::originTransformVector(j), 2)
+                                               + pow(Site::originTransformVector(k), 2), rPower/2);
             }
         }
     }

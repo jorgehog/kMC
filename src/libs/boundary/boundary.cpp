@@ -47,12 +47,13 @@ bool Boundary::isCompatible(const int type1, const int type2, bool reverse)
 
 void Boundary::setupLocations(const uint x, const uint y, const uint z, uvec3 &loc)
 {
+    //make x, y, z boundary static site members?
 
     uvec xyz = {x, y, z};
 
     for (uint i = 0; i < 3; ++i)
     {
-        if (xyz(i) >= N(i))
+        if (xyz(i) >= N(i)/2)
         {
             loc(i) = 1;
         }

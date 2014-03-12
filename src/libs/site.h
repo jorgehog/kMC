@@ -150,6 +150,11 @@ public:
      * Misc. trivial functions
      */
 
+    static const uint &boundaryTypes(const uint i, const uint j)
+    {
+        return m_boundaryTypes(i, j);
+    }
+
     static const uint &nNeighborsToCrystallize()
     {
         return m_nNeighborsToCrystallize;
@@ -170,9 +175,9 @@ public:
         return m_levelMatrix(i, j, k);
     }
 
-    static const ivec &originTransformVector()
+    static uint originTransformVector(const uint i)
     {
-        return m_originTransformVector;
+        return m_originTransformVector(i);
     }
 
     static const uint & totalActiveSites()
@@ -321,6 +326,8 @@ private:
     static field<Boundary*> m_boundaries;
 
     static field<const Setting*> m_boundaryConfigs;
+
+    static umat m_boundaryTypes;
 
     static uint m_nNeighborsLimit;
     static uint m_neighborhoodLength;

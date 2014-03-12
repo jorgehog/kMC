@@ -15,82 +15,67 @@ using namespace kMC;
 class testBed
 {
 public:
-    testBed();
 
-    KMCSolver * makeSolver();
+    static void makeSolver();
 
-    ~testBed();
+    static void testDistanceTo();
 
-    void testDistanceTo();
+    static void testDeactivateSurface();
 
-    void testDeactivateSurface();
+    static void testDiffusionSiteMatrixSetup();
 
-    void testDiffusionSiteMatrixSetup();
+    static void testNeighbors();
 
-    void testNeighbors();
+    static void testRNG();
 
-    void testRNG();
+    static void testBinarySearchChoise();
 
-    void testBinarySearchChoise();
+    static void testReactionChoise();
 
-    void testReactionChoise();
+    static void testRateCalculation();
 
-    void testRateCalculation();
+    static void testEnergyAndNeighborSetup();
 
-    void testEnergyAndNeighborSetup();
+    static void testUpdateNeigbors();
 
-    void testUpdateNeigbors();
+    static void testHasCrystalNeighbor();
 
-    void testHasCrystalNeighbor();
+    static void testInitializationOfCrystal();
 
-    void testInitializationOfCrystal();
+    static void testInitialReactionSetup();
 
-    void testInitialReactionSetup();
+    static void testSequential();
 
-    void testSequential();
+    static void testKnownCase();
 
-    void testKnownCase();
+    static void testBoxSizes();
 
-    void testBoxSizes();
+    static void testnNeiborsLimit();
 
-    void testnNeiborsLimit();
+    static void testnNeighborsToCrystallize();
 
-    void testnNeighborsToCrystallize();
+    static void testBoundaries();
 
-    void testBoundaries();
+    static void testDiffusionSeparation();
 
-    void testDiffusionSeparation();
+    static void runAllBoundaryTests();
 
-
-
+    static KMCSolver* solver;
 
 
-    uint failCount;
-    uint winCount;
-    uint nTrials;
-
-    void reset() {
-
-        failCount = 0;
-        winCount = 0;
-        nTrials = 0;
-    }
-
-    const uint &NX () const
+    static const inline uint & NX()
     {
         return solver->NX();
     }
 
-    const uint &NY () const
+    static const inline  uint & NY()
     {
         return solver->NY();
     }
 
-    const uint &NZ () const
+    static const inline uint & NZ()
     {
         return solver->NZ();
     }
 
-    KMCSolver* solver;
-    Setting* root;
 };

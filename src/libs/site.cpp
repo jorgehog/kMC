@@ -917,6 +917,7 @@ void Site::resetAll()
     resetBoundaries();
 
     m_boundaryConfigs.clear();
+    m_boundaryTypes.clear();
 
 }
 
@@ -1161,19 +1162,19 @@ void Site::setInitialBoundaries(const Setting & boundariesConfig)
 {
 
 
-    umat boundaries(3, 2);
     m_boundaryConfigs.set_size(3, 2);
+    m_boundaryTypes.set_size(3, 2);
 
     for (uint XYZ = 0; XYZ < 3; ++XYZ)
     {
         for (uint orientation = 0; orientation < 2; ++orientation)
         {
             m_boundaryConfigs(XYZ, orientation) = &getSurfaceSetting(boundariesConfig, "configs")[XYZ][orientation];
-            boundaries(XYZ, orientation) = getSurfaceSetting(boundariesConfig, "types")[XYZ][orientation];
+            m_boundaryTypes(XYZ, orientation) = getSurfaceSetting(boundariesConfig, "types")[XYZ][orientation];
         }
     }
 
-    setBoundaries(boundaries, false, false);
+    setBoundaries(m_boundaryTypes, false, false);
 
 }
 
@@ -1185,18 +1186,16 @@ void Site::setBoundaries(const umat &boundaryMatrix, bool reset, bool init)
         resetBoundaries();
     }
 
-    m_boundaries.set_size(3, 2);
+    m_boundaryTypes = boundaryMatrix;
 
-    ivec boundaryTypes(2);
+    m_boundaries.set_size(3, 2);
 
     for (uint XYZ = 0; XYZ < 3; ++XYZ)
     {
         for (uint orientation = 0; orientation < 2; ++orientation)
         {
 
-            boundaryTypes(orientation) = boundaryMatrix(XYZ, orientation);
-
-            switch (boundaryTypes(orientation))
+            switch (m_boundaryTypes(XYZ, orientation))
             {
             case Boundary::Periodic:
                 m_boundaries(XYZ, orientation) = new Periodic(XYZ, orientation);
@@ -1220,7 +1219,7 @@ void Site::setBoundaries(const umat &boundaryMatrix, bool reset, bool init)
 
             default:
 
-                cerr << "Unknown boundary type " << boundaryTypes(orientation) << endl;
+                cerr << "Unknown boundary type " << m_boundaryTypes(XYZ, orientation) << endl;
                 exit(1);
 
                 break;
@@ -1228,19 +1227,26 @@ void Site::setBoundaries(const umat &boundaryMatrix, bool reset, bool init)
 
             m_boundaries(XYZ, orientation)->loadConfig(*m_boundaryConfigs(XYZ, orientation));
 
+
         }
 
-        if (!Boundary::isCompatible(boundaryTypes(0), boundaryTypes(1)))
+        if (!Boundary::isCompatible(m_boundaryTypes(XYZ, 0), m_boundaryTypes(XYZ, 1)))
         {
-            cerr << "Mismatch in boundaries for " << XYZ << "'th dimension: " << boundaryTypes.t();
+            cerr << "Mismatch in boundaries for " << XYZ << "'th dimension: " << m_boundaryTypes.t();
             exit(1);
         }
+    }
+
+    if (reset)
+    {
+        Site::initializeBoundaries();
     }
 
     if (init)
     {
         m_solver->initializeSiteNeighborhoods();
     }
+
 
 }
 
@@ -1287,6 +1293,8 @@ set<Site*> Site::m_affectedSites;
 field<Boundary*> Site::m_boundaries;
 
 field<const Setting*> Site::m_boundaryConfigs;
+
+umat Site::m_boundaryTypes;
 
 const vector<string> ParticleStates::names = {"crystal", "fixedcrystal", "solution", "surface"};
 const vector<string> ParticleStates::shortNames = {"C", "F", "P", "S"};
