@@ -12,6 +12,12 @@ using namespace std;
 
 #define TESTWRAPPER(which) TEST(which) {cout << "Running test " << #which << endl; testBed::test##which();}
 
+TEST(AIDS)
+{
+    testBed::runAllBoundaryTests(zeros<umat>(3, 2) + Boundary::Edge);
+}
+
+/*
 SUITE(Misc)
 {
     TESTWRAPPER(RNG)
@@ -58,7 +64,7 @@ SUITE(Boundaries)
     TEST(Edge)
     {
         cout << "Running test Edge" << endl;
-        testBed::runAllBoundaryTests(zeros<umat>(3, 2) + Boundary::Edge);
+//        testBed::runAllBoundaryTests(zeros<umat>(3, 2) + Boundary::Edge);
     }
 
     TEST(Surface)
@@ -81,7 +87,7 @@ SUITE(Boundaries)
         mixedBoundaries(2, 0) = Boundary::Surface;
         mixedBoundaries(2, 1) = Boundary::ConcentrationWall;
 
-        //testBed::runAllBoundaryTests(mixedBoundaries);
+//        testBed::runAllBoundaryTests(mixedBoundaries);
 
     }
 
@@ -89,10 +95,11 @@ SUITE(Boundaries)
 
 SUITE(General)
 {
-    TESTWRAPPER(Sequential)
+//    TESTWRAPPER(Sequential)
 
     TESTWRAPPER(KnownCase)
 }
+*/
 
 int main()
 {

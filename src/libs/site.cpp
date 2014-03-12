@@ -648,7 +648,7 @@ void Site::introduceNeighborhood()
 
     Site * neighbor;
 
-    assert(m_nNeighborsLimit != 0);
+    KMCDebugger_Assert(m_nNeighborsLimit, !=, 0, "Neighborlimit must be greater than zero.", info());
 
 
     m_nNeighbors.zeros(m_nNeighborsLimit);
@@ -714,8 +714,7 @@ void Site::introduceNeighborhood()
 
                             m_nNeighborsSum++;
 
-                            double
-                                    dE = DiffusionReaction::potential(i,  j,  k);
+                            double dE = DiffusionReaction::potential(i,  j,  k);
 
                             m_energy += dE;
 
