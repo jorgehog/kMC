@@ -29,23 +29,8 @@ Site::Site(uint _x, uint _y, uint _z) :
 
 Site::~Site()
 {
-    for (uint i = 0; i < m_neighborhoodLength; ++i)
-    {
-        for (uint j = 0; j < m_neighborhoodLength; ++j)
-        {
-            for (uint k = 0; k < m_neighborhoodLength; ++k)
-            {
-                m_neighborHood[i][j][k] = NULL;
-            }
 
-            delete [] m_neighborHood[i][j];
-        }
-
-        delete [] m_neighborHood[i];
-    }
-
-    delete [] m_neighborHood;
-
+    clearNeighborhood();
 
     for (Reaction* reaction : m_siteReactions)
     {
@@ -240,7 +225,7 @@ void Site::loadConfig(const Setting &setting)
 
     setNNeighborsToCrystallize(getSurfaceSetting<uint>(setting, "nNeighboursToCrystallize"));
 
-    setNNeighborsLimit(getSurfaceSetting<uint>(setting, "nNeighborsLimit"), false);
+    setNNeighborsLimit(getSurfaceSetting<uint>(setting, "nNeighborsLimit"), false, false);
 
 }
 
@@ -567,7 +552,7 @@ uint Site::countNeighboring(int state, int range) const
 void Site::activate()
 {
 
-    KMCDebugger_AssertBool(!m_active, "activating deactivated site", info());
+    KMCDebugger_AssertBool(!m_active, "activating active site", info());
     KMCDebugger_AssertBool(!isCrystal(), "Activating a crystal. (should always be active)", info());
 
 
@@ -844,6 +829,26 @@ void Site::setZeroEnergy()
     m_energy = 0;
 }
 
+void Site::clearNeighborhood()
+{
+    for (uint i = 0; i < m_neighborhoodLength; ++i)
+    {
+        for (uint j = 0; j < m_neighborhoodLength; ++j)
+        {
+            for (uint k = 0; k < m_neighborhoodLength; ++k)
+            {
+                m_neighborHood[i][j][k] = NULL;
+            }
+
+            delete [] m_neighborHood[i][j];
+        }
+
+        delete [] m_neighborHood[i];
+    }
+
+    delete [] m_neighborHood;
+}
+
 uint Site::findLevel(uint i, uint j, uint k)
 {
 
@@ -1048,8 +1053,13 @@ uint Site::nNeighborsSum() const
     return m_nNeighborsSum;
 }
 
-void Site::setNNeighborsLimit(const uint &nNeighborsLimit, bool init)
+void Site::setNNeighborsLimit(const uint &nNeighborsLimit, bool reset, bool init)
 {
+
+    if (reset)
+    {
+        m_solver->clearSiteNeighborhoods();
+    }
 
     if (!(NX() == KMCSolver::UNSET_UINT && NY() == KMCSolver::UNSET_UINT && NZ() == KMCSolver::UNSET_UINT))
     {

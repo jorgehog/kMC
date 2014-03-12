@@ -282,6 +282,20 @@ void KMCSolver::initializeSites()
 
 }
 
+void KMCSolver::clearSiteNeighborhoods()
+{
+    for (uint x = 0; x < m_NX; ++x)
+    {
+        for (uint y = 0; y < m_NY; ++y)
+        {
+            for (uint z = 0; z < m_NZ; ++z)
+            {
+                sites[x][y][z]->clearNeighborhood();
+            }
+        }
+    }
+}
+
 void KMCSolver::initializeSiteNeighborhoods()
 {
     for (uint x = 0; x < m_NX; ++x)

@@ -140,6 +140,8 @@ public:
         m_nNeighborsSum = 0;
     }
 
+    void clearNeighborhood();
+
 
     const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const;
 
@@ -299,7 +301,7 @@ public:
 
     //Static setters:
 
-    static void setNNeighborsLimit(const uint & nNeighborsLimit, bool init = true);
+    static void setNNeighborsLimit(const uint & nNeighborsLimit, bool reset = true, bool init = true);
 
     static void setInitialBoundaries(const Setting & boundarySetup);
 

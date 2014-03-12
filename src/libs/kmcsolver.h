@@ -131,6 +131,8 @@ public:
     void setRNGSeed(uint seedState, int defaultSeed);
 
 
+    void clearSiteNeighborhoods();
+
 
     void dumpXYZ();
 
@@ -170,7 +172,6 @@ private:
     void initializeDiffusionReactions();
 
     void initializeSites();
-
 
     void clearSites();
 
