@@ -5,12 +5,12 @@
 namespace kMC
 {
 
-class Wall : public Boundary
+class Surface : public Boundary
 {
 public:
-    Wall(const uint dimension, const uint orientation);
+    Surface(const uint dimension, const uint orientation);
 
-    ~Wall();
+    ~Surface();
 
     // Boundary interface
 public:

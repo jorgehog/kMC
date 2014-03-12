@@ -66,8 +66,8 @@ public:
     {
         Periodic,
         Edge,
-        Wall,
-        ConsentrationWall
+        Surface,
+        ConcentrationWall
     };
 
 

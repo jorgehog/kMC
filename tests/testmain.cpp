@@ -10,7 +10,7 @@
 
 using namespace std;
 
-#define UBERTEST(which)                                 \
+#define TESTWRAPPER(which)                                 \
 TEST(which)                                             \
 {                                                       \
     cout << "Testing: " << #which << endl;              \
@@ -19,30 +19,26 @@ TEST(which)                                             \
     cout << "------------------------------\n" << endl; \
 }
 
-UBERTEST(DeactivateSurface)
-//UBERTEST(RNG)
-//UBERTEST(EnergyAndNeighborSetup)
-//UBERTEST(DiffusionSiteMatrixSetup)
-//UBERTEST(Neighbors)
-//UBERTEST(DistanceTo)
-//UBERTEST(BinarySearchChoise)
-//UBERTEST(UpdateNeigbors)
-//UBERTEST(RateCalculation)
-//UBERTEST(ReactionChoise)
-//UBERTEST(HasCrystalNeighbor)
-//UBERTEST(InitializationOfCrystal)
-//UBERTEST(InitialReactionSetup)
-UBERTEST(Sequential)
-UBERTEST(BoxSizes)
-UBERTEST(nNeiborsLimit)
-UBERTEST(nNeighborsToCrystallize)
-//UBERTEST(PeriodicBoundaries)
-//UBERTEST(OpenBoundaries)
-//UBERTEST(WallBoundaries)
-//UBERTEST(ConcentrationBoundaries)
-//UBERTEST(Mixedboundaries)
-//UBERTEST(DiffusionSeparation)
-UBERTEST(KnownCase)
+TESTWRAPPER(DeactivateSurface)
+TESTWRAPPER(RNG)
+TESTWRAPPER(EnergyAndNeighborSetup)
+TESTWRAPPER(DiffusionSiteMatrixSetup)
+TESTWRAPPER(Neighbors)
+TESTWRAPPER(DistanceTo)
+TESTWRAPPER(BinarySearchChoise)
+TESTWRAPPER(UpdateNeigbors)
+TESTWRAPPER(RateCalculation)
+TESTWRAPPER(ReactionChoise)
+TESTWRAPPER(HasCrystalNeighbor)
+TESTWRAPPER(InitializationOfCrystal)
+TESTWRAPPER(InitialReactionSetup)
+TESTWRAPPER(Sequential)
+TESTWRAPPER(BoxSizes)
+TESTWRAPPER(nNeiborsLimit)
+TESTWRAPPER(nNeighborsToCrystallize)
+TESTWRAPPER(Boundaries)
+TESTWRAPPER(DiffusionSeparation)
+TESTWRAPPER(KnownCase)
 
 int main()
 {

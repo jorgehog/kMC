@@ -303,7 +303,7 @@ public:
 
     static void setInitialBoundaries(const Setting & boundarySetup);
 
-    static void setBoundaries(const umat & boundaryMatrix, bool reset = true);
+    static void setBoundaries(const umat & boundaryMatrix, bool reset = true, bool init = true);
 
     static void setNNeighborsToCrystallize(const uint & nNeighborsToCrystallize);
 

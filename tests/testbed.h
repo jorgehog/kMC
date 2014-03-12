@@ -57,15 +57,7 @@ public:
 
     void testnNeighborsToCrystallize();
 
-    void testPeriodicBoundaries();
-
-    void testOpenBoundaries();
-
-    void testWallBoundaries();
-
-    void testConcentrationBoundaries();
-
-    void testMixedboundaries();
+    void testBoundaries();
 
     void testDiffusionSeparation();
 

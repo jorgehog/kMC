@@ -1178,6 +1178,7 @@ void testBed::testnNeiborsLimit()
 }
 
 void testBed::testnNeighborsToCrystallize()
+
 {
 
     uvec nntcs = {1, 2, 3, 4, 5, 6, 7};
@@ -1265,29 +1266,27 @@ void testBed::testnNeighborsToCrystallize()
 
 }
 
-void testBed::testPeriodicBoundaries()
+void testBed::testBoundaries()
 {
+    Site::setBoundaries(zeros<umat>(3, 2) + Boundary::Periodic);
 
-}
 
-void testBed::testOpenBoundaries()
-{
+    Site::setBoundaries(zeros<umat>(3, 2) + Boundary::Periodic);
+    Site::setBoundaries(zeros<umat>(3, 2) + Boundary::Periodic);
+    Site::setBoundaries(zeros<umat>(3, 2) + Boundary::Periodic);
 
-}
+    umat boundaries(3, 2);
 
-void testBed::testWallBoundaries()
-{
+    boundaries(0, 0) = Boundary::Periodic;
+    boundaries(0, 1) = Boundary::Periodic;
 
-}
+    boundaries(1, 0) = Boundary::Edge;
+    boundaries(1, 1) = Boundary::Edge;
 
-void testBed::testConcentrationBoundaries()
-{
+    boundaries(2, 0) = Boundary::Surface;
+    boundaries(2, 1) = Boundary::ConcentrationWall;
 
-}
-
-void testBed::testMixedboundaries()
-{
-
+    Site::setBoundaries(boundaries);
 }
 
 void testBed::testDiffusionSeparation()

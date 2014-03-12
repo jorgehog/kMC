@@ -5,7 +5,7 @@
 
 #include "boundary/periodic/periodic.h"
 #include "boundary/edge/edge.h"
-#include "boundary/wall/wall.h"
+#include "boundary/wall/surface.h"
 #include "boundary/concentrationwall/concentrationwall.h"
 
 #include "debugger/debugger.h"
@@ -1130,11 +1130,11 @@ void Site::setInitialBoundaries(const Setting & boundariesConfig)
         }
     }
 
-    setBoundaries(boundaries, false);
+    setBoundaries(boundaries, false, false);
 
 }
 
-void Site::setBoundaries(const umat &boundaryMatrix, bool reset)
+void Site::setBoundaries(const umat &boundaryMatrix, bool reset, bool init)
 {
 
     if (reset)
@@ -1165,12 +1165,12 @@ void Site::setBoundaries(const umat &boundaryMatrix, bool reset)
 
                 break;
 
-            case Boundary::Wall:
-                m_boundaries(XYZ, orientation) = new Wall(XYZ, orientation);
+            case Boundary::Surface:
+                m_boundaries(XYZ, orientation) = new Surface(XYZ, orientation);
 
                 break;
 
-            case Boundary::ConsentrationWall:
+            case Boundary::ConcentrationWall:
                 m_boundaries(XYZ, orientation) = new ConcentrationWall(XYZ, orientation);
 
                 break;
@@ -1193,6 +1193,12 @@ void Site::setBoundaries(const umat &boundaryMatrix, bool reset)
             exit(1);
         }
     }
+
+    if (init)
+    {
+        m_solver->initializeSiteNeighborhoods();
+    }
+
 }
 
 

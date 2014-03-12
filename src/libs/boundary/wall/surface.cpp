@@ -1,24 +1,24 @@
-#include "wall.h"
+#include "surface.h"
 
 #include "../../kmcsolver.h"
 #include "../../debugger/debugger.h"
 
 using namespace kMC;
 
-Wall::Wall(const uint dimension, const uint orientation) :
+Surface::Surface(const uint dimension, const uint orientation) :
     Boundary(dimension, orientation)
 {
 
 }
 
-Wall::~Wall()
+Surface::~Surface()
 {
 
 }
 
 
 
-void Wall::initialize()
+void Surface::initialize()
 {
     uint xi = 0;
 
