@@ -59,13 +59,13 @@ SUITE(Boundaries)
     TEST(Edge)
     {
         cout << "Running test Edge" << endl;
-//        testBed::runAllBoundaryTests(zeros<umat>(3, 2) + Boundary::Edge);
+        testBed::runAllBoundaryTests(zeros<umat>(3, 2) + Boundary::Edge);
     }
 
     TEST(Surface)
     {
         cout << "Running test Surface" << endl;
-        //testBed::runAllBoundaryTests(zeros<umat>(3, 2) + Boundary::Surface);
+        testBed::runAllBoundaryTests(zeros<umat>(3, 2) + Boundary::Surface);
     }
 
     TEST(Mixed)
@@ -82,7 +82,7 @@ SUITE(Boundaries)
         mixedBoundaries(2, 0) = Boundary::Surface;
         mixedBoundaries(2, 1) = Boundary::ConcentrationWall;
 
-//        testBed::runAllBoundaryTests(mixedBoundaries);
+        testBed::runAllBoundaryTests(mixedBoundaries);
 
     }
 
