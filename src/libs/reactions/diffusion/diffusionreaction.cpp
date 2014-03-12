@@ -100,6 +100,7 @@ void DiffusionReaction::setupPotential()
 
     KMCDebugger_Assert(scale, !=, 0, "Potential parameters not set.");
 
+    m_potential.reset();
     m_potential.set_size(Site::neighborhoodLength(),
                          Site::neighborhoodLength(),
                          Site::neighborhoodLength());
@@ -117,9 +118,10 @@ void DiffusionReaction::setupPotential()
                     continue;
                 }
 
-                m_potential(i, j, k) = 1.0/pow(pow(Site::originTransformVector(i), 2)
-                                               + pow(Site::originTransformVector(j), 2)
-                                               + pow(Site::originTransformVector(k), 2), rPower/2);
+                m_potential(i, j, k) = 1.0/std::pow(Site::originTransformVector(i)*Site::originTransformVector(i)
+                                                  + Site::originTransformVector(j)*Site::originTransformVector(j)
+                                                  + Site::originTransformVector(k)*Site::originTransformVector(k)
+                                                    , rPower/2);
             }
         }
     }
@@ -196,6 +198,7 @@ void DiffusionReaction::setupPotential()
 
 
     m_potential *= scale;
+
 }
 
 bool DiffusionReaction::allowedGivenNotBlocked() const
@@ -408,7 +411,7 @@ void DiffusionReaction::calcRate()
 
         double Esp = getSaddleEnergy();
 
-        newRate = linearRateScale()*exp(-beta()*(reactionSite()->energy()- Esp));
+        newRate = linearRateScale()*std::exp(-beta()*(reactionSite()->energy()- Esp));
 
         m_lastUsedEsp = Esp;
     }
@@ -420,7 +423,7 @@ void DiffusionReaction::calcRate()
         KMCDebugger_Assert(updateFlag(), ==, updateKeepSaddle, "Errorous updateFlag.", getFinalizingDebugMessage());
         KMCDebugger_Assert(lastUsedEnergy(), !=, UNSET_ENERGY, "energy never calculated before.", getFinalizingDebugMessage());
 
-        newRate = rate()*exp(-beta()*(reactionSite()->energy() - lastUsedEnergy()));
+        newRate = rate()*std::exp(-beta()*(reactionSite()->energy() - lastUsedEnergy()));
 
         KMCDebugger_AssertClose(getSaddleEnergy(), m_lastUsedEsp, 1E-10, "Saddle energy was not conserved as assumed by flag. ", getFinalizingDebugMessage());
 

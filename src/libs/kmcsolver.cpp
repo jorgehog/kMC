@@ -50,7 +50,6 @@ KMCSolver::KMCSolver(const Setting & root) :
     Site::loadConfig(SystemSettings);
 
 
-
     setNumberOfCycles(
                 getSurfaceSetting<uint>(SolverSettings, "nCycles"));
 
@@ -579,7 +578,7 @@ void KMCSolver::setRNGSeed(uint seedState, int defaultSeed = 0)
         break;
     }
 
-//    cout << "initializing seed : " << seed << endl;
+    //    cout << "initializing seed : " << seed << endl;
     KMC_INIT_RNG(seed);
 
 }

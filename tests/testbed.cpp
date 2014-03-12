@@ -625,8 +625,8 @@ void testBed::testEnergyAndNeighborSetup()
     const Site* currentSite;
     const Site* otherSite;
 
-
     solver->initializeCrystal();
+    solver->dumpXYZ();
 
     uvec nn(Site::nNeighborsLimit());
 
@@ -654,15 +654,17 @@ void testBed::testEnergyAndNeighborSetup()
                             otherSite = solver->getSite(is, js, ks);
 
                             currentSite->distanceTo(otherSite, dx, dy, dz);
+
                             ldx = abs(dx);
 
                             if (ldx <= Site::nNeighborsLimit())
                             {
+
                                 ldy = abs(dy);
                                 if (ldy <= Site::nNeighborsLimit())
                                 {
-                                    ldz = abs(dz);
 
+                                    ldz = abs(dz);
                                     if (ldz <= Site::nNeighborsLimit())
                                     {
 
@@ -694,7 +696,7 @@ void testBed::testEnergyAndNeighborSetup()
                     }
                 }
 
-//                CHECK_EQUAL(pow(Site::neighborhoodLength(), 3) - 1, C);
+                CHECK_EQUAL(pow(Site::neighborhoodLength(), 3) - 1, C);
 
                 for (uint K = 0; K < Site::nNeighborsLimit(); ++K) {
                     CHECK_EQUAL(nn(K), currentSite->nNeighbors(K));
