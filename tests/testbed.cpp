@@ -137,7 +137,8 @@ void testBed::testDistanceTo()
 
 void testBed::testDeactivateSurface()
 {
-    if (Site::nNeighborsToCrystallize() != 1) return;
+
+    Site::setNNeighborsToCrystallize(1);
 
     Site * orig = solver->getSite(NX()/2, NY()/2, NZ()/2);
     Site * origNeighbor = solver->getSite(NX()/2+1, NY()/2, NZ()/2);
@@ -148,19 +149,20 @@ void testBed::testDeactivateSurface()
     CHECK_EQUAL(ParticleStates::fixedCrystal, orig->particleState());
     CHECK_EQUAL(ParticleStates::surface, origNeighbor->particleState());
 
-    origNeighbor->activate();
-
-    CHECK_EQUAL(ParticleStates::crystal, origNeighbor->particleState());
 
     uvec separations = {0, 1, 2, 3};
 
     for (uint sep: separations)
     {
 
+        origNeighbor->activate();
+
+        CHECK_EQUAL(ParticleStates::crystal, origNeighbor->particleState());
+
         Site::setNNeighborsLimit(sep + 1);
         DiffusionReaction::setSeparation(sep);
 
-        origNextNeighbor = solver->getSite(NX()/2 + 1 + DiffusionReaction::separation(), NY()/2, NZ()/2);
+        origNextNeighbor = solver->getSite(NX()/2 + 2 + DiffusionReaction::separation(), NY()/2, NZ()/2);
 
         CHECK_EQUAL(ParticleStates::surface, origNextNeighbor->particleState());
 
@@ -175,6 +177,8 @@ void testBed::testDeactivateSurface()
 
         CHECK_EQUAL(false, origNextNeighbor->hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation()));
         CHECK_EQUAL(ParticleStates::solution, origNextNeighbor->particleState());
+
+        origNextNeighbor->deactivate();
 
     }
 

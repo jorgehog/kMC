@@ -41,10 +41,6 @@ Site::~Site()
 
     m_siteReactions.clear();
 
-    m_allNeighbors.clear();
-
-    m_nNeighbors.reset();
-
 }
 
 
@@ -216,7 +212,8 @@ bool Site::qualifiesAsCrystal()
 
 bool Site::qualifiesAsSurface()
 {
-    return !isActive() && hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation());
+    return !isActive() && (hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation()) ||
+                           hasNeighboring(ParticleStates::fixedCrystal, 1));
 }
 
 
@@ -344,7 +341,10 @@ void Site::decrystallize()
         m_particleState = ParticleStates::solution;
         propagateToNeighbors(ParticleStates::any, ParticleStates::solution, DiffusionReaction::separation());
     }
-
+    else
+    {
+        KMCDebugger_AssertBreak("Unable to decrystallize site", info());
+    }
 
     KMCDebugger_PushImplication(this, particleStateName().c_str());
 
@@ -640,10 +640,17 @@ void Site::deactivate()
 void Site::introduceNeighborhood()
 {
 
+    uint xTrans, yTrans, zTrans;
+
+    uvec3 loc;
+
+    Site * neighbor;
+
     assert(m_nNeighborsLimit != 0);
 
-    uint xTrans, yTrans, zTrans;
-    uvec3 loc;
+
+    m_nNeighbors.zeros(m_nNeighborsLimit);
+
 
     Boundary::setupLocations(m_x, m_y, m_z, loc);
 
@@ -651,11 +658,6 @@ void Site::introduceNeighborhood()
     const Boundary * yBoundary = m_boundaries(1, loc(1));
     const Boundary * zBoundary = m_boundaries(2, loc(2));
 
-
-    m_nNeighbors.set_size(m_nNeighborsLimit);
-    m_nNeighbors.zeros();
-
-    m_allNeighbors.clear();
 
     m_neighborHood = new Site***[m_neighborhoodLength];
 
@@ -688,17 +690,35 @@ void Site::introduceNeighborhood()
                 else
                 {
 
-                    m_neighborHood[i][j][k] = m_solver->getSite(xTrans, yTrans, zTrans);
+                    neighbor = m_solver->getSite(xTrans, yTrans, zTrans);
 
-                    if (m_neighborHood[i][j][k] != this)
+                    m_neighborHood[i][j][k] = neighbor;
+
+                    if (neighbor != this)
                     {
 
                         KMCDebugger_AssertBool(!(i == Site::nNeighborsLimit() && j == Site::nNeighborsLimit() && k == Site::nNeighborsLimit()));
-                        KMCDebugger_AssertBool(!(m_neighborHood[i][j][k]->x() == x() && m_neighborHood[i][j][k]->y() == y() && m_neighborHood[i][j][k]->z() == z()));
+                        KMCDebugger_AssertBool(!(neighbor->x() == x() && neighbor->y() == y() && neighbor->z() == z()));
                         KMCDebugger_AssertBool(!(xTrans == x() && yTrans == y() && zTrans == z()));
 
+                        m_allNeighbors.push_back(neighbor);
 
-                        m_allNeighbors.push_back(m_neighborHood[i][j][k]);
+                        if (neighbor->isActive())
+                        {
+                            uint level = m_levelMatrix(i, j, k);
+
+                            m_nNeighbors(level)++;
+
+                            m_nNeighborsSum++;
+
+                            double
+                                    dE = DiffusionReaction::potential(i,  j,  k);
+
+                            m_energy += dE;
+
+                            m_totalEnergy += dE;
+                        }
+
                     }
                 }
 
@@ -831,6 +851,19 @@ void Site::setZeroEnergy()
 
 void Site::clearNeighborhood()
 {
+
+    m_totalEnergy -= m_energy;
+
+    m_energy = 0;
+
+
+    m_allNeighbors.clear();
+
+    m_nNeighbors.reset();
+
+    m_nNeighborsSum = 0;
+
+
     for (uint i = 0; i < m_neighborhoodLength; ++i)
     {
         for (uint j = 0; j < m_neighborhoodLength; ++j)
@@ -847,6 +880,7 @@ void Site::clearNeighborhood()
     }
 
     delete [] m_neighborHood;
+
 }
 
 uint Site::findLevel(uint i, uint j, uint k)

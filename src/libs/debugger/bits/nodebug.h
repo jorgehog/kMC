@@ -13,6 +13,8 @@
     _KMCDebugger_IGNORE(0)
 #define KMCDebugger_AssertBool(expr, ...) \
     _KMCDebugger_IGNORE(expr)
+#define KMCDebugger_AssertBreak(...) \
+    _KMCDebugger_IGNORE(0)
 #define KMCDebugger_AssertClose(A, B, lim, ...) \
     _KMCDebugger_IGNORE(0)
 #define KMCDebugger_GetReaction(which) \
