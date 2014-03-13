@@ -88,7 +88,7 @@ void DiffusionReaction::setSeparation(const uint &separation)
     if (separation > Site::nNeighborsLimit())
     {
         cerr << "Forced particle separation cannot exceed the site neighborlimit." << endl;
-        exit(1);
+        KMCSolver::exit();
     }
 
     m_separation = separation;

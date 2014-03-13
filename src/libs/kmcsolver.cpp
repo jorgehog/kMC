@@ -570,7 +570,7 @@ void KMCSolver::setBoxSize(const uvec3 boxSize)
         if (Site::nNeighborsLimit() >= min(m_N)/2)
         {
             cerr << "Neighbor reach must be lower than half the minimum box dimension to avoid sites directly affecting themselves." << endl;
-            exit(1);
+            KMCSolver::exit();
         }
     }
 

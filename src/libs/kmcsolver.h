@@ -119,7 +119,7 @@ public:
         if (relativeSeedSize > 1.0)
         {
             cerr << "The seed size cannot exceed the box size." << endl;
-            exit(1);
+            KMCSolver::exit();
         }
 
         m_relativeSeedSize = relativeSeedSize;
@@ -138,7 +138,10 @@ public:
 
     void dumpXYZ();
 
-
+    static void exit()
+    {
+        throw std::runtime_error("Exit failure.");
+    }
 
     //SHOULD BE IN SITE
 

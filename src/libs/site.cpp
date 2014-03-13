@@ -1151,7 +1151,7 @@ void Site::setNNeighborsLimit(const uint &nNeighborsLimit)
     if (nNeighborsLimit >= min(uvec({NX(), NY(), NZ()}))/2)
     {
         cerr << "Neighbor reach must be lower than half the minimum box dimension to avoid sites directly affecting themselves." << endl;
-        exit(1);
+        KMCSolver::exit();
     }
 
 
@@ -1192,12 +1192,12 @@ void Site::setNNeighborsToCrystallize(const uint &nNeighborsToCrystallize)
     if (nNeighborsToCrystallize == 0)
     {
         cerr << "With nNeighborsToCrystallize = 0, all particles will qualify as crystals." << endl;
-        exit(1);
+        KMCSolver::exit();
     }
     else if (nNeighborsToCrystallize > 7)
     {
         cerr << "With nNeighboorsToCrystallize > 7, no particles except those hugging a fixed crystal will qualify as crystals." << endl;
-        exit(1);
+        KMCSolver::exit();
     }
 
     m_nNeighborsToCrystallize = nNeighborsToCrystallize;
@@ -1261,7 +1261,7 @@ void Site::setBoundaries(const umat &boundaryMatrix)
             default:
 
                 cerr << "Unknown boundary type " << m_boundaryTypes(XYZ, orientation) << endl;
-                exit(1);
+                KMCSolver::exit();
 
                 break;
             }
@@ -1274,7 +1274,7 @@ void Site::setBoundaries(const umat &boundaryMatrix)
         if (!Boundary::isCompatible(m_boundaryTypes(XYZ, 0), m_boundaryTypes(XYZ, 1)))
         {
             cerr << "Mismatch in boundaries for " << XYZ << "'th dimension: " << m_boundaryTypes.t();
-            exit(1);
+            KMCSolver::exit();
         }
     }
 

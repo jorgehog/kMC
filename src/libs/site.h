@@ -386,11 +386,6 @@ private:
     static void setNNeighborsToCrystallize(const uint & nNeighborsToCrystallize);
 
 
-    static void exit(int __status)
-    {
-        throw std::runtime_error(status);
-    }
-
 };
 
 }

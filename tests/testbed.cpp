@@ -368,7 +368,6 @@ void testBed::testNeighbors()
 void testBed::testRNG()
 {
 
-
     double U  = 0;
     double U2 = 0;
     double N  = 0;
@@ -1150,12 +1149,6 @@ void testBed::testInitialReactionSetup()
         uint id2 = oldReactions.at(i)->ID();
         CHECK_EQUAL(id1, id2);
 
-        if (id1 != id2)
-        {
-            cout << "reaction " << id2 << " mismatched: " << endl;
-            cout << oldReactions.at(i)->info() << endl;
-            exit(1);
-        }
     }
 
 
