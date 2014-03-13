@@ -1205,7 +1205,7 @@ void testBed::testKnownCase(const umat & boundaries, const string name)
 
     Site::resetBoundariesTo(boundaries);
 
-    bool make = false;
+    bool make = true;
 
     ifstream o;
 
