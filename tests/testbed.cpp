@@ -1203,6 +1203,7 @@ void testBed::testSequential(const umat & boundaries)
 
     CHECK_EQUAL(s0, s00);
 
+
     CHECK_EQUAL(s2, s3);
 
 
@@ -1230,6 +1231,8 @@ void testBed::initBoundaryTestParameters(const umat &boundaries)
     Site::resetNNeighborsLimitTo(3);
 
     DiffusionReaction::setSeparation(1);
+
+    Site::resetNNeighborsToCrystallizeTo(1);
 
     Site::resetBoundariesTo(boundaries);
 
