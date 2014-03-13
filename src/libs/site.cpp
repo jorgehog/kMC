@@ -233,11 +233,16 @@ void Site::loadConfig(const Setting &setting)
 
 void Site::initializeBoundaries()
 {
+    bool enabled = KMCDebugger_IsEnabled;
+    KMCDebugger_SetEnabledTo(false);
+
     for (uint i = 0; i < 3; ++i) {
         for (uint j = 0; j < 2; ++j) {
             m_boundaries(i, j)->initialize();
         }
     }
+
+    KMCDebugger_SetEnabledTo(enabled);
 }
 
 void Site::updateBoundaries()

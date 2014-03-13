@@ -15,6 +15,8 @@ void testBed::makeSolver()
 
     const Setting & root = cfg.getRoot();
 
+    KMCDebugger_SetEnabledTo(getSurfaceSetting<int>(root, "buildTrace") == 0 ? false : true);
+
     solver = new KMCSolver(root);
 
 }
@@ -1523,6 +1525,9 @@ void testBed::testDiffusionSeparation()
 void testBed::testRunAllBoundaryTests(const umat & boundaries)
 {
 
+    Site::setNNeighborsLimit(3);
+    solver->setBoxSize({10, 10, 10});
+
     uint sum = accu(boundaries);
 
 
@@ -1542,11 +1547,10 @@ void testBed::testRunAllBoundaryTests(const umat & boundaries)
         break;
     }
 
+    Site::setBoundaries(boundaries);
+
     cout << ".. for boundarytype " << name << endl;
 
-    Site::setBoundaries(boundaries);
-    Site::setNNeighborsLimit(3);
-    solver->setBoxSize({10, 10, 10});
 
     cout << "   Running test DistanceTo" << endl;
     testDistanceTo();

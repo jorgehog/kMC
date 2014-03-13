@@ -19,45 +19,46 @@ using namespace std;
     testBed::test##which(__VA_ARGS__); \
     cout << "Done (" << testBed::timer.toc() << " s)" << endl; \
     \
-    delete testBed::solver
+    delete testBed::solver; \
+    \
 
 
 //Defined in one line to made unittest++ file line match.
-#define TESTWRAPPER(which, ...) TEST(which) {TESTCORE(which, ##__VA_ARGS__);}
+#define TESTWRAPPER(which, ...) TEST(which) {TESTCORE(which, ##__VA_ARGS__)}
 
 
 SUITE(Misc)
 {
     TESTWRAPPER(RNG)
 
-            TESTWRAPPER(BinarySearchChoise)
+    TESTWRAPPER(BinarySearchChoise)
 }
 
 SUITE(Reactions)
 {
     TESTWRAPPER(RateCalculation)
 
-            TESTWRAPPER(ReactionChoise)
+    TESTWRAPPER(ReactionChoise)
 
-            TESTWRAPPER(InitialReactionSetup)
+    TESTWRAPPER(InitialReactionSetup)
 }
 
 SUITE(StateChanges)
 {
     TESTWRAPPER(HasCrystalNeighbor)
 
-            TESTWRAPPER(DeactivateSurface)
+    TESTWRAPPER(DeactivateSurface)
 }
 
 SUITE(Parameters)
 {
     TESTWRAPPER(BoxSizes)
 
-            TESTWRAPPER(nNeiborsLimit)
+    TESTWRAPPER(nNeiborsLimit)
 
-            TESTWRAPPER(nNeighborsToCrystallize)
+    TESTWRAPPER(nNeighborsToCrystallize)
 
-            TESTWRAPPER(DiffusionSeparation)
+    TESTWRAPPER(DiffusionSeparation)
 
 }
 
@@ -86,7 +87,7 @@ SUITE(General)
 {
     TESTWRAPPER(Sequential)
 
-            TESTWRAPPER(KnownCase)
+    TESTWRAPPER(KnownCase)
 }
 
 int main()

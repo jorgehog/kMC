@@ -94,6 +94,20 @@ public:
 
     }
 
+    class AssertionException : public exception
+    {
+    public:
+
+        AssertionException(string cerr) : cerr(cerr) {}
+
+        const char * what() const throw()
+        {
+            return cerr.c_str();
+        }
+
+        string cerr;
+
+    };
 
     template<typename TA, typename TB>
     static void
@@ -148,7 +162,7 @@ public:
 
         dumpFullTrace(line, file, additionalInfo);
 
-        exit(1);
+        throw AssertionException(_cerr.str());
 
     }
 
