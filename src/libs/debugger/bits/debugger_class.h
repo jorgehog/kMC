@@ -94,20 +94,6 @@ public:
 
     }
 
-    class AssertionException : public exception
-    {
-    public:
-
-        AssertionException(string cerr) : cerr(cerr) {}
-
-        const char * what() const throw()
-        {
-            return cerr.c_str();
-        }
-
-        string cerr;
-
-    };
 
     template<typename TA, typename TB>
     static void
@@ -159,10 +145,9 @@ public:
 
         cerr << _cerr.str() << endl;
 
-
         dumpFullTrace(line, file, additionalInfo);
 
-        throw AssertionException(_cerr.str());
+        throw std::runtime_error(_cerr.str());
 
     }
 

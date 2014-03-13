@@ -101,7 +101,7 @@ public:
 
     void spawnAsFixedCrystal();
 
-    void stripFixedCrystalProperty();
+    void deactivateFixedCrystal();
 
 
     void crystallize();
@@ -328,7 +328,8 @@ public:
 
     const static uint & NZ();
 
-
+    //should be in site.. all sites in sites and jazz jazz..
+    void clearAllReactions();
 
 
 private:
@@ -387,7 +388,7 @@ private:
 
     static void exit(int __status)
     {
-        std::exit(__status);
+        throw std::runtime_error(status);
     }
 
 };

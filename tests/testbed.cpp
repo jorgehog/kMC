@@ -184,7 +184,7 @@ void testBed::testDistanceTo()
 void testBed::testDeactivateSurface()
 {
 
-
+    solver->setBoxSize({10, 10, 10});
     Site::resetNNeighborsToCrystallizeTo(1);
 
     Site * orig = solver->getSite(NX()/2, NY()/2, NZ()/2);
@@ -207,8 +207,7 @@ void testBed::testDeactivateSurface()
         Site::resetNNeighborsLimitTo(sep + 1);
         DiffusionReaction::setSeparation(sep);
 
-        orig->stripFixedCrystalProperty();
-        orig->deactivate();
+        orig->deactivateFixedCrystal();
         orig->spawnAsFixedCrystal();
 
         solver->dumpXYZ();
@@ -815,7 +814,9 @@ void testBed::testUpdateNeigbors()
 void testBed::testHasCrystalNeighbor()
 {
 
+    solver->setBoxSize({10, 10, 10});
     Site::resetNNeighborsLimitTo(2);
+    DiffusionReaction::setSeparation(1);
 
     //Spawn a seed in the middle of the box.
     solver->getSite(NX()/2, NY()/2, NZ()/2)->spawnAsFixedCrystal();
@@ -915,8 +916,7 @@ void testBed::testHasCrystalNeighbor()
     }
 
     //deactivating the seed should bring everything to solutions except init seed which is surface.
-    initCrystal->stripFixedCrystalProperty();
-    initCrystal->deactivate();
+    initCrystal->deactivateFixedCrystal();
 
     //we now activate all neighbors. This should not make anything crystals.
     for (uint i = 0; i < 3; ++i)
@@ -1162,32 +1162,70 @@ void testBed::testInitialReactionSetup()
 
 }
 
-void testBed::testSequential()
+
+void testBed::testSequential(const umat & boundaries)
 {
 
+    solver->reset();
+
+    const SnapShot & s1 = *testSequentialCore(boundaries);
 
 
-    uint nc = 100;
+    solver->reset();
 
-    solver->setNumberOfCycles(nc);
-    solver->run();
-    SnapShot s1(solver);
-
-    seed_type seed = Seed::initialSeed;
-
-    delete solver;
-
-    makeSolver();
-    KMC_INIT_RNG(seed);
-
-    solver->setNumberOfCycles(nc);
-    solver->run();
-    SnapShot s2(solver);
+    const SnapShot & s2 = *testSequentialCore(boundaries);
 
 
     CHECK_EQUAL(s1, s2);
 
 
+
+    delete solver;
+
+    makeSolver();
+
+    initBoundaryTestParameters();
+
+    const SnapShot & s3 = *testSequentialCore(boundaries);
+
+
+    delete solver;
+
+    makeSolver();
+
+    initBoundaryTestParameters();
+
+    const SnapShot & s4 = *testSequentialCore(boundaries);
+
+
+    CHECK_EQUAL(s3, s4);
+
+
+
+    CHECK_EQUAL(s2, s3);
+
+
+}
+
+const SnapShot * testBed::testSequentialCore(const umat & boundaries)
+{
+
+    Site::resetBoundariesTo(boundaries);
+    solver->setRNGSeed(Seed::specific, Seed::initialSeed);
+
+    uint nc = 100;
+
+    solver->setNumberOfCycles(nc);
+    solver->run();
+
+    return new SnapShot(solver);
+
+}
+
+void testBed::initBoundaryTestParameters()
+{
+    solver->setBoxSize({10, 10, 10});
+    Site::resetNNeighborsLimitTo(3);
 }
 
 void testBed::testKnownCase(const umat & boundaries, const string name)
@@ -1599,8 +1637,7 @@ void testBed::testDiffusionSeparation()
 void testBed::testRunAllBoundaryTests(const umat & boundaries)
 {
 
-    Site::resetNNeighborsLimitTo(3);
-    solver->setBoxSize({10, 10, 10});
+    initBoundaryTestParameters();
 
     uint sum = accu(boundaries);
 
@@ -1649,6 +1686,10 @@ void testBed::testRunAllBoundaryTests(const umat & boundaries)
     solver->reset();
     cout << "   Running test EnergyAndNeighborSetup" << endl;
     testEnergyAndNeighborSetup();
+
+
+    cout << "   Running test Sequential" << endl;
+    testSequential(boundaries);
 
     cout << "   Running test KnownCase" << endl;
     testKnownCase(boundaries, name);

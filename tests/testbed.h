@@ -12,6 +12,8 @@
 using namespace libconfig;
 using namespace kMC;
 
+class SnapShot;
+
 class testBed
 {
 public:
@@ -44,7 +46,7 @@ public:
 
     static void testInitialReactionSetup();
 
-    static void testSequential();
+    static void testSequential(const umat &boundaries);
 
     static void testKnownCase(const umat &boundaries, const string name);
 
@@ -64,6 +66,9 @@ public:
 
     static wall_clock timer;
 
+
+private:
+
     static const inline uint & NX()
     {
         return solver->NX();
@@ -78,5 +83,9 @@ public:
     {
         return solver->NZ();
     }
+
+    static const SnapShot *testSequentialCore(const umat &boundaries);
+
+    static void initBoundaryTestParameters();
 
 };

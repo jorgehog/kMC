@@ -41,6 +41,8 @@ public:
 
     void initializeSiteNeighborhoods();
 
+    void initializeDiffusionReactions();
+
     void getRateVariables();
 
     uint getReactionChoice(double R);
@@ -133,10 +135,16 @@ public:
     void setRNGSeed(uint seedState, int defaultSeed);
 
 
-    void clearSiteNeighborhoods();
-
 
     void dumpXYZ();
+
+
+
+    //SHOULD BE IN SITE
+
+    void clearSiteNeighborhoods();
+
+    void clearAllReactions();
 
 
 private:
@@ -170,8 +178,6 @@ private:
     uint outputCounter;
 
 
-
-    void initializeDiffusionReactions();
 
     void initializeSites();
 

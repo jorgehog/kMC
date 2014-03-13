@@ -83,11 +83,6 @@ SUITE(MixedBoundaries)
 }
 
 
-SUITE(General)
-{
-    TESTWRAPPER(Sequential)
-}
-
 int main()
 {
     KMCDebugger_SetFilename("testTrace");

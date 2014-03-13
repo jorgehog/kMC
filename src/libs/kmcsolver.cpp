@@ -99,10 +99,7 @@ KMCSolver::~KMCSolver()
 
     clearSites();
 
-    m_allReactions.clear();
-
     Site::clearAll();
-    Reaction::clearAll();
     DiffusionReaction::clearAll();
     Boundary::clearAll();
 
@@ -163,7 +160,13 @@ void KMCSolver::run()
 void KMCSolver::reset()
 {
 
-    KMCDebugger_Init();
+    KMCDebugger_Finalize();
+
+    totalTime = 0;
+
+    cycle = 0;
+
+    outputCounter = 0;
 
     clearSites();
 
@@ -175,6 +178,7 @@ void KMCSolver::reset()
 
     setRNGSeed(Seed::specific, Seed::initialSeed);
 
+    KMCDebugger_Init();
 
 }
 
@@ -354,6 +358,24 @@ void KMCSolver::clearSites()
     Site::clearAffectedSites();
     Site::setZeroTotalEnergy();
 
+    Reaction::clearAll();
+
+    m_allReactions.clear();
+
+}
+
+void KMCSolver::clearAllReactions()
+{
+    for (uint i = 0; i < m_NX; ++i)
+    {
+        for (uint j = 0; j < m_NY; ++j)
+        {
+            for (uint k = 0; k < m_NZ; ++k)
+            {
+                sites[i][j][k]->clearAllReactions();
+            }
+        }
+    }
 }
 
 
@@ -557,6 +579,7 @@ void KMCSolver::setBoxSize(const uvec3 boxSize)
     Site::initializeBoundaries();
 
     initializeDiffusionReactions();
+
 
 }
 

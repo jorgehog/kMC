@@ -33,14 +33,7 @@ Site::~Site()
 
     clearNeighborhood();
 
-    for (Reaction* reaction : m_siteReactions)
-    {
-        delete reaction;
-    }
-
-    m_activeReactions.clear();
-
-    m_siteReactions.clear();
+    clearAllReactions();
 
     if (isActive())
     {
@@ -280,12 +273,8 @@ void Site::updateReactions()
 
 }
 
-
-void Site::spawnAsFixedCrystal()
+void Site::clearAllReactions()
 {
-    m_particleState = ParticleStates::surface;
-    m_isFixedCrystalSeed = true;
-
     for (Reaction * reaction : m_siteReactions)
     {
         delete reaction;
@@ -293,22 +282,33 @@ void Site::spawnAsFixedCrystal()
 
     m_siteReactions.clear();
 
+    m_activeReactions.clear();
+
+}
+
+void Site::spawnAsFixedCrystal()
+{
+    m_particleState = ParticleStates::surface;
+    m_isFixedCrystalSeed = true;
+
+    clearAllReactions();
+
     activate();
 
     m_particleState = ParticleStates::fixedCrystal;
 
 }
 
-void Site::stripFixedCrystalProperty()
+void Site::deactivateFixedCrystal()
 {
-    if (!m_isFixedCrystalSeed)
-    {
-        return;
-    }
+
+    KMCDebugger_Assert(particleState(), ==, ParticleStates::fixedCrystal);
 
     m_isFixedCrystalSeed = false;
 
     m_particleState = ParticleStates::crystal;
+
+    deactivate();
 
     initializeDiffusionReactions();
 
@@ -371,9 +371,16 @@ void Site::calculateRates()
 void Site::initializeDiffusionReactions()
 {
 
-    Site * destination;
 
-    assert(m_siteReactions.size() == 0 && "Sitereactions are already set");
+    KMCDebugger_Assert(m_siteReactions.size(), ==, 0, "Sitereactions are already set", info());
+    KMCDebugger_AssertBool(!isActive() || isFixedCrystalSeed(), "Non FixedCrystal Site should not be active when reactions are initialized.", info());
+
+    if (isFixedCrystalSeed())
+    {
+        return;
+    }
+
+    Site * destination;
 
     //For each site, loop over all closest neighbors
     for (uint i = 0; i < 3; ++i)
@@ -399,7 +406,7 @@ void Site::initializeDiffusionReactions()
 
                     else
                     {
-                        assert((i == 1) && (j == 1) && (k == 1));
+                        KMCDebugger_AssertBool((i == 1) && (j == 1) && (k == 1));
                     }
                 }
 
@@ -936,7 +943,13 @@ void Site::resetBoundariesTo(const umat &boundaryMatrix)
 
     m_solver->initializeSiteNeighborhoods();
 
+
+    m_solver->clearAllReactions();
+
     Site::initializeBoundaries();
+
+    m_solver->initializeDiffusionReactions();
+
 
 }
 
@@ -1114,7 +1127,7 @@ const string Site::info(int xr, int yr, int zr, string desc) const
     numberSearchRepl(ParticleStates::solution,     ParticleStates::shortNames.at(ParticleStates::solution));
 
     numberSearchRepl(_min+0, ".");
-    numberSearchRepl(_min+1, " ");
+    numberSearchRepl(_min+1, "--");
     numberSearchRepl(_min+2, particleStateShortName() + "^");
     numberSearchRepl(_min+3, desc);
 

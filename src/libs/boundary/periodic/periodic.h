@@ -37,6 +37,7 @@ private:
 
     ivec delta;
 
+    void setupDelta();
 
 };
 
