@@ -181,7 +181,7 @@ void testBed::testDistanceTo()
 
 void testBed::testDeactivateSurface()
 {
-    makeSolver();
+
 
     Site::setNNeighborsToCrystallize(1);
 
@@ -259,7 +259,7 @@ void testBed::testDeactivateSurface()
 
     solver->dumpXYZ();
 
-    delete solver;
+
 }
 
 void testBed::testDiffusionSiteMatrixSetup()
@@ -366,7 +366,7 @@ void testBed::testNeighbors()
 
 void testBed::testRNG()
 {
-    makeSolver();
+
 
     double U  = 0;
     double U2 = 0;
@@ -427,12 +427,12 @@ void testBed::testRNG()
         CHECK_EQUAL(KMC_RNG_NORMAL(), setn.at(i));
     }
 
-    delete solver;
+
 }
 
 void testBed::testBinarySearchChoise()
 {
-    makeSolver();
+
 
     uint choice;
     uint secondChoice;
@@ -464,12 +464,12 @@ void testBed::testBinarySearchChoise()
     }
 
 
-    delete solver;
+
 }
 
 void testBed::testReactionChoise()
 {
-    makeSolver();
+
 
     uint choice, count, count2;
 
@@ -478,7 +478,7 @@ void testBed::testReactionChoise()
     Reaction* reaction;
 
 
-    uint N = 10;
+    uint N = 3;
     uint n = 0;
 
 
@@ -551,12 +551,12 @@ void testBed::testReactionChoise()
 
     }
 
-    delete solver;
+
 }
 
 void testBed::testRateCalculation()
 {
-    makeSolver();
+
 
     double E, Esp;
 
@@ -590,7 +590,7 @@ void testBed::testRateCalculation()
         }
     }
 
-    delete solver;
+
 }
 
 void testBed::testEnergyAndNeighborSetup()
@@ -780,7 +780,8 @@ void testBed::testUpdateNeigbors()
 
 void testBed::testHasCrystalNeighbor()
 {
-    makeSolver();
+
+    Site::setNNeighborsLimit(2);
 
     //Spawn a seed in the middle of the box.
     solver->getSite(NX()/2, NY()/2, NZ()/2)->spawnAsFixedCrystal();
@@ -941,7 +942,7 @@ void testBed::testHasCrystalNeighbor()
     //The number of possible reactions on the level=2 rim should be 1310
     CHECK_EQUAL(nReactions, nActives);
 
-    delete solver;
+
 
 }
 
@@ -998,7 +999,7 @@ void testBed::testInitializationOfCrystal()
 void testBed::testInitialReactionSetup()
 {
 
-    makeSolver();
+
 
     KMCDebugger_Init();
 
@@ -1089,14 +1090,14 @@ void testBed::testInitialReactionSetup()
         }
     }
 
-    delete solver;
+
 
 }
 
 void testBed::testSequential()
 {
 
-    makeSolver();
+
 
     uint nc = 100;
 
@@ -1118,7 +1119,6 @@ void testBed::testSequential()
 
     CHECK_EQUAL(s1, s2);
 
-    delete solver;
 
 }
 
@@ -1204,15 +1204,17 @@ void testBed::testKnownCase()
         }
     }
 
-    delete solver;
+
 
 }
 
 void testBed::testBoxSizes()
 {
-    makeSolver();
 
-    uvec N = {10, 15, 20};
+
+    uvec N = {6, 10, 15};
+
+    Site::setNNeighborsLimit(2);
 
     uvec3 boxSize;
     set<Site*> allSites;
@@ -1276,13 +1278,13 @@ void testBed::testBoxSizes()
         }
     }
 
-    delete solver;
+
 
 }
 
 void testBed::testnNeiborsLimit()
 {
-    makeSolver();
+
 
     set<Site*> allSites;
 
@@ -1324,13 +1326,13 @@ void testBed::testnNeiborsLimit()
 
     }
 
-    delete solver;
+
 
 }
 
 void testBed::testnNeighborsToCrystallize()
 {
-    makeSolver();
+
 
     uvec nntcs = {1, 2, 3, 4, 5, 6, 7};
 
@@ -1413,13 +1415,13 @@ void testBed::testnNeighborsToCrystallize()
 
     }
 
-    delete solver;
+
 
 }
 
 void testBed::testDiffusionSeparation()
 {
-    makeSolver();
+
 
     bool enabled = KMCDebugger_IsEnabled;
     KMCDebugger_SetEnabledTo(false);
@@ -1515,12 +1517,32 @@ void testBed::testDiffusionSeparation()
 
     KMCDebugger_SetEnabledTo(enabled);
 
-    delete solver;
+
 }
 
-void testBed::runAllBoundaryTests(const umat & boundaries)
+void testBed::testRunAllBoundaryTests(const umat & boundaries)
 {
-    makeSolver();
+
+    uint sum = accu(boundaries);
+
+
+    string name = "";
+    switch (sum) {
+    case 6*Boundary::Periodic:
+        name = "Periodic";
+        break;
+    case 6*Boundary::Edge:
+        name = "Edge";
+        break;
+    case 6*Boundary::Surface:
+        name = "Surface";
+        break;
+    default:
+        name = "Mixed";
+        break;
+    }
+
+    cout << ".. for boundarytype " << name << endl;
 
     Site::setBoundaries(boundaries);
     Site::setNNeighborsLimit(3);
@@ -1549,12 +1571,13 @@ void testBed::runAllBoundaryTests(const umat & boundaries)
     cout << "   Running test EnergyAndNeighborSetup" << endl;
     testEnergyAndNeighborSetup();
 
-    delete solver;
+
 
 }
 
 
 KMCSolver * testBed::solver;
 
+wall_clock testBed::timer;
 
 

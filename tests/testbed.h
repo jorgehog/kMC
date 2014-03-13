@@ -58,10 +58,11 @@ public:
 
     static void testDiffusionSeparation();
 
-    static void runAllBoundaryTests(const umat &boundaries);
+    static void testRunAllBoundaryTests(const umat &boundaries);
 
     static KMCSolver* solver;
 
+    static wall_clock timer;
 
     static const inline uint & NX()
     {

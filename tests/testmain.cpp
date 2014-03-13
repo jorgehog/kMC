@@ -10,93 +10,99 @@
 
 using namespace std;
 
-#define TESTWRAPPER(which) TEST(which) {cout << "Running test " << #which << endl; testBed::test##which();}
+#define TESTCORE(which, ...) \
+    cout << "Running test " << #which << endl; \
+    \
+    testBed::makeSolver(); \
+    \
+    testBed::timer.tic(); \
+    testBed::test##which(__VA_ARGS__); \
+    cout << "Done (" << testBed::timer.toc() << " s)" << endl; \
+    \
+    delete testBed::solver
+
+
+//Defined in one line to made unittest++ file line match.
+#define TESTWRAPPER(which, ...) TEST(which) {TESTCORE(which, ##__VA_ARGS__);}
 
 
 SUITE(Misc)
 {
     TESTWRAPPER(RNG)
 
-    TESTWRAPPER(BinarySearchChoise)
+            TESTWRAPPER(BinarySearchChoise)
 }
 
 SUITE(Reactions)
 {
     TESTWRAPPER(RateCalculation)
 
-    TESTWRAPPER(ReactionChoise)
+            TESTWRAPPER(ReactionChoise)
 
-    TESTWRAPPER(InitialReactionSetup)
+            TESTWRAPPER(InitialReactionSetup)
 }
 
 SUITE(StateChanges)
 {
     TESTWRAPPER(HasCrystalNeighbor)
 
-    TESTWRAPPER(DeactivateSurface)
+            TESTWRAPPER(DeactivateSurface)
 }
 
 SUITE(Parameters)
 {
     TESTWRAPPER(BoxSizes)
 
-    TESTWRAPPER(nNeiborsLimit)
+            TESTWRAPPER(nNeiborsLimit)
 
-    TESTWRAPPER(nNeighborsToCrystallize)
+            TESTWRAPPER(nNeighborsToCrystallize)
 
-    TESTWRAPPER(DiffusionSeparation)
+            TESTWRAPPER(DiffusionSeparation)
 
 }
 
-SUITE(Boundaries)
+SUITE(PeriodicBoundaries)
 {
-    TEST(Periodic)
-    {
-        cout << "Running test Periodic" << endl;
-        testBed::runAllBoundaryTests(zeros<umat>(3, 2) + Boundary::Periodic);
-    }
-
-    TEST(Edge)
-    {
-        cout << "Running test Edge" << endl;
-        testBed::runAllBoundaryTests(zeros<umat>(3, 2) + Boundary::Edge);
-    }
-
-    TEST(Surface)
-    {
-        cout << "Running test Surface" << endl;
-        testBed::runAllBoundaryTests(zeros<umat>(3, 2) + Boundary::Surface);
-    }
-
-    TEST(Mixed)
-    {
-        cout << "Running test Mixed" << endl;
-        umat mixedBoundaries(3, 2);
-
-        mixedBoundaries(0, 0) = Boundary::Periodic;
-        mixedBoundaries(0, 1) = Boundary::Periodic;
-
-        mixedBoundaries(1, 0) = Boundary::Edge;
-        mixedBoundaries(1, 1) = Boundary::Edge;
-
-        mixedBoundaries(2, 0) = Boundary::Surface;
-        mixedBoundaries(2, 1) = Boundary::ConcentrationWall;
-
-        testBed::runAllBoundaryTests(mixedBoundaries);
-
-    }
-
+    TESTWRAPPER(RunAllBoundaryTests, zeros<umat>(3, 2) + Boundary::Periodic)
 }
+
+SUITE(EdgeBoundaries)
+{
+    TESTWRAPPER(RunAllBoundaryTests, zeros<umat>(3, 2) + Boundary::Edge)
+}
+SUITE(SurfaceBoundaries)
+{
+    TESTWRAPPER(RunAllBoundaryTests, zeros<umat>(3, 2) + Boundary::Surface)
+}
+
+SUITE(MixedBoundaries)
+{
+    umat mixedBoundaries(3, 2);
+    TESTWRAPPER(RunAllBoundaryTests, mixedBoundaries)
+}
+
 
 SUITE(General)
 {
     TESTWRAPPER(Sequential)
 
-    TESTWRAPPER(KnownCase)
+            TESTWRAPPER(KnownCase)
 }
 
 int main()
 {
     KMCDebugger_SetFilename("testTrace");
+
+    using namespace SuiteMixedBoundaries;
+
+    mixedBoundaries(0, 0) = Boundary::Periodic;
+    mixedBoundaries(0, 1) = Boundary::Periodic;
+
+    mixedBoundaries(1, 0) = Boundary::Edge;
+    mixedBoundaries(1, 1) = Boundary::Edge;
+
+    mixedBoundaries(2, 0) = Boundary::Surface;
+    mixedBoundaries(2, 1) = Boundary::ConcentrationWall;
+
     return UnitTest::RunAllTests();
 }
