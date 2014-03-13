@@ -185,7 +185,7 @@ void testBed::testDeactivateSurface()
 {
 
 
-    Site::setNNeighborsToCrystallize(1);
+    Site::resetNNeighborsToCrystallizeTo(1);
 
     Site * orig = solver->getSite(NX()/2, NY()/2, NZ()/2);
     Site * origNeighbor = solver->getSite(NX()/2+1, NY()/2, NZ()/2);
@@ -204,7 +204,7 @@ void testBed::testDeactivateSurface()
     for (uint sep: separations)
     {
 
-        Site::setNNeighborsLimit(sep + 1);
+        Site::resetNNeighborsLimitTo(sep + 1);
         DiffusionReaction::setSeparation(sep);
 
         orig->stripFixedCrystalProperty();
@@ -815,7 +815,7 @@ void testBed::testUpdateNeigbors()
 void testBed::testHasCrystalNeighbor()
 {
 
-    Site::setNNeighborsLimit(2);
+    Site::resetNNeighborsLimitTo(2);
 
     //Spawn a seed in the middle of the box.
     solver->getSite(NX()/2, NY()/2, NZ()/2)->spawnAsFixedCrystal();
@@ -1203,7 +1203,7 @@ void testBed::testKnownCase(const umat & boundaries, const string name)
 
     solver = new KMCSolver(root);
 
-    Site::setBoundaries(boundaries);
+    Site::resetBoundariesTo(boundaries);
 
     bool make = false;
 
@@ -1287,7 +1287,7 @@ void testBed::testBoxSizes()
 
     uvec N = {6, 10, 15};
 
-    Site::setNNeighborsLimit(2);
+    Site::resetNNeighborsLimitTo(2);
 
     uvec3 boxSize;
     set<Site*> allSites;
@@ -1371,7 +1371,7 @@ void testBed::testnNeiborsLimit()
     uvec3 boxSize = {10, 10, 10};
 
 
-    Site::setBoundaries(zeros<umat>(3, 2) + Boundary::Periodic);
+    Site::resetBoundariesTo(zeros<umat>(3, 2) + Boundary::Periodic);
 
     solver->setBoxSize(boxSize);
 
@@ -1379,7 +1379,7 @@ void testBed::testnNeiborsLimit()
     for (uint nNlim : nNlims)
     {
         allSites.clear();
-        Site::setNNeighborsLimit(nNlim);
+        Site::resetNNeighborsLimitTo(nNlim);
 
         for (uint x = 0; x < NX(); ++x)
         {
@@ -1430,7 +1430,7 @@ void testBed::testnNeighborsToCrystallize()
     for (uint nnts : nntcs)
     {
 
-        Site::setNNeighborsToCrystallize(nnts);
+        Site::resetNNeighborsToCrystallizeTo(nnts);
         totCrystalNeighbors = 0;
 
         //Fill a 3x3 surface with crystals.
@@ -1515,7 +1515,7 @@ void testBed::testDiffusionSeparation()
 
     for (uint sep : separations)
     {
-        Site::setNNeighborsLimit(sep + 1);
+        Site::resetNNeighborsLimitTo(sep + 1);
         DiffusionReaction::setSeparation(sep);
 
         for (uint i = 1; i <= sep + 2; ++i)
@@ -1599,7 +1599,7 @@ void testBed::testDiffusionSeparation()
 void testBed::testRunAllBoundaryTests(const umat & boundaries)
 {
 
-    Site::setNNeighborsLimit(3);
+    Site::resetNNeighborsLimitTo(3);
     solver->setBoxSize({10, 10, 10});
 
     uint sum = accu(boundaries);
@@ -1622,7 +1622,7 @@ void testBed::testRunAllBoundaryTests(const umat & boundaries)
         break;
     }
 
-    Site::setBoundaries(boundaries);
+    Site::resetBoundariesTo(boundaries);
 
     cout << ".. for boundarytype " << name << endl;
 

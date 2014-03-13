@@ -57,7 +57,7 @@ public:
 
     static void setMainSolver(KMCSolver * m_solver);
 
-    static void resetAll()
+    static void clearAll()
 
     {
         m_currentBoundaries.clear();

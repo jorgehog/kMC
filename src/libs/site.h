@@ -54,9 +54,13 @@ public:
 
     static void loadConfig(const Setting & setting);
 
+
+    static void setInitialBoundaries(const Setting & boundarySetup);
+
     static void initializeBoundaries();
 
     static void updateBoundaries();
+
 
     static void updateAffectedSites();
 
@@ -64,11 +68,19 @@ public:
 
     static uint findLevel(uint i, uint j, uint k);
 
-    static void resetAll();
 
-    static void resetBoundaries();
+    static void resetBoundariesTo(const umat & boundaryMatrix);
 
-    static void resetAffectedSites();
+    static void resetNNeighborsLimitTo(const uint & nNeighborsLimit);
+
+    static void resetNNeighborsToCrystallizeTo(const uint & nNeighborsToCrystallize);
+
+
+    static void clearAll();
+
+    static void clearAffectedSites();
+
+    static void clearBoundaries();
 
     static void setZeroTotalEnergy();
 
@@ -136,7 +148,7 @@ public:
 
     void setZeroEnergy();
 
-    void reset()
+    void clear()
     {
         m_nNeighbors.zeros();
         m_totalEnergy -= m_energy;
@@ -317,21 +329,6 @@ public:
     const static uint & NZ();
 
 
-    //Static setters:
-
-    static void setNNeighborsLimit(const uint & nNeighborsLimit, bool reset = true, bool init = true);
-
-    static void setInitialBoundaries(const Setting & boundarySetup);
-
-    static void setBoundaries(const umat & boundaryMatrix, bool reset = true, bool init = true);
-
-    static void setNNeighborsToCrystallize(const uint & nNeighborsToCrystallize);
-
-
-    static void exit(int __status)
-    {
-        std::exit(__status);
-    }
 
 
 private:
@@ -381,6 +378,17 @@ private:
     vector<Reaction*> m_activeReactions;
 
 
+    static void setNNeighborsLimit(const uint & nNeighborsLimit);
+
+    static void setBoundaries(const umat & boundaryMatrix);
+
+    static void setNNeighborsToCrystallize(const uint & nNeighborsToCrystallize);
+
+
+    static void exit(int __status)
+    {
+        std::exit(__status);
+    }
 
 };
 

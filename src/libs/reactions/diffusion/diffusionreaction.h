@@ -40,7 +40,7 @@ public:
 
     static void loadConfig(const Setting & setting);
 
-    static void resetAll()
+    static void clearAll()
     {
         m_potential.reset();
     }

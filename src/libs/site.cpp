@@ -227,7 +227,7 @@ void Site::loadConfig(const Setting &setting)
 
     setNNeighborsToCrystallize(getSurfaceSetting<uint>(setting, "nNeighboursToCrystallize"));
 
-    setNNeighborsLimit(getSurfaceSetting<uint>(setting, "nNeighborsLimit"), false, false);
+    setNNeighborsLimit(getSurfaceSetting<uint>(setting, "nNeighborsLimit"));
 
 }
 
@@ -903,7 +903,7 @@ uint Site::findLevel(uint i, uint j, uint k)
 
 }
 
-void Site::resetAll()
+void Site::clearAll()
 {
 
     m_nNeighborsToCrystallize = KMCSolver::UNSET_UINT;
@@ -915,15 +915,48 @@ void Site::resetAll()
     m_levelMatrix.reset();
     m_originTransformVector.reset();
 
-    resetAffectedSites();
-    resetBoundaries();
+    clearAffectedSites();
+    clearBoundaries();
 
     m_boundaryConfigs.clear();
     m_boundaryTypes.clear();
 
 }
 
-void Site::resetBoundaries()
+void Site::resetBoundariesTo(const umat &boundaryMatrix)
+{
+
+    m_solver->clearSiteNeighborhoods();
+
+    clearBoundaries();
+
+
+    setBoundaries(boundaryMatrix);
+
+
+    m_solver->initializeSiteNeighborhoods();
+
+    Site::initializeBoundaries();
+
+}
+
+void Site::resetNNeighborsLimitTo(const uint &nNeighborsLimit)
+{
+
+    m_solver->clearSiteNeighborhoods();
+
+    setNNeighborsLimit(nNeighborsLimit);
+
+    m_solver->initializeSiteNeighborhoods();
+
+}
+
+void Site::resetNNeighborsToCrystallizeTo(const uint &nNeighborsToCrystallize)
+{
+    setNNeighborsToCrystallize(nNeighborsToCrystallize);
+}
+
+void Site::clearBoundaries()
 {
     for (uint i = 0; i < 3; ++i)
     {
@@ -935,7 +968,7 @@ void Site::resetBoundaries()
     m_boundaries.clear();
 }
 
-void Site::resetAffectedSites()
+void Site::clearAffectedSites()
 {
     m_affectedSites.clear();
 }
@@ -1099,22 +1132,15 @@ uint Site::nNeighborsSum() const
     return m_nNeighborsSum;
 }
 
-void Site::setNNeighborsLimit(const uint &nNeighborsLimit, bool reset, bool init)
+void Site::setNNeighborsLimit(const uint &nNeighborsLimit)
 {
 
-    if (reset)
+    if (nNeighborsLimit >= min(uvec({NX(), NY(), NZ()}))/2)
     {
-        m_solver->clearSiteNeighborhoods();
+        cerr << "Neighbor reach must be lower than half the minimum box dimension to avoid sites directly affecting themselves." << endl;
+        exit(1);
     }
 
-    if (!(NX() == KMCSolver::UNSET_UINT && NY() == KMCSolver::UNSET_UINT && NZ() == KMCSolver::UNSET_UINT))
-    {
-        if (nNeighborsLimit >= min(uvec({NX(), NY(), NZ()}))/2)
-        {
-            cerr << "Neighbor reach must be lower than half the minimum box dimension to avoid sites directly affecting themselves." << endl;
-            exit(1);
-        }
-    }
 
     m_nNeighborsLimit = nNeighborsLimit;
 
@@ -1144,11 +1170,6 @@ void Site::setNNeighborsLimit(const uint &nNeighborsLimit, bool reset, bool init
     }
 
     DiffusionReaction::setupPotential();
-
-    if (init)
-    {
-        m_solver->initializeSiteNeighborhoods();
-    }
 
 }
 
@@ -1186,17 +1207,12 @@ void Site::setInitialBoundaries(const Setting & boundariesConfig)
         }
     }
 
-    setBoundaries(m_boundaryTypes, false, false);
+    setBoundaries(m_boundaryTypes);
 
 }
 
-void Site::setBoundaries(const umat &boundaryMatrix, bool reset, bool init)
+void Site::setBoundaries(const umat &boundaryMatrix)
 {
-
-    if (reset)
-    {
-        resetBoundaries();
-    }
 
     m_boundaryTypes = boundaryMatrix;
 
@@ -1248,17 +1264,6 @@ void Site::setBoundaries(const umat &boundaryMatrix, bool reset, bool init)
             exit(1);
         }
     }
-
-    if (reset)
-    {
-        Site::initializeBoundaries();
-    }
-
-    if (init)
-    {
-        m_solver->initializeSiteNeighborhoods();
-    }
-
 
 }
 

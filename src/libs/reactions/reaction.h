@@ -49,7 +49,7 @@ public:
     virtual const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X")  const;
 
 
-    static void resetAll()
+    static void clearAll()
     {
         m_IDCount = 0;
     }

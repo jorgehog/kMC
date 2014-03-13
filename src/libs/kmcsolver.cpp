@@ -101,10 +101,10 @@ KMCSolver::~KMCSolver()
 
     m_allReactions.clear();
 
-    Site::resetAll();
-    Reaction::resetAll();
-    DiffusionReaction::resetAll();
-    Boundary::resetAll();
+    Site::clearAll();
+    Reaction::clearAll();
+    DiffusionReaction::clearAll();
+    Boundary::clearAll();
 
     KMCDebugger_Finalize();
 
@@ -351,7 +351,7 @@ void KMCSolver::clearSites()
 
     KMCDebugger_Assert(Site::totalActiveSites(), ==, 0);
 
-    Site::resetAffectedSites();
+    Site::clearAffectedSites();
     Site::setZeroTotalEnergy();
 
 }
