@@ -602,7 +602,7 @@ void testBed::testEnergyAndNeighborSetup()
     uint ldx, ldy, ldz;
 
     double E;
-    uint C, nBlocked;
+    uint C;
 
     const Site* currentSite, * otherSite;
 
@@ -677,18 +677,9 @@ void testBed::testEnergyAndNeighborSetup()
                     }
                 }
 
-                nBlocked = 0;
-
-                for (Site * site : currentSite->allNeighbors())
-                {
-                    if (site == NULL)
-                    {
-                        nBlocked++;
-                    }
-                }
 
 
-                CHECK_EQUAL(pow(Site::neighborhoodLength(), 3) - 1, C + nBlocked);
+                CHECK_EQUAL(currentSite->allNeighbors().size(), C);
 
                 for (uint K = 0; K < Site::nNeighborsLimit(); ++K) {
                     CHECK_EQUAL(nn(K), currentSite->nNeighbors(K));
@@ -704,8 +695,6 @@ void testBed::testEnergyAndNeighborSetup()
 
 void testBed::testUpdateNeigbors()
 {
-
-    return;
 
     bool enabled = KMCDebugger_IsEnabled;
     KMCDebugger_SetEnabledTo(false);
@@ -1126,6 +1115,8 @@ void testBed::testSequential()
 
 void testBed::testKnownCase()
 {
+
+    delete solver;
 
     Config cfg;
 
@@ -1569,7 +1560,7 @@ void testBed::testRunAllBoundaryTests(const umat & boundaries)
 
     solver->reset();
     cout << "   Running test UpdateNeighbors" << endl;
-    testUpdateNeigbors();
+//    testUpdateNeigbors();
 
     solver->reset();
     cout << "   Running test EnergyAndNeighborSetup" << endl;
