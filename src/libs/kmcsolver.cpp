@@ -84,18 +84,14 @@ KMCSolver::KMCSolver(const Setting & root) :
 
 
 
-    ptrCount++;
+    refCounter++;
 
 }
 
 KMCSolver::~KMCSolver()
 {
 
-    if (ptrCount > 1)
-    {
-        cout << "WARNING: "<< ptrCount << " solver objects alive when freeing.\n";
-        cout << "Static member variables of objects IN USE by living solver WILL BE FREED." << endl;
-    }
+    checkRefCounter();
 
     clearSites();
 
@@ -105,11 +101,20 @@ KMCSolver::~KMCSolver()
 
     KMCDebugger_Finalize();
 
-    ptrCount--;
+    refCounter--;
 
 }
 
+void KMCSolver::checkRefCounter()
+{
+    if (refCounter > 1)
+    {
+        cerr << "ERROR: "<< refCounter << " solver objects alive when freeing.\n";
+        cerr << "Static member variables of objects IN USE by living solver WILL BE FREED." << endl;
 
+        exit();
+    }
+}
 
 void KMCSolver::run()
 {
@@ -160,6 +165,8 @@ void KMCSolver::run()
 void KMCSolver::reset()
 {
 
+    checkRefCounter();
+
     KMCDebugger_Finalize();
 
     totalTime = 0;
@@ -168,21 +175,32 @@ void KMCSolver::reset()
 
     outputCounter = 0;
 
-    clearSites();
+    Site::clearAffectedSites();
 
-    initializeSites();
+    for (uint x = 0; x < m_NX; ++x)
+    {
+        for (uint y = 0; y < m_NY; ++y)
+        {
+            for (uint z = 0; z < m_NZ; ++z)
+            {
+                sites[x][y][z]->reset();
+            }
+        }
+    }
+
+    KMCDebugger_AssertClose(Site::totalEnergy(), 0, 1E-5);
+
+    KMCDebugger_Assert(Site::totalActiveSites(), ==, 0);
+
+    Site::setZeroTotalEnergy();
 
     Site::initializeBoundaries();
-
-    initializeDiffusionReactions();
 
     setRNGSeed(Seed::specific, Seed::initialSeed);
 
     KMCDebugger_Init();
 
 }
-
-
 
 
 
@@ -262,7 +280,6 @@ void KMCSolver::dumpOutput()
 void KMCSolver::initializeDiffusionReactions()
 {
 
-    //Loop over all sites
     for (uint x = 0; x < m_NX; ++x)
     {
         for (uint y = 0; y < m_NY; ++y)
@@ -550,7 +567,7 @@ uint KMCSolver::getReactionChoice(double R)
 
 }
 
-void KMCSolver::setBoxSize(const uvec3 boxSize)
+void KMCSolver::setBoxSize(const uvec3 boxSize, bool check)
 {
 
     if (m_NX != UNSET_UINT && m_NY != UNSET_UINT && m_NZ != UNSET_UINT)
@@ -565,7 +582,7 @@ void KMCSolver::setBoxSize(const uvec3 boxSize)
 
     m_N = boxSize;
 
-    if (Site::nNeighborsLimit() != UNSET_UINT)
+    if (Site::nNeighborsLimit() != UNSET_UINT && check)
     {
         if (Site::nNeighborsLimit() >= min(m_N)/2)
         {
@@ -607,4 +624,4 @@ void KMCSolver::setRNGSeed(uint seedState, int defaultSeed = 0)
 }
 
 
-uint KMCSolver::ptrCount = 0;
+uint KMCSolver::refCounter = 0;

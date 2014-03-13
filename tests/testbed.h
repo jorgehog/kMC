@@ -84,8 +84,8 @@ private:
         return solver->NZ();
     }
 
-    static const SnapShot *testSequentialCore(const umat &boundaries);
+    static const SnapShot *testSequentialCore();
 
-    static void initBoundaryTestParameters();
+    static void initBoundaryTestParameters(const umat &boundaries);
 
 };

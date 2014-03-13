@@ -857,6 +857,41 @@ void Site::setZeroEnergy()
     m_energy = 0;
 }
 
+void Site::reset()
+{
+
+    if (isActive())
+    {
+        m_totalActiveSites--;
+        m_active = false;
+    }
+
+    if (isFixedCrystalSeed())
+    {
+        m_isFixedCrystalSeed = false;
+        initializeDiffusionReactions();
+    }
+
+
+    m_particleState = ParticleStates::solution;
+
+    m_nNeighbors.zeros();
+
+    m_totalEnergy -= m_energy;
+
+    m_nNeighborsSum = 0;
+
+    setZeroEnergy();
+
+    for (Reaction * reaction : siteReactions())
+    {
+        reaction->reset();
+    }
+
+    m_activeReactions.clear();
+
+}
+
 void Site::clearNeighborhood()
 {
 
@@ -953,12 +988,12 @@ void Site::resetBoundariesTo(const umat &boundaryMatrix)
 
 }
 
-void Site::resetNNeighborsLimitTo(const uint &nNeighborsLimit)
+void Site::resetNNeighborsLimitTo(const uint &nNeighborsLimit, bool check)
 {
 
     m_solver->clearSiteNeighborhoods();
 
-    setNNeighborsLimit(nNeighborsLimit);
+    setNNeighborsLimit(nNeighborsLimit, check);
 
     m_solver->initializeSiteNeighborhoods();
 
@@ -1145,10 +1180,10 @@ uint Site::nNeighborsSum() const
     return m_nNeighborsSum;
 }
 
-void Site::setNNeighborsLimit(const uint &nNeighborsLimit)
+void Site::setNNeighborsLimit(const uint &nNeighborsLimit, bool check)
 {
 
-    if (nNeighborsLimit >= min(uvec({NX(), NY(), NZ()}))/2)
+    if (nNeighborsLimit >= min(uvec({NX(), NY(), NZ()}))/2 && check)
     {
         cerr << "Neighbor reach must be lower than half the minimum box dimension to avoid sites directly affecting themselves." << endl;
         KMCSolver::exit();

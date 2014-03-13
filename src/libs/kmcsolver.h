@@ -101,7 +101,7 @@ public:
 
     //Set functions
 
-    void setBoxSize(const uvec3 boxSize);
+    void setBoxSize(const uvec3 boxSize, bool check = true);
 
     void setNumberOfCycles(const uint nCycles)
     {
@@ -189,8 +189,10 @@ private:
 
     void dumpOutput();
 
+    void checkRefCounter();
 
-    static uint ptrCount;
+    static uint refCounter;
+
 
 };
 

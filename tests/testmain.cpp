@@ -13,14 +13,11 @@ using namespace std;
 #define TESTCORE(which, ...) \
     cout << "Running test " << #which << endl; \
     \
-    testBed::makeSolver(); \
-    \
     testBed::timer.tic(); \
     testBed::test##which(__VA_ARGS__); \
     cout << "Done (" << testBed::timer.toc() << " s)" << endl; \
     \
-    delete testBed::solver; \
-    \
+    testBed::solver->reset();
 
 
 //Defined in one line to made unittest++ file line match.
@@ -36,11 +33,12 @@ SUITE(Misc)
 
 SUITE(Reactions)
 {
+    TESTWRAPPER(InitialReactionSetup)
+
     TESTWRAPPER(RateCalculation)
 
     TESTWRAPPER(ReactionChoise)
 
-    TESTWRAPPER(InitialReactionSetup)
 }
 
 SUITE(StateChanges)
@@ -86,6 +84,8 @@ SUITE(MixedBoundaries)
 int main()
 {
     KMCDebugger_SetFilename("testTrace");
+
+    testBed::makeSolver();
 
     using namespace SuiteMixedBoundaries;
 

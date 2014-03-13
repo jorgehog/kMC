@@ -126,6 +126,17 @@ void Reaction::loadConfig(const Setting &setting)
 
 }
 
+void Reaction::reset()
+{
+
+    m_lastUsedEnergy = UNSET_ENERGY;
+
+    m_rate = UNSET_RATE;
+
+    m_updateFlag = UNSET_UPDATE_FLAG;
+
+}
+
 void Reaction::selectTriumphingUpdateFlag()
 {
 

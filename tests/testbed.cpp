@@ -184,7 +184,7 @@ void testBed::testDistanceTo()
 void testBed::testDeactivateSurface()
 {
 
-    solver->setBoxSize({10, 10, 10});
+    solver->setBoxSize({10, 10, 10}, false);
     Site::resetNNeighborsToCrystallizeTo(1);
 
     Site * orig = solver->getSite(NX()/2, NY()/2, NZ()/2);
@@ -813,8 +813,9 @@ void testBed::testUpdateNeigbors()
 void testBed::testHasCrystalNeighbor()
 {
 
+    Site::resetNNeighborsLimitTo(2, false);
     solver->setBoxSize({10, 10, 10});
-    Site::resetNNeighborsLimitTo(2);
+
     DiffusionReaction::setSeparation(1);
 
     //Spawn a seed in the middle of the box.
@@ -1054,8 +1055,6 @@ void testBed::testInitializationOfCrystal()
 void testBed::testInitialReactionSetup()
 {
 
-
-
     KMCDebugger_Init();
 
     for (uint i = 0; i < NX(); ++i)
@@ -1159,14 +1158,19 @@ void testBed::testInitialReactionSetup()
 void testBed::testSequential(const umat & boundaries)
 {
 
-    solver->reset();
-
-    const SnapShot & s1 = *testSequentialCore(boundaries);
+    initBoundaryTestParameters(boundaries);
 
 
     solver->reset();
 
-    const SnapShot & s2 = *testSequentialCore(boundaries);
+    const SnapShot s0(solver);
+
+    const SnapShot & s1 = *testSequentialCore();
+
+
+    solver->reset();
+
+    const SnapShot & s2 = *testSequentialCore();
 
 
     CHECK_EQUAL(s1, s2);
@@ -1177,48 +1181,58 @@ void testBed::testSequential(const umat & boundaries)
 
     makeSolver();
 
-    initBoundaryTestParameters();
+    initBoundaryTestParameters(boundaries);
 
-    const SnapShot & s3 = *testSequentialCore(boundaries);
+    const SnapShot s00(solver);
+
+    const SnapShot & s3 = *testSequentialCore();
 
 
     delete solver;
 
     makeSolver();
 
-    initBoundaryTestParameters();
+    initBoundaryTestParameters(boundaries);
 
-    const SnapShot & s4 = *testSequentialCore(boundaries);
+
+    const SnapShot & s4 = *testSequentialCore();
 
 
     CHECK_EQUAL(s3, s4);
 
 
+    CHECK_EQUAL(s0, s00);
 
     CHECK_EQUAL(s2, s3);
 
 
 }
 
-const SnapShot * testBed::testSequentialCore(const umat & boundaries)
+const SnapShot * testBed::testSequentialCore()
 {
 
-    Site::resetBoundariesTo(boundaries);
     solver->setRNGSeed(Seed::specific, Seed::initialSeed);
 
     uint nc = 100;
 
     solver->setNumberOfCycles(nc);
+
     solver->run();
 
     return new SnapShot(solver);
 
 }
 
-void testBed::initBoundaryTestParameters()
+void testBed::initBoundaryTestParameters(const umat &boundaries)
 {
-    solver->setBoxSize({10, 10, 10});
+    solver->setBoxSize({10, 10, 10}, false);
+
     Site::resetNNeighborsLimitTo(3);
+
+    DiffusionReaction::setSeparation(1);
+
+    Site::resetBoundariesTo(boundaries);
+
 }
 
 void testBed::testKnownCase(const umat & boundaries, const string name)
@@ -1404,7 +1418,7 @@ void testBed::testnNeiborsLimit()
 
     Site::resetBoundariesTo(zeros<umat>(3, 2) + Boundary::Periodic);
 
-    solver->setBoxSize(boxSize);
+    solver->setBoxSize(boxSize, false);
 
 
     for (uint nNlim : nNlims)
@@ -1533,7 +1547,7 @@ void testBed::testDiffusionSeparation()
     bool enabled = KMCDebugger_IsEnabled;
     KMCDebugger_SetEnabledTo(false);
 
-    solver->setBoxSize({15, 15, 15});
+    solver->setBoxSize({15, 15, 15}, false);
 
 
     Site * neighbor;
@@ -1615,12 +1629,13 @@ void testBed::testDiffusionSeparation()
                 }
 
                 destination->deactivate();
-
             }
 
         }
 
     }
+
+    DiffusionReaction::setSeparation(1);
 
     KMCDebugger_SetEnabledTo(enabled);
 
@@ -1630,7 +1645,6 @@ void testBed::testDiffusionSeparation()
 void testBed::testRunAllBoundaryTests(const umat & boundaries)
 {
 
-    initBoundaryTestParameters();
 
     uint sum = accu(boundaries);
 
@@ -1652,7 +1666,9 @@ void testBed::testRunAllBoundaryTests(const umat & boundaries)
         break;
     }
 
-    Site::resetBoundariesTo(boundaries);
+
+    initBoundaryTestParameters(boundaries);
+
 
     cout << ".. for boundarytype " << name << endl;
 

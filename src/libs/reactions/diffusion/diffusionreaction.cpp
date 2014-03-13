@@ -119,8 +119,8 @@ void DiffusionReaction::setupPotential()
                 }
 
                 m_potential(i, j, k) = 1.0/std::pow(Site::originTransformVector(i)*Site::originTransformVector(i)
-                                                  + Site::originTransformVector(j)*Site::originTransformVector(j)
-                                                  + Site::originTransformVector(k)*Site::originTransformVector(k)
+                                                    + Site::originTransformVector(j)*Site::originTransformVector(j)
+                                                    + Site::originTransformVector(k)*Site::originTransformVector(k)
                                                     , rPower/2);
             }
         }
@@ -470,6 +470,15 @@ const string DiffusionReaction::info(int xr, int yr, int zr, string desc) const
 bool DiffusionReaction::isAllowed() const
 {
     return !m_destinationSite->isActive() && allowedGivenNotBlocked();
+}
+
+void DiffusionReaction::reset()
+{
+
+    Reaction::reset();
+
+    m_lastUsedEsp = UNSET_ENERGY;
+
 }
 
 

@@ -71,7 +71,7 @@ public:
 
     static void resetBoundariesTo(const umat & boundaryMatrix);
 
-    static void resetNNeighborsLimitTo(const uint & nNeighborsLimit);
+    static void resetNNeighborsLimitTo(const uint & nNeighborsLimit, bool check = true);
 
     static void resetNNeighborsToCrystallizeTo(const uint & nNeighborsToCrystallize);
 
@@ -148,13 +148,7 @@ public:
 
     void setZeroEnergy();
 
-    void clear()
-    {
-        m_nNeighbors.zeros();
-        m_totalEnergy -= m_energy;
-        m_energy = 0;
-        m_nNeighborsSum = 0;
-    }
+    void reset();
 
     void clearNeighborhood();
 
@@ -379,7 +373,7 @@ private:
     vector<Reaction*> m_activeReactions;
 
 
-    static void setNNeighborsLimit(const uint & nNeighborsLimit);
+    static void setNNeighborsLimit(const uint & nNeighborsLimit, bool check = true);
 
     static void setBoundaries(const umat & boundaryMatrix);
 
