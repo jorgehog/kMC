@@ -3,6 +3,8 @@
 #include "../kmcsolver.h"
 #include "../site.h"
 
+#include "../debugger/debugger.h"
+
 #include <climits>
 
 #include <armadillo>
@@ -19,10 +21,62 @@ Boundary::Boundary(const uint dimension, const uint orientation, const uint type
     m_orientation(orientation)
 {
 
+
+
 }
 
 Boundary::~Boundary()
 {
+    m_boundarySites.clear();
+}
+
+void Boundary::setupBoundarySites()
+{
+
+    uint xi = (orientation() == 0) ? 0 : (span() - 1);
+
+    m_boundarySites.clear();
+
+    if (dimension() == X)
+    {
+
+        for (uint y = 0; y < NY(); ++y)
+        {
+            for (uint z = 0; z < NZ(); ++z)
+            {
+                m_boundarySites.push_back(solver()->getSite(xi, y, z));
+            }
+        }
+
+    }
+
+    else if (dimension() == Y)
+    {
+
+        for (uint x = 0; x < NX(); ++x)
+        {
+            for (uint z = 0; z < NZ(); ++z)
+            {
+                m_boundarySites.push_back(solver()->getSite(x, xi, z));
+            }
+        }
+
+    }
+
+    else
+    {
+
+        KMCDebugger_Assert(dimension(), ==, Z, "This else should always correspond to dim=2");
+
+        for (uint x = 0; x < NX(); ++x)
+        {
+            for (uint y = 0; y < NY(); ++y)
+            {
+                m_boundarySites.push_back(solver()->getSite(x, y, xi));
+            }
+        }
+
+    }
 
 }
 
@@ -42,9 +96,8 @@ void Boundary::distanceFromSite(const Site *site, int &dxi, bool abs)
 
 void Boundary::setMainSolver(KMCSolver *solver)
 {
-
     m_solver = solver;
-
+    m_currentBoundaries.resize(3);
 }
 
 bool Boundary::isCompatible(const int type1, const int type2, bool reverse)
@@ -119,4 +172,4 @@ uint Boundary::BLOCKED_COORDINATE = (uint)ULLONG_MAX;
 KMCSolver* Boundary::m_solver;
 
 
-vector<const Boundary*> Boundary::m_currentBoundaries(3);
+vector<const Boundary*> Boundary::m_currentBoundaries;

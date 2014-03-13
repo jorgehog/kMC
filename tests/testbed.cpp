@@ -1190,7 +1190,7 @@ void testBed::testSequential()
 
 }
 
-void testBed::testKnownCase()
+void testBed::testKnownCase(const umat & boundaries, const string name)
 {
 
     delete solver;
@@ -1203,24 +1203,29 @@ void testBed::testKnownCase()
 
     solver = new KMCSolver(root);
 
+    Site::setBoundaries(boundaries);
+
     bool make = false;
 
     ifstream o;
 
     ofstream o2;
 
+    stringstream fullName;
+    fullName << "knowncase" << name << ".txt";
+
     if (make)
     {
-        o2.open("knowncase.txt");
+        o2.open(fullName.str());
     }
 
     else
     {
-        o.open("infiles/knowncase.txt");
+        o.open("infiles/" + fullName.str());
 
         if (!o.good())
         {
-            cout << "NO KNOWNCASE FILE EXIST." << endl;
+            cout << "NO KNOWNCASE FILE EXIST:" << "infiles/" + fullName.str() << endl;
             return;
         }
     }
@@ -1270,11 +1275,6 @@ void testBed::testKnownCase()
     {
         o.close();
         CHECK_EQUAL(NX()*NY()*NZ(), equal);
-        if (equal != NX()*NY()*NZ())
-        {
-            KMCDebugger_DumpFullTrace();
-            exit(1);
-        }
     }
 
 
@@ -1650,7 +1650,8 @@ void testBed::testRunAllBoundaryTests(const umat & boundaries)
     cout << "   Running test EnergyAndNeighborSetup" << endl;
     testEnergyAndNeighborSetup();
 
-
+    cout << "   Running test KnownCase" << endl;
+    testKnownCase(boundaries, name);
 
 }
 

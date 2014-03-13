@@ -46,7 +46,7 @@ public:
 
     static void testSequential();
 
-    static void testKnownCase();
+    static void testKnownCase(const umat &boundaries, const string name);
 
     static void testBoxSizes();
 

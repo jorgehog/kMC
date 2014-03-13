@@ -41,6 +41,8 @@ public:
 
     virtual void initialize() = 0;
 
+    void setupBoundarySites();
+
     void distanceFromSite(const Site * site, int & dxi, bool abs = false);
 
 
@@ -58,6 +60,7 @@ public:
     static void resetAll()
 
     {
+        m_currentBoundaries.clear();
         m_solver = NULL;
     }
 
@@ -103,10 +106,12 @@ private:
 
     const uint m_orientation;
 
+    vector<Site*> m_boundarySites;
+
 
 protected:
 
-    static KMCSolver * mainSolver()
+    static KMCSolver * solver()
     {
         return m_solver;
     }
@@ -114,6 +119,11 @@ protected:
     static void setupLocations(const uint x, const uint y, const uint z, uvec3 &loc);
 
     static vector<const Boundary*> m_currentBoundaries;
+
+    const vector<Site*> & boundarySites() const
+    {
+        return m_boundarySites;
+    }
 
     uint span() const
     {

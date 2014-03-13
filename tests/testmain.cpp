@@ -86,8 +86,6 @@ SUITE(MixedBoundaries)
 SUITE(General)
 {
     TESTWRAPPER(Sequential)
-
-    TESTWRAPPER(KnownCase)
 }
 
 int main()

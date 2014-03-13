@@ -20,56 +20,21 @@ Surface::~Surface()
 
 void Surface::initialize()
 {
-    uint xi = 0;
 
-    if (orientation() == 1)
+    setupBoundarySites();
+
+    for (Site * boundarySite : boundarySites())
     {
-        xi = span() - 1;
-    }
+        if (!boundarySite->isActive())
+        {
+            boundarySite->spawnAsFixedCrystal();
+        }
 
-    if (dimension() == X)
-    {
-
-        for (uint y = 0; y < NY(); ++y) {
-            for (uint z = 0; z < NZ(); ++z) {
-                if (!mainSolver()->getSite(xi, y, z)->isActive())
-                {
-
-                    mainSolver()->getSite(xi, y, z)->spawnAsFixedCrystal();
-                }
-            }
+        else
+        {
+            KMCDebugger_Assert(boundarySite->particleState(), ==, ParticleStates::fixedCrystal, "surface boundary attempted initialized with active particles on the surface.");
         }
 
     }
-
-    else if (dimension() == Y)
-    {
-
-        for (uint x = 0; x < NX(); ++x) {
-            for (uint z = 0; z < NZ(); ++z) {
-                if (!mainSolver()->getSite(x, xi, z)->isActive())
-                {
-                    mainSolver()->getSite(x, xi, z)->spawnAsFixedCrystal();
-                }
-            }
-        }
-
-    }
-
-    else
-    {
-        KMCDebugger_Assert(dimension(), ==, Z, "This else should always correspond to dim=2");
-
-        for (uint x = 0; x < NX(); ++x) {
-            for (uint y = 0; y < NY(); ++y) {
-                if (!mainSolver()->getSite(x, y, xi)->isActive())
-                {
-                    mainSolver()->getSite(x, y, xi)->spawnAsFixedCrystal();
-                }
-            }
-        }
-
-    }
-
 
 }
