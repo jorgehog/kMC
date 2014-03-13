@@ -351,6 +351,9 @@ void KMCSolver::initializeSiteNeighborhoods()
 void KMCSolver::clearSites()
 {
 
+    bool enabled = KMCDebugger_IsEnabled;
+    KMCDebugger_SetEnabledTo(false);
+
     for (uint i = 0; i < m_NX; ++i)
     {
         for (uint j = 0; j < m_NY; ++j)
@@ -378,6 +381,9 @@ void KMCSolver::clearSites()
     Reaction::clearAll();
 
     m_allReactions.clear();
+
+
+    KMCDebugger_SetEnabledTo(enabled);
 
 }
 

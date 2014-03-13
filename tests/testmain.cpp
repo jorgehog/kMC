@@ -84,6 +84,7 @@ SUITE(MixedBoundaries)
 int main()
 {
     KMCDebugger_SetFilename("testTrace");
+    KMCDebugger_SetEnabledTo(false);
 
     testBed::makeSolver();
 

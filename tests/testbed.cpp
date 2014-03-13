@@ -1226,6 +1226,7 @@ const SnapShot * testBed::testSequentialCore()
 
 void testBed::initBoundaryTestParameters(const umat &boundaries)
 {
+
     solver->setBoxSize({10, 10, 10}, false);
 
     Site::resetNNeighborsLimitTo(3);

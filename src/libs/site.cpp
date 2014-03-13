@@ -275,6 +275,9 @@ void Site::updateReactions()
 
 void Site::clearAllReactions()
 {
+
+    KMCDebugger_AssertBool(m_siteReactions.size() != 0 || isFixedCrystalSeed(), "Reactions were already cleared..", str());
+
     for (Reaction * reaction : m_siteReactions)
     {
         delete reaction;
