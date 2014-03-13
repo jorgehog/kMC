@@ -20,6 +20,7 @@ Site::Site(uint _x, uint _y, uint _z) :
     m_x(_x),
     m_y(_y),
     m_z(_z),
+    m_r({_x, _y, _z}),
     m_energy(0),
     m_particleState(ParticleStates::solution)
 {
@@ -417,9 +418,9 @@ void Site::distanceTo(const Site *other, int &dx, int &dy, int &dz, bool absolut
     dz = m_boundaries(2)->getDistanceBetween(other->z(), m_z);
 
     if (absolutes) {
-        dx = abs(dx);
-        dy = abs(dy);
-        dz = abs(dz);
+        dx = std::abs(dx);
+        dy = std::abs(dy);
+        dz = std::abs(dz);
     }
 
 }
@@ -644,8 +645,6 @@ void Site::introduceNeighborhood()
 
     uint xTrans, yTrans, zTrans;
 
-    uvec3 loc;
-
     Site * neighbor;
 
     KMCDebugger_Assert(m_nNeighborsLimit, !=, 0, "Neighborlimit must be greater than zero.", info());
@@ -653,34 +652,28 @@ void Site::introduceNeighborhood()
 
     m_nNeighbors.zeros(m_nNeighborsLimit);
 
-
-    Boundary::setupLocations(m_x, m_y, m_z, loc);
-
-    const Boundary * xBoundary = m_boundaries(0, loc(0));
-    const Boundary * yBoundary = m_boundaries(1, loc(1));
-    const Boundary * zBoundary = m_boundaries(2, loc(2));
-
+    Boundary::setupCurrentBoundaries(x(), y(), z());
 
     m_neighborHood = new Site***[m_neighborhoodLength];
 
     for (uint i = 0; i < m_neighborhoodLength; ++i)
     {
 
-        xTrans = xBoundary->transformCoordinate((int)m_x + m_originTransformVector(i));
+        xTrans = Boundary::currentBoundaries(0)->transformCoordinate((int)m_x + m_originTransformVector(i));
 
         m_neighborHood[i] = new Site**[m_neighborhoodLength];
 
         for (uint j = 0; j < m_neighborhoodLength; ++j)
         {
 
-            yTrans = yBoundary->transformCoordinate((int)m_y + m_originTransformVector(j));
+            yTrans = Boundary::currentBoundaries(1)->transformCoordinate((int)m_y + m_originTransformVector(j));
 
             m_neighborHood[i][j] = new Site*[m_neighborhoodLength];
 
             for (uint k = 0; k < m_neighborhoodLength; ++k)
             {
 
-                zTrans = zBoundary->transformCoordinate((int)m_z + m_originTransformVector(k));
+                zTrans = Boundary::currentBoundaries(2)->transformCoordinate((int)m_z + m_originTransformVector(k));
 
                 if (Boundary::isBlocked(xTrans) ||
                         Boundary::isBlocked(yTrans) ||

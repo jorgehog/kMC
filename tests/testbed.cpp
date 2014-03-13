@@ -620,10 +620,9 @@ void testBed::testEnergyAndNeighborSetup()
     uint ldx, ldy, ldz;
 
     double E;
-    uint C;
+    uint C, nBlocked;
 
-    const Site* currentSite;
-    const Site* otherSite;
+    const Site* currentSite, * otherSite;
 
     solver->initializeCrystal();
     solver->dumpXYZ();
@@ -696,7 +695,27 @@ void testBed::testEnergyAndNeighborSetup()
                     }
                 }
 
-                CHECK_EQUAL(pow(Site::neighborhoodLength(), 3) - 1, C);
+                nBlocked = 0;
+
+                for (Boundary * boundary : Site::boundaryField())
+                {
+                    if (boundary->type != Boundary::Periodic)
+                    {
+                        int dxi;
+
+                        boundary->distanceFromSite(currentSite, dxi, true);
+
+                        if (dxi < (int)Site::nNeighborsLimit())
+                        {
+                            nBlocked += Site::neighborhoodLength()*Site::neighborhoodLength()*(Site::nNeighborsLimit() - dxi);
+
+
+                        }
+                    }
+                }
+
+
+                CHECK_EQUAL(pow(Site::neighborhoodLength(), 3) - 1, C + nBlocked);
 
                 for (uint K = 0; K < Site::nNeighborsLimit(); ++K) {
                     CHECK_EQUAL(nn(K), currentSite->nNeighbors(K));

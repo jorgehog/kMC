@@ -199,6 +199,11 @@ public:
         return m_boundaries(xyz, loc);
     }
 
+    static const field<Boundary*> & boundaryField()
+    {
+        return m_boundaries;
+    }
+
 
     const int & particleState() const
     {
@@ -253,6 +258,10 @@ public:
         return m_z;
     }
 
+    const uint & r(const uint i) const
+    {
+        return m_r(i);
+    }
 
     const vector<Reaction*> & activeReactions() const
     {
@@ -361,6 +370,7 @@ private:
     uint m_x;
     uint m_y;
     uint m_z;
+    uvec3 m_r;
 
     double m_energy;
 

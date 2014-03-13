@@ -8,7 +8,11 @@ namespace kMC
 class Edge : public Boundary
 {
 public:
-    Edge(const uint dimension, const uint orientation) : Boundary(dimension, orientation) {}
+    Edge(const uint dimension, const uint orientation) :
+        Boundary(dimension, orientation, Boundary::Edge)
+    {
+
+    }
 
     // Boundary interface
 public:

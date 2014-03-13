@@ -10,21 +10,21 @@ namespace kMC
 {
 
 class KMCSolver;
+class Site;
 
 class Boundary
 {
 public:
 
-    Boundary(const uint dimension, const uint orientation);
+    Boundary(const uint dimension, const uint orientation, const uint type);
 
     virtual ~Boundary();
 
+    const uint type;
 
     virtual uint transformCoordinate(const int xi) const
     {
         return (((xi >= (int)span()) || (xi < 0)) ? BLOCKED_COORDINATE : xi);
-
-
     }
 
     virtual int getDistanceBetween(int x1, int x2)
@@ -41,6 +41,8 @@ public:
 
     virtual void initialize() = 0;
 
+    void distanceFromSite(const Site * site, int & dxi, bool abs = false);
+
 
     static bool isBlocked(const uint xi)
     {
@@ -50,7 +52,6 @@ public:
 
     static bool isCompatible(const int type1, const int type2, bool reverse = true);
 
-    static void setupLocations(const uint x, const uint y, const uint z, uvec3 &loc);
 
     static void setMainSolver(KMCSolver * m_solver);
 
@@ -80,6 +81,18 @@ public:
     static uint N(const uint i);
 
 
+    static void setupCurrentBoundaries(const uint x, const uint y, const uint z);
+
+    static const Boundary* currentBoundaries(const uint i)
+    {
+        return m_currentBoundaries.at(i);
+    }
+
+    const uint & orientation() const
+    {
+        return m_orientation;
+    }
+
 private:
 
     static uint BLOCKED_COORDINATE;
@@ -87,6 +100,7 @@ private:
     static KMCSolver * m_solver;
 
     const uint m_dimension;
+
     const uint m_orientation;
 
 
@@ -97,14 +111,13 @@ protected:
         return m_solver;
     }
 
+    static void setupLocations(const uint x, const uint y, const uint z, uvec3 &loc);
+
+    static vector<const Boundary*> m_currentBoundaries;
+
     uint span() const
     {
         return N(m_dimension);
-    }
-
-    const uint & orientation() const
-    {
-        return m_orientation;
     }
 
     const uint & dimension() const
@@ -118,6 +131,7 @@ protected:
         Y,
         Z
     };
+
 
 
 };

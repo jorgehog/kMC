@@ -6,7 +6,7 @@
 using namespace kMC;
 
 Surface::Surface(const uint dimension, const uint orientation) :
-    Boundary(dimension, orientation)
+    Boundary(dimension, orientation, Boundary::Surface)
 {
 
 }

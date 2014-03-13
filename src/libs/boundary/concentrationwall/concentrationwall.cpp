@@ -4,7 +4,7 @@
 using namespace kMC;
 
 ConcentrationWall::ConcentrationWall(const uint dimension, const uint orientation) :
-    Boundary(dimension, orientation)
+    Boundary(dimension, orientation, Boundary::ConcentrationWall)
 {
 
 }
