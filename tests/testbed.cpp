@@ -28,12 +28,6 @@ void testBed::testDistanceTo()
     Site* startSite;
     Site* endSite;
 
-    uvec3 loc;
-
-    const Boundary* xBoundary;
-    const Boundary* yBoundary;
-    const Boundary* zBoundary;
-
 
     for (uint startx = 0; startx < NX(); ++startx)
     {
@@ -51,11 +45,7 @@ void testBed::testDistanceTo()
                         for (uint endz = 0; endz < NZ(); ++endz)
                         {
 
-                            Boundary::setupLocations(endx, endy, endz, loc);
-
-                            xBoundary = Site::boundaries(0, loc(0));
-                            yBoundary = Site::boundaries(1, loc(1));
-                            zBoundary = Site::boundaries(2, loc(2));
+                            Boundary::setupCurrentBoundaries(endx, endy, endz);
 
 
                             endSite = solver->getSite(endx, endy, endz);
@@ -101,11 +91,11 @@ void testBed::testDistanceTo()
                                 CHECK_EQUAL(adz, abs(dz2));
                             }
 
-                            CHECK_EQUAL(startSite->x(), xBoundary->transformCoordinate(endSite->x() + dx));
-                            CHECK_EQUAL(startSite->y(), yBoundary->transformCoordinate(endSite->y() + dy));
-                            CHECK_EQUAL(startSite->z(), zBoundary->transformCoordinate(endSite->z() + dz));
+                            CHECK_EQUAL(startSite->x(), Boundary::currentBoundaries(0)->transformCoordinate(endSite->x() + dx));
+                            CHECK_EQUAL(startSite->y(), Boundary::currentBoundaries(1)->transformCoordinate(endSite->y() + dy));
+                            CHECK_EQUAL(startSite->z(), Boundary::currentBoundaries(2)->transformCoordinate(endSite->z() + dz));
 
-                            if (Site::boundaryTypes(0, 0) == Boundary::Periodic)
+                            if (Site::boundaryTypes(0) == Boundary::Periodic)
                             {
                                 int X = (int)startSite->x() - (int)endSite->x();
 
@@ -130,7 +120,7 @@ void testBed::testDistanceTo()
 
                             }
 
-                            if (Site::boundaryTypes(1, 0) == Boundary::Periodic)
+                            if (Site::boundaryTypes(1) == Boundary::Periodic)
                             {
                                 int Y = (int)startSite->y() - (int)endSite->y();
 
@@ -155,7 +145,7 @@ void testBed::testDistanceTo()
 
                             }
 
-                            if (Site::boundaryTypes(2, 0) == Boundary::Periodic)
+                            if (Site::boundaryTypes(2) == Boundary::Periodic)
                             {
                                 int Z = (int)startSite->z() - (int)endSite->z();
 
@@ -277,12 +267,6 @@ void testBed::testDiffusionSiteMatrixSetup()
 
     DiffusionReaction * currentDiffReaction;
 
-    const Boundary * xBoundary;
-    const Boundary * yBoundary;
-    const Boundary * zBoundary;
-
-    uvec3 loc;
-
     int i, j, k;
 
     for (uint x = 0; x < NX(); ++x)
@@ -295,11 +279,7 @@ void testBed::testDiffusionSiteMatrixSetup()
                 const Site & currentSite = *(solver->getSite(x, y, z));
 
 
-                Boundary::setupLocations(x, y, z, loc);
-
-                xBoundary = Site::boundaries(0, loc(0));
-                yBoundary = Site::boundaries(1, loc(1));
-                zBoundary = Site::boundaries(2, loc(2));
+                Boundary::setupCurrentBoundaries(x, y, z);
 
 
                 for (Reaction * r : currentSite.siteReactions())
@@ -314,9 +294,9 @@ void testBed::testDiffusionSiteMatrixSetup()
 
                     site.distanceTo(&dest, i, j, k);
 
-                    uint xt = xBoundary->transformCoordinate(x + i);
-                    uint yt = yBoundary->transformCoordinate(y + j);
-                    uint zt = zBoundary->transformCoordinate(z + k);
+                    uint xt = Boundary::currentBoundaries(0)->transformCoordinate(x + i);
+                    uint yt = Boundary::currentBoundaries(1)->transformCoordinate(y + j);
+                    uint zt = Boundary::currentBoundaries(2)->transformCoordinate(z + k);
 
                     const Site & dest2 = *(solver->getSite(xt, yt, zt));
 
@@ -697,20 +677,11 @@ void testBed::testEnergyAndNeighborSetup()
 
                 nBlocked = 0;
 
-                for (Boundary * boundary : Site::boundaryField())
+                for (Site * site : currentSite->allNeighbors())
                 {
-                    if (boundary->type != Boundary::Periodic)
+                    if (site == NULL)
                     {
-                        int dxi;
-
-                        boundary->distanceFromSite(currentSite, dxi, true);
-
-                        if (dxi < (int)Site::nNeighborsLimit())
-                        {
-                            nBlocked += Site::neighborhoodLength()*Site::neighborhoodLength()*(Site::nNeighborsLimit() - dxi);
-
-
-                        }
+                        nBlocked++;
                     }
                 }
 

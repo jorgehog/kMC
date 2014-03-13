@@ -154,7 +154,7 @@ public:
      * Misc. trivial functions
      */
 
-    static const uint &boundaryTypes(const uint i, const uint j)
+    static const uint &boundaryTypes(const uint i, const uint j = 0)
     {
         return m_boundaryTypes(i, j);
     }
