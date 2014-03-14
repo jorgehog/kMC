@@ -6,27 +6,16 @@
 
 #include "../src/libs/debugger/debugger.h"
 
-#include <math.h>
-
-using namespace std;
-
-#define TESTCORE(which, ...) \
-    cout << "Running test " << #which << endl; \
-    \
-    testBed::timer.tic(); \
-    testBed::test##which(__VA_ARGS__); \
-    cout << "Done (" << testBed::timer.toc() << " s)" << endl; \
-    \
-    if (UnitTest::CurrentTest::Results()->GetFailureCount() != 0) \
-    { \
-        KMCDebugger_DumpFullTrace(); \
-    } \
-    \
-    testBed::solver->reset();
 
 
-//Defined in one line to made unittest++ file line match.
-#define TESTWRAPPER(which, ...) TEST(which) {TESTCORE(which, ##__VA_ARGS__)}
+
+#define focusSuite "Misc"
+#define focusTest  "TotalParticleStateCounters"
+
+#include "defines.h"
+
+
+
 
 
 SUITE(Misc)
@@ -34,6 +23,8 @@ SUITE(Misc)
     TESTWRAPPER(RNG)
 
     TESTWRAPPER(BinarySearchChoise)
+
+    TESTWRAPPER(TotalParticleStateCounters)
 }
 
 SUITE(Reactions)
@@ -86,7 +77,7 @@ SUITE(SurfaceBoundaries)
 SUITE(MixedBoundaries)
 {
     umat mixedBoundaries(3, 2);
-        TESTWRAPPER(RunAllBoundaryTests, mixedBoundaries)
+    TESTWRAPPER(RunAllBoundaryTests, mixedBoundaries)
 }
 
 

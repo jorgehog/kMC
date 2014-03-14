@@ -21,6 +21,15 @@ void testBed::makeSolver()
 
 }
 
+void testBed::testTotalParticleStateCounters()
+{
+
+    CHECK_EQUAL(0, accu(Site::totalActiveParticlesVector()));
+    CHECK_EQUAL(NX()*NY()*NZ(), accu(Site::totalDeactiveParticlesVector()));
+    CHECK_EQUAL(NX()*NY()*NZ(), Site::totalDeactiveParticles(ParticleStates::solution));
+
+}
+
 void testBed::testDistanceTo()
 {
 

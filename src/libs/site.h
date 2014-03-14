@@ -116,6 +116,10 @@ public:
 
     void deactivate();
 
+    void flipActive();
+
+    void flipDeactive();
+
 
     void addReaction(Reaction* reaction);
 

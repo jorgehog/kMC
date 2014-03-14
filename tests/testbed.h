@@ -20,6 +20,8 @@ public:
 
     static void makeSolver();
 
+    static void testTotalParticleStateCounters();
+
     static void testDistanceTo();
 
     static void testDeactivateSurface();

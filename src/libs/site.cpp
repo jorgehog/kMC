@@ -563,14 +563,8 @@ uint Site::countNeighboring(int state, int range) const
 void Site::activate()
 {
 
-    KMCDebugger_AssertBool(!m_active, "activating active site", info());
-    KMCDebugger_AssertBool(!isCrystal(), "Activating a crystal. (should always be active)", info());
+    flipActive();
 
-    m_active = true;
-
-    m_affectedSites.insert(this);
-
-    informNeighborhoodOnChange(+1);
 
     if (isSurface())
     {
@@ -581,8 +575,9 @@ void Site::activate()
         KMCDebugger_PushImplication(this, "activation");
     }
 
-    m_totalDeactiveParticles(particleState())--;
-    m_totalActiveParticles(particleState())++;
+
+
+
 
 
     setDirectUpdateFlags();
@@ -604,12 +599,7 @@ void Site::activate()
 void Site::deactivate()
 {
 
-    KMCDebugger_AssertBool(m_active, "deactivating deactive site. ", info());
-    KMCDebugger_AssertBool(!isSurface(), "deactivating a surface. (should always be deactive)", info());
-
-    m_active = false;
-
-    informNeighborhoodOnChange(-1);
+    flipDeactive();
 
     //if we deactivate a crystal site, we have to potentially
     //reduce the surface by adding more sites as solution sites.
@@ -640,15 +630,46 @@ void Site::deactivate()
 
     setDirectUpdateFlags();
 
-    m_totalActiveParticles(particleState())--;
-    m_totalDeactiveParticles(particleState())++;
-
-
     m_activeReactions.clear();
 
     KMCDebugger_MarkPartialStep("DEACTIVATION COMPLETE");
 
     m_totalActiveSites--;
+
+}
+
+void Site::flipActive()
+{
+
+    KMCDebugger_AssertBool(!m_active, "activating active site", info());
+    KMCDebugger_AssertBool(!isCrystal(), "Activating a crystal. (should always be active)", info());
+
+    m_totalDeactiveParticles(particleState())--;
+    m_totalActiveParticles(particleState())++;
+
+
+    m_active = true;
+
+
+    m_affectedSites.insert(this);
+
+    informNeighborhoodOnChange(+1);
+
+}
+
+void Site::flipDeactive()
+{
+    KMCDebugger_AssertBool(m_active, "deactivating deactive site. ", info());
+    KMCDebugger_AssertBool(!isSurface(), "deactivating a surface. (should always be deactive)", info());
+
+    m_totalActiveParticles(particleState())--;
+    m_totalDeactiveParticles(particleState())++;
+
+
+    m_active = false;
+
+
+    informNeighborhoodOnChange(-1);
 
 }
 
