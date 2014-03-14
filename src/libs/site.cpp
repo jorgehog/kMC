@@ -314,6 +314,7 @@ void Site::deactivateFixedCrystal()
 
 }
 
+
 void Site::crystallize()
 {
 
@@ -598,6 +599,12 @@ void Site::activate()
 
 void Site::deactivate()
 {
+
+    if (isFixedCrystalSeed())
+    {
+        deactivateFixedCrystal();
+        return;
+    }
 
     flipDeactive();
 

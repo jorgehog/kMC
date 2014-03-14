@@ -9,8 +9,8 @@
 
 
 
-#define focusSuite "Misc"
-#define focusTest  "TotalParticleStateCounters"
+//#define focusSuite "Misc"
+//#define focusTest  "TotalParticleStateCounters"
 
 #include "defines.h"
 

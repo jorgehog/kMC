@@ -106,9 +106,6 @@ public:
 
     void spawnAsFixedCrystal();
 
-    void deactivateFixedCrystal();
-
-
     void crystallize();
 
     void decrystallize();
@@ -425,6 +422,8 @@ private:
     static void setNNeighborsToCrystallize(const uint & nNeighborsToCrystallize);
 
     void setNewParticleState(int newState);
+
+    void deactivateFixedCrystal();
 
 };
 

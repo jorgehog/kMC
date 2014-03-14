@@ -49,14 +49,14 @@ void testBed::testTotalParticleStateCounters()
     CHECK_EQUAL(NX()*NY()*NZ(), accu(Site::totalActiveParticlesVector()));
     CHECK_EQUAL(NX()*NY()*NZ() - 1, Site::totalActiveParticles(ParticleStates::crystal));
 
-    boxCenter->deactivateFixedCrystal();
+    boxCenter->deactivate();
 
     boxCenter->activate();
 
     CHECK_EQUAL(0, Site::totalActiveParticles(ParticleStates::surface));
     CHECK_EQUAL(0, accu(Site::totalDeactiveParticlesVector()));
     CHECK_EQUAL(NX()*NY()*NZ(), accu(Site::totalActiveParticlesVector()));
-    CHECK_EQUAL(NX()*NY()*NZ(), Site::totalActiveParticles(ParticleStates::solution));
+    CHECK_EQUAL(NX()*NY()*NZ(), Site::totalActiveParticles(ParticleStates::crystal));
 
     deactivateAllSites();
 
@@ -78,6 +78,91 @@ void testBed::testTotalParticleStateCounters()
     CHECK_EQUAL(0, accu(Site::totalActiveParticlesVector()));
     CHECK_EQUAL(NX()*NY()*NZ(), accu(Site::totalDeactiveParticlesVector()));
     CHECK_EQUAL(NX()*NY()*NZ(), Site::totalDeactiveParticles(ParticleStates::solution));
+
+    Site * currentSite;
+
+    uint C0 = NX()*NY()*NZ();
+    uint C1 = 0;
+    for (uint x = 0; x < NX(); ++x)
+    {
+        for (uint y = 0; y < NY(); ++y)
+        {
+            for (uint z = 0; z < NZ(); ++z)
+            {
+
+                CHECK_EQUAL(C0, accu(Site::totalDeactiveParticlesVector()));
+                CHECK_EQUAL(C0, Site::totalDeactiveParticles(ParticleStates::solution));
+
+                CHECK_EQUAL(C1, accu(Site::totalActiveParticlesVector()));
+                CHECK_EQUAL(C1, Site::totalActiveParticles(ParticleStates::solution));
+
+                currentSite = solver->getSite(x, y, z);
+
+                currentSite->activate();
+
+                C0--;
+                C1++;
+
+            }
+        }
+    }
+
+    deactivateAllSites();
+
+    CHECK_EQUAL(0, Site::totalActiveParticles(ParticleStates::surface));
+    CHECK_EQUAL(0, accu(Site::totalActiveParticlesVector()));
+    CHECK_EQUAL(NX()*NY()*NZ(), accu(Site::totalDeactiveParticlesVector()));
+    CHECK_EQUAL(NX()*NY()*NZ(), Site::totalDeactiveParticles(ParticleStates::solution));
+
+    solver->setBoxSize({10, 10, 10});
+
+    boxCenter = solver->getSite(NX()/2, NY()/2, NZ()/2);
+
+    for (uint sep = 0; sep <= 3 ; ++sep)
+    {
+
+        Site::resetNNeighborsLimitTo(sep + 1);
+
+        DiffusionReaction::setSeparation(sep);
+
+        boxCenter->spawnAsFixedCrystal();
+
+        CHECK_EQUAL(pow(2*sep + 1, 3) - 1, Site::totalDeactiveParticles(ParticleStates::surface));
+
+        boxCenter->deactivate();
+
+    }
+
+    DiffusionReaction::setSeparation(3);
+
+    solver->getSite(0, 0, 0)->spawnAsFixedCrystal();
+
+    for (uint x = 0; x < NX(); ++x)
+    {
+        for (uint y = 0; y < NY(); ++y)
+        {
+            for (uint z = 0; z < NZ(); ++z)
+            {
+                if (x == 0 && y == 0 && z == 0)
+                {
+                    continue;
+                }
+
+                if ((x%2 == 0) && (y%2 == 0) && (z%2 == 0))
+                {
+                    solver->getSite(x, y, z)->spawnAsFixedCrystal();
+                }
+
+            }
+        }
+    }
+
+    solver->dumpXYZ();
+
+    CHECK_EQUAL(NX()*NY()*NZ()/8, Site::totalActiveParticles(ParticleStates::fixedCrystal));
+    CHECK_EQUAL(7*NX()*NY()*NZ()/8, Site::totalDeactiveParticles(ParticleStates::surface));
+
+
 
 }
 
@@ -269,7 +354,7 @@ void testBed::testDeactivateSurface()
         Site::resetNNeighborsLimitTo(sep + 1);
         DiffusionReaction::setSeparation(sep);
 
-        orig->deactivateFixedCrystal();
+        orig->deactivate();
         orig->spawnAsFixedCrystal();
 
 
@@ -955,7 +1040,7 @@ void testBed::testHasCrystalNeighbor()
     }
 
     //deactivating the seed should bring everything to solutions except init seed which is surface.
-    initCrystal->deactivateFixedCrystal();
+    initCrystal->deactivate();
 
     //we now activate all neighbors. This should not make anything crystals.
     for (uint i = 0; i < 3; ++i)

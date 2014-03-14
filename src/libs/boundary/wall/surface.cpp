@@ -45,7 +45,7 @@ void Surface::finalize()
     {
         if (boundarySite->isFixedCrystalSeed() && boundarySite->isActive())
         {
-            boundarySite->deactivateFixedCrystal();
+            boundarySite->deactivate();
         }
     }
 }
