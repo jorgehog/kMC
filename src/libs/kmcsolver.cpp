@@ -127,6 +127,8 @@ void KMCSolver::run()
 
     initializeCrystal();
 
+    dumpXYZ();
+
     while(cycle < m_nCycles)
     {
 
@@ -470,9 +472,6 @@ void KMCSolver::initializeCrystal()
             }
         }
     }
-
-
-    dumpXYZ();
 
 
     KMCDebugger_SetEnabledTo(enabled);

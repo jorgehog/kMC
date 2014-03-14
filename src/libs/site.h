@@ -82,6 +82,10 @@ public:
 
     static void clearBoundaries();
 
+    static void finalizeBoundaries();
+
+
+
     static void setZeroTotalEnergy();
 
     /*

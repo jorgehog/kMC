@@ -16,6 +16,7 @@ public:
 public:
     void update() {}
     void initialize();
+    void finalize();
 };
 
 }

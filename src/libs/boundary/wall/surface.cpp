@@ -38,3 +38,14 @@ void Surface::initialize()
     }
 
 }
+
+void Surface::finalize()
+{
+    for (Site * boundarySite : boundarySites())
+    {
+        if (boundarySite->isFixedCrystalSeed() && boundarySite->isActive())
+        {
+            boundarySite->deactivateFixedCrystal();
+        }
+    }
+}

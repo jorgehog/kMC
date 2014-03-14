@@ -23,6 +23,9 @@ using namespace std;
 //Defined in one line to made unittest++ file line match.
 #define TESTWRAPPER(which, ...) TEST(which) {TESTCORE(which, ##__VA_ARGS__)}
 
+/*
+
+*/
 
 SUITE(Misc)
 {
@@ -90,6 +93,7 @@ int main()
     using namespace SuiteMixedBoundaries;
 
     KMCDebugger_SetFilename("testTrace");
+
     KMCDebugger_SetEnabledTo(false);
 
 

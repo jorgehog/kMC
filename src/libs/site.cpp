@@ -276,8 +276,6 @@ void Site::updateReactions()
 void Site::clearAllReactions()
 {
 
-    KMCDebugger_AssertBool(m_siteReactions.size() != 0 || isFixedCrystalSeed(), "Reactions were already cleared..", str());
-
     for (Reaction * reaction : m_siteReactions)
     {
         delete reaction;
@@ -291,6 +289,7 @@ void Site::clearAllReactions()
 
 void Site::spawnAsFixedCrystal()
 {
+
     m_particleState = ParticleStates::surface;
     m_isFixedCrystalSeed = true;
 
@@ -308,6 +307,7 @@ void Site::deactivateFixedCrystal()
     KMCDebugger_Assert(particleState(), ==, ParticleStates::fixedCrystal);
 
     m_isFixedCrystalSeed = false;
+
 
     m_particleState = ParticleStates::crystal;
 
@@ -866,12 +866,14 @@ void Site::reset()
     if (isActive())
     {
         m_totalActiveSites--;
+
         m_active = false;
     }
 
     if (isFixedCrystalSeed())
     {
         m_isFixedCrystalSeed = false;
+
         initializeDiffusionReactions();
     }
 
@@ -885,6 +887,7 @@ void Site::reset()
     m_nNeighborsSum = 0;
 
     setZeroEnergy();
+
 
     for (Reaction * reaction : siteReactions())
     {
@@ -971,9 +974,11 @@ void Site::clearAll()
 void Site::resetBoundariesTo(const umat &boundaryMatrix)
 {
 
-    m_solver->clearSiteNeighborhoods();
+    finalizeBoundaries();
 
     clearBoundaries();
+
+    m_solver->clearSiteNeighborhoods();
 
 
     setBoundaries(boundaryMatrix);
@@ -1009,14 +1014,27 @@ void Site::resetNNeighborsToCrystallizeTo(const uint &nNeighborsToCrystallize)
 
 void Site::clearBoundaries()
 {
+
     for (uint i = 0; i < 3; ++i)
     {
-        for (uint j = 0; j < 2; ++j) {
+        for (uint j = 0; j < 2; ++j)
+        {
             delete m_boundaries(i, j);
         }
     }
 
     m_boundaries.clear();
+}
+
+void Site::finalizeBoundaries()
+{
+    for (uint i = 0; i < 3; ++i)
+    {
+        for (uint j = 0; j < 2; ++j)
+        {
+            m_boundaries(i, j)->finalize();
+        }
+    }
 }
 
 void Site::clearAffectedSites()

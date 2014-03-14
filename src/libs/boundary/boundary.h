@@ -41,6 +41,8 @@ public:
 
     virtual void initialize() = 0;
 
+    virtual void finalize() {}
+
     void setupBoundarySites();
 
     void distanceFromSite(const Site * site, int & dxi, bool abs = false);
