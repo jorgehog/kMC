@@ -17,14 +17,16 @@ using namespace std;
     testBed::test##which(__VA_ARGS__); \
     cout << "Done (" << testBed::timer.toc() << " s)" << endl; \
     \
+    if (UnitTest::CurrentTest::Results()->GetFailureCount() != 0) \
+    { \
+        KMCDebugger_DumpFullTrace(); \
+    } \
+    \
     testBed::solver->reset();
 
 
 //Defined in one line to made unittest++ file line match.
 #define TESTWRAPPER(which, ...) TEST(which) {TESTCORE(which, ##__VA_ARGS__)}
-
-/*
-*/
 
 
 SUITE(Misc)
@@ -80,12 +82,11 @@ SUITE(SurfaceBoundaries)
 {
     TESTWRAPPER(RunAllBoundaryTests, zeros<umat>(3, 2) + Boundary::Surface)
 }
-/*
-*/
+
 SUITE(MixedBoundaries)
 {
     umat mixedBoundaries(3, 2);
-    TESTWRAPPER(RunAllBoundaryTests, mixedBoundaries)
+        TESTWRAPPER(RunAllBoundaryTests, mixedBoundaries)
 }
 
 
@@ -94,8 +95,6 @@ int main()
     using namespace SuiteMixedBoundaries;
 
     KMCDebugger_SetFilename("testTrace");
-
-    KMCDebugger_SetEnabledTo(false);
 
 
     mixedBoundaries(0, 0) = Boundary::Periodic;
@@ -113,6 +112,7 @@ int main()
     int exitSuccess = UnitTest::RunAllTests();
 
     delete testBed::solver;
+
 
     return exitSuccess;
 }

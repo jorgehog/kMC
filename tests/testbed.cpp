@@ -1252,9 +1252,10 @@ void testBed::testSequential(const umat & boundaries)
 const SnapShot * testBed::testSequentialCore()
 {
 
-    uint nc = 100;
+    uint nc = 1000;
 
     solver->setNumberOfCycles(nc);
+    solver->setCyclesPerOutput(nc + 1);
 
     solver->run();
 
@@ -1741,9 +1742,8 @@ void testBed::testRunAllBoundaryTests(const umat & boundaries)
 
     initBoundaryTestParameters(boundaries);
 
-    /*
-    */
     cout << ".. for boundarytype " << name << endl;
+
 
     cout << "   Running test InitialReactionSetup" << endl;
     testInitialReactionSetup();
@@ -1778,8 +1778,7 @@ void testBed::testRunAllBoundaryTests(const umat & boundaries)
 
     cout << "   Running test Sequential" << endl;
     testSequential(boundaries);
-    /*
-    */
+
     cout << "   Running test KnownCase" << endl;
     testKnownCase(boundaries, name);
 

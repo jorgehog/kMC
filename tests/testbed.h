@@ -56,8 +56,6 @@ public:
 
     static void testnNeighborsToCrystallize();
 
-    static void testBoundaries();
-
     static void testDiffusionSeparation();
 
     static void testRunAllBoundaryTests(const umat &boundaries);

@@ -49,7 +49,7 @@ bool SnapShot::operator==(const SnapShot &other) const
     for (uint l = 0; l < allRates.size(); ++l)
     {
         double diff = abs(allRates.at(l) - other.allRates.at(l));
-        if (diff > 1E-15)
+        if (diff > 1E-10)
         {
             cout << "mismatch in snapshot rate calculation" << endl;
             cout << allRates.at(l) << " != " << other.allRates.at(l) << " for l = " << l << endl;

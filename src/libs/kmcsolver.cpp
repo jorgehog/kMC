@@ -25,7 +25,7 @@ KMCSolver::KMCSolver(const Setting & root) :
     m_NY(UNSET_UINT),
     m_NZ(UNSET_UINT),
     totalTime(0),
-    cycle(0),
+    cycle(1),
     outputCounter(0)
 {
 
@@ -129,7 +129,7 @@ void KMCSolver::run()
 
     dumpXYZ();
 
-    while(cycle < m_nCycles)
+    while(cycle <= m_nCycles)
     {
 
         getRateVariables();
@@ -173,7 +173,7 @@ void KMCSolver::reset()
 
     totalTime = 0;
 
-    cycle = 0;
+    cycle = 1;
 
     outputCounter = 0;
 
@@ -196,9 +196,11 @@ void KMCSolver::reset()
 
     Site::setZeroTotalEnergy();
 
-    Site::initializeBoundaries();
+    Site::finalizeBoundaries();
 
     setRNGSeed(Seed::specific, Seed::initialSeed);
+
+    Site::initializeBoundaries();
 
     KMCDebugger_Init();
 
