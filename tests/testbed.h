@@ -66,6 +66,8 @@ public:
 
     static wall_clock timer;
 
+    static seed_type baseSeed;
+
 
 private:
 

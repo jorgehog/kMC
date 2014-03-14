@@ -1277,6 +1277,7 @@ void testBed::initBoundaryTestParameters(const umat &boundaries)
 
     Site::resetNNeighborsToCrystallizeTo(1);
 
+    solver->setRNGSeed(Seed::specific, baseSeed);
 
 }
 
@@ -1734,6 +1735,7 @@ void testBed::testRunAllBoundaryTests(const umat & boundaries)
         break;
     }
 
+    baseSeed = Seed::initialSeed;
 
     initBoundaryTestParameters(boundaries);
 
@@ -1785,4 +1787,4 @@ KMCSolver * testBed::solver;
 
 wall_clock testBed::timer;
 
-
+seed_type testBed::baseSeed;
