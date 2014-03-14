@@ -3,6 +3,7 @@
 #include <armadillo>
 #include <libconfig_utils/libconfig_utils.h>
 
+
 using namespace arma;
 using namespace libconfig;
 

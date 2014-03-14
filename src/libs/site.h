@@ -71,6 +71,8 @@ public:
 
     static void resetBoundariesTo(const umat & boundaryMatrix);
 
+    static void resetBoundariesTo(const int boundaryType);
+
     static void resetNNeighborsLimitTo(const uint & nNeighborsLimit, bool check = true);
 
     static void resetNNeighborsToCrystallizeTo(const uint & nNeighborsToCrystallize);

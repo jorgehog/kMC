@@ -24,6 +24,57 @@ void testBed::makeSolver()
 void testBed::testTotalParticleStateCounters()
 {
 
+    CHECK_EQUAL(0, Site::totalActiveParticles(ParticleStates::surface));
+    CHECK_EQUAL(0, accu(Site::totalActiveParticlesVector()));
+    CHECK_EQUAL(NX()*NY()*NZ(), accu(Site::totalDeactiveParticlesVector()));
+    CHECK_EQUAL(NX()*NY()*NZ(), Site::totalDeactiveParticles(ParticleStates::solution));
+
+    initSimpleSystemParameters();
+
+    activateAllSites();
+
+    CHECK_EQUAL(0, Site::totalActiveParticles(ParticleStates::surface));
+    CHECK_EQUAL(0, accu(Site::totalDeactiveParticlesVector()));
+    CHECK_EQUAL(NX()*NY()*NZ(), accu(Site::totalActiveParticlesVector()));
+    CHECK_EQUAL(NX()*NY()*NZ(), Site::totalActiveParticles(ParticleStates::solution));
+
+    Site * boxCenter = solver->getSite(NX()/2, NY()/2, NZ()/2);
+
+    boxCenter->deactivate();
+
+    boxCenter->spawnAsFixedCrystal();
+
+    CHECK_EQUAL(0, Site::totalActiveParticles(ParticleStates::surface));
+    CHECK_EQUAL(0, accu(Site::totalDeactiveParticlesVector()));
+    CHECK_EQUAL(NX()*NY()*NZ(), accu(Site::totalActiveParticlesVector()));
+    CHECK_EQUAL(NX()*NY()*NZ() - 1, Site::totalActiveParticles(ParticleStates::crystal));
+
+    boxCenter->deactivateFixedCrystal();
+
+    boxCenter->activate();
+
+    CHECK_EQUAL(0, Site::totalActiveParticles(ParticleStates::surface));
+    CHECK_EQUAL(0, accu(Site::totalDeactiveParticlesVector()));
+    CHECK_EQUAL(NX()*NY()*NZ(), accu(Site::totalActiveParticlesVector()));
+    CHECK_EQUAL(NX()*NY()*NZ(), Site::totalActiveParticles(ParticleStates::solution));
+
+    deactivateAllSites();
+
+    CHECK_EQUAL(0, Site::totalActiveParticles(ParticleStates::surface));
+    CHECK_EQUAL(0, accu(Site::totalActiveParticlesVector()));
+    CHECK_EQUAL(NX()*NY()*NZ(), accu(Site::totalDeactiveParticlesVector()));
+    CHECK_EQUAL(NX()*NY()*NZ(), Site::totalDeactiveParticles(ParticleStates::solution));
+
+    boxCenter->spawnAsFixedCrystal();
+
+    CHECK_EQUAL(0, Site::totalActiveParticles(ParticleStates::surface));
+    CHECK_EQUAL(1, accu(Site::totalActiveParticlesVector()));
+    CHECK_EQUAL(1, Site::totalActiveParticles(ParticleStates::fixedCrystal));
+    CHECK_EQUAL(pow(DiffusionReaction::separation()*2 + 1, 3) - 1, Site::totalDeactiveParticles(ParticleStates::surface));
+
+    solver->reset();
+
+    CHECK_EQUAL(0, Site::totalActiveParticles(ParticleStates::surface));
     CHECK_EQUAL(0, accu(Site::totalActiveParticlesVector()));
     CHECK_EQUAL(NX()*NY()*NZ(), accu(Site::totalDeactiveParticlesVector()));
     CHECK_EQUAL(NX()*NY()*NZ(), Site::totalDeactiveParticles(ParticleStates::solution));
@@ -701,25 +752,10 @@ void testBed::testUpdateNeigbors()
     bool enabled = KMCDebugger_IsEnabled;
     KMCDebugger_SetEnabledTo(false);
 
+
+    activateAllSites();
+
     Site * currentSite;
-
-    for (uint i = 0; i < NX(); ++i)
-    {
-        for (uint j = 0; j < NY(); ++j)
-        {
-            for (uint k = 0; k < NZ(); ++k)
-            {
-
-                currentSite = solver->getSite(i, j, k);
-
-                if (!currentSite->isActive())
-                {
-                    currentSite->activate();
-                }
-            }
-        }
-    }
-
 
     double eMax = accu(DiffusionReaction::potentialBox());
 
@@ -815,7 +851,7 @@ void testBed::testHasCrystalNeighbor()
     Site::resetNNeighborsLimitTo(2, false);
     solver->setBoxSize({10, 10, 10});
 
-    Site::resetBoundariesTo(zeros<umat>(3, 2) + Boundary::Edge);
+    Site::resetBoundariesTo(Boundary::Edge);
 
     DiffusionReaction::setSeparation(1);
 
@@ -1289,6 +1325,68 @@ void testBed::initBoundaryTestParameters(const umat &boundaries)
 
 }
 
+void testBed::initSimpleSystemParameters()
+{
+
+    solver->setBoxSize({5, 5, 5}, false);
+
+    Site::resetNNeighborsLimitTo(1);
+
+    Site::resetNNeighborsToCrystallizeTo(1);
+
+    DiffusionReaction::setSeparation(1);
+
+    Site::resetBoundariesTo(Boundary::Periodic);
+
+}
+
+void testBed::activateAllSites()
+{
+
+    Site * currentSite;
+
+    for (uint x = 0; x < NX(); ++x)
+    {
+        for (uint y = 0; y < NY(); ++y)
+        {
+            for (uint z = 0; z < NZ(); ++z)
+            {
+
+                currentSite = solver->getSite(x, y, z);
+
+                if (!currentSite->isActive())
+                {
+                    currentSite->activate();
+                }
+
+            }
+        }
+    }
+}
+
+void testBed::deactivateAllSites()
+{
+    Site * currentSite;
+
+    for (uint x = 0; x < NX(); ++x)
+    {
+        for (uint y = 0; y < NY(); ++y)
+        {
+            for (uint z = 0; z < NZ(); ++z)
+            {
+
+                currentSite = solver->getSite(x, y, z);
+
+                if (currentSite->isActive())
+                {
+                    currentSite->deactivate();
+                }
+
+            }
+        }
+    }
+}
+
 void testBed::testKnownCase(const umat & boundaries, const string name)
 {
 
@@ -1494,7 +1592,7 @@ void testBed::testnNeiborsLimit()
     uvec3 boxSize = {10, 10, 10};
 
 
-    Site::resetBoundariesTo(zeros<umat>(3, 2) + Boundary::Periodic);
+    Site::resetBoundariesTo(Boundary::Periodic);
 
     solver->setBoxSize(boxSize, false);
 

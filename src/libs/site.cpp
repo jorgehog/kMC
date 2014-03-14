@@ -1025,6 +1025,11 @@ void Site::resetBoundariesTo(const umat &boundaryMatrix)
 
 }
 
+void Site::resetBoundariesTo(const int boundaryType)
+{
+    resetBoundariesTo(umat::fixed<3, 2>(fill::zeros) + boundaryType);
+}
+
 void Site::resetNNeighborsLimitTo(const uint &nNeighborsLimit, bool check)
 {
 

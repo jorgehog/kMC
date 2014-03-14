@@ -90,4 +90,11 @@ private:
 
     static void initBoundaryTestParameters(const umat &boundaries);
 
+    static void initSimpleSystemParameters();
+
+    static void activateAllSites();
+
+    static void deactivateAllSites();
+
+
 };
