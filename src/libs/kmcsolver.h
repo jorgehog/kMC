@@ -98,6 +98,11 @@ public:
         return m_kTot;
     }
 
+    const double & targetSaturation()
+    {
+        return m_targetSaturation;
+    }
+
 
     //Set functions
 
@@ -127,9 +132,9 @@ public:
 
     }
 
-    void setSaturation(const double saturation)
+    void setTargetSaturation(const double saturation)
     {
-        m_saturation = saturation;
+        m_targetSaturation = saturation;
     }
 
     void setRNGSeed(uint seedState, int defaultSeed);
@@ -152,7 +157,7 @@ public:
 
 private:
 
-    double m_saturation;
+    double m_targetSaturation;
 
     double m_relativeSeedSize;
 

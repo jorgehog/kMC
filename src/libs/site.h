@@ -94,7 +94,6 @@ public:
 
     void setParticleState(int newState);
 
-
     bool isLegalToSpawn();
 
 
@@ -197,6 +196,26 @@ public:
     static const uint & totalActiveSites()
     {
         return m_totalActiveSites;
+    }
+
+    static const uvec4 & totalActiveParticlesVector()
+    {
+        return m_totalActiveParticles;
+    }
+
+    static const uvec4 & totalDeactiveParticlesVector()
+    {
+        return m_totalDeactiveParticles;
+    }
+
+    static const uint & totalActiveParticles(const uint i)
+    {
+        return m_totalActiveParticles(i);
+    }
+
+    static const uint & totalDeactiveParticles(const uint i)
+    {
+        return m_totalDeactiveParticles(i);
     }
 
     static const double & totalEnergy()
@@ -338,26 +357,42 @@ private:
 
     static umat m_boundaryTypes;
 
+
     static uint m_nNeighborsLimit;
+
     static uint m_neighborhoodLength;
+
 
     static uint m_nNeighborsToCrystallize;
 
+
     static ucube m_levelMatrix;
+
     static ivec m_originTransformVector;
+
 
     static uint m_totalActiveSites;
 
+    static uvec4 m_totalActiveParticles;
+
+    static uvec4 m_totalDeactiveParticles;
+
     static double m_totalEnergy;
+
 
     static set<Site*> m_affectedSites;
 
     static KMCSolver* m_solver;
 
+
     Site**** m_neighborHood;
+
     vector<Site*> m_allNeighbors;
+
     uvec m_nNeighbors;
+
     uint m_nNeighborsSum;
+
 
     bool m_active;
 
@@ -383,6 +418,7 @@ private:
 
     static void setNNeighborsToCrystallize(const uint & nNeighborsToCrystallize);
 
+    void setNewParticleState(int newState);
 
 };
 

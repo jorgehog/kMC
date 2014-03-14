@@ -56,7 +56,7 @@ KMCSolver::KMCSolver(const Setting & root) :
     setCyclesPerOutput(
                 getSurfaceSetting<uint>(SolverSettings, "cyclesPerOutput"));
 
-    setSaturation(
+    setTargetSaturation(
                 getSurfaceSetting<double>(InitializationSettings, "SaturationLevel"));
 
     setRelativeSeedSize(
@@ -189,6 +189,10 @@ void KMCSolver::reset()
             }
         }
     }
+
+    KMCDebugger_Assert(accu(Site::totalActiveParticlesVector()), ==, 0);
+
+    KMCDebugger_Assert(Site::totalDeactiveParticles(ParticleStates::solution), ==, m_NX*m_NY*m_NZ);
 
     KMCDebugger_AssertClose(Site::totalEnergy(), 0, 1E-5);
 
@@ -375,6 +379,11 @@ void KMCSolver::clearSites()
 
     delete [] sites;
 
+
+    KMCDebugger_Assert(accu(Site::totalActiveParticlesVector()), ==, 0);
+
+    KMCDebugger_Assert(accu(Site::totalDeactiveParticlesVector()), ==, 0);
+
     KMCDebugger_AssertClose(Site::totalEnergy(), 0, 1E-5);
 
     KMCDebugger_Assert(Site::totalActiveSites(), ==, 0);
@@ -462,7 +471,7 @@ void KMCSolver::initializeCrystal()
 
                 if ((i < solutionEndX) || (i >= solutionStartX) || (j < solutionEndY) || (j >= solutionStartY) || (k < solutionEndZ) || (k >= solutionStartZ))
                 {
-                    if (KMC_RNG_UNIFORM() < m_saturation)
+                    if (KMC_RNG_UNIFORM() < m_targetSaturation)
                     {
                         if(sites[i][j][k]->isLegalToSpawn())
                         {

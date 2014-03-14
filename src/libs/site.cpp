@@ -24,7 +24,7 @@ Site::Site(uint _x, uint _y, uint _z) :
     m_energy(0),
     m_particleState(ParticleStates::solution)
 {
-
+    m_totalDeactiveParticles(ParticleStates::solution)++;
 }
 
 
@@ -38,7 +38,12 @@ Site::~Site()
     if (isActive())
     {
         m_totalActiveSites--;
+        m_totalActiveParticles(particleState())--;
+        m_totalDeactiveParticles(particleState())++;
     }
+
+
+    m_totalDeactiveParticles(particleState())--;
 
 }
 
@@ -76,9 +81,6 @@ void Site::selectUpdateFlags()
 void Site::setParticleState(int newState)
 {
 
-    KMCDebugger_MarkPre(particleStateName());
-
-
     KMCDebugger_Assert(newState, !=, m_particleState, "switching particle states to same state...", info());
 
     /* ################## crystal -> surface | solution ################### */
@@ -100,7 +102,7 @@ void Site::setParticleState(int newState)
         if (newState == ParticleStates::crystal)
         {
 
-            KMCDebugger_AssertBool(isActive());
+            KMCDebugger_AssertBool(!isActive());
 
             crystallize();
 
@@ -114,16 +116,15 @@ void Site::setParticleState(int newState)
         else if (newState == ParticleStates::solution)
         {
 
-            KMCDebugger_AssertBool(!isActive(), "surface should not be active.", info());
+//            KMCDebugger_AssertBool(!isActive(), "surface should not be active.", info());
 
             if (!qualifiesAsSurface())
             {
-                m_particleState = ParticleStates::solution;
+                setNewParticleState(ParticleStates::solution);
                 queueAffectedSites();
             }
 
 
-            KMCDebugger_PushImplication(this, particleStateName().c_str());
         }
         /* ################################################################## */
 
@@ -149,9 +150,7 @@ void Site::setParticleState(int newState)
 
         else
         {
-            m_particleState = ParticleStates::surface;
-
-            KMCDebugger_PushImplication(this, particleStateName().c_str());
+            setNewParticleState(ParticleStates::surface);
 
             queueAffectedSites();
         }
@@ -159,8 +158,6 @@ void Site::setParticleState(int newState)
 
 
     }
-
-    KMCDebugger_AssertBool(!(isSurface() && isActive()), "surface should not be active.", info());
 
 }
 
@@ -211,7 +208,7 @@ bool Site::qualifiesAsCrystal()
 
 bool Site::qualifiesAsSurface()
 {
-    return !isActive() && hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation());
+    return hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation());
 }
 
 
@@ -290,14 +287,15 @@ void Site::clearAllReactions()
 void Site::spawnAsFixedCrystal()
 {
 
-    m_particleState = ParticleStates::surface;
+    setNewParticleState(ParticleStates::surface);
+
     m_isFixedCrystalSeed = true;
 
     clearAllReactions();
 
     activate();
 
-    m_particleState = ParticleStates::fixedCrystal;
+    setNewParticleState(ParticleStates::fixedCrystal);
 
 }
 
@@ -308,8 +306,7 @@ void Site::deactivateFixedCrystal()
 
     m_isFixedCrystalSeed = false;
 
-
-    m_particleState = ParticleStates::crystal;
+    setNewParticleState(ParticleStates::crystal);
 
     deactivate();
 
@@ -320,25 +317,23 @@ void Site::deactivateFixedCrystal()
 void Site::crystallize()
 {
 
-    KMCDebugger_AssertBool(isActive(), "should not attempt to crystallize an unactive site.", info());
+    KMCDebugger_AssertBool(isActive() || isSurface(), "should not attempt to crystallize an already active site.", info());
 
     if (qualifiesAsCrystal())
     {
         //No need to test if it has neigh crystals because
         //diffusion reactions deactivates old spot before activating new spot.
         //Which will remove access surface.
-        m_particleState  = ParticleStates::crystal;
+        setNewParticleState(ParticleStates::crystal);
 
-        KMCDebugger_PushImplication(this, particleStateName().c_str());
         propagateToNeighbors(ParticleStates::solution, ParticleStates::surface, DiffusionReaction::separation());
     }
     else
     {
         KMCDebugger_AssertBool(!(DiffusionReaction::separation() == 1 && Site::nNeighborsToCrystallize() == 1), "With a single neighboring crystal needed, everything should crystallize if asked.", info());
 
-        m_particleState = ParticleStates::solution;
+        setNewParticleState(ParticleStates::solution);
 
-        KMCDebugger_PushImplication(this, particleStateName().c_str());
     }
 }
 
@@ -347,17 +342,15 @@ void Site::decrystallize()
 
     if (qualifiesAsSurface())
     {
-        m_particleState = ParticleStates::surface;
+        setNewParticleState(ParticleStates::surface);
         propagateToNeighbors(ParticleStates::any, ParticleStates::solution, DiffusionReaction::separation());
     }
 
     else if (!qualifiesAsCrystal())
     {
-        m_particleState = ParticleStates::solution;
+        setNewParticleState(ParticleStates::solution);
         propagateToNeighbors(ParticleStates::any, ParticleStates::solution, DiffusionReaction::separation());
     }
-
-    KMCDebugger_PushImplication(this, particleStateName().c_str());
 
 }
 
@@ -574,7 +567,6 @@ void Site::activate()
     KMCDebugger_AssertBool(!isCrystal(), "Activating a crystal. (should always be active)", info());
 
 
-    m_active = true;
     m_affectedSites.insert(this);
 
     informNeighborhoodOnChange(+1);
@@ -588,6 +580,11 @@ void Site::activate()
         KMCDebugger_PushImplication(this, "activation");
     }
 
+    m_totalDeactiveParticles(particleState())--;
+    m_totalActiveParticles(particleState())++;
+
+    m_active = true;
+
     setDirectUpdateFlags();
 
     for (Reaction * reaction : m_siteReactions)
@@ -599,8 +596,10 @@ void Site::activate()
 
     m_totalActiveSites++;
 
+    KMCDebugger_AssertBool(!(isSurface() && isActive()), "surface should not be active.", info());
 
 }
+
 
 void Site::deactivate()
 {
@@ -609,7 +608,6 @@ void Site::deactivate()
     KMCDebugger_AssertBool(!isSurface(), "deactivating a surface. (should always be deactive)", info());
 
 
-    m_active = false;
 
 
     informNeighborhoodOnChange(-1);
@@ -631,10 +629,8 @@ void Site::deactivate()
 
         KMCDebugger_Assert(particleState(), ==, ParticleStates::solution);
 
-        m_particleState = ParticleStates::surface;
+        setNewParticleState(ParticleStates::surface);
 
-        KMCDebugger_MarkPre("surfaceSolution");
-        KMCDebugger_PushImplication(this, "surface");
     }
 
     else
@@ -645,6 +641,10 @@ void Site::deactivate()
 
     setDirectUpdateFlags();
 
+    m_totalActiveParticles(particleState())--;
+    m_totalDeactiveParticles(particleState())++;
+
+    m_active = false;
 
     m_activeReactions.clear();
 
@@ -868,6 +868,10 @@ void Site::reset()
         m_totalActiveSites--;
 
         m_active = false;
+
+        m_totalActiveParticles(particleState())--;
+        m_totalDeactiveParticles(particleState())++;
+
     }
 
     if (isFixedCrystalSeed())
@@ -878,7 +882,11 @@ void Site::reset()
     }
 
 
+    m_totalDeactiveParticles(particleState())--;
+
     m_particleState = ParticleStates::solution;
+
+    m_totalDeactiveParticles(ParticleStates::solution)++;
 
     m_nNeighbors.zeros();
 
@@ -960,6 +968,8 @@ void Site::clearAll()
 
     m_totalActiveSites = 0;
     m_totalEnergy = 0;
+    m_totalActiveParticles.zeros();
+    m_totalDeactiveParticles.zeros();
     m_levelMatrix.reset();
     m_originTransformVector.reset();
 
@@ -1260,6 +1270,39 @@ void Site::setNNeighborsToCrystallize(const uint &nNeighborsToCrystallize)
 
 }
 
+void Site::setNewParticleState(int newState)
+{
+
+    KMCDebugger_MarkPre(particleStateName());
+
+    if (isActive())
+    {
+
+        KMCDebugger_Assert(m_totalActiveParticles(particleState()), !=, 0, "trying to reduce particle type count below zero", info());
+
+        m_totalActiveParticles(particleState())--;
+
+        m_totalActiveParticles(newState)++;
+
+    }
+
+    else
+    {
+
+        KMCDebugger_Assert(m_totalDeactiveParticles(particleState()), !=, 0, "trying to reduce particle type count below zero", info());
+
+        m_totalDeactiveParticles(particleState())--;
+
+        m_totalDeactiveParticles(newState)++;
+
+    }
+
+    m_particleState = newState;
+
+    KMCDebugger_PushImplication(this, particleStateName().c_str());
+
+}
+
 void Site::setInitialBoundaries(const Setting & boundariesConfig)
 {
 
@@ -1367,20 +1410,35 @@ uint       Site::m_nNeighborsLimit = KMCSolver::UNSET_UINT;
 
 uint       Site::m_neighborhoodLength = KMCSolver::UNSET_UINT;
 
+
 ucube      Site::m_levelMatrix;
+
 ivec       Site::m_originTransformVector;
+
 
 uint       Site::m_totalActiveSites = 0;
 
+uvec4      Site::m_totalActiveParticles;
+
+uvec4      Site::m_totalDeactiveParticles;
+
 double     Site::m_totalEnergy = 0;
 
+
 set<Site*> Site::m_affectedSites;
+
 
 field<Boundary*> Site::m_boundaries;
 
 field<const Setting*> Site::m_boundaryConfigs;
 
 umat Site::m_boundaryTypes;
+
+
+
+
+
+
 
 const vector<string> ParticleStates::names = {"crystal", "fixedcrystal", "solution", "surface"};
 const vector<string> ParticleStates::shortNames = {"C", "F", "P", "S"};
