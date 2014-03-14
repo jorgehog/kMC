@@ -33,7 +33,6 @@ SUITE(Misc)
 
 SUITE(Reactions)
 {
-    TESTWRAPPER(InitialReactionSetup)
 
     TESTWRAPPER(RateCalculation)
 
@@ -50,7 +49,6 @@ SUITE(StateChanges)
 
 SUITE(Parameters)
 {
-    TESTWRAPPER(BoxSizes)
 
     TESTWRAPPER(nNeiborsLimit)
 
@@ -69,9 +67,15 @@ SUITE(EdgeBoundaries)
 {
     TESTWRAPPER(RunAllBoundaryTests, zeros<umat>(3, 2) + Boundary::Edge)
 }
+
 SUITE(SurfaceBoundaries)
 {
     TESTWRAPPER(RunAllBoundaryTests, zeros<umat>(3, 2) + Boundary::Surface)
+}
+
+SUITE(ConcentrationBoundaries)
+{
+    TESTWRAPPER(RunAllBoundaryTests, zeros<umat>(3, 2) + Boundary::ConcentrationWall)
 }
 
 SUITE(MixedBoundaries)
@@ -83,12 +87,11 @@ SUITE(MixedBoundaries)
 
 int main()
 {
+    using namespace SuiteMixedBoundaries;
+
     KMCDebugger_SetFilename("testTrace");
     KMCDebugger_SetEnabledTo(false);
 
-    testBed::makeSolver();
-
-    using namespace SuiteMixedBoundaries;
 
     mixedBoundaries(0, 0) = Boundary::Periodic;
     mixedBoundaries(0, 1) = Boundary::Periodic;
@@ -99,5 +102,12 @@ int main()
     mixedBoundaries(2, 0) = Boundary::Surface;
     mixedBoundaries(2, 1) = Boundary::ConcentrationWall;
 
-    return UnitTest::RunAllTests();
+
+    testBed::makeSolver();
+
+    int exitSuccess = UnitTest::RunAllTests();
+
+    delete testBed::solver;
+
+    return exitSuccess;
 }

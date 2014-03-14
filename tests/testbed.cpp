@@ -30,6 +30,9 @@ void testBed::testDistanceTo()
     Site* startSite;
     Site* endSite;
 
+    solver->setBoxSize({6, 6, 6}, false);
+    Site::resetNNeighborsLimitTo(2);
+
 
     for (uint startx = 0; startx < NX(); ++startx)
     {
@@ -1057,6 +1060,11 @@ void testBed::testInitialReactionSetup()
 
     KMCDebugger_Init();
 
+    uint nBlocked;
+
+    Site * currentSite;
+    Site * neighbor;
+
     for (uint i = 0; i < NX(); ++i)
     {
         for (uint j = 0; j < NY(); ++j)
@@ -1064,7 +1072,48 @@ void testBed::testInitialReactionSetup()
             for (uint k = 0; k < NZ(); ++k)
             {
 
-                CHECK_EQUAL(solver->getSite(i, j, k)->siteReactions().size(), 26);
+                currentSite = solver->getSite(i, j, k);
+
+
+                if (currentSite->isActive())
+                {
+
+                    CHECK_EQUAL(ParticleStates::fixedCrystal, currentSite->particleState());
+
+                    CHECK_EQUAL(0, currentSite->siteReactions().size());
+
+                }
+
+                else
+                {
+
+                    nBlocked = 0;
+
+
+                    for (uint x = 0; x < 3; ++x)
+                    {
+                        for (uint y = 0; y < 3; ++y)
+                        {
+                            for (uint z = 0; z < 3; ++z)
+                            {
+
+                                neighbor = currentSite->neighborHood(Site::nNeighborsLimit() - 1 + x,
+                                                                     Site::nNeighborsLimit() - 1 + y,
+                                                                     Site::nNeighborsLimit() - 1 + z);
+
+                                if (neighbor == NULL)
+                                {
+                                    nBlocked++;
+                                }
+
+                            }
+                        }
+                    }
+
+                    CHECK_EQUAL(26, currentSite->siteReactions().size() + nBlocked);
+
+                }
+
 
             }
         }
@@ -1101,8 +1150,6 @@ void testBed::testInitialReactionSetup()
     }
 
 
-
-    Site* currentSite;
     for (uint i = 0; i < NX(); ++i)
     {
         for (uint j = 0; j < NY(); ++j)
@@ -1229,13 +1276,14 @@ void testBed::initBoundaryTestParameters(const umat &boundaries)
 
     solver->setBoxSize({10, 10, 10}, false);
 
+    Site::resetBoundariesTo(boundaries);
+
     Site::resetNNeighborsLimitTo(3);
 
     DiffusionReaction::setSeparation(1);
 
     Site::resetNNeighborsToCrystallizeTo(1);
 
-    Site::resetBoundariesTo(boundaries);
 
 }
 
@@ -1254,7 +1302,7 @@ void testBed::testKnownCase(const umat & boundaries, const string name)
 
     Site::resetBoundariesTo(boundaries);
 
-    bool make = true;
+    bool make = false;
 
     ifstream o;
 
@@ -1336,12 +1384,15 @@ void testBed::testBoxSizes()
 
     uvec N = {6, 10, 15};
 
-    Site::resetNNeighborsLimitTo(2);
+    Site::resetNNeighborsLimitTo(2, false);
 
     uvec3 boxSize;
     set<Site*> allSites;
 
     Site* currentSite;
+
+
+    uint nBlocked;
 
     for (uint i = 0; i < N.n_elem; ++i)
     {
@@ -1387,12 +1438,29 @@ void testBed::testBoxSizes()
 
                             currentSite = solver->getSite(x, y, z);
 
-                            CHECK_EQUAL(pow(Site::neighborhoodLength(), 3) - 1, currentSite->allNeighbors().size());
+                            nBlocked = 0;
+
+                            for (uint X = 0; X < Site::neighborhoodLength(); ++X)
+                            {
+                                for (uint Y = 0; Y < Site::neighborhoodLength(); ++Y)
+                                {
+                                    for (uint Z = 0; Z < Site::neighborhoodLength(); ++Z)
+                                    {
+                                        if (currentSite->neighborHood(X, Y, Z) == NULL)
+                                        {
+                                            nBlocked++;
+                                        }
+                                    }
+                                }
+                            }
+
+                            CHECK_EQUAL(pow(Site::neighborhoodLength(), 3) - 1, currentSite->allNeighbors().size() + nBlocked);
 
                             for (Site * neighbor : currentSite->allNeighbors())
                             {
                                 allSites.insert(neighbor);
                             }
+
                         }
                     }
                 }
@@ -1665,6 +1733,9 @@ void testBed::testRunAllBoundaryTests(const umat & boundaries)
     case 6*Boundary::Surface:
         name = "Surface";
         break;
+    case 6*Boundary::ConcentrationWall:
+        name = "ConcentrationWall";
+        break;
     default:
         name = "Mixed";
         break;
@@ -1676,7 +1747,14 @@ void testBed::testRunAllBoundaryTests(const umat & boundaries)
 
     cout << ".. for boundarytype " << name << endl;
 
+    cout << "   Running test InitialReactionSetup" << endl;
+    testInitialReactionSetup();
 
+    solver->reset();
+    cout << "   Running test BoxSizes" << endl;
+    testBoxSizes();
+
+    solver->reset();
     cout << "   Running test DistanceTo" << endl;
     testDistanceTo();
 

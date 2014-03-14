@@ -21,6 +21,7 @@ void Periodic::initialize()
 
 void Periodic::setupDelta()
 {
+    delta.clear();
     delta.set_size(span());
 
     for(uint i = 0; i < span(); ++i)

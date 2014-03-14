@@ -15,8 +15,6 @@ DiffusionReaction::DiffusionReaction(Site * currentSite, Site *destinationSite) 
 
     reactionSite()->distanceTo(destinationSite, path(0), path(1), path(2));
 
-    neighborSetIntersectionPoints = getSaddleOverlapMatrix(path);
-
     saddleFieldIndices = conv_to<uvec>::from(path + 1);
 
 }
@@ -126,9 +124,15 @@ void DiffusionReaction::setupPotential()
         }
     }
 
+    m_saddlePotential.reset_objects();
+    m_saddlePotential.reset();
     m_saddlePotential.set_size(3, 3, 3);
 
-    umat overlapBox;
+    neighborSetIntersectionPoints.reset_objects();
+    neighborSetIntersectionPoints.reset();
+    neighborSetIntersectionPoints.set_size(3, 3, 3);
+
+    umat::fixed<3, 2> overlapBox;
     ivec _path;
     uint i, j, k;
     double dx, dy, dz, r;
@@ -151,6 +155,7 @@ void DiffusionReaction::setupPotential()
                 _path = {x, y, z};
                 overlapBox = getSaddleOverlapMatrix(_path);
 
+                neighborSetIntersectionPoints(i, j, k) = overlapBox;
 
                 m_saddlePotential(i, j, k).set_size(overlapBox(0, 1) - overlapBox(0, 0),
                                                     overlapBox(1, 1) - overlapBox(1, 0),
@@ -300,11 +305,15 @@ double DiffusionReaction::getSaddleEnergy()
                                                saddleFieldIndices(1),
                                                saddleFieldIndices(2));
 
-    for (uint xn = neighborSetIntersectionPoints(0, 0); xn < neighborSetIntersectionPoints(0, 1); ++xn)
+    const umat::fixed<3, 2> & myIntersectionPoints = neighborSetIntersectionPoints(saddleFieldIndices(0),
+                                                                                   saddleFieldIndices(1),
+                                                                                   saddleFieldIndices(2));
+
+    for (uint xn = myIntersectionPoints(0, 0); xn < myIntersectionPoints(0, 1); ++xn)
     {
-        for (uint yn = neighborSetIntersectionPoints(1, 0); yn < neighborSetIntersectionPoints(1, 1); ++yn)
+        for (uint yn = myIntersectionPoints(1, 0); yn < myIntersectionPoints(1, 1); ++yn)
         {
-            for (uint zn = neighborSetIntersectionPoints(2, 0); zn < neighborSetIntersectionPoints(2, 1); ++zn)
+            for (uint zn = myIntersectionPoints(2, 0); zn < myIntersectionPoints(2, 1); ++zn)
             {
                 targetSite = reactionSite()->neighborHood(xn, yn, zn);
 
@@ -323,13 +332,13 @@ double DiffusionReaction::getSaddleEnergy()
                     continue;
                 }
 
-                Esp += saddlePot(xn - neighborSetIntersectionPoints(0, 0),
-                                 yn - neighborSetIntersectionPoints(1, 0),
-                                 zn - neighborSetIntersectionPoints(2, 0));
+                Esp += saddlePot(xn - myIntersectionPoints(0, 0),
+                                 yn - myIntersectionPoints(1, 0),
+                                 zn - myIntersectionPoints(2, 0));
 
-                KMCDebugger_Assert(saddlePot(xn - neighborSetIntersectionPoints(0, 0),
-                                             yn - neighborSetIntersectionPoints(1, 0),
-                                             zn - neighborSetIntersectionPoints(2, 0)),
+                KMCDebugger_Assert(saddlePot(xn - myIntersectionPoints(0, 0),
+                                             yn - myIntersectionPoints(1, 0),
+                                             zn - myIntersectionPoints(2, 0)),
                                    ==,
                                    getSaddleEnergyContributionFrom(targetSite),
                                    "Mismatch in saddle energy contribution.",
@@ -360,10 +369,15 @@ double DiffusionReaction::getSaddleEnergyContributionFromNeighborAt(const uint &
     return m_saddlePotential(saddleFieldIndices(0),
                              saddleFieldIndices(1),
                              saddleFieldIndices(2))
-            (i - neighborSetIntersectionPoints(0, 0),
-             j - neighborSetIntersectionPoints(1, 0),
-             k - neighborSetIntersectionPoints(2, 0));
-
+            (i - neighborSetIntersectionPoints(saddleFieldIndices(0),
+                                               saddleFieldIndices(1),
+                                               saddleFieldIndices(2))(0, 0),
+             j - neighborSetIntersectionPoints(saddleFieldIndices(0),
+                                               saddleFieldIndices(1),
+                                               saddleFieldIndices(2))(1, 0),
+             k - neighborSetIntersectionPoints(saddleFieldIndices(0),
+                                               saddleFieldIndices(1),
+                                               saddleFieldIndices(2))(2, 0));
 }
 
 umat::fixed<3, 2> DiffusionReaction::getSaddleOverlapMatrix(const ivec & relCoor)
@@ -489,3 +503,5 @@ uint          DiffusionReaction::m_separation;
 
 cube          DiffusionReaction::m_potential;
 field<cube>   DiffusionReaction::m_saddlePotential;
+field<umat::fixed<3, 2> >
+              DiffusionReaction::neighborSetIntersectionPoints;

@@ -43,6 +43,10 @@ public:
     static void clearAll()
     {
         m_potential.reset();
+        m_saddlePotential.reset_objects();
+        m_saddlePotential.reset();
+        neighborSetIntersectionPoints.reset_objects();
+        neighborSetIntersectionPoints.reset();
     }
 
 
@@ -89,6 +93,7 @@ private:
 
     static cube m_potential;
     static field<cube> m_saddlePotential;
+    static field<umat::fixed<3, 2> > neighborSetIntersectionPoints;
 
 
     double m_lastUsedEsp;
@@ -100,7 +105,6 @@ private:
         updateKeepSaddle = 2
     };
 
-    umat::fixed<3, 2> neighborSetIntersectionPoints;
     ivec::fixed<3> path;
     uvec::fixed<3> saddleFieldIndices;
 
