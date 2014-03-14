@@ -102,7 +102,7 @@ void Site::setParticleState(int newState)
         if (newState == ParticleStates::crystal)
         {
 
-            KMCDebugger_AssertBool(!isActive());
+            KMCDebugger_AssertBool(isActive());
 
             crystallize();
 
@@ -116,7 +116,7 @@ void Site::setParticleState(int newState)
         else if (newState == ParticleStates::solution)
         {
 
-//            KMCDebugger_AssertBool(!isActive(), "surface should not be active.", info());
+            KMCDebugger_AssertBool(!isActive(), "surface should not be active.", info());
 
             if (!qualifiesAsSurface())
             {
@@ -208,7 +208,7 @@ bool Site::qualifiesAsCrystal()
 
 bool Site::qualifiesAsSurface()
 {
-    return hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation());
+    return !isActive() && hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation());
 }
 
 
@@ -317,7 +317,7 @@ void Site::deactivateFixedCrystal()
 void Site::crystallize()
 {
 
-    KMCDebugger_AssertBool(isActive() || isSurface(), "should not attempt to crystallize an already active site.", info());
+    KMCDebugger_AssertBool(isActive(), "crystallization must occure on active or currently activating site.", info());
 
     if (qualifiesAsCrystal())
     {
@@ -566,6 +566,7 @@ void Site::activate()
     KMCDebugger_AssertBool(!m_active, "activating active site", info());
     KMCDebugger_AssertBool(!isCrystal(), "Activating a crystal. (should always be active)", info());
 
+    m_active = true;
 
     m_affectedSites.insert(this);
 
@@ -583,7 +584,6 @@ void Site::activate()
     m_totalDeactiveParticles(particleState())--;
     m_totalActiveParticles(particleState())++;
 
-    m_active = true;
 
     setDirectUpdateFlags();
 
@@ -607,8 +607,7 @@ void Site::deactivate()
     KMCDebugger_AssertBool(m_active, "deactivating deactive site. ", info());
     KMCDebugger_AssertBool(!isSurface(), "deactivating a surface. (should always be deactive)", info());
 
-
-
+    m_active = false;
 
     informNeighborhoodOnChange(-1);
 
@@ -644,7 +643,6 @@ void Site::deactivate()
     m_totalActiveParticles(particleState())--;
     m_totalDeactiveParticles(particleState())++;
 
-    m_active = false;
 
     m_activeReactions.clear();
 
