@@ -24,8 +24,8 @@ using namespace std;
 #define TESTWRAPPER(which, ...) TEST(which) {TESTCORE(which, ##__VA_ARGS__)}
 
 /*
-
 */
+
 
 SUITE(Misc)
 {
@@ -71,16 +71,17 @@ SUITE(EdgeBoundaries)
     TESTWRAPPER(RunAllBoundaryTests, zeros<umat>(3, 2) + Boundary::Edge)
 }
 
-SUITE(SurfaceBoundaries)
-{
-    TESTWRAPPER(RunAllBoundaryTests, zeros<umat>(3, 2) + Boundary::Surface)
-}
-
 SUITE(ConcentrationBoundaries)
 {
     TESTWRAPPER(RunAllBoundaryTests, zeros<umat>(3, 2) + Boundary::ConcentrationWall)
 }
 
+SUITE(SurfaceBoundaries)
+{
+    TESTWRAPPER(RunAllBoundaryTests, zeros<umat>(3, 2) + Boundary::Surface)
+}
+/*
+*/
 SUITE(MixedBoundaries)
 {
     umat mixedBoundaries(3, 2);

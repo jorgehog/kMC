@@ -45,17 +45,6 @@ struct Seed
 
     static seed_type initialSeed;
 
-
-    class SeedNotSetException : public std::exception
-    {
-    public:
-        virtual const char* what() const throw()
-        {
-            return "Seed not set.";
-        }
-    } static seedNotSetException;
-
-
 };
 
 }

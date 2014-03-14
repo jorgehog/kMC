@@ -2,5 +2,4 @@
 
 using namespace kMC;
 
-Seed::SeedNotSetException Seed::seedNotSetException;
-seed_type                 Seed::initialSeed;
+seed_type                 Seed::initialSeed = -1;

@@ -1252,8 +1252,6 @@ void testBed::testSequential(const umat & boundaries)
 const SnapShot * testBed::testSequentialCore()
 {
 
-    solver->setRNGSeed(Seed::specific, Seed::initialSeed);
-
     uint nc = 100;
 
     solver->setNumberOfCycles(nc);
@@ -1368,7 +1366,11 @@ void testBed::testKnownCase(const umat & boundaries, const string name)
         CHECK_EQUAL(NX()*NY()*NZ(), equal);
     }
 
-
+    //if we dont reset to default solver, next time sequential test is called,
+    //it will have mismatch in parameters such as
+    //temperature and saturation.
+    delete solver;
+    makeSolver();
 
 }
 
@@ -1739,7 +1741,8 @@ void testBed::testRunAllBoundaryTests(const umat & boundaries)
 
     initBoundaryTestParameters(boundaries);
 
-
+    /*
+    */
     cout << ".. for boundarytype " << name << endl;
 
     cout << "   Running test InitialReactionSetup" << endl;
@@ -1773,10 +1776,10 @@ void testBed::testRunAllBoundaryTests(const umat & boundaries)
     cout << "   Running test EnergyAndNeighborSetup" << endl;
     testEnergyAndNeighborSetup();
 
-
     cout << "   Running test Sequential" << endl;
     testSequential(boundaries);
-
+    /*
+    */
     cout << "   Running test KnownCase" << endl;
     testKnownCase(boundaries, name);
 

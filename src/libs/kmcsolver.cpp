@@ -608,7 +608,10 @@ void KMCSolver::setBoxSize(const uvec3 boxSize, bool check)
 void KMCSolver::setRNGSeed(uint seedState, int defaultSeed = 0)
 {
 
+    seed_type prevSeed = Seed::initialSeed;
+
     seed_type seed = -1;
+
     switch (seedState)
     {
     case Seed::specific:
@@ -618,13 +621,17 @@ void KMCSolver::setRNGSeed(uint seedState, int defaultSeed = 0)
         seed = static_cast<seed_type>(time(NULL));
         break;
     default:
-        cerr << "SEED NOT SPECIFIED." << endl;
-        throw Seed::seedNotSetException;
+        throw std::runtime_error("Seed not specified.");
         break;
     }
 
-    //    cout << "initializing seed : " << seed << endl;
     KMC_INIT_RNG(seed);
+
+
+    if (prevSeed != Seed::initialSeed)
+    {
+        cout << " -- new seed set: " << seed << endl;
+    }
 
 }
 
