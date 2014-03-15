@@ -400,6 +400,13 @@ void KMCSolver::clearSites()
 
 }
 
+void KMCSolver::setBoxSize_KeepSites(const uvec3 &boxSizes)
+{
+
+    // have to clear sites and all that jazz because of vector setup...
+
+}
+
 void KMCSolver::clearAllReactions()
 {
     for (uint i = 0; i < m_NX; ++i)
@@ -417,12 +424,15 @@ void KMCSolver::clearAllReactions()
 
 void KMCSolver::initializeCrystal()
 {
-
+    bool noSeed = true;
     bool enabled = KMCDebugger_IsEnabled;
     KMCDebugger_SetEnabledTo(false);
 
-    sites[m_NX/2][m_NY/2][m_NZ/2]->spawnAsFixedCrystal();
-    KMCDebugger_PushTraces();
+    if (!noSeed)
+    {
+        sites[m_NX/2][m_NY/2][m_NZ/2]->spawnAsFixedCrystal();
+        KMCDebugger_PushTraces();
+    }
 
     uint crystalSizeX = round(m_NX*m_relativeSeedSize);
     uint crystalSizeY = round(m_NY*m_relativeSeedSize);
@@ -444,6 +454,8 @@ void KMCSolver::initializeCrystal()
     uint solutionStartY = crystalEndY + Site::nNeighborsLimit();
     uint solutionStartZ = crystalEndZ + Site::nNeighborsLimit();
 
+
+
     for (uint i = 0; i < m_NX; ++i)
     {
         for (uint j = 0; j < m_NY; ++j)
@@ -451,25 +463,30 @@ void KMCSolver::initializeCrystal()
             for (uint k = 0; k < m_NZ; ++k)
             {
 
-                if (i >= crystalStartX && i < crystalEndX)
+                if (!noSeed)
                 {
-                    if (j >= crystalStartY && j < crystalEndY)
+
+                    if (i >= crystalStartX && i < crystalEndX)
                     {
-                        if (k >= crystalStartZ && k < crystalEndZ)
+                        if (j >= crystalStartY && j < crystalEndY)
                         {
-                            if (!((i == m_NX/2 && j == m_NY/2 && k == m_NZ/2)))
+                            if (k >= crystalStartZ && k < crystalEndZ)
                             {
-                                sites[i][j][k]->activate();
-                                KMCDebugger_PushTraces();
+                                if (!((i == m_NX/2 && j == m_NY/2 && k == m_NZ/2)))
+                                {
+                                    sites[i][j][k]->activate();
+                                    KMCDebugger_PushTraces();
+                                }
+
+                                continue;
+
                             }
-
-                            continue;
-
                         }
                     }
+
                 }
 
-                if ((i < solutionEndX) || (i >= solutionStartX) || (j < solutionEndY) || (j >= solutionStartY) || (k < solutionEndZ) || (k >= solutionStartZ))
+                if (noSeed || ((i < solutionEndX) || (i >= solutionStartX) || (j < solutionEndY) || (j >= solutionStartY) || (k < solutionEndZ) || (k >= solutionStartZ)))
                 {
                     if (KMC_RNG_UNIFORM() < m_targetSaturation)
                     {
@@ -583,8 +600,14 @@ uint KMCSolver::getReactionChoice(double R)
 
 }
 
-void KMCSolver::setBoxSize(const uvec3 boxSize, bool check)
+void KMCSolver::setBoxSize(const uvec3 boxSize, bool check, bool keepSystem)
 {
+
+    if (keepSystem)
+    {
+        setBoxSize_KeepSites(boxSize);
+        return;
+    }
 
     if (m_NX != UNSET_UINT && m_NY != UNSET_UINT && m_NZ != UNSET_UINT)
     {
@@ -607,12 +630,12 @@ void KMCSolver::setBoxSize(const uvec3 boxSize, bool check)
         }
     }
 
+
     initializeSites();
 
     Site::initializeBoundaries();
 
     initializeDiffusionReactions();
-
 
 }
 

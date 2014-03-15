@@ -122,7 +122,7 @@ protected:
 
     static vector<const Boundary*> m_currentBoundaries;
 
-    const vector<Site*> & boundarySites() const
+    vector<Site*> & boundarySites()
     {
         return m_boundarySites;
     }
@@ -137,13 +137,18 @@ protected:
         return m_dimension;
     }
 
-    enum Orientations
+    enum Dimensions
     {
         X,
         Y,
         Z
     };
 
+    enum Orientations
+    {
+        Near,
+        Far
+    };
 
 
 };

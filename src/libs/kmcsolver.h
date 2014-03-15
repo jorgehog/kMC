@@ -43,6 +43,7 @@ public:
 
     void initializeDiffusionReactions();
 
+
     void getRateVariables();
 
     uint getReactionChoice(double R);
@@ -83,6 +84,11 @@ public:
         return m_N(i);
     }
 
+    const uvec3 NVec() const
+    {
+        return m_N;
+    }
+
     const vector<double> & accuAllRates() const
     {
         return m_accuAllRates;
@@ -106,7 +112,7 @@ public:
 
     //Set functions
 
-    void setBoxSize(const uvec3 boxSize, bool check = true);
+    void setBoxSize(const uvec3 boxSize, bool check = true, bool keepSystem = false);
 
     void setNumberOfCycles(const uint nCycles)
     {
@@ -190,6 +196,8 @@ private:
     void initializeSites();
 
     void clearSites();
+
+    void setBoxSize_KeepSites(const uvec3 &boxSizes);
 
 
     void dumpOutput();

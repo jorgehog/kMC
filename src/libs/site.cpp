@@ -50,12 +50,17 @@ Site::~Site()
 
 
 
-void Site::updateAffectedSites()
+void Site::
+updateAffectedSites()
 {
 
     for (Site* site : m_affectedSites)
     {
-        KMCDebugger_AssertBool(site->isActive(), "Affected site should be active.", site->info());
+        if (!site->isActive())
+        {
+            continue;
+        }
+
         site->updateReactions();
         site->calculateRates();
     }
