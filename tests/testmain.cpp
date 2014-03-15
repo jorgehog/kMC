@@ -10,7 +10,7 @@
 
 
 //#define focusSuite "Misc"
-//#define focusTest  "TotalParticleStateCounters"
+//#define focusTest  "PropertyCalculations"
 
 #include "defines.h"
 
@@ -25,6 +25,8 @@ SUITE(Misc)
     TESTWRAPPER(BinarySearchChoise)
 
     TESTWRAPPER(TotalParticleStateCounters)
+
+    TESTWRAPPER(PropertyCalculations)
 }
 
 SUITE(Reactions)

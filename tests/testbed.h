@@ -30,6 +30,8 @@ public:
 
     static void testNeighbors();
 
+    static void testPropertyCalculations();
+
     static void testRNG();
 
     static void testBinarySearchChoise();
@@ -95,6 +97,8 @@ private:
     static void activateAllSites();
 
     static void deactivateAllSites();
+
+    static Site * getBoxCenter();
 
 
 };

@@ -66,8 +66,24 @@ public:
 
     static void selectUpdateFlags();
 
-    static uint findLevel(uint i, uint j, uint k);
 
+    /*
+     *  Misc static property functions
+     */
+
+    static uint getLevel(uint i, uint j, uint k);
+
+    static double getCurrentSolutionDensity();
+
+    static double getCurrentRelativeCrystalOccupancy();
+
+    static umat getCurrentCrystalBoxTopology();
+
+
+
+    /*
+     * Reset / clear static implementations
+     */
 
     static void resetBoundariesTo(const umat & boundaryMatrix);
 
@@ -85,7 +101,6 @@ public:
     static void clearBoundaries();
 
     static void finalizeBoundaries();
-
 
 
     static void setZeroTotalEnergy();
@@ -165,6 +180,22 @@ public:
     /*
      * Misc. trivial functions
      */
+
+    static const uint & nSurfaces()
+    {
+        return m_totalDeactiveParticles.memptr()[ParticleStates::surface];
+    }
+
+    static uint nCrystals()
+    {
+        return m_totalActiveParticles(ParticleStates::crystal) + m_totalActiveParticles(ParticleStates::fixedCrystal);
+    }
+
+    static const uint & nSolutionParticles()
+    {
+        return m_totalActiveParticles.memptr()[ParticleStates::solution];
+    }
+
 
     static const uint &boundaryTypes(const uint i, const uint j = 0)
     {

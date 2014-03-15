@@ -501,6 +501,103 @@ void testBed::testNeighbors()
     }
 }
 
+void testBed::testPropertyCalculations()
+{
+
+    initSimpleSystemParameters();
+
+    CHECK_EQUAL(0, Site::nSurfaces());
+    CHECK_EQUAL(0, Site::nCrystals());
+    CHECK_EQUAL(0, Site::nSolutionParticles());
+    CHECK_EQUAL(0, Site::getCurrentSolutionDensity());
+
+
+    Site * center = getBoxCenter();
+
+    center->spawnAsFixedCrystal();
+
+    CHECK_EQUAL(26, Site::nSurfaces());
+    CHECK_EQUAL(1, Site::nCrystals());
+    CHECK_EQUAL(0, Site::nSolutionParticles());
+
+    CHECK_EQUAL(0, Site::getCurrentSolutionDensity());
+    CHECK_EQUAL(1.0, 125*Site::getCurrentRelativeCrystalOccupancy());
+
+    umat boxTop = Site::getCurrentCrystalBoxTopology();
+
+    CHECK_EQUAL(NX()/2, boxTop(0, 0));
+    CHECK_EQUAL(NY()/2, boxTop(1, 0));
+    CHECK_EQUAL(NZ()/2, boxTop(2, 0));
+
+    CHECK_EQUAL(NX()/2, boxTop(0, 1));
+    CHECK_EQUAL(NY()/2, boxTop(1, 1));
+    CHECK_EQUAL(NZ()/2, boxTop(2, 1));
+
+    solver->getSite(0, 0, 0)->activate();
+    solver->getSite(1, 0, 0)->activate();
+    solver->getSite(0, 1, 0)->activate();
+
+
+    CHECK_EQUAL(3, Site::nSolutionParticles());
+
+    CHECK_EQUAL(3.0/124, Site::getCurrentSolutionDensity());
+
+    activateAllSites();
+
+
+    CHECK_EQUAL(0, Site::nSurfaces());
+    CHECK_EQUAL(125, Site::nCrystals());
+    CHECK_EQUAL(0, Site::nSolutionParticles());
+
+    CHECK_EQUAL(0, Site::getCurrentSolutionDensity());
+    CHECK_EQUAL(1.0, Site::getCurrentRelativeCrystalOccupancy());
+
+    boxTop = Site::getCurrentCrystalBoxTopology();
+
+    CHECK_EQUAL(0, boxTop(0, 0));
+    CHECK_EQUAL(0, boxTop(1, 0));
+    CHECK_EQUAL(0, boxTop(2, 0));
+
+    CHECK_EQUAL(NX()-1, boxTop(0, 1));
+    CHECK_EQUAL(NY()-1, boxTop(1, 1));
+    CHECK_EQUAL(NZ()-1, boxTop(2, 1));
+
+
+    CHECK_EQUAL(0, Site::getCurrentSolutionDensity());
+
+    deactivateAllSites();
+
+    center->spawnAsFixedCrystal();
+    solver->getSite(2, 2, 3)->activate();
+    solver->getSite(2, 2, 4)->activate();
+
+    solver->getSite(2, 1, 1)->activate();
+    solver->getSite(2, 1, 2)->activate();
+    solver->getSite(2, 1, 3)->activate();
+
+
+    solver->getSite(2, 3, 3)->activate();
+
+    /*
+     *        x x x
+     *          x x x
+     *            x
+     *
+     */
+
+
+    boxTop = Site::getCurrentCrystalBoxTopology();
+
+    CHECK_EQUAL(2, boxTop(0, 0));
+    CHECK_EQUAL(1, boxTop(1, 0));
+    CHECK_EQUAL(1, boxTop(2, 0));
+
+    CHECK_EQUAL(2, boxTop(0, 1));
+    CHECK_EQUAL(3, boxTop(1, 1));
+    CHECK_EQUAL(4, boxTop(2, 1));
+
+}
+
 void testBed::testRNG()
 {
 
@@ -790,7 +887,7 @@ void testBed::testEnergyAndNeighborSetup()
                                         {
                                             if (otherSite->isActive())
                                             {
-                                                nn(Site::findLevel(ldx, ldy, ldz))++;
+                                                nn(Site::getLevel(ldx, ldy, ldz))++;
 
                                                 E += DiffusionReaction::potential(Site::nNeighborsLimit() + ldx,
                                                                                   Site::nNeighborsLimit() + ldy,
@@ -959,7 +1056,7 @@ void testBed::testHasCrystalNeighbor()
             for (int k = -3; k < 4; ++k)
             {
 
-                if (Site::findLevel(abs(i), abs(j), abs(k)) == 2)
+                if (Site::getLevel(abs(i), abs(j), abs(k)) == 2)
                 {
                     solver->getSite(NX()/2 + i, NY()/2 + j, NZ()/2 + k)->activate();
                     CHECK_EQUAL(ParticleStates::solution, solver->getSite(NX()/2 + i, NY()/2 + j, NZ()/2 + k)->particleState());
@@ -981,7 +1078,7 @@ void testBed::testHasCrystalNeighbor()
             for (int k = -2; k < 3; ++k)
             {
 
-                uint level = Site::findLevel(abs(i), abs(j), abs(k));
+                uint level = Site::getLevel(abs(i), abs(j), abs(k));
                 if (level == 1)
                 {
                     nReactions += solver->getSite(NX()/2 + i, NY()/2 + j, NZ()/2 + k)->nNeighbors();
@@ -1101,15 +1198,15 @@ void testBed::testHasCrystalNeighbor()
             for (int k = -3; k < 4; ++k)
             {
 
-                if (Site::findLevel(abs(i), abs(j), abs(k)) == 0)
+                if (Site::getLevel(abs(i), abs(j), abs(k)) == 0)
                 {
                     CHECK_EQUAL(ParticleStates::crystal, solver->getSite(NX()/2 + i, NY()/2 + j, NZ()/2 + k)->particleState());
                 }
-                else if (Site::findLevel(abs(i), abs(j), abs(k)) == 1)
+                else if (Site::getLevel(abs(i), abs(j), abs(k)) == 1)
                 {
                     CHECK_EQUAL(ParticleStates::surface, solver->getSite(NX()/2 + i, NY()/2 + j, NZ()/2 + k)->particleState());
                 }
-                else if (Site::findLevel(abs(i), abs(j), abs(k)) == 2)
+                else if (Site::getLevel(abs(i), abs(j), abs(k)) == 2)
                 {
                     CHECK_EQUAL(ParticleStates::solution, solver->getSite(NX()/2 + i, NY()/2 + j, NZ()/2 + k)->particleState());
                     nActives += solver->getSite(NX()/2 + i, NY()/2 + j, NZ()/2 + k)->activeReactions().size();
@@ -1470,6 +1567,11 @@ void testBed::deactivateAllSites()
             }
         }
     }
+}
+
+Site *testBed::getBoxCenter()
+{
+    return solver->getSite(NX()/2, NY()/2, NZ()/2);
 }
 
 void testBed::testKnownCase(const umat & boundaries, const string name)

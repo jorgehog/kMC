@@ -440,7 +440,7 @@ uint Site::maxDistanceTo(const Site *other) const
 
     this->distanceTo(other, X, Y, Z, true);
 
-    return findLevel((uint)X, (uint)Y, (uint)Z) + 1;
+    return getLevel((uint)X, (uint)Y, (uint)Z) + 1;
 
 }
 
@@ -966,7 +966,7 @@ void Site::clearNeighborhood()
 
 }
 
-uint Site::findLevel(uint i, uint j, uint k)
+uint Site::getLevel(uint i, uint j, uint k)
 {
 
     uint m = i;
@@ -983,6 +983,65 @@ uint Site::findLevel(uint i, uint j, uint k)
 
     return m - 1;
 
+}
+
+double Site::getCurrentSolutionDensity()
+{
+    if (nSolutionParticles() == 0)
+    {
+        return 0;
+    }
+
+    return static_cast<double>(nSolutionParticles())/(NX()*NY()*NZ() - nCrystals());
+}
+
+double Site::getCurrentRelativeCrystalOccupancy()
+{
+    return static_cast<double>(nCrystals())/(NX()*NY()*NZ());
+}
+
+umat Site::getCurrentCrystalBoxTopology()
+{
+
+    umat boxTop(3, 2);
+
+    boxTop.col(0) = ucolvec({NX(), NY(), NZ()});
+    boxTop.col(1).zeros();
+
+    uvec3 r;
+
+    for (uint x = 0; x < NX(); ++x)
+    {
+        for (uint y = 0; y < NY(); ++y)
+        {
+            for (uint z = 0; z < NZ(); ++z)
+            {
+                if (m_solver->getSite(x, y, z)->isCrystal())
+                {
+
+                    r = {x, y, z};
+
+                    for (uint xi = 0; xi < 3; ++xi)
+                    {
+
+                        if (r(xi) < boxTop(xi, 0))
+                        {
+                            boxTop(xi, 0) = r(xi);
+                        }
+
+                        if (r(xi) > boxTop(xi, 1))
+                        {
+                            boxTop(xi, 1) = r(xi);
+                        }
+
+                    }
+
+                }
+            }
+        }
+    }
+
+    return boxTop;
 }
 
 void Site::clearAll()
@@ -1272,9 +1331,9 @@ void Site::setNNeighborsLimit(const uint &nNeighborsLimit, bool check)
                     continue;
                 }
 
-                m_levelMatrix(i, j, k) = findLevel(std::abs(m_originTransformVector(i)),
-                                                   std::abs(m_originTransformVector(j)),
-                                                   std::abs(m_originTransformVector(k)));
+                m_levelMatrix(i, j, k) = getLevel(std::abs(m_originTransformVector(i)),
+                                                  std::abs(m_originTransformVector(j)),
+                                                  std::abs(m_originTransformVector(k)));
             }
         }
     }
