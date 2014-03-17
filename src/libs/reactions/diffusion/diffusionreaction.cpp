@@ -80,7 +80,7 @@ string DiffusionReaction::getFinalizingDebugMessage() const
 #endif
 }
 
-void DiffusionReaction::setSeparation(const uint &separation)
+void DiffusionReaction::setSeparation(const uint separation)
 {
 
     if (separation > Site::nNeighborsLimit())
@@ -90,6 +90,19 @@ void DiffusionReaction::setSeparation(const uint &separation)
     }
 
     m_separation = separation;
+
+}
+
+
+
+void DiffusionReaction::resetSeparationTo(const uint separation)
+{
+
+    Site::finalizeBoundaries();
+
+    setSeparation(separation);
+
+    Site::initializeBoundaries();
 
 }
 

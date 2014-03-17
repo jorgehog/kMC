@@ -15,6 +15,7 @@ using namespace kMC;
 
 
 bool Debugger::enabled = true;
+bool Debugger::prevState = true;
 
 std::vector<std::string> Debugger::reactionTraceBefore;
 std::vector<std::string> Debugger::reactionTraceAfter;
@@ -53,17 +54,25 @@ void Debugger::setFilepath(const string & filepath)
 
 void Debugger::setEnabledTo(bool state)
 {
+
+    prevState = enabled;
+
     enabled = state;
 
-    if (enabled)
-    {
-        initialize();
-    }
+//    if (enabled)
+//    {
+//        initialize();
+//    }
 
-    else
-    {
-        reset();
-    }
+//    else
+//    {
+//        reset();
+    //    }
+}
+
+void Debugger::resetEnabled()
+{
+    enabled = prevState;
 }
 
 void Debugger::pushTraces()
@@ -74,13 +83,14 @@ void Debugger::pushTraces()
 
     stringstream s;
 
-    s << setupAffectedUnion();
+    if (affectedUnion.size() != Site::affectedSites().size())
+    {
+        s << setupAffectedUnion();
 
-    s << addFlagsToImplications();
+        s << addFlagsToImplications();
 
-    string full_str = s.str();
-
-    implications += full_str;
+        implications += s.str();
+    }
 
     implicationTrace.push_back(implications);
 
@@ -316,7 +326,7 @@ void Debugger::dumpFullTrace(int line, const char * filename, const string addit
     stringstream path;
 
 
-    if (currentReaction != NULL || !implications.empty())
+    if (currentReaction != NULL || !(implications.compare(_KMCDebugger_INITIAL_IMPLICATION_MSG)==0))
     {
         pushTraces();
     }

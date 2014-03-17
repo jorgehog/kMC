@@ -148,8 +148,8 @@ void Reaction::selectTriumphingUpdateFlag()
 
 }
 
-const double   Reaction::UNSET_RATE = -1.337;
-const double   Reaction::UNSET_ENERGY = -1;
+const double   Reaction::UNSET_RATE = -1337;
+const double   Reaction::UNSET_ENERGY = -13371337;
 
 KMCSolver*     Reaction::m_solver;
 

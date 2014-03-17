@@ -157,7 +157,6 @@ void KMCSolver::run()
         totalTime += Reaction::linearRateScale()/m_kTot;
         cycle++;
 
-        KMCDebugger_AssertBreak("");
 
         Site::updateBoundaries();
 
@@ -360,7 +359,6 @@ void KMCSolver::initializeSiteNeighborhoods()
 void KMCSolver::clearSites()
 {
 
-    bool enabled = KMCDebugger_IsEnabled;
     KMCDebugger_SetEnabledTo(false);
 
     for (uint i = 0; i < m_NX; ++i)
@@ -397,7 +395,7 @@ void KMCSolver::clearSites()
     m_allReactions.clear();
 
 
-    KMCDebugger_SetEnabledTo(enabled);
+    KMCDebugger_ResetEnabled();
 
 }
 
@@ -425,8 +423,7 @@ void KMCSolver::clearAllReactions()
 
 void KMCSolver::initializeCrystal()
 {
-    bool noSeed = true;
-    bool enabled = KMCDebugger_IsEnabled;
+    bool noSeed = false;
     KMCDebugger_SetEnabledTo(false);
 
     if (!noSeed)
@@ -502,8 +499,7 @@ void KMCSolver::initializeCrystal()
         }
     }
 
-
-    KMCDebugger_SetEnabledTo(enabled);
+    KMCDebugger_ResetEnabled();
 
 }
 
@@ -512,6 +508,7 @@ void KMCSolver::initializeCrystal()
 
 void KMCSolver::getRateVariables()
 {
+
 
     m_kTot = 0;
     m_accuAllRates.clear();

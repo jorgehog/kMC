@@ -27,6 +27,7 @@ class Debugger
 public:
 
     static bool enabled;
+    static bool prevState;
 
     static vector<string> reactionTraceBefore;
     static vector<string> reactionTraceAfter;
@@ -55,6 +56,7 @@ public:
     static void setFilename(const string &filename);
     static void setFilepath(const string &filepath);
     static void setEnabledTo(bool state);
+    static void resetEnabled();
     static void pushTraces();
     static void pushImplication(Site *site, const char *_new);
     static void markPartialStep(const char * msg);
@@ -130,7 +132,7 @@ public:
         if (!assertCore.str().empty())
         {
 
-            assertMessage << "Assertion '" << assertCore << "' failed: ";
+            assertMessage << "Assertion '" << assertCore.str() << "' failed: ";
 
             OP_B.str(string());
 

@@ -7,6 +7,8 @@
     _KMCDebugger_IGNORE(pre)
 #define KMCDebugger_SetEnabledTo(state) \
     _KMCDebugger_IGNORE(state)
+#define KMCDebugger_ResetEnabled() \
+    _KMCDebugger_IGNORE(0)
 #define KMCDebugger_IsEnabled \
     false
 #define KMCDebugger_Assert(A, OP, B, ...) \

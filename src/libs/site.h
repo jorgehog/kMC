@@ -163,7 +163,7 @@ public:
 
     double potentialBetween(const Site * other);
 
-    void setDirectUpdateFlags();
+    void setNeighboringDirectUpdateFlags();
 
     void queueAffectedSites();
 

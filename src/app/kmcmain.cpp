@@ -31,7 +31,3 @@ int main()
     return 0;
 }
 
-
-//Introduce conditions for 'crystallizing' (and its inverse) as something easily replaced
-//Same for diffusion. Introduce conditions for a blocked diffusion path (beyond weather site is occupied).
-//Load into static  function as a lambda expression? Yes I think so!.

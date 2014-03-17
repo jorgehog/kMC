@@ -18,17 +18,18 @@ ConcentrationWall::~ConcentrationWall()
 
 void ConcentrationWall::loadConfig(const Setting &setting)
 {
-    try
-    {
-        minDistanceFromSurface = setting["ds"];
-    }
-    catch (const SettingNotFoundException & exc)
-    {
+//    try
+//    {
 
-        minDistanceFromSurface = span()/4;
-        return;
+//        minDistanceFromSurface = setting["ds"];
+//    }
+//    catch (const SettingNotFoundException & exc)
+//    {
 
-    }
+//        minDistanceFromSurface = span()/4;
+//        return;
+
+//    }
 }
 
 void ConcentrationWall::update()
@@ -39,20 +40,20 @@ void ConcentrationWall::update()
     uint c = 0;
 
 
-    crystalBoxTopology = Site::getCurrentCrystalBoxTopology();
+//    crystalBoxTopology = Site::getCurrentCrystalBoxTopology();
 
-    bool resize;
+//    bool resize;
 
-    switch (orientation()) {
-    case Near:
-        resize = crystalBoxTopology(dimension(), Near) < minDistanceFromSurface;
+//    switch (orientation()) {
+//    case Near:
+//        resize = crystalBoxTopology(dimension(), Near) < minDistanceFromSurface;
 
-        break;
-    case Far:
-        resize = crystalBoxTopology(dimension(), Far) > span() - minDistanceFromSurface;
+//        break;
+//    case Far:
+//        resize = crystalBoxTopology(dimension(), Far) > span() - minDistanceFromSurface;
 
-        break;
-    }
+//        break;
+//    }
 
 
 //    if (resize)
@@ -67,7 +68,7 @@ void ConcentrationWall::update()
 //    }
 
 
-    std::random_shuffle(boundarySites().begin(), boundarySites().end());
+    std::random_shuffle(boundarySites().begin(), boundarySites().end(), [] (uint n) {return KMC_RNG_UNIFORM()*n;});
 
 
     while (Site::getCurrentSolutionDensity() > solver()->targetSaturation() && c != boundarySites().size())

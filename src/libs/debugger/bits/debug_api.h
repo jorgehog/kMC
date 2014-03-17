@@ -51,6 +51,8 @@
 #define KMCDebugger_SetEnabledTo(state) \
     kMC::Debugger::setEnabledTo(state)
 
+#define KMCDebugger_ResetEnabled() \
+    kMC::Debugger::resetEnabled()
 
 //TRACE OUTPUT/FETCH FUNCTIONS
 #define KMCDebugger_SearchReactionTraceBefore(i) _KMCDebugger_TRACE_SEARCH(kMC::Debugger::reactionTraceBefore, i)

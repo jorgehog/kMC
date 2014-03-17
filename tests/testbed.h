@@ -50,9 +50,9 @@ public:
 
     static void testInitialReactionSetup();
 
-    static void testSequential(const umat &boundaries);
+    static void testSequential();
 
-    static void testKnownCase(const umat &boundaries, const string name);
+    static void testKnownCase();
 
     static void testBoxSizes();
 
@@ -62,7 +62,7 @@ public:
 
     static void testDiffusionSeparation();
 
-    static void testRunAllBoundaryTests(const umat &boundaries);
+    static void initBoundarySuite(const umat &boundaries);
 
     static KMCSolver* solver;
 
@@ -90,7 +90,7 @@ private:
 
     static const SnapShot *testSequentialCore();
 
-    static void initBoundaryTestParameters(const umat &boundaries);
+    static void initBoundaryTestParameters();
 
     static void initSimpleSystemParameters();
 
@@ -99,6 +99,10 @@ private:
     static void deactivateAllSites();
 
     static Site * getBoxCenter();
+
+    static string lastBoundariesName;
+
+    static umat lastBoundaries;
 
 
 };

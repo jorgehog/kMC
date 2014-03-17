@@ -228,7 +228,6 @@ void Site::loadConfig(const Setting &setting)
 
 void Site::initializeBoundaries()
 {
-    bool enabled = KMCDebugger_IsEnabled;
     KMCDebugger_SetEnabledTo(false);
 
     for (uint i = 0; i < 3; ++i) {
@@ -237,7 +236,7 @@ void Site::initializeBoundaries()
         }
     }
 
-    KMCDebugger_SetEnabledTo(enabled);
+    KMCDebugger_ResetEnabled();
 }
 
 void Site::updateBoundaries()
@@ -462,7 +461,7 @@ double Site::potentialBetween(const Site *other)
     return DiffusionReaction::potential(X, Y, Z);
 }
 
-void Site::setDirectUpdateFlags()
+void Site::setNeighboringDirectUpdateFlags()
 {
 
     for (Site * neighbor : m_allNeighbors)
@@ -582,16 +581,13 @@ void Site::activate()
     }
 
 
-
-
-
-
-    setDirectUpdateFlags();
+    setNeighboringDirectUpdateFlags();
 
     for (Reaction * reaction : m_siteReactions)
     {
         reaction->setDirectUpdateFlags(this);
     }
+
 
     KMCDebugger_MarkPartialStep("ACTIVATION COMPLETE");
 
@@ -640,7 +636,7 @@ void Site::deactivate()
     }
 
 
-    setDirectUpdateFlags();
+    setNeighboringDirectUpdateFlags();
 
     m_activeReactions.clear();
 
@@ -1312,6 +1308,12 @@ void Site::setNNeighborsLimit(const uint &nNeighborsLimit, bool check)
     if (nNeighborsLimit >= min(uvec({NX(), NY(), NZ()}))/2 && check)
     {
         cerr << "Neighbor reach must be lower than half the minimum box dimension to avoid sites directly affecting themselves." << endl;
+        KMCSolver::exit();
+    }
+
+    if (nNeighborsLimit < DiffusionReaction::separation() && check)
+    {
+        cerr << "Neighbor reach must be higher or equal than diffusion separation." << endl;
         KMCSolver::exit();
     }
 

@@ -79,7 +79,9 @@ public:
     string getFinalizingDebugMessage() const;
 
     //static setters
-    static void setSeparation(const uint & separation);
+    static void setSeparation(const uint separation);
+
+    static void resetSeparationTo(const uint separation);
 
     static void setupPotential();
 

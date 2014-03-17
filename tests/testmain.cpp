@@ -1,4 +1,5 @@
 #include <unittest++/UnitTest++.h>
+#include <unittest++/TestReporterStdout.h>
 
 #include <iostream>
 #include <sys/types.h>
@@ -7,17 +8,11 @@
 #include "../src/libs/debugger/debugger.h"
 
 
-
-
-//#define focusSuite "Misc"
-//#define focusTest  "PropertyCalculations"
+//#define focusSuite "SurfaceBoundaries"
+//#define focusTest  "KnownCase"
 
 
 #include "defines.h"
-
-
-
-
 
 SUITE(Misc)
 {
@@ -57,39 +52,64 @@ SUITE(Parameters)
 
 }
 
+#define AllBoundaryTests                \
+TESTWRAPPER(InitialReactionSetup)       \
+                                        \
+TESTWRAPPER(BoxSizes)                   \
+                                        \
+TESTWRAPPER(DistanceTo)                 \
+                                        \
+TESTWRAPPER(InitializationOfCrystal)    \
+                                        \
+TESTWRAPPER(DiffusionSiteMatrixSetup)   \
+                                        \
+TESTWRAPPER(Neighbors)                  \
+                                        \
+TESTWRAPPER(UpdateNeigbors)             \
+                                        \
+TESTWRAPPER(EnergyAndNeighborSetup)     \
+                                        \
+TESTWRAPPER(Sequential)                 \
+                                        \
+TESTWRAPPER(KnownCase)
+
+
 SUITE(PeriodicBoundaries)
 {
-    TESTWRAPPER(RunAllBoundaryTests, zeros<umat>(3, 2) + Boundary::Periodic)
+    AllBoundaryTests
 }
 
 SUITE(EdgeBoundaries)
 {
-    TESTWRAPPER(RunAllBoundaryTests, zeros<umat>(3, 2) + Boundary::Edge)
+    AllBoundaryTests
 }
 
 SUITE(ConcentrationBoundaries)
 {
-    TESTWRAPPER(RunAllBoundaryTests, zeros<umat>(3, 2) + Boundary::ConcentrationWall)
+    AllBoundaryTests
 }
 
 SUITE(SurfaceBoundaries)
 {
-    TESTWRAPPER(RunAllBoundaryTests, zeros<umat>(3, 2) + Boundary::Surface)
+    AllBoundaryTests
 }
 
 SUITE(MixedBoundaries)
 {
-    umat mixedBoundaries(3, 2);
-    TESTWRAPPER(RunAllBoundaryTests, mixedBoundaries)
+    AllBoundaryTests
 }
 
+#define AllBoundariesAs(type) (zeros<umat>(3, 2) + type)
 
 int main()
 {
     using namespace SuiteMixedBoundaries;
 
-    KMCDebugger_SetFilename("testTrace");
+    KMCDebugger_SetEnabledTo(false);
 
+    testBed::makeSolver();
+
+    umat mixedBoundaries(3, 2);
 
     mixedBoundaries(0, 0) = Boundary::Periodic;
     mixedBoundaries(0, 1) = Boundary::Periodic;
@@ -101,12 +121,37 @@ int main()
     mixedBoundaries(2, 1) = Boundary::ConcentrationWall;
 
 
-    testBed::makeSolver();
 
-    int exitSuccess = UnitTest::RunAllTests();
+    int exitSuccess = 0;
+
+    UnitTest::TestReporterStdout reporter;
+
+    UnitTest::TestRunner runner(reporter);
+
+    exitSuccess += RUNSUITE(runner, "Misc");
+    exitSuccess += RUNSUITE(runner, "Reactions");
+    exitSuccess += RUNSUITE(runner, "StateChanges");
+    exitSuccess += RUNSUITE(runner, "Parameters");
+
+    testBed::initBoundarySuite(AllBoundariesAs(Boundary::Periodic));
+    exitSuccess += RUNSUITE(runner, "PeriodicBoundaries");
+
+    testBed::initBoundarySuite(AllBoundariesAs(Boundary::Edge));
+    exitSuccess += RUNSUITE(runner, "EdgeBoundaries");
+
+    testBed::initBoundarySuite(AllBoundariesAs(Boundary::Surface));
+    exitSuccess += RUNSUITE(runner, "SurfaceBoundaries");
+
+    testBed::initBoundarySuite(AllBoundariesAs(Boundary::ConcentrationWall));
+    exitSuccess += RUNSUITE(runner, "ConcentrationBoundaries");
+
+    testBed::initBoundarySuite(mixedBoundaries);
+    exitSuccess += RUNSUITE(runner, "MixedBoundaries");
+
+
+
 
     delete testBed::solver;
-
 
     return exitSuccess;
 }
