@@ -109,45 +109,68 @@ public:
             string additionalInfo = "")
     {
 
-        stringstream s, _cerr;
-        string replString;
-
-        s  << " " << OP << " " << B;
-
-        replString = s.str();
-        searchRepl(replString, " == true", "");
-
-        _cerr <<  file << ":" << line << ":\n" << func << ":\n";
-
-        _cerr << "Assertion '" << A << replString << "' failed: ";
-
-        s.str(string());
-
-        s << "!" << OP;
-
-        replString = s.str();
-
-        searchRepl(replString, "!==", "!=");
-        searchRepl(replString, "!!=", "==");
-        searchRepl(replString, "!>=",  "<");
-        searchRepl(replString, "!<=",  ">");
-        searchRepl(replString, "!>" , "<=");
-        searchRepl(replString, "!<" , ">=");
+        stringstream OP_B, assertMessage, assertCore;
+        string OP_B_repl, A_repl;
 
 
-        _cerr << Aval << " " <<  replString << " " << Bval << ".";
+        OP_B  << " " << OP << " " << B;
 
-        if (!what.empty())
+        OP_B_repl = OP_B.str();
+        searchRepl(OP_B_repl, " == true", "");
+
+
+        A_repl    = string(A);
+        searchRepl(A_repl   , "false", "");
+
+
+        assertMessage <<  file << ":" << line << ": " << func << ": ";
+
+        assertCore << A_repl << OP_B_repl;
+
+        if (!assertCore.str().empty())
         {
-            _cerr << "\nwhat? : " << what;
+
+            assertMessage << "Assertion '" << assertCore << "' failed: ";
+
+            OP_B.str(string());
+
+            OP_B << "!" << OP;
+
+            OP_B_repl = OP_B.str();
+
+            searchRepl(OP_B_repl, "!==", "!=");
+            searchRepl(OP_B_repl, "!!=", "==");
+            searchRepl(OP_B_repl, "!>=",  "<");
+            searchRepl(OP_B_repl, "!<=",  ">");
+            searchRepl(OP_B_repl, "!>" , "<=");
+            searchRepl(OP_B_repl, "!<" , ">=");
+
+
+            assertMessage << Aval << " " <<  OP_B_repl << " " << Bval;
+
+        }
+
+        else
+        {
+            assertMessage << "Assertion failed";
+        }
+
+        if (what.empty())
+        {
+            assertMessage << ".";
+        }
+        else
+        {
+            assertMessage << " : " << what;
         }
 
 
-        cerr << _cerr.str() << endl;
+
+        //        cerr << _cerr.str() << endl;
 
         dumpFullTrace(line, file, additionalInfo);
 
-        throw std::runtime_error(_cerr.str());
+        throw std::runtime_error(assertMessage.str());
 
     }
 

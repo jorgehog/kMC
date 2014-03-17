@@ -157,6 +157,7 @@ void KMCSolver::run()
         totalTime += Reaction::linearRateScale()/m_kTot;
         cycle++;
 
+        KMCDebugger_AssertBreak("");
 
         Site::updateBoundaries();
 
