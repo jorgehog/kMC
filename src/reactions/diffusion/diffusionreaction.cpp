@@ -28,8 +28,11 @@ DiffusionReaction::~DiffusionReaction()
 void DiffusionReaction::loadConfig(const Setting &setting)
 {
 
-    rPower = getSurfaceSetting<double>(setting, "rPower");
-    scale  = getSurfaceSetting<double>(setting, "scale");
+    m_rPower = getSurfaceSetting<double>(setting, "rPower");
+    m_scale  = getSurfaceSetting<double>(setting, "scale");
+
+    setSeparation(getSurfaceSetting<uint>(setting, "separation"), false);
+
 
 }
 
@@ -80,10 +83,10 @@ string DiffusionReaction::getFinalizingDebugMessage() const
 #endif
 }
 
-void DiffusionReaction::setSeparation(const uint separation)
+void DiffusionReaction::setSeparation(const uint separation, bool check)
 {
 
-    if (separation > Site::nNeighborsLimit())
+    if (separation > Site::nNeighborsLimit() && check)
     {
         cerr << "Forced particle separation cannot exceed the site neighborlimit." << endl;
         KMCSolver::exit();
@@ -109,7 +112,7 @@ void DiffusionReaction::resetSeparationTo(const uint separation)
 void DiffusionReaction::setupPotential()
 {
 
-    KMCDebugger_Assert(scale, !=, 0, "Potential parameters not set.");
+    KMCDebugger_Assert(m_scale, !=, 0, "Potential parameters not set.");
 
     m_potential.reset();
     m_potential.set_size(Site::neighborhoodLength(),
@@ -132,7 +135,7 @@ void DiffusionReaction::setupPotential()
                 m_potential(i, j, k) = 1.0/std::pow(Site::originTransformVector(i)*Site::originTransformVector(i)
                                                     + Site::originTransformVector(j)*Site::originTransformVector(j)
                                                     + Site::originTransformVector(k)*Site::originTransformVector(k)
-                                                    , rPower/2);
+                                                    , m_rPower/2);
             }
         }
     }
@@ -148,7 +151,7 @@ void DiffusionReaction::setupPotential()
     umat::fixed<3, 2> overlapBox;
     ivec _path;
     uint i, j, k;
-    double dx, dy, dz, r;
+    double dx, dy, dz, r2;
 
     for (int x = -1; x <= 1; ++x)
     {
@@ -166,7 +169,7 @@ void DiffusionReaction::setupPotential()
                 k = z + 1;
 
                 _path = {x, y, z};
-                overlapBox = getSaddleOverlapMatrix(_path);
+                overlapBox = makeSaddleOverlapMatrix(_path);
 
                 neighborSetIntersectionPoints(i, j, k) = overlapBox;
 
@@ -197,25 +200,25 @@ void DiffusionReaction::setupPotential()
 
                             dz = z/2.0 - (int)zn + (int)Site::nNeighborsLimit();
 
-                            r = sqrt(dx*dx + dy*dy + dz*dz);
+                            r2 = dx*dx + dy*dy + dz*dz;
 
 
                             m_saddlePotential(i, j, k)(xn - overlapBox(0, 0),
                                                        yn - overlapBox(1, 0),
-                                                       zn - overlapBox(2, 0)) = 1.0/pow(r, rPower);
+                                                       zn - overlapBox(2, 0)) = 1.0/pow(r2, m_rPower/2);
 
                         }
                     }
                 }
 
-                m_saddlePotential(i, j, k) *= scale;
+                m_saddlePotential(i, j, k) *= m_scale;
 
             }
         }
     }
 
 
-    m_potential *= scale;
+    m_potential *= m_scale;
 
 }
 
@@ -393,7 +396,7 @@ double DiffusionReaction::getSaddleEnergyContributionFromNeighborAt(const uint &
                                                saddleFieldIndices(2))(2, 0));
 }
 
-umat::fixed<3, 2> DiffusionReaction::getSaddleOverlapMatrix(const ivec & relCoor)
+umat::fixed<3, 2> DiffusionReaction::makeSaddleOverlapMatrix(const ivec & relCoor)
 {
 
     umat::fixed<3, 2> overlap;
@@ -509,10 +512,10 @@ void DiffusionReaction::reset()
 }
 
 
-double        DiffusionReaction::rPower;
-double        DiffusionReaction::scale = 0;
+double        DiffusionReaction::m_rPower = 1.0;
+double        DiffusionReaction::m_scale  = 1.0;
 
-uint          DiffusionReaction::m_separation;
+uint          DiffusionReaction::m_separation = 1;
 
 cube          DiffusionReaction::m_potential;
 field<cube>   DiffusionReaction::m_saddlePotential;

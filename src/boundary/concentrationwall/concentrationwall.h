@@ -12,15 +12,19 @@ public:
     ConcentrationWall(const uint dimension, const uint orientation);
     ~ConcentrationWall();
 
+    void setMinDistanceFromSite(const uint minDistanceFromSite)
+    {
+        m_minDistanceFromSurface = minDistanceFromSite;
+    }
+
     // Boundary interface
 public:
-    void loadConfig(const Setting &setting);
     void update();
     void initialize();
 
 private:
 
-    uint minDistanceFromSurface;
+    uint m_minDistanceFromSurface;
 
     umat::fixed<3, 2> crystalBoxTopology;
 

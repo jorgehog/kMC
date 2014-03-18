@@ -1,11 +1,9 @@
 #pragma once
 
 #include <armadillo>
-#include <libconfig_utils/libconfig_utils.h>
 
-
+using namespace std;
 using namespace arma;
-using namespace libconfig;
 
 namespace kMC
 {
@@ -33,11 +31,6 @@ public:
         return x1 - x2;
     }
 
-    virtual void loadConfig(const Setting& setting)
-    {
-        (void) setting;
-    }
-
     virtual void update() = 0;
 
     virtual void initialize() = 0;
@@ -54,9 +47,12 @@ public:
         return xi == BLOCKED_COORDINATE;
     }
 
-
     static bool isCompatible(const int type1, const int type2, bool reverse = true);
 
+    static umat allBoundariesAs(const int boundaryType)
+    {
+        return zeros<umat>(3, 2) + boundaryType;
+    }
 
     static void setMainSolver(KMCSolver * m_solver);
 

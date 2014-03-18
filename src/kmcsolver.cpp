@@ -20,27 +20,14 @@ using namespace arma;
 using namespace std;
 using namespace kMC;
 
-KMCSolver::KMCSolver(const Setting & root) :
-    m_NX(UNSET_UINT),
-    m_NY(UNSET_UINT),
-    m_NZ(UNSET_UINT),
-    totalTime(0),
-    cycle(1),
-    outputCounter(0)
+KMCSolver::KMCSolver(const Setting & root)
 {
+
+    onConstruct();
 
     const Setting & SystemSettings = getSurfaceSetting(root, "System");
     const Setting & SolverSettings = getSurfaceSetting(root, "Solver");
-    const Setting & InitializationSettings = getSurfaceSetting(root, "Initialization");
     const Setting & diffusionSettings = getSetting(root, {"Reactions", "Diffusion"});
-
-
-    Boundary::setMainSolver(this);
-
-    Reaction::setMainSolver(this);
-
-    Site::setMainSolver(this);
-
 
 
     Reaction::loadConfig(getSurfaceSetting(root, "Reactions"));
@@ -63,13 +50,6 @@ KMCSolver::KMCSolver(const Setting & root) :
     setTargetSaturation(
                 getSurfaceSetting<double>(SystemSettings, "SaturationLevel"));
 
-    Site::setInitialBoundaries(
-                getSurfaceSetting(SystemSettings, "Boundaries"));
-
-    DiffusionReaction::setSeparation(
-                getSurfaceSetting<uint>(diffusionSettings, "separation"));
-
-
 
     uvec3 boxSize;
 
@@ -80,9 +60,11 @@ KMCSolver::KMCSolver(const Setting & root) :
     setBoxSize(boxSize);
 
 
+}
 
-    refCounter++;
-
+KMCSolver::KMCSolver()
+{
+    onConstruct();
 }
 
 KMCSolver::~KMCSolver()
@@ -113,10 +95,27 @@ void KMCSolver::checkRefCounter()
     }
 }
 
-void KMCSolver::run()
+void KMCSolver::onConstruct()
 {
 
-    KMCDebugger_Init();
+    m_NX = UNSET_UINT;
+    m_NY = UNSET_UINT;
+    m_NZ = UNSET_UINT;
+
+    outputCounter = 0;
+
+    Boundary::setMainSolver(this);
+
+    Reaction::setMainSolver(this);
+
+    Site::setMainSolver(this);
+
+    refCounter++;
+
+}
+
+void KMCSolver::mainloop()
+{
 
     Reaction * selectedReaction;
     uint choice;
@@ -124,14 +123,17 @@ void KMCSolver::run()
 
     dumpXYZ();
 
+    totalTime = 0;
+    cycle = 1;
+
+    KMCDebugger_Init();
+
     while(cycle <= m_nCycles)
     {
 
         getRateVariables();
 
-        double r = KMC_RNG_UNIFORM();
-
-        R = m_kTot*r;
+        R = m_kTot*KMC_RNG_UNIFORM();
 
         choice = getReactionChoice(R);
 
@@ -645,7 +647,7 @@ void KMCSolver::setBoxSize(const uvec3 boxSize, bool check, bool keepSystem)
 
 }
 
-void KMCSolver::setRNGSeed(uint seedState, int defaultSeed = 0)
+void KMCSolver::setRNGSeed(uint seedState, int defaultSeed)
 {
 
     seed_type prevSeed = Seed::initialSeed;

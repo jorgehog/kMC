@@ -31,7 +31,7 @@ int main()
 
     t.tic();
 
-    solver->run();
+    solver->mainloop();
 
     cout << "Simulation ended after " << t.toc() << " seconds" << endl;
 

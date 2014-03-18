@@ -100,8 +100,6 @@ SUITE(MixedBoundaries)
     AllBoundaryTests
 }
 
-#define AllBoundariesAs(type) (zeros<umat>(3, 2) + type)
-
 int main()
 {
     using namespace SuiteMixedBoundaries;
@@ -134,16 +132,16 @@ int main()
     exitSuccess += RUNSUITE(runner, "StateChanges");
     exitSuccess += RUNSUITE(runner, "Parameters");
 
-    testBed::initBoundarySuite(AllBoundariesAs(Boundary::Periodic));
+    testBed::initBoundarySuite(Boundary::allBoundariesAs(Boundary::Periodic));
     exitSuccess += RUNSUITE(runner, "PeriodicBoundaries");
 
-    testBed::initBoundarySuite(AllBoundariesAs(Boundary::Edge));
+    testBed::initBoundarySuite(Boundary::allBoundariesAs(Boundary::Edge));
     exitSuccess += RUNSUITE(runner, "EdgeBoundaries");
 
-    testBed::initBoundarySuite(AllBoundariesAs(Boundary::Surface));
+    testBed::initBoundarySuite(Boundary::allBoundariesAs(Boundary::Surface));
     exitSuccess += RUNSUITE(runner, "SurfaceBoundaries");
 
-    testBed::initBoundarySuite(AllBoundariesAs(Boundary::ConcentrationWall));
+    testBed::initBoundarySuite(Boundary::allBoundariesAs(Boundary::ConcentrationWall));
     exitSuccess += RUNSUITE(runner, "ConcentrationBoundaries");
 
     testBed::initBoundarySuite(mixedBoundaries);

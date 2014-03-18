@@ -55,8 +55,6 @@ public:
     static void loadConfig(const Setting & setting);
 
 
-    static void setInitialBoundaries(const Setting & boundarySetup);
-
     static void initializeBoundaries();
 
     static void updateBoundaries();
@@ -82,8 +80,17 @@ public:
 
 
     /*
-     * Reset / clear static implementations
+     * Init / Reset / clear static implementations
      */
+
+    static void setInitialNNeighborsLimit(const uint & nNeighborsLimit, bool check = true);
+
+    static void setInitialBoundaries(const umat & boundaryMatrix);
+
+    static void setInitialBoundaries(const int boundaryType);
+
+    static void setInitialNNeighborsToCrystallize(const uint & nNeighborsToCrystallize);
+
 
     static void resetBoundariesTo(const umat & boundaryMatrix);
 
@@ -380,8 +387,8 @@ public:
     const static uint & NZ();
 
     //should be in site.. all sites in sites and jazz jazz..
-    void clearAllReactions();
 
+    void clearAllReactions();
 
 private:
 
@@ -445,12 +452,6 @@ private:
 
     vector<Reaction*> m_activeReactions;
 
-
-    static void setNNeighborsLimit(const uint & nNeighborsLimit, bool check = true);
-
-    static void setBoundaries(const umat & boundaryMatrix);
-
-    static void setNNeighborsToCrystallize(const uint & nNeighborsToCrystallize);
 
     void setNewParticleState(int newState);
 

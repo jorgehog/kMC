@@ -220,9 +220,23 @@ bool Site::qualifiesAsSurface()
 void Site::loadConfig(const Setting &setting)
 {
 
-    setNNeighborsToCrystallize(getSurfaceSetting<uint>(setting, "nNeighboursToCrystallize"));
+    setInitialNNeighborsToCrystallize(getSurfaceSetting<uint>(setting, "nNeighboursToCrystallize"));
 
-    setNNeighborsLimit(getSurfaceSetting<uint>(setting, "nNeighborsLimit"));
+    setInitialNNeighborsLimit(getSurfaceSetting<uint>(setting, "nNeighborsLimit"));
+
+    const Setting & boundariesConfig = getSurfaceSetting(setting, "Boundaries");
+
+    umat boundaryTypes(3, 2);
+
+    for (uint XYZ = 0; XYZ < 3; ++XYZ)
+    {
+        for (uint orientation = 0; orientation < 2; ++orientation)
+        {
+            boundaryTypes(XYZ, orientation) = getSurfaceSetting(boundariesConfig, "types")[XYZ][orientation];
+        }
+    }
+
+    setInitialBoundaries(boundaryTypes);
 
 }
 
@@ -685,11 +699,13 @@ void Site::flipDeactive()
 void Site::introduceNeighborhood()
 {
 
+    KMCDebugger_Assert(m_nNeighborsLimit, !=, 0, "Neighborlimit must be greater than zero.", info());
+    KMCDebugger_Assert(m_nNeighborsLimit, !=, KMCSolver::UNSET_UINT, "Neighborlimit is not set.", str());
+
+
     uint xTrans, yTrans, zTrans;
 
     Site * neighbor;
-
-    KMCDebugger_Assert(m_nNeighborsLimit, !=, 0, "Neighborlimit must be greater than zero.", info());
 
 
     m_nNeighbors.zeros(m_nNeighborsLimit);
@@ -1077,7 +1093,7 @@ void Site::resetBoundariesTo(const umat &boundaryMatrix)
     m_solver->clearSiteNeighborhoods();
 
 
-    setBoundaries(boundaryMatrix);
+    setInitialBoundaries(boundaryMatrix);
 
 
     m_solver->initializeSiteNeighborhoods();
@@ -1102,7 +1118,7 @@ void Site::resetNNeighborsLimitTo(const uint &nNeighborsLimit, bool check)
 
     m_solver->clearSiteNeighborhoods();
 
-    setNNeighborsLimit(nNeighborsLimit, check);
+    setInitialNNeighborsLimit(nNeighborsLimit, check);
 
     m_solver->initializeSiteNeighborhoods();
 
@@ -1110,7 +1126,7 @@ void Site::resetNNeighborsLimitTo(const uint &nNeighborsLimit, bool check)
 
 void Site::resetNNeighborsToCrystallizeTo(const uint &nNeighborsToCrystallize)
 {
-    setNNeighborsToCrystallize(nNeighborsToCrystallize);
+    setInitialNNeighborsToCrystallize(nNeighborsToCrystallize);
 }
 
 void Site::clearBoundaries()
@@ -1302,7 +1318,7 @@ uint Site::nNeighborsSum() const
     return m_nNeighborsSum;
 }
 
-void Site::setNNeighborsLimit(const uint &nNeighborsLimit, bool check)
+void Site::setInitialNNeighborsLimit(const uint &nNeighborsLimit, bool check)
 {
 
     if (nNeighborsLimit >= min(uvec({NX(), NY(), NZ()}))/2 && check)
@@ -1349,7 +1365,7 @@ void Site::setNNeighborsLimit(const uint &nNeighborsLimit, bool check)
 
 }
 
-void Site::setNNeighborsToCrystallize(const uint &nNeighborsToCrystallize)
+void Site::setInitialNNeighborsToCrystallize(const uint &nNeighborsToCrystallize)
 
 {
     if (nNeighborsToCrystallize == 0)
@@ -1400,27 +1416,7 @@ void Site::setNewParticleState(int newState)
 
 }
 
-void Site::setInitialBoundaries(const Setting & boundariesConfig)
-{
-
-
-    m_boundaryConfigs.set_size(3, 2);
-    m_boundaryTypes.set_size(3, 2);
-
-    for (uint XYZ = 0; XYZ < 3; ++XYZ)
-    {
-        for (uint orientation = 0; orientation < 2; ++orientation)
-        {
-            m_boundaryConfigs(XYZ, orientation) = &getSurfaceSetting(boundariesConfig, "configs")[XYZ][orientation];
-            m_boundaryTypes(XYZ, orientation) = getSurfaceSetting(boundariesConfig, "types")[XYZ][orientation];
-        }
-    }
-
-    setBoundaries(m_boundaryTypes);
-
-}
-
-void Site::setBoundaries(const umat &boundaryMatrix)
+void Site::setInitialBoundaries(const umat &boundaryMatrix)
 {
 
     m_boundaryTypes = boundaryMatrix;
@@ -1462,9 +1458,6 @@ void Site::setBoundaries(const umat &boundaryMatrix)
                 break;
             }
 
-            m_boundaries(XYZ, orientation)->loadConfig(*m_boundaryConfigs(XYZ, orientation));
-
-
         }
 
         if (!Boundary::isCompatible(m_boundaryTypes(XYZ, 0), m_boundaryTypes(XYZ, 1)))
@@ -1474,6 +1467,11 @@ void Site::setBoundaries(const umat &boundaryMatrix)
         }
     }
 
+}
+
+void Site::setInitialBoundaries(const int boundaryType)
+{
+    setInitialBoundaries(Boundary::allBoundariesAs(boundaryType));
 }
 
 

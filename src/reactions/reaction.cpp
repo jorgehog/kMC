@@ -153,8 +153,8 @@ const double   Reaction::UNSET_ENERGY = -13371337;
 
 KMCSolver*     Reaction::m_solver;
 
-double         Reaction::m_beta;
-double         Reaction::m_linearRateScale;
+double         Reaction::m_beta = 1.0;
+double         Reaction::m_linearRateScale = 1.0;
 
 uint           Reaction::m_IDCount = 0;
 

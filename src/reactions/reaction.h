@@ -36,6 +36,20 @@ public:
 
     static void loadConfig(const Setting & setting);
 
+    static void setBeta(const double beta)
+    {
+        m_beta = beta;
+    }
+
+    static void setLinearRateScale(const double linearRateScale)
+    {
+        m_linearRateScale = linearRateScale;
+    }
+
+    static void clearAll()
+    {
+        m_IDCount = 0;
+    }
 
     virtual void setDirectUpdateFlags(const Site * changedSite) = 0;
 
@@ -51,10 +65,6 @@ public:
     virtual const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X")  const;
 
 
-    static void clearAll()
-    {
-        m_IDCount = 0;
-    }
 
     const uint & IDCount()
     {
@@ -146,6 +156,7 @@ public:
     };
 
     static const double UNSET_RATE;
+
     static const double UNSET_ENERGY;
 
     const static uint & NX();

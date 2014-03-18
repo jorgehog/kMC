@@ -16,21 +16,6 @@ ConcentrationWall::~ConcentrationWall()
 
 }
 
-void ConcentrationWall::loadConfig(const Setting &setting)
-{
-//    try
-//    {
-
-//        minDistanceFromSurface = setting["ds"];
-//    }
-//    catch (const SettingNotFoundException & exc)
-//    {
-
-//        minDistanceFromSurface = span()/4;
-//        return;
-
-//    }
-}
 
 void ConcentrationWall::update()
 {

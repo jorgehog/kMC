@@ -31,14 +31,12 @@ public:
     double getSaddleEnergyContributionFromNeighborAt(const uint &i, const uint &j, const uint &k);
 
 
-    static uint separation()
-    {
-        return m_separation;
-    }
 
-    static umat::fixed<3, 2> getSaddleOverlapMatrix(const ivec &relCoor);
+    static umat::fixed<3, 2> makeSaddleOverlapMatrix(const ivec &relCoor);
 
     static void loadConfig(const Setting & setting);
+
+    static void setupPotential();
 
     static void clearAll()
     {
@@ -49,6 +47,11 @@ public:
         neighborSetIntersectionPoints.reset();
     }
 
+
+    static uint separation()
+    {
+        return m_separation;
+    }
 
     static const double & potential(const uint & x, const uint & y, const uint & z)
     {
@@ -76,20 +79,35 @@ public:
 
     const uint & zD () const;
 
-    string getFinalizingDebugMessage() const;
 
     //static setters
-    static void setSeparation(const uint separation);
+    static void setSeparation(const uint separation, bool check = true);
 
     static void resetSeparationTo(const uint separation);
 
-    static void setupPotential();
+    static void setPotentialParameters(const double rPower, const double scale, bool setup = true)
+    {
 
+        m_rPower = rPower;
+
+        m_scale = scale;
+
+        if (setup)
+        {
+            setupPotential();
+        }
+
+    }
+
+
+    string getFinalizingDebugMessage() const;
 
 private:
 
-    static double rPower;
-    static double scale;
+    static double m_rPower;
+
+    static double m_scale;
+
 
     static uint m_separation;
 

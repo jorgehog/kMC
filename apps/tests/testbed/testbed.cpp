@@ -9,13 +9,20 @@
 void testBed::makeSolver()
 {
 
-    Config cfg;
+    solver = new KMCSolver();
 
-    cfg.readFile("infiles/config.cfg");
+    solver->setRNGSeed();
 
-    const Setting & root = cfg.getRoot();
+    DiffusionReaction::setPotentialParameters(1.0, 0.5, false);
 
-    solver = new KMCSolver(root);
+    Site::setInitialBoundaries(Boundary::Periodic);
+
+    Site::setInitialNNeighborsLimit(2);
+
+    Reaction::setBeta(0.5);
+
+    solver->setBoxSize({10, 10, 10});
+
 
 }
 
@@ -1479,7 +1486,7 @@ const SnapShot * testBed::testSequentialCore()
     solver->setCyclesPerOutput(nc + 1);
     solver->initializeCrystal(0.2);
 
-    solver->run();
+    solver->mainloop();
 
     return new SnapShot(solver);
 
@@ -1612,7 +1619,7 @@ void testBed::testKnownCase()
         }
     }
 
-    solver->run();
+    solver->mainloop();
 
     string line;
     stringstream s;

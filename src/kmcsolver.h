@@ -28,12 +28,14 @@ public:
 
     KMCSolver(const Setting & root);
 
+    KMCSolver();
+
     ~KMCSolver();
 
     const static uint UNSET_UINT = (uint)ULLONG_MAX;
 
 
-    void run();
+    void mainloop();
 
     void reset();
 
@@ -130,7 +132,7 @@ public:
         m_targetSaturation = saturation;
     }
 
-    void setRNGSeed(uint seedState, int defaultSeed);
+    void setRNGSeed(uint seedState = Seed::fromTime, int defaultSeed = 0);
 
 
 
@@ -150,7 +152,7 @@ public:
 
 private:
 
-    double m_targetSaturation;
+    double m_targetSaturation = 0.01;
 
     Site**** sites;
 
@@ -169,7 +171,7 @@ private:
     double totalTime;
 
 
-    uint m_nCycles;
+    uint m_nCycles = 1000000;
     uint cycle;
 
     uint m_cyclesPerOutput;
@@ -187,6 +189,8 @@ private:
     void dumpOutput();
 
     void checkRefCounter();
+
+    void onConstruct();
 
     static uint refCounter;
 
