@@ -56,7 +56,7 @@ void ConcentrationWall::update()
     std::random_shuffle(boundarySites().begin(), boundarySites().end(), [] (uint n) {return KMC_RNG_UNIFORM()*n;});
 
 
-    while (Site::getCurrentSolutionDensity() > solver()->targetSaturation() && c != boundarySites().size())
+    while (Site::getCurrentSolutionDensity() > solver()->targetSaturation() && c != m_maxEventsPrCycle)
     {
         currentSite = boundarySites().at(c);
 
@@ -68,7 +68,7 @@ void ConcentrationWall::update()
         c++; //*giggle*
     }
 
-    while (Site::getCurrentSolutionDensity() < solver()->targetSaturation() && c != boundarySites().size())
+    while (Site::getCurrentSolutionDensity() < solver()->targetSaturation() && c != m_maxEventsPrCycle)
     {
         currentSite = boundarySites().at(c);
 
@@ -85,4 +85,18 @@ void ConcentrationWall::update()
 void ConcentrationWall::initialize()
 {
     setupBoundarySites();
+
+    for (Site * site: boundarySites())
+    {
+        site->blockCrystallizationOnSite();
+    }
+
+}
+
+void ConcentrationWall::finalize()
+{
+    for (Site * site : boundarySites())
+    {
+        site->allowCrystallizationOnSite();
+    }
 }

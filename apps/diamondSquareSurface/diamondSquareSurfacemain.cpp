@@ -66,7 +66,10 @@ void initialize_diamondSquareSurface(KMCSolver * solver, const Setting & root)
     bool addition           = static_cast<bool>(
                               getSurfaceSetting<int>   (initCFG, "addition"));
 
+
     uint clearing           = getSurfaceSetting<uint>  (initCFG, "clearing");
+
+    double cutoffPercent   = getSurfaceSetting<double>(initCFG, "cutoffPrc");
 
 
     double NX = static_cast<double>(solver->NX());
@@ -106,6 +109,9 @@ void initialize_diamondSquareSurface(KMCSolver * solver, const Setting & root)
 
 
     uint maxHeight = 0;
+    uint topMax    = 0;
+    uint bottomMax = 0;
+
     uint currentHeight;
 
     //We should be guaranteed to be in range ..!
@@ -114,17 +120,74 @@ void initialize_diamondSquareSurface(KMCSolver * solver, const Setting & root)
         for (uint j = 0; j < solver->NY(); ++j)
         {
 
-            currentHeight = Bottom.at(i).at(j) + Top.at(i).at(j);
+            uint bottomZ = Bottom.at(i).at(j);
+            uint topZ    = Top.at(i).at(j);
+
+            currentHeight = bottomZ + topZ;
 
             if (currentHeight > maxHeight)
             {
                 maxHeight = currentHeight;
             }
 
+            if (bottomZ > bottomMax)
+            {
+                bottomMax = bottomZ;
+            }
+
+            if (topZ > topMax)
+            {
+                topMax = topZ;
+            }
+
         }
     }
 
-    uint newNZ = maxHeight + clearing;
+    vec occupancyBottom(bottomMax, fill::zeros);
+    vec occupancyTop   (topMax,    fill::zeros);
+
+    for (uint i = 0; i < solver->NX(); ++i)
+    {
+        for (uint j = 0; j < solver->NY(); ++j)
+        {
+
+            uint bottomZ = Bottom.at(i).at(j);
+            uint topZ    = Top.at(i).at(j);
+
+            for (uint z = 0; z < bottomZ; ++z)
+            {
+                occupancyBottom(z)++;
+            }
+
+            for (uint z = 0; z < topZ; ++z)
+            {
+                occupancyTop(z)++;
+            }
+
+        }
+    }
+
+    uint area = solver->NX()*solver->NY();
+
+    occupancyBottom /= area;
+    occupancyTop    /= area;
+
+    uint bottomCutoff = 0;
+
+    while (occupancyTop(bottomCutoff) > cutoffPercent)
+    {
+        bottomCutoff++;
+    }
+
+    uint topCutoff = 0;
+
+    while (occupancyTop(topCutoff) > cutoffPercent)
+    {
+        topCutoff++;
+    }
+
+
+    uint newNZ =  maxHeight - (topCutoff + bottomCutoff) + clearing;
 
     uvec newN  = solver->NVec();
     newN(2) = newNZ;
@@ -140,16 +203,19 @@ void initialize_diamondSquareSurface(KMCSolver * solver, const Setting & root)
         for (uint y = 0; y < solver->NY(); ++y)
         {
 
-            uint endBottom = static_cast<uint>(Bottom.at(x).at(y));
-            uint startTop  = newNZ - static_cast<uint>(Top.at(x).at(y));
+            uint bottomEnd = static_cast<uint>(Bottom.at(x).at(y));
+            uint topEnd    = static_cast<uint>(Top.at(x).at(y));
+
+
+            uint bottomSurface = (bottomEnd > bottomCutoff) ? (     (bottomEnd - bottomCutoff)) : 0;
+            uint topSurface    =    (topEnd > topCutoff)    ? (newNZ - (topEnd - topCutoff)   ) : newNZ;
 
             for (uint z = 1; z < newNZ - 1; ++z)
             {
-
                 currentSite = solver->getSite(x, y, z);
 
                 //Fill in crystals below the bottom and above the top surface
-                if (z < endBottom || z >= startTop)
+                if ((z < bottomSurface) || (z >= topSurface))
                 {
                     currentSite->spawnAsCrystal();
                 }
@@ -162,6 +228,7 @@ void initialize_diamondSquareSurface(KMCSolver * solver, const Setting & root)
                         currentSite->activate();
                     }
                 }
+
             }
         }
 

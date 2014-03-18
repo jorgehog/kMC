@@ -17,6 +17,7 @@ Site::Site(uint _x, uint _y, uint _z) :
     m_nNeighborsSum(0),
     m_active(false),
     m_isFixedCrystalSeed(false),
+    m_cannotCrystallize(false),
     m_x(_x),
     m_y(_y),
     m_z(_z),
@@ -197,6 +198,11 @@ bool Site::qualifiesAsCrystal()
         return true;
     }
 
+    else if (cannotCrystallize())
+    {
+        return false;
+    }
+
     else if (hasNeighboring(ParticleStates::fixedCrystal, 1))
     {
         return true;
@@ -213,7 +219,7 @@ bool Site::qualifiesAsCrystal()
 
 bool Site::qualifiesAsSurface()
 {
-    return !isActive() && hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation());
+    return !isActive() && hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation()) && !cannotCrystallize();
 }
 
 
@@ -922,6 +928,7 @@ void Site::reset()
         initializeDiffusionReactions();
     }
 
+    m_cannotCrystallize = false;
 
     m_totalDeactiveParticles(particleState())--;
 
@@ -1565,4 +1572,14 @@ void kMC::Site::spawnAsCrystal()
     setNewParticleState(ParticleStates::surface);
 
     activate();
+}
+
+void Site::blockCrystallizationOnSite()
+{
+    m_cannotCrystallize = true;
+}
+
+void Site::allowCrystallizationOnSite()
+{
+    m_cannotCrystallize = false;
 }

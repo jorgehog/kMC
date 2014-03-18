@@ -21,10 +21,13 @@ public:
 public:
     void update();
     void initialize();
+    void finalize();
 
 private:
 
     uint m_minDistanceFromSurface;
+
+    uint m_maxEventsPrCycle = 3;
 
     umat::fixed<3, 2> crystalBoxTopology;
 

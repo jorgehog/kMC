@@ -130,6 +130,12 @@ public:
 
     void spawnAsCrystal();
 
+
+    void blockCrystallizationOnSite();
+
+    void allowCrystallizationOnSite();
+
+
     void crystallize();
 
     void decrystallize();
@@ -370,6 +376,11 @@ public:
         return m_isFixedCrystalSeed;
     }
 
+    const bool & cannotCrystallize()
+    {
+        return m_cannotCrystallize;
+    }
+
     bool operator == (const Site & other) const
     {
         return this == &other;
@@ -440,6 +451,8 @@ private:
     bool m_active;
 
     bool m_isFixedCrystalSeed;
+
+    bool m_cannotCrystallize;
 
     uint m_x;
     uint m_y;
