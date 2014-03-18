@@ -35,3 +35,5 @@ QMAKE_EXTRA_TARGETS += first copydata createDirs
 CONFIG(RNG_ZIG) {
     DEFINES += KMC_RNG_ZIG
 }
+
+TOP_PWD = $$PWD

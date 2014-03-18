@@ -1,14 +1,14 @@
 #pragma once
 
-#include "../src/libs/RNG/kMCRNG.h"
+#include "../src/RNG/kMCRNG.h"
 
-#include "../src/libs/site.h"
+#include "../src/site.h"
 
-#include "../src/libs/reactions/reaction.h"
-#include "../src/libs/reactions/diffusion/diffusionreaction.h"
+#include "../src/reactions/reaction.h"
+#include "../src/reactions/diffusion/diffusionreaction.h"
 
-#include "../src/libs/kmcsolver.h"
+#include "../src/kmcsolver.h"
 
-#include "../src/libs/debugger/debugger.h"
+#include "../src/debugger/debugger.h"
 
-#include "../src/libs/boundary/boundary.h"
+#include "../src/boundary/boundary.h"
