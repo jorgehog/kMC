@@ -64,7 +64,7 @@ void initialize_diamondSquareSurface(KMCSolver * solver, const Setting & root)
     double sigma            = getSurfaceSetting<double>(initCFG, "sigma");
 
     bool addition           = static_cast<bool>(
-                getSurfaceSetting<int>   (initCFG, "addition"));
+                              getSurfaceSetting<int>   (initCFG, "addition"));
 
     uint clearing           = getSurfaceSetting<uint>  (initCFG, "clearing");
 
@@ -91,14 +91,14 @@ void initialize_diamondSquareSurface(KMCSolver * solver, const Setting & root)
     DiamondSquare generator(power2, RNG::Uniform, Seed::initialSeed);
 
     auto Bottom = generator.generate(H,              //Hurst Exponent
-    {0, NX, 0, NY}, //Corners
+                                     {0, NX, 0, NY}, //Corners
                                      sigma,          //Deviation of random displacements
                                      0.5,            //RandomFactor: What the fuck is this?
                                      addition,       //Some weird shit I don't understand!
                                      true);          //Periodic Boundary Conditions
 
     auto Top    = generator.generate(H,
-    {0, NX, 0, NY},
+                                     {0, NX, 0, NY},
                                      sigma,
                                      0.5,
                                      addition,
