@@ -1,11 +1,11 @@
 include(../app_defaults.pri)
 
-TARGET  = __name__
+TARGET  = surfaceGrowth
 
-SOURCES = __name__main.cpp
+SOURCES = surfaceGrowthmain.cpp
 
 
-OTHER_FILES += infiles/__name__.cfg
+OTHER_FILES += infiles/surfaceGrowth.cfg
 
 
 copydata.commands = $(COPY_DIR) $$PWD/infiles $$OUT_PWD

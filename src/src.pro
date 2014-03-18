@@ -3,6 +3,10 @@ include(../defaults.pri)
 TEMPLATE = lib
 TARGET = ../lib/kMC
 
+QMAKE_LFLAGS += -g
+
+QMAKE_CXXFLAGS_RELEASE += -g
+
 HEADERS = RNG/kMCRNG.h \
     reactions/reaction.h \
     kmcsolver.h \

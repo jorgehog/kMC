@@ -56,15 +56,12 @@ KMCSolver::KMCSolver(const Setting & root) :
     setCyclesPerOutput(
                 getSurfaceSetting<uint>(SolverSettings, "cyclesPerOutput"));
 
-    setTargetSaturation(
-                getSurfaceSetting<double>(InitializationSettings, "SaturationLevel"));
-
-    setRelativeSeedSize(
-                getSurfaceSetting<double>(InitializationSettings, "RelativeSeedSize"));
-
     setRNGSeed(
                 getSurfaceSetting<uint>(SolverSettings, "seedType"),
                 getSurfaceSetting<int>(SolverSettings, "specificSeed"));
+
+    setTargetSaturation(
+                getSurfaceSetting<double>(SystemSettings, "SaturationLevel"));
 
     Site::setInitialBoundaries(
                 getSurfaceSetting(SystemSettings, "Boundaries"));
@@ -124,8 +121,6 @@ void KMCSolver::run()
     Reaction * selectedReaction;
     uint choice;
     double R;
-
-    initializeCrystal();
 
     dumpXYZ();
 
@@ -421,8 +416,21 @@ void KMCSolver::clearAllReactions()
 }
 
 
-void KMCSolver::initializeCrystal()
+void KMCSolver::initializeCrystal(const double relativeSeedSize)
 {
+
+    if (relativeSeedSize > 1.0)
+    {
+        cerr << "The seed size cannot exceed the box size." << endl;
+        KMCSolver::exit();
+    }
+
+    else if (relativeSeedSize < 0)
+    {
+        cerr << "The seed size cannot be negative." << endl;
+        KMCSolver::exit();
+    }
+
     bool noSeed = false;
     KMCDebugger_SetEnabledTo(false);
 
@@ -432,9 +440,9 @@ void KMCSolver::initializeCrystal()
         KMCDebugger_PushTraces();
     }
 
-    uint crystalSizeX = round(m_NX*m_relativeSeedSize);
-    uint crystalSizeY = round(m_NY*m_relativeSeedSize);
-    uint crystalSizeZ = round(m_NZ*m_relativeSeedSize);
+    uint crystalSizeX = round(m_NX*relativeSeedSize);
+    uint crystalSizeY = round(m_NY*relativeSeedSize);
+    uint crystalSizeZ = round(m_NZ*relativeSeedSize);
 
     uint crystalStartX = m_NX/2 - crystalSizeX/2;
     uint crystalStartY = m_NY/2 - crystalSizeY/2;

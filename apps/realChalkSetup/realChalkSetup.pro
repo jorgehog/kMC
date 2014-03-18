@@ -1,11 +1,11 @@
 include(../app_defaults.pri)
 
-TARGET  = __name__
+TARGET  = realChalkSetup
 
-SOURCES = __name__main.cpp
+SOURCES = realChalkSetupmain.cpp
 
 
-OTHER_FILES += infiles/__name__.cfg
+OTHER_FILES += infiles/realChalkSetup.cfg
 
 
 copydata.commands = $(COPY_DIR) $$PWD/infiles $$OUT_PWD

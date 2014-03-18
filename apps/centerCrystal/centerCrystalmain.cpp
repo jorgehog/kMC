@@ -5,7 +5,7 @@ using namespace libconfig;
 using namespace kMC;
 
 
-void initialize_centerCrystal(KMCSolver * solver);
+void initialize_centerCrystal(KMCSolver * solver, const Setting & root);
 
 int main()
 {
@@ -14,7 +14,7 @@ int main()
     wall_clock t;
 
 
-    cfg.readFile("infiles/config.cfg");
+    cfg.readFile("infiles/centerCrystal.cfg");
 
     const Setting & root = cfg.getRoot();
 
@@ -26,7 +26,7 @@ int main()
 
     KMCSolver* solver = new KMCSolver(root);
 
-    initialize_centerCrystal(solver);
+    initialize_centerCrystal(solver, root);
 
 
     t.tic();
@@ -46,7 +46,7 @@ int main()
 }
 
 
-void initialize_centerCrystal(KMCSolver * solver)
+void initialize_centerCrystal(KMCSolver * solver, const Setting & root)
 {
-
+    solver->initializeCrystal(getSetting<double>(root, {"Initialization", "RelativeSeedSize"}));
 }

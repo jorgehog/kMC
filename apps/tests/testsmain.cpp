@@ -1,6 +1,6 @@
 #include <kMC>
 
-#include "testbed.h"
+#include "testbed/testbed.h"
 
 #include <unittest++/UnitTest++.h>
 #include <unittest++/TestReporterStdout.h>

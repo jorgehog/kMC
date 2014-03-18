@@ -10,6 +10,9 @@ System = {
     nNeighboursToCrystallize = 5;
 
 
+    SaturationLevel = 0.01;
+
+
     #0 = Periodic
     #1 = Edge
     #2 = Surface
@@ -18,7 +21,7 @@ System = {
     #            #back #front
          types = ([0,    0],   #X
                   [0,    0],   #Y
-                  [1,    2]);  #Z
+                  [0,    0]);  #Z
 
          configs = (
 
@@ -53,8 +56,6 @@ Reactions = {
 
 Initialization = {
 
-    SaturationLevel = 0.01;
-    RelativeSeedSize = 0.2;
 
 };
 

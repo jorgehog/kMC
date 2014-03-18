@@ -1,6 +1,6 @@
 #include "testbed.h"
 
-#include "snapshot.h"
+#include "../snapshot/snapshot.h"
 
 #include <unittest++/UnitTest++.h>
 
@@ -672,7 +672,7 @@ void testBed::testBinarySearchChoise()
     uint secondChoice;
     double R;
 
-    solver->initializeCrystal();
+    solver->initializeCrystal(0.3);
 
     solver->getRateVariables();
 
@@ -717,7 +717,7 @@ void testBed::testReactionChoise()
     uint n = 0;
 
 
-    solver->initializeCrystal();
+    solver->initializeCrystal(0.3);
 
     solver->getRateVariables();
 
@@ -796,7 +796,7 @@ void testBed::testRateCalculation()
 
     double E, Esp;
 
-    solver->initializeCrystal();
+    solver->initializeCrystal(0.3);
 
     solver->getRateVariables();
 
@@ -841,7 +841,7 @@ void testBed::testEnergyAndNeighborSetup()
 
     const Site* currentSite, * otherSite;
 
-    solver->initializeCrystal();
+    solver->initializeCrystal(0.3);
 
     uvec nn(Site::nNeighborsLimit());
 
@@ -1222,7 +1222,7 @@ void testBed::testHasCrystalNeighbor()
 void testBed::testInitializationOfCrystal()
 {
 
-    solver->initializeCrystal();
+    solver->initializeCrystal(0.3);
 
     Site* currentSite;
 
@@ -1333,7 +1333,7 @@ void testBed::testInitialReactionSetup()
         }
     }
 
-    solver->initializeCrystal();
+    solver->initializeCrystal(0.3);
     Site::updateAffectedSites();
 
     std::vector<Reaction*> oldReactions;
@@ -1477,6 +1477,7 @@ const SnapShot * testBed::testSequentialCore()
 
     solver->setNumberOfCycles(nc);
     solver->setCyclesPerOutput(nc + 1);
+    solver->initializeCrystal(0.2);
 
     solver->run();
 
@@ -1583,6 +1584,8 @@ void testBed::testKnownCase()
     solver = new KMCSolver(root);
 
     Site::resetBoundariesTo(lastBoundaries);
+
+    solver->initializeCrystal(getSetting<double>(root, {"Initialization", "RelativeSeedSize"}));
 
     bool make = false;
 

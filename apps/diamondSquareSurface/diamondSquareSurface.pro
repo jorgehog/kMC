@@ -1,11 +1,11 @@
 include(../app_defaults.pri)
 
-TARGET  = __name__
+TARGET  = diamondSquareSurface
 
-SOURCES = __name__main.cpp
+SOURCES = diamondSquareSurfacemain.cpp
 
 
-OTHER_FILES += infiles/__name__.cfg
+OTHER_FILES += infiles/diamondSquareSurface.cfg
 
 
 copydata.commands = $(COPY_DIR) $$PWD/infiles $$OUT_PWD

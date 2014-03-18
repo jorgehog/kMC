@@ -21,6 +21,13 @@ def main():
 
     os.mkdir(absAppPath)
     
+    infilesPath = join(absAppPath, "infiles")
+
+    os.mkdir(infilesPath)
+
+
+    configFileAbsPath = join(infilesPath, "%s.cfg" % appName)    
+    
     appProFileAbsPath = join(absAppPath, "%s.pro" % appName)
     
     appMainFileAbsPath = join(absAppPath, "%smain.cpp" % appName)
@@ -37,13 +44,19 @@ def main():
         with open(join(cwd, "defaults", "defaultmain.cpp.bones"), 'r') as defaultFile:
             
             appMainFile.write(defaultFile.read().replace("__name__", appName))
+           
+    with open(configFileAbsPath, 'w') as appConfigFile:
             
+        with open(join(cwd, "defaults", "defaultconfig.cfg.bones"), 'r') as defaultFile:
+            
+            appConfigFile.write(defaultFile.read().replace("__name__", appName))
+          
     
     appsProFileAbspath = join(cwd, "apps.pro")
     
     with open(appsProFileAbspath, 'r') as appsProFile:
         
-        newAppsProFile = appsProFile.read().replace("#__next_app__", "%s #__next_app__" % appName)
+        newAppsProFile = appsProFile.read().replace("#__next_app__", "\\\n           %s #__next_app__" % appName)
         
     with open(appsProFileAbspath, 'w') as appsProFile:
         

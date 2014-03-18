@@ -37,7 +37,7 @@ public:
 
     void reset();
 
-    void initializeCrystal();
+    void initializeCrystal(const double relativeSeedSize);
 
     void initializeSiteNeighborhoods();
 
@@ -124,19 +124,6 @@ public:
         m_cyclesPerOutput = cyclesPerOutput;
     }
 
-    void setRelativeSeedSize(const double relativeSeedSize)
-    {
-
-        if (relativeSeedSize > 1.0)
-        {
-            cerr << "The seed size cannot exceed the box size." << endl;
-            KMCSolver::exit();
-        }
-
-        m_relativeSeedSize = relativeSeedSize;
-
-
-    }
 
     void setTargetSaturation(const double saturation)
     {
@@ -164,9 +151,6 @@ public:
 private:
 
     double m_targetSaturation;
-
-    double m_relativeSeedSize;
-
 
     Site**** sites;
 
