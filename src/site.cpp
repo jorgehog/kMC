@@ -1480,6 +1480,24 @@ void Site::setInitialBoundaries(const int boundaryType)
 }
 
 
+void Site::spawnAsCrystal()
+{
+    setNewParticleState(ParticleStates::surface);
+
+    activate();
+}
+
+void Site::blockCrystallizationOnSite()
+{
+    m_cannotCrystallize = true;
+}
+
+void Site::allowCrystallizationOnSite()
+{
+    m_cannotCrystallize = false;
+}
+
+
 
 const uint &Site::NX()
 {
@@ -1561,25 +1579,4 @@ int ParticleStates::equalAs(int state)
         return state;
         break;
     }
-}
-
-
-
-
-
-void kMC::Site::spawnAsCrystal()
-{
-    setNewParticleState(ParticleStates::surface);
-
-    activate();
-}
-
-void Site::blockCrystallizationOnSite()
-{
-    m_cannotCrystallize = true;
-}
-
-void Site::allowCrystallizationOnSite()
-{
-    m_cannotCrystallize = false;
 }
