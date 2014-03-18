@@ -57,19 +57,19 @@ enum RNG
 void initialize_diamondSquareSurface(KMCSolver * solver, const Setting & root)
 {
 
-    const Setting & initCFG = getSurfaceSetting(root, "Initialization");
+    const Setting & initCFG  = getSurfaceSetting(root, "Initialization");
 
-    double H                = getSurfaceSetting<double>(initCFG, "H");
+    double H                 = getSurfaceSetting<double>(initCFG, "H");
 
-    double sigma            = getSurfaceSetting<double>(initCFG, "sigma");
+    double sigma             = getSurfaceSetting<double>(initCFG, "sigma");
 
-    bool addition           = static_cast<bool>(
-                              getSurfaceSetting<int>   (initCFG, "addition"));
+    bool addition            = static_cast<bool>(
+                               getSurfaceSetting<int>   (initCFG, "addition"));
 
 
-    uint clearing           = getSurfaceSetting<uint>  (initCFG, "clearing");
+    uint clearing            = getSurfaceSetting<uint>  (initCFG, "clearing");
 
-    double cutoffPercent   = getSurfaceSetting<double>(initCFG, "cutoffPrc");
+    double occupancyTreshold = getSurfaceSetting<double>(initCFG, "treshold");
 
 
     double NX = static_cast<double>(solver->NX());
@@ -143,6 +143,8 @@ void initialize_diamondSquareSurface(KMCSolver * solver, const Setting & root)
         }
     }
 
+    //calculate how many percent of the total z = z' surface is populated
+
     vec occupancyBottom(bottomMax, fill::zeros);
     vec occupancyTop   (topMax,    fill::zeros);
 
@@ -172,26 +174,29 @@ void initialize_diamondSquareSurface(KMCSolver * solver, const Setting & root)
     occupancyBottom /= area;
     occupancyTop    /= area;
 
-    uint bottomCutoff = 0;
 
-    while (occupancyTop(bottomCutoff) > cutoffPercent)
+    //Going from top to bottom, ending when the population is lower than
+    //the given treshold.
+
+    uint bottomCutoff = 0;
+    while (occupancyTop(bottomCutoff) > occupancyTreshold)
     {
         bottomCutoff++;
     }
 
     uint topCutoff = 0;
-
-    while (occupancyTop(topCutoff) > cutoffPercent)
+    while (occupancyTop(topCutoff) > occupancyTreshold)
     {
         topCutoff++;
     }
 
 
+    //calculate the new box height
+
     uint newNZ =  maxHeight - (topCutoff + bottomCutoff) + clearing;
 
     uvec newN  = solver->NVec();
     newN(2) = newNZ;
-
 
     solver->setBoxSize(newN);
 
@@ -206,7 +211,7 @@ void initialize_diamondSquareSurface(KMCSolver * solver, const Setting & root)
             uint bottomEnd = static_cast<uint>(Bottom.at(x).at(y));
             uint topEnd    = static_cast<uint>(Top.at(x).at(y));
 
-
+            //Points below the cutoff are filtered out. Avoiding uints going to negative values (overflow)
             uint bottomSurface = (bottomEnd > bottomCutoff) ? (     (bottomEnd - bottomCutoff)) : 0;
             uint topSurface    =    (topEnd > topCutoff)    ? (newNZ - (topEnd - topCutoff)   ) : newNZ;
 
