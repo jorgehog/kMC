@@ -1,4 +1,4 @@
-LIBS += -llapack -larmadillo -lconfig++
+LIBS += -larmadillo -lconfig++
 CONFIG -= app_bundle
 CONFIG -= qt
 CONFIG += RNG_ZIG

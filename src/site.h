@@ -128,6 +128,8 @@ public:
 
     void spawnAsFixedCrystal();
 
+    void spawnAsCrystal();
+
     void crystallize();
 
     void decrystallize();

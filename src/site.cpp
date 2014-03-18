@@ -305,13 +305,11 @@ void Site::clearAllReactions()
 void Site::spawnAsFixedCrystal()
 {
 
-    setNewParticleState(ParticleStates::surface);
-
     m_isFixedCrystalSeed = true;
 
     clearAllReactions();
 
-    activate();
+    spawnAsCrystal();
 
     setNewParticleState(ParticleStates::fixedCrystal);
 
@@ -1560,3 +1558,11 @@ int ParticleStates::equalAs(int state)
 
 
 
+
+
+void kMC::Site::spawnAsCrystal()
+{
+    setNewParticleState(ParticleStates::surface);
+
+    activate();
+}
