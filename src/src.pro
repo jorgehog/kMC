@@ -46,13 +46,7 @@ SOURCES += RNG/zigrandom.cpp \
 }
 
 
-copylib.commands = $(COPY_DIR) $$OUT_PWD/../lib $$TOP_PWD
-
-first.depends = $(first) copylib
-
-export(first.depends)
-export(copydata.commands)
-export(createDirs.commands)
-
-QMAKE_EXTRA_TARGETS += first copylib
+!equals(PWD, $${OUT_PWD}) {
+    QMAKE_POST_LINK += $(COPY_DIR) $$OUT_PWD/../lib $$TOP_PWD
+}
 
