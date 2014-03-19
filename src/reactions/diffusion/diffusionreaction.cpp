@@ -331,7 +331,7 @@ double DiffusionReaction::getSaddleEnergy()
         {
             for (uint zn = myIntersectionPoints(2, 0); zn < myIntersectionPoints(2, 1); ++zn)
             {
-                targetSite = reactionSite()->neighborHood(xn, yn, zn);
+                targetSite = reactionSite()->neighborhood(xn, yn, zn);
 
                 if (targetSite == NULL)
                 {

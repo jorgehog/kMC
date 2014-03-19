@@ -478,7 +478,7 @@ void testBed::testNeighbors()
                         for (uint k = 0; k < Site::neighborhoodLength(); ++k)
                         {
 
-                            neighbor = currentSite->neighborHood(i, j, k);
+                            neighbor = currentSite->neighborhood(i, j, k);
 
                             if (neighbor == NULL)
                             {
@@ -904,11 +904,11 @@ void testBed::testEnergyAndNeighborSetup()
                                             C++;
                                         }
 
-                                        CHECK_EQUAL(otherSite, currentSite->neighborHood(Site::nNeighborsLimit() + dx,
+                                        CHECK_EQUAL(otherSite, currentSite->neighborhood(Site::nNeighborsLimit() + dx,
                                                                                          Site::nNeighborsLimit() + dy,
                                                                                          Site::nNeighborsLimit() + dz));
 
-                                        CHECK_EQUAL(currentSite, otherSite->neighborHood(Site::nNeighborsLimit() - dx,
+                                        CHECK_EQUAL(currentSite, otherSite->neighborhood(Site::nNeighborsLimit() - dx,
                                                                                          Site::nNeighborsLimit() - dy,
                                                                                          Site::nNeighborsLimit() - dz));
                                     }
@@ -967,7 +967,7 @@ void testBed::testUpdateNeigbors()
                     {
                         for (uint nk = 0; nk < Site::neighborhoodLength(); ++nk)
                         {
-                            if (currentSite->neighborHood(ni, nj, nk) == NULL)
+                            if (currentSite->neighborhood(ni, nj, nk) == NULL)
                             {
                                 nBlocked(Site::levelMatrix(ni, nj, nk))++;
                                 blockedE += DiffusionReaction::potential(ni, nj, nk);
@@ -1102,7 +1102,7 @@ void testBed::testHasCrystalNeighbor()
             {
 
 
-                neighbor = initCrystal->neighborHood(i, j, k);
+                neighbor = initCrystal->neighborhood(i, j, k);
 
                 //Then we check weather the middle is actually a crystal
                 if (neighbor == initCrystal)
@@ -1149,7 +1149,7 @@ void testBed::testHasCrystalNeighbor()
 
             for (uint k = 0; k < 3; ++k)
             {
-                neighbor = initCrystal->neighborHood(Site::nNeighborsLimit() - 1 + i,
+                neighbor = initCrystal->neighborhood(Site::nNeighborsLimit() - 1 + i,
                                                      Site::nNeighborsLimit() - 1 + j,
                                                      Site::nNeighborsLimit() - 1 + k);
 
@@ -1172,7 +1172,7 @@ void testBed::testHasCrystalNeighbor()
 
             for (uint k = 0; k < 3; ++k)
             {
-                neighbor = initCrystal->neighborHood(Site::nNeighborsLimit() - 1 + i,
+                neighbor = initCrystal->neighborhood(Site::nNeighborsLimit() - 1 + i,
                                                      Site::nNeighborsLimit() - 1 + j,
                                                      Site::nNeighborsLimit() - 1 + k);
 
@@ -1318,7 +1318,7 @@ void testBed::testInitialReactionSetup()
                             for (uint z = 0; z < 3; ++z)
                             {
 
-                                neighbor = currentSite->neighborHood(Site::nNeighborsLimit() - 1 + x,
+                                neighbor = currentSite->neighborhood(Site::nNeighborsLimit() - 1 + x,
                                                                      Site::nNeighborsLimit() - 1 + y,
                                                                      Site::nNeighborsLimit() - 1 + z);
 
@@ -1747,7 +1747,7 @@ void testBed::testBoxSizes()
                                 {
                                     for (uint Z = 0; Z < Site::neighborhoodLength(); ++Z)
                                     {
-                                        if (currentSite->neighborHood(X, Y, Z) == NULL)
+                                        if (currentSite->neighborhood(X, Y, Z) == NULL)
                                         {
                                             nBlocked++;
                                         }

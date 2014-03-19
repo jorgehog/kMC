@@ -409,7 +409,7 @@ void Site::initializeDiffusionReactions()
             for (uint k = 0; k < 3; ++k)
             {
 
-                destination = neighborHood(Site::nNeighborsLimit() - 1 + i,
+                destination = neighborhood(Site::nNeighborsLimit() - 1 + i,
                                            Site::nNeighborsLimit() - 1 + j,
                                            Site::nNeighborsLimit() - 1 + k);
 
@@ -513,9 +513,9 @@ bool Site::hasNeighboring(int state, int range) const
             for (int k = -range; k <= range; ++k)
             {
 
-                nextNeighbor = m_neighborHood[i + Site::nNeighborsLimit()]
-                        [j + Site::nNeighborsLimit()]
-                        [k + Site::nNeighborsLimit()];
+                nextNeighbor = neighborhood(i + Site::nNeighborsLimit(),
+                                            j + Site::nNeighborsLimit(),
+                                            k + Site::nNeighborsLimit());
 
                 if (nextNeighbor == NULL)
                 {
@@ -555,9 +555,9 @@ uint Site::countNeighboring(int state, int range) const
             for (int k = -range; k <= range; ++k)
             {
 
-                nextNeighbor = m_neighborHood[i + Site::nNeighborsLimit()]
-                        [j + Site::nNeighborsLimit()]
-                        [k + Site::nNeighborsLimit()];
+                nextNeighbor = neighborhood(i + Site::nNeighborsLimit(),
+                                            j + Site::nNeighborsLimit(),
+                                            k + Site::nNeighborsLimit());
 
                 if (nextNeighbor == NULL)
                 {
@@ -716,21 +716,21 @@ void Site::introduceNeighborhood()
 
     Boundary::setupCurrentBoundaries(x(), y(), z());
 
-    m_neighborHood = new Site***[m_neighborhoodLength];
+    m_neighborhood = new Site***[m_neighborhoodLength];
 
     for (uint i = 0; i < m_neighborhoodLength; ++i)
     {
 
         xTrans = Boundary::currentBoundaries(0)->transformCoordinate((int)m_x + m_originTransformVector(i));
 
-        m_neighborHood[i] = new Site**[m_neighborhoodLength];
+        m_neighborhood[i] = new Site**[m_neighborhoodLength];
 
         for (uint j = 0; j < m_neighborhoodLength; ++j)
         {
 
             yTrans = Boundary::currentBoundaries(1)->transformCoordinate((int)m_y + m_originTransformVector(j));
 
-            m_neighborHood[i][j] = new Site*[m_neighborhoodLength];
+            m_neighborhood[i][j] = new Site*[m_neighborhoodLength];
 
             for (uint k = 0; k < m_neighborhoodLength; ++k)
             {
@@ -741,7 +741,7 @@ void Site::introduceNeighborhood()
                         Boundary::isBlocked(yTrans) ||
                         Boundary::isBlocked(zTrans))
                 {
-                    m_neighborHood[i][j][k] = NULL;
+                    m_neighborhood[i][j][k] = NULL;
                 }
 
                 else
@@ -749,7 +749,7 @@ void Site::introduceNeighborhood()
 
                     neighbor = m_solver->getSite(xTrans, yTrans, zTrans);
 
-                    m_neighborHood[i][j][k] = neighbor;
+                    m_neighborhood[i][j][k] = neighbor;
 
                     if (neighbor != this)
                     {
@@ -802,9 +802,9 @@ void Site::propagateToNeighbors(int reqOldState, int newState, int range)
             for (int k = -range; k <= range; ++k)
             {
 
-                nextNeighbor = m_neighborHood[i + Site::nNeighborsLimit()]
-                        [j + Site::nNeighborsLimit()]
-                        [k + Site::nNeighborsLimit()];
+                nextNeighbor = neighborhood(i + Site::nNeighborsLimit(),
+                                            j + Site::nNeighborsLimit(),
+                                            k + Site::nNeighborsLimit());
 
                 if (nextNeighbor == NULL)
                 {
@@ -847,7 +847,7 @@ void Site::informNeighborhoodOnChange(int change)
             for (uint k = 0; k < m_neighborhoodLength; ++k)
             {
 
-                neighbor = m_neighborHood[i][j][k];
+                neighbor = neighborhood(i, j, k);
 
                 if (neighbor == NULL)
                 {
@@ -975,16 +975,16 @@ void Site::clearNeighborhood()
         {
             for (uint k = 0; k < m_neighborhoodLength; ++k)
             {
-                m_neighborHood[i][j][k] = NULL;
+                m_neighborhood[i][j][k] = NULL;
             }
 
-            delete [] m_neighborHood[i][j];
+            delete [] m_neighborhood[i][j];
         }
 
-        delete [] m_neighborHood[i];
+        delete [] m_neighborhood[i];
     }
 
-    delete [] m_neighborHood;
+    delete [] m_neighborhood;
 
 }
 
@@ -1214,7 +1214,7 @@ const string Site::info(int xr, int yr, int zr, string desc) const
             for (uint k = 0; k < m_neighborhoodLength; ++k)
             {
 
-                currentSite = m_neighborHood[i][j][k];
+                currentSite = neighborhood(i, j, k);
 
 
                 if (currentSite == NULL)

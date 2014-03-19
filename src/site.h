@@ -116,6 +116,7 @@ public:
      * Non-trivial functions
      */
 
+
     void setParticleState(int newState);
 
     bool isLegalToSpawn();
@@ -361,9 +362,9 @@ public:
         return m_affectedSites;
     }
 
-    Site* neighborHood(const uint x, const uint y, const uint z) const
+    Site* neighborhood(const uint x, const uint y, const uint z) const
     {
-        return m_neighborHood[x][y][z];
+        return m_neighborhood[x][y][z];
     }
 
     double energy() const
@@ -439,7 +440,7 @@ private:
     static KMCSolver* m_solver;
 
 
-    Site**** m_neighborHood;
+    Site**** m_neighborhood;
 
     vector<Site*> m_allNeighbors;
 
