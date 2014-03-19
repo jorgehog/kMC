@@ -191,9 +191,14 @@ public:
     const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const;
 
 
-    void forAllNeighborsDo(function<void (Site *)> applyFunction) const;
+    void forEachNeighborDo(function<void (Site *)> applyFunction) const;
 
-    void forAllActiveReactionsDo(function<void (Reaction*)> applyFunction) const;
+    void forEachNeighborDo_sendIndices(function<void (Site *, uint, uint, uint)> applyFunction) const;
+
+
+    void forEachActiveReactionDo(function<void (Reaction*)> applyFunction) const;
+
+    void forEachActiveReactionDo_sendIndex(function<void (Reaction*, uint)> applyFunction) const;
 
 
     /*

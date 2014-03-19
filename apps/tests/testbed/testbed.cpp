@@ -86,33 +86,24 @@ void testBed::testTotalParticleStateCounters()
     CHECK_EQUAL(NX()*NY()*NZ(), accu(Site::totalDeactiveParticlesVector()));
     CHECK_EQUAL(NX()*NY()*NZ(), Site::totalDeactiveParticles(ParticleStates::solution));
 
-    Site * currentSite;
 
     uint C0 = NX()*NY()*NZ();
     uint C1 = 0;
-    for (uint x = 0; x < NX(); ++x)
+
+    solver->forEachSiteDo([&C0, &C1] (Site * currentSite)
     {
-        for (uint y = 0; y < NY(); ++y)
-        {
-            for (uint z = 0; z < NZ(); ++z)
-            {
+        CHECK_EQUAL(C0, accu(Site::totalDeactiveParticlesVector()));
+        CHECK_EQUAL(C0, Site::totalDeactiveParticles(ParticleStates::solution));
 
-                CHECK_EQUAL(C0, accu(Site::totalDeactiveParticlesVector()));
-                CHECK_EQUAL(C0, Site::totalDeactiveParticles(ParticleStates::solution));
+        CHECK_EQUAL(C1, accu(Site::totalActiveParticlesVector()));
+        CHECK_EQUAL(C1, Site::totalActiveParticles(ParticleStates::solution));
 
-                CHECK_EQUAL(C1, accu(Site::totalActiveParticlesVector()));
-                CHECK_EQUAL(C1, Site::totalActiveParticles(ParticleStates::solution));
+        currentSite->activate();
 
-                currentSite = solver->getSite(x, y, z);
+        C0--;
+        C1++;
 
-                currentSite->activate();
-
-                C0--;
-                C1++;
-
-            }
-        }
-    }
+    });
 
     deactivateAllSites();
 
@@ -144,25 +135,15 @@ void testBed::testTotalParticleStateCounters()
 
     solver->getSite(0, 0, 0)->spawnAsFixedCrystal();
 
-    for (uint x = 0; x < NX(); ++x)
+    solver->forEachSiteDo_sendIndices([] (Site * site, uint x, uint y, uint z)
     {
-        for (uint y = 0; y < NY(); ++y)
+
+        if ((x%2 == 0) && (y%2 == 0) && (z%2 == 0) && (!(x == 0 && y == 0 && z == 0)))
         {
-            for (uint z = 0; z < NZ(); ++z)
-            {
-                if (x == 0 && y == 0 && z == 0)
-                {
-                    continue;
-                }
-
-                if ((x%2 == 0) && (y%2 == 0) && (z%2 == 0))
-                {
-                    solver->getSite(x, y, z)->spawnAsFixedCrystal();
-                }
-
-            }
+            site->spawnAsFixedCrystal();
         }
-    }
+
+    });
 
     solver->dumpXYZ();
 
@@ -179,160 +160,139 @@ void testBed::testDistanceTo()
     int dx, dy, dz, dx2, dy2, dz2;
     uint adx, ady, adz;
 
-    Site* startSite;
-    Site* endSite;
 
     solver->setBoxSize({6, 6, 6}, false);
     Site::resetNNeighborsLimitTo(2);
 
 
-    for (uint startx = 0; startx < NX(); ++startx)
+    solver->forEachSiteDo([&] (Site * startSite)
     {
-        for (uint starty = 0; starty < NY(); ++starty)
+        solver->forEachSiteDo_sendIndices([&] (Site * endSite, uint endx, uint endy, uint endz)
         {
-            for (uint startz = 0; startz < NZ(); ++startz)
+
+            Boundary::setupCurrentBoundaries(endx, endy, endz);
+
+            endSite->distanceTo(startSite, dx, dy, dz, true);
+
+            adx = dx;
+            ady = dy;
+            adz = dz;
+
+            endSite->distanceTo(startSite, dx, dy, dz);
+
+            CHECK_EQUAL(adx, abs(dx));
+            CHECK_EQUAL(ady, abs(dy));
+            CHECK_EQUAL(adz, abs(dz));
+
+            startSite->distanceTo(endSite, dx2, dy2, dz2);
+
+            if (adx != NX()/2)
             {
+                CHECK_EQUAL(dx, -dx2);
+            }
+            else
+            {
+                CHECK_EQUAL(adx, abs(dx2));
+            }
 
-                startSite = solver->getSite(startx, starty, startz);
+            if (ady != NY()/2)
+            {
+                CHECK_EQUAL(dy, -dy2);
+            }
+            else
+            {
+                CHECK_EQUAL(ady, abs(dy2));
+            }
 
-                for (uint endx = 0; endx < NX(); ++endx)
+            if (adz != NZ()/2)
+            {
+                CHECK_EQUAL(dz, -dz2);
+            }
+            else
+            {
+                CHECK_EQUAL(adz, abs(dz2));
+            }
+
+            CHECK_EQUAL(startSite->x(), Boundary::currentBoundaries(0)->transformCoordinate(endSite->x() + dx));
+            CHECK_EQUAL(startSite->y(), Boundary::currentBoundaries(1)->transformCoordinate(endSite->y() + dy));
+            CHECK_EQUAL(startSite->z(), Boundary::currentBoundaries(2)->transformCoordinate(endSite->z() + dz));
+
+            if (Site::boundaryTypes(0) == Boundary::Periodic)
+            {
+                int X = (int)startSite->x() - (int)endSite->x();
+
+                if (X < -(int)NX()/2)
                 {
-                    for (uint endy = 0; endy < NY(); ++endy)
-                    {
-                        for (uint endz = 0; endz < NZ(); ++endz)
-                        {
-
-                            Boundary::setupCurrentBoundaries(endx, endy, endz);
-
-
-                            endSite = solver->getSite(endx, endy, endz);
-
-                            endSite->distanceTo(startSite, dx, dy, dz, true);
-
-                            adx = dx;
-                            ady = dy;
-                            adz = dz;
-
-                            endSite->distanceTo(startSite, dx, dy, dz);
-
-                            CHECK_EQUAL(adx, abs(dx));
-                            CHECK_EQUAL(ady, abs(dy));
-                            CHECK_EQUAL(adz, abs(dz));
-
-                            startSite->distanceTo(endSite, dx2, dy2, dz2);
-
-                            if (adx != NX()/2)
-                            {
-                                CHECK_EQUAL(dx, -dx2);
-                            }
-                            else
-                            {
-                                CHECK_EQUAL(adx, abs(dx2));
-                            }
-
-                            if (ady != NY()/2)
-                            {
-                                CHECK_EQUAL(dy, -dy2);
-                            }
-                            else
-                            {
-                                CHECK_EQUAL(ady, abs(dy2));
-                            }
-
-                            if (adz != NZ()/2)
-                            {
-                                CHECK_EQUAL(dz, -dz2);
-                            }
-                            else
-                            {
-                                CHECK_EQUAL(adz, abs(dz2));
-                            }
-
-                            CHECK_EQUAL(startSite->x(), Boundary::currentBoundaries(0)->transformCoordinate(endSite->x() + dx));
-                            CHECK_EQUAL(startSite->y(), Boundary::currentBoundaries(1)->transformCoordinate(endSite->y() + dy));
-                            CHECK_EQUAL(startSite->z(), Boundary::currentBoundaries(2)->transformCoordinate(endSite->z() + dz));
-
-                            if (Site::boundaryTypes(0) == Boundary::Periodic)
-                            {
-                                int X = (int)startSite->x() - (int)endSite->x();
-
-                                if (X < -(int)NX()/2)
-                                {
-                                    X += NX();
-                                }
-                                else if (X > (int)NX()/2)
-                                {
-                                    X -= NX();
-                                }
+                    X += NX();
+                }
+                else if (X > (int)NX()/2)
+                {
+                    X -= NX();
+                }
 
 
-                                if (abs(X) == (int)NX()/2)
-                                {
-                                    CHECK_EQUAL(abs(X), adx);
-                                }
-                                else
-                                {
-                                    CHECK_EQUAL(dx, X);
-                                }
-
-                            }
-
-                            if (Site::boundaryTypes(1) == Boundary::Periodic)
-                            {
-                                int Y = (int)startSite->y() - (int)endSite->y();
-
-                                if (Y < -(int)NY()/2)
-                                {
-                                    Y += NY();
-                                }
-                                else if (Y > (int)NY()/2)
-                                {
-                                    Y -= NY();
-                                }
-
-
-                                if (abs(Y) == (int)NY()/2)
-                                {
-                                    CHECK_EQUAL(abs(Y), ady);
-                                }
-                                else
-                                {
-                                    CHECK_EQUAL(dy, Y);
-                                }
-
-                            }
-
-                            if (Site::boundaryTypes(2) == Boundary::Periodic)
-                            {
-                                int Z = (int)startSite->z() - (int)endSite->z();
-
-                                if (Z < -(int)NZ()/2)
-                                {
-                                    Z += NZ();
-                                }
-                                else if (Z > (int)NZ()/2)
-                                {
-                                    Z -= NZ();
-                                }
-
-
-                                if (abs(Z) == (int)NZ()/2)
-                                {
-                                    CHECK_EQUAL(abs(Z), adz);
-                                }
-                                else
-                                {
-                                    CHECK_EQUAL(dz, Z);
-                                }
-                            }
-
-                        }
-                    }
+                if (abs(X) == (int)NX()/2)
+                {
+                    CHECK_EQUAL(abs(X), adx);
+                }
+                else
+                {
+                    CHECK_EQUAL(dx, X);
                 }
 
             }
-        }
-    }
+
+            if (Site::boundaryTypes(1) == Boundary::Periodic)
+            {
+                int Y = (int)startSite->y() - (int)endSite->y();
+
+                if (Y < -(int)NY()/2)
+                {
+                    Y += NY();
+                }
+                else if (Y > (int)NY()/2)
+                {
+                    Y -= NY();
+                }
+
+
+                if (abs(Y) == (int)NY()/2)
+                {
+                    CHECK_EQUAL(abs(Y), ady);
+                }
+                else
+                {
+                    CHECK_EQUAL(dy, Y);
+                }
+
+            }
+
+            if (Site::boundaryTypes(2) == Boundary::Periodic)
+            {
+                int Z = (int)startSite->z() - (int)endSite->z();
+
+                if (Z < -(int)NZ()/2)
+                {
+                    Z += NZ();
+                }
+                else if (Z > (int)NZ()/2)
+                {
+                    Z -= NZ();
+                }
+
+
+                if (abs(Z) == (int)NZ()/2)
+                {
+                    CHECK_EQUAL(abs(Z), adz);
+                }
+                else
+                {
+                    CHECK_EQUAL(dz, Z);
+                }
+            }
+
+        });
+    });
 
 }
 
@@ -413,99 +373,58 @@ void testBed::testDiffusionSiteMatrixSetup()
 
     int i, j, k;
 
-    for (uint x = 0; x < NX(); ++x)
+    solver->forEachSiteDo_sendIndices([&] (Site * site, uint x, uint y, uint z)
     {
-        for (uint y = 0; y < NY(); ++y)
+
+        const Site & currentSite = *site;
+
+
+        Boundary::setupCurrentBoundaries(x, y, z);
+
+
+        for (Reaction * r : currentSite.reactions())
         {
-            for (uint z = 0; z < NZ(); ++z)
-            {
 
-                const Site & currentSite = *(solver->getSite(x, y, z));
+            currentDiffReaction = (DiffusionReaction*)r;
 
+            const Site & site = *(currentDiffReaction->getReactionSite());
+            const Site & dest  = *(currentDiffReaction->destinationSite());
 
-                Boundary::setupCurrentBoundaries(x, y, z);
+            CHECK_EQUAL(currentSite, site);
 
+            site.distanceTo(&dest, i, j, k);
 
-                for (Reaction * r : currentSite.reactions())
-                {
+            uint xt = Boundary::currentBoundaries(0)->transformCoordinate(x + i);
+            uint yt = Boundary::currentBoundaries(1)->transformCoordinate(y + j);
+            uint zt = Boundary::currentBoundaries(2)->transformCoordinate(z + k);
 
-                    currentDiffReaction = (DiffusionReaction*)r;
+            const Site & dest2 = *(solver->getSite(xt, yt, zt));
 
-                    const Site & site = *(currentDiffReaction->getReactionSite());
-                    const Site & dest  = *(currentDiffReaction->destinationSite());
-
-                    CHECK_EQUAL(currentSite, site);
-
-                    site.distanceTo(&dest, i, j, k);
-
-                    uint xt = Boundary::currentBoundaries(0)->transformCoordinate(x + i);
-                    uint yt = Boundary::currentBoundaries(1)->transformCoordinate(y + j);
-                    uint zt = Boundary::currentBoundaries(2)->transformCoordinate(z + k);
-
-                    const Site & dest2 = *(solver->getSite(xt, yt, zt));
-
-                    CHECK_EQUAL(dest, dest2);
-                }
-
-
-            }
+            CHECK_EQUAL(dest, dest2);
         }
-    }
+
+
+    });
 
 }
 
 void testBed::testNeighbors()
 {
 
-    Site* currentSite, *neighbor;
-
     int dx, dy, dz;
 
-    for (uint x = 0; x < NX(); ++x)
+    solver->forEachSiteDo([&] (Site * currentSite)
     {
-        for (uint y = 0; y < NY(); ++y)
+        currentSite->forEachNeighborDo_sendIndices([&] (Site * neighbor, uint i, uint j, uint k)
         {
-            for (uint z = 0; z < NZ(); ++z)
-            {
+            currentSite->distanceTo(neighbor, dx, dy, dz);
 
-                currentSite = solver->getSite(x, y, z);
+            CHECK_EQUAL(Site::originTransformVector(i), dx);
+            CHECK_EQUAL(Site::originTransformVector(j), dy);
+            CHECK_EQUAL(Site::originTransformVector(k), dz);
 
-
-                for(uint i = 0; i < Site::neighborhoodLength(); ++i)
-                {
-                    for (uint j = 0; j < Site::neighborhoodLength(); ++j)
-                    {
-                        for (uint k = 0; k < Site::neighborhoodLength(); ++k)
-                        {
-
-                            neighbor = currentSite->neighborhood(i, j, k);
-
-                            if (neighbor == NULL)
-                            {
-                                continue;
-                            }
-
-                            if ((i == Site::nNeighborsLimit())
-                                    && (j == Site::nNeighborsLimit())
-                                    && (k == Site::nNeighborsLimit()))
-                            {
-                                CHECK_EQUAL(neighbor, currentSite);
-                                continue;
-                            }
-
-                            currentSite->distanceTo(neighbor, dx, dy, dz);
-
-                            CHECK_EQUAL(Site::originTransformVector(i), dx);
-                            CHECK_EQUAL(Site::originTransformVector(j), dy);
-                            CHECK_EQUAL(Site::originTransformVector(k), dz);
-
-
-                        }
-                    }
-                }
-            }
-        }
-    }
+        });
+    });
 }
 
 void testBed::testPropertyCalculations()
@@ -753,7 +672,7 @@ void testBed::testReactionChoise()
                     for (uint k = 0; k < NZ(); ++k)
                     {
                         bool notSet = true;
-                        solver->getSite(i, j, k)->forAllActiveReactionsDo([&] (Reaction * r)
+                        solver->getSite(i, j, k)->forEachActiveReactionDo([&] (Reaction * r)
                         {
                             if (!notSet)
                             {
@@ -814,34 +733,25 @@ void testBed::testRateCalculation()
 
     solver->getRateVariables();
 
-    for (uint i = 0; i < NX(); ++i)
+    solver->forEachSiteDo([&] (Site * site)
     {
-        for (uint j = 0; j < NY(); ++j)
+        site->forEachActiveReactionDo([&] (Reaction * r)
         {
-            for (uint k = 0; k < NZ(); ++k)
-            {
 
-                solver->getSite(i, j, k)->forAllActiveReactionsDo([&] (Reaction * r)
-                {
+            E = ((DiffusionReaction*)r)->lastUsedEnergy();
 
-                    E = ((DiffusionReaction*)r)->lastUsedEnergy();
+            Esp = ((DiffusionReaction*)r)->lastUsedEsp();
 
-                    Esp = ((DiffusionReaction*)r)->lastUsedEsp();
+            r->forceUpdateFlag(Reaction::defaultUpdateFlag);
 
-                    r->forceUpdateFlag(Reaction::defaultUpdateFlag);
+            r->calcRate();
 
-                    r->calcRate();
+            CHECK_EQUAL(E, ((DiffusionReaction*)r)->lastUsedEnergy());
 
-                    CHECK_EQUAL(E, ((DiffusionReaction*)r)->lastUsedEnergy());
+            CHECK_EQUAL(Esp, ((DiffusionReaction*)r)->lastUsedEsp());
 
-                    CHECK_EQUAL(Esp, ((DiffusionReaction*)r)->lastUsedEsp());
-
-                });
-            }
-        }
-    }
-
-
+        });
+    });
 }
 
 void testBed::testEnergyAndNeighborSetup()
@@ -853,97 +763,79 @@ void testBed::testEnergyAndNeighborSetup()
     double E;
     uint C;
 
-    const Site* currentSite, * otherSite;
-
     solver->initializeCrystal(0.3);
 
     uvec nn(Site::nNeighborsLimit());
 
 
-    for (uint i = 0; i < NX(); ++i)
+    solver->forEachSiteDo([&] (Site * currentSite)
     {
-        for (uint j = 0; j < NY(); ++j)
+
+        E = 0;
+        C = 0;
+        nn.zeros();
+
+        solver->forEachSiteDo([&] (Site * otherSite)
         {
-            for (uint k = 0; k < NZ(); ++k)
+
+            currentSite->distanceTo(otherSite, dx, dy, dz);
+
+            ldx = abs(dx);
+
+            if (ldx <= Site::nNeighborsLimit())
             {
 
-                E = 0;
-                C = 0;
-                nn.zeros();
-
-                currentSite = solver->getSite(i, j, k);
-
-                for (uint is = 0; is < NX(); ++is)
+                ldy = abs(dy);
+                if (ldy <= Site::nNeighborsLimit())
                 {
-                    for (uint js = 0; js < NY(); ++js)
+
+                    ldz = abs(dz);
+                    if (ldz <= Site::nNeighborsLimit())
                     {
-                        for (uint ks = 0; ks < NZ(); ++ks)
+
+                        if (currentSite != otherSite)
                         {
-
-                            otherSite = solver->getSite(is, js, ks);
-
-                            currentSite->distanceTo(otherSite, dx, dy, dz);
-
-                            ldx = abs(dx);
-
-                            if (ldx <= Site::nNeighborsLimit())
+                            if (otherSite->isActive())
                             {
+                                nn(Site::getLevel(ldx, ldy, ldz))++;
 
-                                ldy = abs(dy);
-                                if (ldy <= Site::nNeighborsLimit())
-                                {
-
-                                    ldz = abs(dz);
-                                    if (ldz <= Site::nNeighborsLimit())
-                                    {
-
-                                        if (currentSite != otherSite)
-                                        {
-                                            if (otherSite->isActive())
-                                            {
-                                                nn(Site::getLevel(ldx, ldy, ldz))++;
-
-                                                E += DiffusionReaction::potential(Site::nNeighborsLimit() + ldx,
-                                                                                  Site::nNeighborsLimit() + ldy,
-                                                                                  Site::nNeighborsLimit() + ldz);
-                                            }
-
-                                            C++;
-                                        }
-
-                                        CHECK_EQUAL(otherSite, currentSite->neighborhood(Site::nNeighborsLimit() + dx,
-                                                                                         Site::nNeighborsLimit() + dy,
-                                                                                         Site::nNeighborsLimit() + dz));
-
-                                        CHECK_EQUAL(currentSite, otherSite->neighborhood(Site::nNeighborsLimit() - dx,
-                                                                                         Site::nNeighborsLimit() - dy,
-                                                                                         Site::nNeighborsLimit() - dz));
-                                    }
-                                }
+                                E += DiffusionReaction::potential(Site::nNeighborsLimit() + ldx,
+                                                                  Site::nNeighborsLimit() + ldy,
+                                                                  Site::nNeighborsLimit() + ldz);
                             }
+
+                            C++;
                         }
+
+                        CHECK_EQUAL(otherSite, currentSite->neighborhood(Site::nNeighborsLimit() + dx,
+                                                                         Site::nNeighborsLimit() + dy,
+                                                                         Site::nNeighborsLimit() + dz));
+
+                        CHECK_EQUAL(currentSite, otherSite->neighborhood(Site::nNeighborsLimit() - dx,
+                                                                         Site::nNeighborsLimit() - dy,
+                                                                         Site::nNeighborsLimit() - dz));
                     }
                 }
-
-                uint nNeighbors = 0;
-                currentSite->forAllNeighborsDo([&nNeighbors] (Site * neighbor)
-                {
-                    (void) neighbor;
-                    nNeighbors++;
-                });
-
-                CHECK_EQUAL(nNeighbors, C);
-
-                for (uint K = 0; K < Site::nNeighborsLimit(); ++K)
-                {
-                    CHECK_EQUAL(nn(K), currentSite->nNeighbors(K));
-                }
-
-                CHECK_CLOSE(E, currentSite->energy(), 0.00001);
-
             }
+        });
+
+        uint nNeighbors = 0;
+        currentSite->forEachNeighborDo([&nNeighbors] (Site * neighbor)
+        {
+            (void) neighbor;
+            nNeighbors++;
+        });
+
+        CHECK_EQUAL(nNeighbors, C);
+
+        for (uint K = 0; K < Site::nNeighborsLimit(); ++K)
+        {
+            CHECK_EQUAL(nn(K), currentSite->nNeighbors(K));
         }
-    }
+
+        CHECK_CLOSE(E, currentSite->energy(), 0.00001);
+
+    });
 
 }
 
@@ -952,8 +844,6 @@ void testBed::testUpdateNeigbors()
 
     activateAllSites();
 
-    Site * currentSite;
-
     double eMax = accu(DiffusionReaction::potentialBox());
 
     double blockedE;
@@ -961,78 +851,54 @@ void testBed::testUpdateNeigbors()
 
     double accuBlockedE = 0;
 
-    for (uint i = 0; i < NX(); ++i)
+    solver->forEachSiteDo([&] (Site * currentSite)
     {
-        for (uint j = 0; j < NY(); ++j)
+        blockedE = 0;
+        nBlocked.zeros();
+
+        for (uint ni = 0; ni < Site::neighborhoodLength(); ++ni)
         {
-            for (uint k = 0; k < NZ(); ++k)
+            for (uint nj = 0; nj < Site::neighborhoodLength(); ++nj)
             {
-
-                currentSite = solver->getSite(i, j, k);
-
-                blockedE = 0;
-                nBlocked.zeros();
-
-                for (uint ni = 0; ni < Site::neighborhoodLength(); ++ni)
+                for (uint nk = 0; nk < Site::neighborhoodLength(); ++nk)
                 {
-                    for (uint nj = 0; nj < Site::neighborhoodLength(); ++nj)
+                    if (currentSite->neighborhood(ni, nj, nk) == NULL)
                     {
-                        for (uint nk = 0; nk < Site::neighborhoodLength(); ++nk)
-                        {
-                            if (currentSite->neighborhood(ni, nj, nk) == NULL)
-                            {
-                                nBlocked(Site::levelMatrix(ni, nj, nk))++;
-                                blockedE += DiffusionReaction::potential(ni, nj, nk);
-                            }
-                        }
+                        nBlocked(Site::levelMatrix(ni, nj, nk))++;
+                        blockedE += DiffusionReaction::potential(ni, nj, nk);
                     }
                 }
-
-
-                for (uint K = 0; K < Site::nNeighborsLimit(); ++K)
-                {
-                    CHECK_EQUAL(2*(12*(K+1)*(K+1) + 1), currentSite->nNeighbors(K) + nBlocked(K));
-                }
-
-                CHECK_CLOSE(eMax, currentSite->energy() + blockedE, 0.001);
-
-                accuBlockedE += blockedE;
-
             }
         }
-    }
+
+
+        for (uint K = 0; K < Site::nNeighborsLimit(); ++K)
+        {
+            CHECK_EQUAL(2*(12*(K+1)*(K+1) + 1), currentSite->nNeighbors(K) + nBlocked(K));
+        }
+
+        CHECK_CLOSE(eMax, currentSite->energy() + blockedE, 0.001);
+
+        accuBlockedE += blockedE;
+
+    });
 
     CHECK_EQUAL(NX()*NY()*NZ(), Site::totalActiveSites());
     CHECK_CLOSE(NX()*NY()*NZ()*eMax, Site::totalEnergy() + accuBlockedE, 0.001);
 
-    for (uint i = 0; i < NX(); ++i)
+    deactivateAllSites();
+
+    solver->forEachSiteDo([&] (Site * site)
     {
-        for (uint j = 0; j < NY(); ++j)
+
+        for (uint K = 0; K < Site::nNeighborsLimit(); ++K)
         {
-            for (uint k = 0; k < NZ(); ++k)
-            {
-                solver->getSite(i, j, k)->deactivate();
-            }
+            CHECK_EQUAL(0, site->nNeighbors(K));
         }
-    }
 
-    for (uint i = 0; i < NX(); ++i)
-    {
-        for (uint j = 0; j < NY(); ++j)
-        {
-            for (uint k = 0; k < NZ(); ++k)
-            {
+        CHECK_CLOSE(0, site->energy(), 0.001);
 
-                for (uint K = 0; K < Site::nNeighborsLimit(); ++K)
-                {
-                    CHECK_EQUAL(0, solver->getSite(i, j, k)->nNeighbors(K));
-                }
-
-                CHECK_CLOSE(0, solver->getSite(i, j, k)->energy(), 0.001);
-
-            }
-        }
-    }
+    });
 
     CHECK_EQUAL(0, Site::totalActiveSites());
     CHECK_CLOSE(0, Site::totalEnergy(), 0.001);
@@ -1222,7 +1088,7 @@ void testBed::testHasCrystalNeighbor()
                 else if (Site::getLevel(abs(i), abs(j), abs(k)) == 2)
                 {
                     CHECK_EQUAL(ParticleStates::solution, solver->getSite(NX()/2 + i, NY()/2 + j, NZ()/2 + k)->particleState());
-                    solver->getSite(NX()/2 + i, NY()/2 + j, NZ()/2 + k)->forAllActiveReactionsDo([&nActives] (Reaction * r)
+                    solver->getSite(NX()/2 + i, NY()/2 + j, NZ()/2 + k)->forEachActiveReactionDo([&nActives] (Reaction * r)
                     {
                         (void) r;
                         nActives++;
@@ -1247,48 +1113,37 @@ void testBed::testInitializationOfCrystal()
 
     solver->initializeCrystal(0.3);
 
-    Site* currentSite;
-
-    for (uint i = 0; i < NX(); ++i)
+    solver->forEachSiteDo([&] (Site * currentSite)
     {
-        for (uint j = 0; j < NY(); ++j)
+        switch (currentSite->particleState())
         {
-            for (uint k = 0; k < NZ(); ++k)
+        case ParticleStates::solution:
+
+            //After initialization, a solution particle should not be blocked in any direction.
+            if (currentSite->isActive())
             {
-
-                currentSite = solver->getSite(i, j, k);
-
-                switch (currentSite->particleState())
-                {
-                case ParticleStates::solution:
-
-                    //After initialization, a solution particle should not be blocked in any direction.
-                    if (currentSite->isActive())
-                    {
-                        CHECK_EQUAL(0, currentSite->nNeighbors());
-                    }
-
-                    break;
-
-                case ParticleStates::surface:
-
-                    CHECK_EQUAL(true, !currentSite->isActive());
-                    CHECK_EQUAL(true, currentSite->hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation()));
-                    CHECK_EQUAL(true, currentSite->nNeighbors() > 0);
-
-                    break;
-
-                case ParticleStates::crystal:
-
-                    CHECK_EQUAL(true, currentSite->isActive());
-
-                default:
-                    break;
-                }
-
+                CHECK_EQUAL(0, currentSite->nNeighbors());
             }
+
+            break;
+
+        case ParticleStates::surface:
+
+            CHECK_EQUAL(true, !currentSite->isActive());
+            CHECK_EQUAL(true, currentSite->hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation()));
+            CHECK_EQUAL(true, currentSite->nNeighbors() > 0);
+
+            break;
+
+        case ParticleStates::crystal:
+
+            CHECK_EQUAL(true, currentSite->isActive());
+
+        default:
+            break;
         }
-    }
+
+    });
 
 }
 
@@ -1297,64 +1152,54 @@ void testBed::testInitialReactionSetup()
 
     KMCDebugger_Init();
 
-    uint nBlocked;
-
-    Site * currentSite;
     Site * neighbor;
 
-    for (uint i = 0; i < NX(); ++i)
+    uint nBlocked;
+
+    solver->forEachSiteDo([&] (Site * currentSite)
     {
-        for (uint j = 0; j < NY(); ++j)
+
+        if (currentSite->isActive())
         {
-            for (uint k = 0; k < NZ(); ++k)
-            {
 
-                currentSite = solver->getSite(i, j, k);
+            CHECK_EQUAL(ParticleStates::fixedCrystal, currentSite->particleState());
 
+            CHECK_EQUAL(0, currentSite->reactions().size());
 
-                if (currentSite->isActive())
-                {
-
-                    CHECK_EQUAL(ParticleStates::fixedCrystal, currentSite->particleState());
-
-                    CHECK_EQUAL(0, currentSite->reactions().size());
-
-                }
-
-                else
-                {
-
-                    nBlocked = 0;
-
-
-                    for (uint x = 0; x < 3; ++x)
-                    {
-                        for (uint y = 0; y < 3; ++y)
-                        {
-                            for (uint z = 0; z < 3; ++z)
-                            {
-
-                                neighbor = currentSite->neighborhood(Site::nNeighborsLimit() - 1 + x,
-                                                                     Site::nNeighborsLimit() - 1 + y,
-                                                                     Site::nNeighborsLimit() - 1 + z);
-
-                                if (neighbor == NULL)
-                                {
-                                    nBlocked++;
-                                }
-
-                            }
-                        }
-                    }
-
-                    CHECK_EQUAL(26, currentSite->reactions().size() + nBlocked);
-
-                }
-
-
-            }
         }
-    }
+
+        else
+        {
+
+            nBlocked = 0;
+
+
+            for (uint x = 0; x < 3; ++x)
+            {
+                for (uint y = 0; y < 3; ++y)
+                {
+                    for (uint z = 0; z < 3; ++z)
+                    {
+
+                        neighbor = currentSite->neighborhood(Site::nNeighborsLimit() - 1 + x,
+                                                             Site::nNeighborsLimit() - 1 + y,
+                                                             Site::nNeighborsLimit() - 1 + z);
+
+                        if (neighbor == NULL)
+                        {
+                            nBlocked++;
+                        }
+
+                    }
+                }
+            }
+
+            CHECK_EQUAL(26, currentSite->reactions().size() + nBlocked);
+
+        }
+
+
+    });
 
     solver->initializeCrystal(0.3);
     Site::updateAffectedSites();
@@ -1362,65 +1207,41 @@ void testBed::testInitialReactionSetup()
     std::vector<Reaction*> oldReactions;
     double totRate1 = 0;
 
-    for (uint i = 0; i < NX(); ++i)
+    solver->forEachSiteDo([&] (Site * currentSite)
     {
-        for (uint j = 0; j < NY(); ++j)
+        currentSite->forEachActiveReactionDo([&] (Reaction * r)
         {
-            for (uint k = 0; k < NZ(); ++k)
-            {
+            KMCDebugger_AssertBool(currentSite->isActive(),
+                                   "DEACTIVE SITE SHOULD HAVE NO REACTIONS",
+                                   currentSite->info());
 
-                solver->getSite(i, j, k)->forAllActiveReactionsDo([&] (Reaction * r)
-                {
-                    KMCDebugger_AssertBool(solver->getSite(i, j, k)->isActive(),
-                                           "DEACTIVE SITE SHOULD HAVE NO REACTIONS",
-                                           solver->getSite(i, j, k)->info());
+            KMCDebugger_AssertBool(r->isAllowed(),
+                                   "REACTION NOT DEACTIVATED PROPERLY:",
+                                   r->info());
 
-                    KMCDebugger_AssertBool(r->isAllowed(),
-                                           "REACTION NOT DEACTIVATED PROPERLY:",
-                                           r->info());
+            oldReactions.push_back(r);
+            totRate1 += r->rate();
 
-                    oldReactions.push_back(r);
-                    totRate1 += r->rate();
+        });
+    });
 
-                });
-            }
-        }
-    }
-
-    for (uint i = 0; i < NX(); ++i)
+    solver->forEachSiteDo([] (Site * currentSite)
     {
-        for (uint j = 0; j < NY(); ++j)
-        {
-            for (uint k = 0; k < NZ(); ++k)
-            {
-
-                currentSite = solver->getSite(i, j, k);
-
-                currentSite->calculateRates();
-
-            }
-        }
-    }
+        currentSite->calculateRates();
+    });
 
 
     std::vector<Reaction*> reactions;
     double totRate2 = 0;
 
-    for (uint i = 0; i < NX(); ++i)
+    solver->forEachSiteDo([&] (Site * currentSite)
     {
-        for (uint j = 0; j < NY(); ++j)
+        currentSite->forEachActiveReactionDo([&] (Reaction * r)
         {
-            for (uint k = 0; k < NZ(); ++k)
-            {
-
-                solver->getSite(i, j, k)->forAllActiveReactionsDo([&] (Reaction * r)
-                {
-                    reactions.push_back(r);
-                    totRate2 += r->rate();
-                });
-            }
-        }
-    }
+            reactions.push_back(r);
+            totRate2 += r->rate();
+        });
+    });
 
     CHECK_CLOSE(totRate1, totRate2, 0.000000001);
     CHECK_EQUAL(oldReactions.size(), reactions.size());
@@ -1543,48 +1364,26 @@ void testBed::initSimpleSystemParameters()
 void testBed::activateAllSites()
 {
 
-    Site * currentSite;
-
-    for (uint x = 0; x < NX(); ++x)
+    solver->forEachSiteDo([] (Site * currentSite)
     {
-        for (uint y = 0; y < NY(); ++y)
+        if (!currentSite->isActive())
         {
-            for (uint z = 0; z < NZ(); ++z)
-            {
-
-                currentSite = solver->getSite(x, y, z);
-
-                if (!currentSite->isActive())
-                {
-                    currentSite->activate();
-                }
-
-            }
+            currentSite->activate();
         }
-    }
+    });
+
 }
 
 void testBed::deactivateAllSites()
 {
-    Site * currentSite;
 
-    for (uint x = 0; x < NX(); ++x)
+    solver->forEachSiteDo([] (Site * currentSite)
     {
-        for (uint y = 0; y < NY(); ++y)
+        if (currentSite->isActive())
         {
-            for (uint z = 0; z < NZ(); ++z)
-            {
-
-                currentSite = solver->getSite(x, y, z);
-
-                if (currentSite->isActive())
-                {
-                    currentSite->deactivate();
-                }
-
-            }
+            currentSite->deactivate();
         }
-    }
+    });
 }
 
 Site *testBed::getBoxCenter()
@@ -1643,33 +1442,26 @@ void testBed::testKnownCase()
 
     uint equal = 0;
 
-    for (uint i = 0; i < NX(); ++i)
+    solver->forEachSiteDo([&] (Site * site)
     {
-        for (uint j = 0; j < NY(); ++j)
+        if (make)
         {
-            for (uint k = 0; k < NZ(); ++k)
-            {
-
-                if (make)
-                {
-                    o2 << solver->getSite(i, j, k)->isActive() << endl;
-                }
-
-                else
-                {
-
-                    getline(o,line);
-                    s << solver->getSite(i, j, k)->isActive();
-                    if(s.str().compare(line) == 0)
-                    {
-                        equal++;
-                    }
-                    s.str(string());
-
-                }
-            }
+            o2 << site->isActive() << endl;
         }
-    }
+
+        else
+        {
+
+            getline(o,line);
+            s << site->isActive();
+            if(s.str().compare(line) == 0)
+            {
+                equal++;
+            }
+            s.str(string());
+
+        }
+    });
 
     if(make)
     {
@@ -1704,8 +1496,6 @@ void testBed::testBoxSizes()
 
     uvec3 boxSize;
     set<Site*> allSites;
-
-    Site* currentSite;
 
 
     uint nBlocked;
@@ -1745,49 +1535,40 @@ void testBed::testBoxSizes()
                 CHECK_EQUAL(ny, Reaction::NY());
                 CHECK_EQUAL(nz, Reaction::NZ());
 
-                for (uint x = 0; x < NX(); ++x)
+                solver->forEachSiteDo([&] (Site * currentSite)
                 {
-                    for (uint y = 0; y < NY(); ++y)
+                    nBlocked = 0;
+
+                    for (uint X = 0; X < Site::neighborhoodLength(); ++X)
                     {
-                        for (uint z = 0; z < NZ(); ++z)
+                        for (uint Y = 0; Y < Site::neighborhoodLength(); ++Y)
                         {
-
-                            currentSite = solver->getSite(x, y, z);
-
-                            nBlocked = 0;
-
-                            for (uint X = 0; X < Site::neighborhoodLength(); ++X)
+                            for (uint Z = 0; Z < Site::neighborhoodLength(); ++Z)
                             {
-                                for (uint Y = 0; Y < Site::neighborhoodLength(); ++Y)
+                                if (currentSite->neighborhood(X, Y, Z) == NULL)
                                 {
-                                    for (uint Z = 0; Z < Site::neighborhoodLength(); ++Z)
-                                    {
-                                        if (currentSite->neighborhood(X, Y, Z) == NULL)
-                                        {
-                                            nBlocked++;
-                                        }
-                                    }
+                                    nBlocked++;
                                 }
                             }
-
-
-                            uint nNeighbors = 0;
-                            currentSite->forAllNeighborsDo([&nNeighbors] (Site * neighbor)
-                            {
-                                (void) neighbor;
-                                nNeighbors++;
-                            });
-
-                            CHECK_EQUAL(pow(Site::neighborhoodLength(), 3) - 1, nNeighbors + nBlocked);
-
-                            currentSite->forAllNeighborsDo([&allSites] (Site * neighbor)
-                            {
-                                allSites.insert(neighbor);
-                            });
-
                         }
                     }
-                }
+
+
+                    uint nNeighbors = 0;
+                    currentSite->forEachNeighborDo([&nNeighbors] (Site * neighbor)
+                    {
+                        (void) neighbor;
+                        nNeighbors++;
+                    });
+
+                    CHECK_EQUAL(pow(Site::neighborhoodLength(), 3) - 1, nNeighbors + nBlocked);
+
+                    currentSite->forEachNeighborDo([&allSites] (Site * neighbor)
+                    {
+                        allSites.insert(neighbor);
+                    });
+
+                });
 
                 CHECK_EQUAL(nx*ny*nz, allSites.size());
 
@@ -1805,8 +1586,6 @@ void testBed::testnNeiborsLimit()
 
     set<Site*> allSites;
 
-    Site* currentSite;
-
     uvec nNlims = {1, 2, 3};
 
     uvec3 boxSize = {10, 10, 10};
@@ -1822,32 +1601,23 @@ void testBed::testnNeiborsLimit()
         allSites.clear();
         Site::resetNNeighborsLimitTo(nNlim, false);
 
-        for (uint x = 0; x < NX(); ++x)
+        solver->forEachSiteDo([&] (Site * currentSite)
         {
-            for (uint y = 0; y < NY(); ++y)
+            currentSite->forEachNeighborDo([&allSites] (Site * neighbor)
             {
-                for (uint z = 0; z < NZ(); ++z)
-                {
+                allSites.insert(neighbor);
+            });
 
-                    currentSite = solver->getSite(x, y, z);
+            uint nNeighbors = 0;
+            currentSite->forEachNeighborDo([&nNeighbors] (Site * neighbor)
+            {
+                (void) neighbor;
+                nNeighbors++;
+            });
 
-                    currentSite->forAllNeighborsDo([&allSites] (Site * neighbor)
-                    {
-                        allSites.insert(neighbor);
-                    });
+            CHECK_EQUAL(pow(2*nNlim + 1, 3) - 1, nNeighbors);
 
-                    uint nNeighbors = 0;
-                    currentSite->forAllNeighborsDo([&nNeighbors] (Site * neighbor)
-                    {
-                        (void) neighbor;
-                        nNeighbors++;
-                    });
-
-                    CHECK_EQUAL(pow(2*nNlim + 1, 3) - 1, nNeighbors);
-
-                }
-            }
-        }
+        });
 
         CHECK_EQUAL(NX()*NY()*NZ(), allSites.size());
 

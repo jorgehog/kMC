@@ -312,7 +312,7 @@ void Site::deactivateFixedCrystal()
 
 }
 
-void Site::forAllNeighborsDo(function<void (Site *)> applyFunction) const
+void Site::forEachNeighborDo(function<void (Site *)> applyFunction) const
 {
 
     Site * neighbor;
@@ -345,7 +345,40 @@ void Site::forAllNeighborsDo(function<void (Site *)> applyFunction) const
     }
 }
 
-void Site::forAllActiveReactionsDo(function<void (Reaction *)> applyFunction) const
+void Site::forEachNeighborDo_sendIndices(function<void (Site *, uint, uint, uint)> applyFunction) const
+{
+
+    Site * neighbor;
+
+    for (uint i = 0; i < m_neighborhoodLength; ++i)
+    {
+        for (uint j = 0; j < m_neighborhoodLength; ++j)
+        {
+            for (uint k = 0; k < m_neighborhoodLength; ++k)
+            {
+
+                neighbor = neighborhood(i, j, k);
+
+                if (neighbor == NULL)
+                {
+                    continue;
+                }
+
+                else if (neighbor == this) {
+                    assert(i == j && j == k && k == m_nNeighborsLimit);
+                    continue;
+                }
+
+
+                applyFunction(neighbor, i, j, k);
+
+
+            }
+        }
+    }
+}
+
+void Site::forEachActiveReactionDo(function<void (Reaction *)> applyFunction) const
 {
     if (!m_active)
     {
@@ -361,12 +394,32 @@ void Site::forAllActiveReactionsDo(function<void (Reaction *)> applyFunction) co
     }
 }
 
+void Site::forEachActiveReactionDo_sendIndex(function<void (Reaction *, uint)> applyFunction) const
+{
+    if (!m_active)
+    {
+        return;
+    }
+
+    uint i = 0;
+
+    for (Reaction * reaction : m_reactions)
+    {
+        if (reaction->isAllowed())
+        {
+            applyFunction(reaction, i);
+        }
+
+        i++;
+    }
+}
+
 uint Site::nActiveReactions() const
 {
 
     uint nActiveReactions = 0;
 
-    forAllActiveReactionsDo([&nActiveReactions] (Reaction * r)
+    forEachActiveReactionDo([&nActiveReactions] (Reaction * r)
     {
         (void) r;
         nActiveReactions++;
@@ -419,7 +472,7 @@ void Site::decrystallize()
 
 void Site::calculateRates()
 {
-    forAllActiveReactionsDo([] (Reaction* reaction)
+    forEachActiveReactionDo([] (Reaction* reaction)
     {
         reaction->selectTriumphingUpdateFlag();
         reaction->calcRate();
@@ -521,7 +574,7 @@ double Site::potentialBetween(const Site *other)
 void Site::setNeighboringDirectUpdateFlags()
 {
 
-    forAllNeighborsDo([this] (Site * neighbor)
+    forEachNeighborDo([this] (Site * neighbor)
     {
         {
             if (neighbor->isActive())
@@ -920,7 +973,7 @@ void Site::informNeighborhoodOnChange(int change)
 
 void Site::queueAffectedSites()
 {
-    forAllNeighborsDo([] (Site * neighbor)
+    forEachNeighborDo([] (Site * neighbor)
     {
         {
             if (neighbor->isActive())
@@ -998,7 +1051,7 @@ void Site::clearNeighborhood()
     m_energy = 0;
 
 
-//    m_allNeighbors.clear();
+    //    m_allNeighbors.clear();
 
     m_nNeighbors.reset();
 
@@ -1068,36 +1121,30 @@ umat Site::getCurrentCrystalBoxTopology()
 
     uvec3 r;
 
-    for (uint x = 0; x < NX(); ++x)
+    m_solver->forEachSiteDo_sendIndices([&] (Site * site, uint x, uint y, uint z)
     {
-        for (uint y = 0; y < NY(); ++y)
+        if (site->isCrystal())
         {
-            for (uint z = 0; z < NZ(); ++z)
+
+            r = {x, y, z};
+
+            for (uint xi = 0; xi < 3; ++xi)
             {
-                if (m_solver->getSite(x, y, z)->isCrystal())
+
+                if (r(xi) < boxTop(xi, 0))
                 {
-
-                    r = {x, y, z};
-
-                    for (uint xi = 0; xi < 3; ++xi)
-                    {
-
-                        if (r(xi) < boxTop(xi, 0))
-                        {
-                            boxTop(xi, 0) = r(xi);
-                        }
-
-                        if (r(xi) > boxTop(xi, 1))
-                        {
-                            boxTop(xi, 1) = r(xi);
-                        }
-
-                    }
-
+                    boxTop(xi, 0) = r(xi);
                 }
+
+                if (r(xi) > boxTop(xi, 1))
+                {
+                    boxTop(xi, 1) = r(xi);
+                }
+
             }
+
         }
-    }
+    });
 
     return boxTop;
 }

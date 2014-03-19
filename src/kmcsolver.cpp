@@ -176,16 +176,10 @@ void KMCSolver::reset()
 
     Site::clearAffectedSites();
 
-    for (uint x = 0; x < m_NX; ++x)
+    forEachSiteDo([] (Site * site)
     {
-        for (uint y = 0; y < m_NY; ++y)
-        {
-            for (uint z = 0; z < m_NZ; ++z)
-            {
-                sites[x][y][z]->reset();
-            }
-        }
-    }
+        site->reset();
+    });
 
     KMCDebugger_Assert(accu(Site::totalActiveParticlesVector()), ==, 0);
 
@@ -282,22 +276,32 @@ void KMCSolver::dumpOutput()
 }
 
 
-void KMCSolver::initializeDiffusionReactions()
+void KMCSolver::forEachSiteDo(function<void (Site *)> applyFunction) const
 {
-
     for (uint x = 0; x < m_NX; ++x)
     {
         for (uint y = 0; y < m_NY; ++y)
         {
             for (uint z = 0; z < m_NZ; ++z)
             {
-
-                sites[x][y][z]->initializeDiffusionReactions();
-
+                applyFunction(sites[x][y][z]);
             }
         }
     }
+}
 
+void KMCSolver::forEachSiteDo_sendIndices(function<void (Site *, uint, uint, uint)> applyFunction) const
+{
+    for (uint x = 0; x < m_NX; ++x)
+    {
+        for (uint y = 0; y < m_NY; ++y)
+        {
+            for (uint z = 0; z < m_NZ; ++z)
+            {
+                applyFunction(sites[x][y][z], x, y, z);
+            }
+        }
+    }
 }
 
 void KMCSolver::initializeSites()
@@ -325,33 +329,6 @@ void KMCSolver::initializeSites()
 
 }
 
-void KMCSolver::clearSiteNeighborhoods()
-{
-    for (uint x = 0; x < m_NX; ++x)
-    {
-        for (uint y = 0; y < m_NY; ++y)
-        {
-            for (uint z = 0; z < m_NZ; ++z)
-            {
-                sites[x][y][z]->clearNeighborhood();
-            }
-        }
-    }
-}
-
-void KMCSolver::initializeSiteNeighborhoods()
-{
-    for (uint x = 0; x < m_NX; ++x)
-    {
-        for (uint y = 0; y < m_NY; ++y)
-        {
-            for (uint z = 0; z < m_NZ; ++z)
-            {
-                sites[x][y][z]->introduceNeighborhood();
-            }
-        }
-    }
-}
 
 void KMCSolver::clearSites()
 {
@@ -403,19 +380,6 @@ void KMCSolver::setBoxSize_KeepSites(const uvec3 &boxSizes)
 
 }
 
-void KMCSolver::clearAllReactions()
-{
-    for (uint i = 0; i < m_NX; ++i)
-    {
-        for (uint j = 0; j < m_NY; ++j)
-        {
-            for (uint k = 0; k < m_NZ; ++k)
-            {
-                sites[i][j][k]->clearAllReactions();
-            }
-        }
-    }
-}
 
 
 void KMCSolver::initializeCrystal(const double relativeSeedSize)
@@ -516,27 +480,16 @@ void KMCSolver::initializeCrystal(const double relativeSeedSize)
 void KMCSolver::initializeSolutionBath()
 {
 
-    Site * currentSite;
-
-    for (uint i = 0; i < NX(); ++i)
+    forEachSiteDo([this] (Site * site)
     {
-        for (uint j = 0; j < NY(); ++j)
+        if (site->isLegalToSpawn())
         {
-            for (uint k = 0; k < NZ(); ++k)
+            if (KMC_RNG_UNIFORM() < targetSaturation())
             {
-
-                currentSite = getSite(i, j, k);
-
-                if (currentSite->isLegalToSpawn())
-                {
-                    if (KMC_RNG_UNIFORM() < targetSaturation())
-                    {
-                        currentSite->activate();
-                    }
-                }
+                site->activate();
             }
         }
-    }
+    });
 }
 
 
@@ -547,27 +500,30 @@ void KMCSolver::getRateVariables()
 
 
     m_kTot = 0;
+
     m_accuAllRates.clear();
+
     m_allReactions.clear();
+
 
     Site::updateAffectedSites();
 
-    for (uint x = 0; x < m_NX; ++x)
+
+    forEachSiteDo([this] (Site * site)
     {
-        for (uint y = 0; y < m_NY; ++y)
+        site->forEachActiveReactionDo([this] (Reaction * reaction)
         {
-            for (uint z = 0; z < m_NZ; ++z)
-            {
-                sites[x][y][z]->forAllActiveReactionsDo([this] (Reaction * reaction)
-                {
-                    assert(reaction->rate() != Reaction::UNSET_RATE);
-                    m_kTot += reaction->rate();
-                    m_accuAllRates.push_back(m_kTot);
-                    m_allReactions.push_back(reaction);
-                });
-            }
-        }
-    }
+
+            assert(reaction->rate() != Reaction::UNSET_RATE);
+
+            m_kTot += reaction->rate();
+
+            m_accuAllRates.push_back(m_kTot);
+
+            m_allReactions.push_back(reaction);
+
+        });
+    });
 
 }
 
