@@ -9,12 +9,19 @@ namespace kMC
 class ConcentrationWall : public Boundary
 {
 public:
+
     ConcentrationWall(const uint dimension, const uint orientation);
+
     ~ConcentrationWall();
 
-    void setMinDistanceFromSite(const uint minDistanceFromSite)
+    static void setMinDistanceFromSite(const uint minDistanceFromSite)
     {
         m_minDistanceFromSurface = minDistanceFromSite;
+    }
+
+    static void setMaxEventsPrCycle(uint val)
+    {
+        m_maxEventsPrCycle = val;
     }
 
     // Boundary interface
@@ -25,11 +32,9 @@ public:
 
 private:
 
-    uint m_minDistanceFromSurface;
+    static uint m_minDistanceFromSurface;
 
-    uint m_maxEventsPrCycle = 3;
-
-    umat::fixed<3, 2> crystalBoxTopology;
+    static uint m_maxEventsPrCycle;
 
 };
 

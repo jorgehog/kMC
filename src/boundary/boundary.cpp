@@ -78,6 +78,8 @@ void Boundary::setupBoundarySites()
 
     }
 
+    KMCDebugger_Assert(m_boundarySites.size(), ==, NX()*NY()*NZ()/span(), "mismatch in boundary site setup.");
+
 }
 
 void Boundary::distanceFromSite(const Site *site, int &dxi, bool abs)

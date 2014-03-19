@@ -5,7 +5,7 @@
 
 #include "boundary/periodic/periodic.h"
 #include "boundary/edge/edge.h"
-#include "boundary/wall/surface.h"
+#include "boundary/surface/surface.h"
 #include "boundary/concentrationwall/concentrationwall.h"
 
 #include "debugger/debugger.h"
@@ -353,7 +353,7 @@ void Site::crystallize()
     }
     else
     {
-        KMCDebugger_AssertBool(!(DiffusionReaction::separation() == 1 && Site::nNeighborsToCrystallize() == 1), "With a single neighboring crystal needed, everything should crystallize if asked.", info());
+        KMCDebugger_AssertBool(!(DiffusionReaction::separation() == 1 && Site::nNeighborsToCrystallize() == 1 && !cannotCrystallize()), "With a single neighboring crystal needed, everything should crystallize if asked.", info());
 
         setNewParticleState(ParticleStates::solution);
 

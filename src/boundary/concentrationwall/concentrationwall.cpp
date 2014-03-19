@@ -2,6 +2,7 @@
 
 #include "../../kmcsolver.h"
 
+#include "../../debugger/debugger.h"
 
 using namespace kMC;
 
@@ -19,6 +20,9 @@ ConcentrationWall::~ConcentrationWall()
 
 void ConcentrationWall::update()
 {
+
+    KMCDebugger_Assert(m_maxEventsPrCycle, <=, boundarySites().size(), "Max events pr cycle cannot exceed the number of boundary sites.");
+
 
     Site * currentSite;
 
@@ -100,3 +104,9 @@ void ConcentrationWall::finalize()
         site->allowCrystallizationOnSite();
     }
 }
+
+
+
+uint ConcentrationWall::m_minDistanceFromSurface;
+
+uint ConcentrationWall::m_maxEventsPrCycle = 3;

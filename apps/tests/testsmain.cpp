@@ -9,7 +9,7 @@
 #include <sys/types.h>
 
 
-//#define focusSuite "SurfaceBoundaries"
+//#define focusSuite "ConcentrationWallBoundaries"
 //#define focusTest  "KnownCase"
 
 
@@ -85,7 +85,7 @@ SUITE(EdgeBoundaries)
     AllBoundaryTests
 }
 
-SUITE(ConcentrationBoundaries)
+SUITE(ConcentrationWallBoundaries)
 {
     AllBoundaryTests
 }
@@ -142,7 +142,7 @@ int main()
     exitSuccess += RUNSUITE(runner, "SurfaceBoundaries");
 
     testBed::initBoundarySuite(Boundary::allBoundariesAs(Boundary::ConcentrationWall));
-    exitSuccess += RUNSUITE(runner, "ConcentrationBoundaries");
+    exitSuccess += RUNSUITE(runner, "ConcentrationWallBoundaries");
 
     testBed::initBoundarySuite(mixedBoundaries);
     exitSuccess += RUNSUITE(runner, "MixedBoundaries");

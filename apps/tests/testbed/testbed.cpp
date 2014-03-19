@@ -1592,6 +1592,8 @@ void testBed::testKnownCase()
 
     Site::resetBoundariesTo(lastBoundaries);
 
+    ConcentrationWall::setMaxEventsPrCycle(15*15);
+
     solver->initializeCrystal(getSetting<double>(root, {"Initialization", "RelativeSeedSize"}));
 
     bool make = false;
@@ -1671,6 +1673,9 @@ void testBed::testKnownCase()
     //temperature and saturation.
     delete solver;
     makeSolver();
+
+    ConcentrationWall::setMaxEventsPrCycle(3);
+
 
 }
 
