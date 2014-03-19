@@ -918,9 +918,14 @@ void testBed::testEnergyAndNeighborSetup()
                     }
                 }
 
+                uint nNeighbors = 0;
+                currentSite->forAllNeighborsDo([&nNeighbors] (Site * neighbor)
+                {
+                    (void) neighbor;
+                    nNeighbors++;
+                });
 
-
-                CHECK_EQUAL(currentSite->allNeighbors().size(), C);
+                CHECK_EQUAL(nNeighbors, C);
 
                 for (uint K = 0; K < Site::nNeighborsLimit(); ++K)
                 {
@@ -1755,12 +1760,20 @@ void testBed::testBoxSizes()
                                 }
                             }
 
-                            CHECK_EQUAL(pow(Site::neighborhoodLength(), 3) - 1, currentSite->allNeighbors().size() + nBlocked);
 
-                            for (Site * neighbor : currentSite->allNeighbors())
+                            uint nNeighbors = 0;
+                            currentSite->forAllNeighborsDo([&nNeighbors] (Site * neighbor)
+                            {
+                                (void) neighbor;
+                                nNeighbors++;
+                            });
+
+                            CHECK_EQUAL(pow(Site::neighborhoodLength(), 3) - 1, nNeighbors + nBlocked);
+
+                            currentSite->forAllNeighborsDo([&allSites] (Site * neighbor)
                             {
                                 allSites.insert(neighbor);
-                            }
+                            });
 
                         }
                     }
@@ -1808,9 +1821,19 @@ void testBed::testnNeiborsLimit()
 
                     currentSite = solver->getSite(x, y, z);
 
-                    allSites.insert(currentSite->allNeighbors().begin(), currentSite->allNeighbors().end());
+                    currentSite->forAllNeighborsDo([&allSites] (Site * neighbor)
+                    {
+                        allSites.insert(neighbor);
+                    });
 
-                    CHECK_EQUAL(pow(2*nNlim + 1, 3) - 1, currentSite->allNeighbors().size());
+                    uint nNeighbors = 0;
+                    currentSite->forAllNeighborsDo([&nNeighbors] (Site * neighbor)
+                    {
+                        (void) neighbor;
+                        nNeighbors++;
+                    });
+
+                    CHECK_EQUAL(pow(2*nNlim + 1, 3) - 1, nNeighbors);
 
                 }
             }

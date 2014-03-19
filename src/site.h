@@ -193,6 +193,9 @@ public:
     const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const;
 
 
+    void forAllNeighborsDo(function<void (Site *)> f) const;
+
+
     /*
      * Misc. trivial functions
      */
@@ -352,11 +355,6 @@ public:
         return m_siteReactions;
     }
 
-    const vector<Site*> & allNeighbors() const
-    {
-        return m_allNeighbors;
-    }
-
     const static set<Site*> & affectedSites()
     {
         return m_affectedSites;
@@ -404,6 +402,7 @@ public:
 
     void clearAllReactions();
 
+
 private:
 
     static field<Boundary*> m_boundaries;
@@ -442,8 +441,6 @@ private:
 
     Site**** m_neighborhood;
 
-    vector<Site*> m_allNeighbors;
-
     uvec m_nNeighbors;
 
     uint m_nNeighborsSum;
@@ -472,6 +469,7 @@ private:
     void setNewParticleState(int newState);
 
     void deactivateFixedCrystal();
+
 
 };
 

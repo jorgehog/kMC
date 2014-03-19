@@ -336,6 +336,39 @@ void Site::deactivateFixedCrystal()
 
 }
 
+void Site::forAllNeighborsDo(function<void (Site *)> f) const
+{
+
+    Site * neighbor;
+
+    for (uint i = 0; i < m_neighborhoodLength; ++i)
+    {
+        for (uint j = 0; j < m_neighborhoodLength; ++j)
+        {
+            for (uint k = 0; k < m_neighborhoodLength; ++k)
+            {
+
+                neighbor = neighborhood(i, j, k);
+
+                if (neighbor == NULL)
+                {
+                    continue;
+                }
+
+                else if (neighbor == this) {
+                    assert(i == j && j == k && k == m_nNeighborsLimit);
+                    continue;
+                }
+
+
+                f(neighbor);
+
+
+            }
+        }
+    }
+}
+
 
 void Site::crystallize()
 {
@@ -482,23 +515,24 @@ double Site::potentialBetween(const Site *other)
 void Site::setNeighboringDirectUpdateFlags()
 {
 
-    for (Site * neighbor : m_allNeighbors)
+    forAllNeighborsDo([this] (Site * neighbor)
     {
-        if (neighbor->isActive())
         {
-            //This approach assumes that recursive updating of non-neighboring sites
-            //WILL NOT ACTIVATE OR DEACTIVATE any sites, simply change their state,
-            //and thus not interfere with any flags set here, not require flags of their own.
-            for (Reaction * reaction : neighbor->siteReactions())
+            if (neighbor->isActive())
             {
-                reaction->setDirectUpdateFlags(this);
+                //This approach assumes that recursive updating of non-neighboring sites
+                //WILL NOT ACTIVATE OR DEACTIVATE any sites, simply change their state,
+                //and thus not interfere with any flags set here, not require flags of their own.
+                for (Reaction * reaction : neighbor->siteReactions())
+                {
+                    reaction->setDirectUpdateFlags(this);
+                }
+
+                m_affectedSites.insert(neighbor);
+
             }
-
-            m_affectedSites.insert(neighbor);
-
         }
-    }
-
+    });
 }
 
 bool Site::hasNeighboring(int state, int range) const
@@ -758,7 +792,7 @@ void Site::introduceNeighborhood()
                         KMCDebugger_AssertBool(!(neighbor->x() == x() && neighbor->y() == y() && neighbor->z() == z()));
                         KMCDebugger_AssertBool(!(xTrans == x() && yTrans == y() && zTrans == z()));
 
-                        m_allNeighbors.push_back(neighbor);
+                        //                        m_allNeighbors.push_back(neighbor);
 
                         if (neighbor->isActive())
                         {
@@ -884,19 +918,21 @@ void Site::informNeighborhoodOnChange(int change)
 
 void Site::queueAffectedSites()
 {
-    for (Site * neighbor : m_allNeighbors)
+    forAllNeighborsDo([] (Site * neighbor)
     {
-        if (neighbor->isActive())
         {
-
-            for (Reaction * reaction : neighbor->siteReactions())
+            if (neighbor->isActive())
             {
-                reaction->addUpdateFlag(Reaction::defaultUpdateFlag);
-            }
 
-            m_affectedSites.insert(neighbor);
+                for (Reaction * reaction : neighbor->siteReactions())
+                {
+                    reaction->addUpdateFlag(Reaction::defaultUpdateFlag);
+                }
+
+                m_affectedSites.insert(neighbor);
+            }
         }
-    }
+    });
 }
 
 
@@ -962,7 +998,7 @@ void Site::clearNeighborhood()
     m_energy = 0;
 
 
-    m_allNeighbors.clear();
+//    m_allNeighbors.clear();
 
     m_nNeighbors.reset();
 
