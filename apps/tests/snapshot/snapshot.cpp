@@ -20,7 +20,7 @@ SnapShot::SnapShot(KMCSolver *solver)
                 currentSite = solver->getSite(i, j, k);
                 siteBox(i, j, k) = currentSite->isActive();
 
-                for (Reaction * r : currentSite->siteReactions())
+                for (Reaction * r : currentSite->reactions())
                 {
                     allRates.push_back(r->rate());
                     allreactions.push_back({r->x(), r->y(), r->z(),

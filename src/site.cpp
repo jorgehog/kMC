@@ -51,8 +51,7 @@ Site::~Site()
 
 
 
-void Site::
-updateAffectedSites()
+void Site::updateAffectedSites()
 {
 
     for (Site* site : m_affectedSites)
@@ -62,7 +61,6 @@ updateAffectedSites()
             continue;
         }
 
-        site->updateReactions();
         site->calculateRates();
     }
 
@@ -75,7 +73,7 @@ void Site::selectUpdateFlags()
     for (Site * site : m_affectedSites)
     {
 
-        for (Reaction * reaction : site->siteReactions())
+        for (Reaction * reaction : site->reactions())
         {
             reaction->selectTriumphingUpdateFlag();
         }
@@ -177,7 +175,7 @@ bool Site::isLegalToSpawn()
         return false;
     }
 
-    for (Reaction * r : m_siteReactions)
+    for (Reaction * r : m_reactions)
     {
         if (!r->isAllowed())
         {
@@ -271,40 +269,18 @@ void Site::updateBoundaries()
 
 void Site::addReaction(Reaction *reaction)
 {
-    m_siteReactions.push_back(reaction);
-}
-
-void Site::updateReactions()
-{
-
-    m_activeReactions.clear();
-
-    if (!m_active)
-    {
-        return;
-    }
-
-    for (Reaction* reaction : m_siteReactions)
-    {
-        if (reaction->isAllowed())
-        {
-            m_activeReactions.push_back(reaction);
-        }
-    }
-
+    m_reactions.push_back(reaction);
 }
 
 void Site::clearAllReactions()
 {
 
-    for (Reaction * reaction : m_siteReactions)
+    for (Reaction * reaction : m_reactions)
     {
         delete reaction;
     }
 
-    m_siteReactions.clear();
-
-    m_activeReactions.clear();
+    m_reactions.clear();
 
 }
 
@@ -336,7 +312,7 @@ void Site::deactivateFixedCrystal()
 
 }
 
-void Site::forAllNeighborsDo(function<void (Site *)> f) const
+void Site::forAllNeighborsDo(function<void (Site *)> applyFunction) const
 {
 
     Site * neighbor;
@@ -361,12 +337,42 @@ void Site::forAllNeighborsDo(function<void (Site *)> f) const
                 }
 
 
-                f(neighbor);
+                applyFunction(neighbor);
 
 
             }
         }
     }
+}
+
+void Site::forAllActiveReactionsDo(function<void (Reaction *)> applyFunction) const
+{
+    if (!m_active)
+    {
+        return;
+    }
+
+    for (Reaction * reaction : m_reactions)
+    {
+        if (reaction->isAllowed())
+        {
+            applyFunction(reaction);
+        }
+    }
+}
+
+uint Site::nActiveReactions() const
+{
+
+    uint nActiveReactions = 0;
+
+    forAllActiveReactionsDo([&nActiveReactions] (Reaction * r)
+    {
+        (void) r;
+        nActiveReactions++;
+    });
+
+    return nActiveReactions;
 }
 
 
@@ -413,18 +419,18 @@ void Site::decrystallize()
 
 void Site::calculateRates()
 {
-    for (Reaction* reaction : m_activeReactions)
+    forAllActiveReactionsDo([] (Reaction* reaction)
     {
         reaction->selectTriumphingUpdateFlag();
         reaction->calcRate();
-    }
+    });
 }
 
 void Site::initializeDiffusionReactions()
 {
 
 
-    KMCDebugger_Assert(m_siteReactions.size(), ==, 0, "Sitereactions are already set", info());
+    KMCDebugger_Assert(m_reactions.size(), ==, 0, "Sitereactions are already set", info());
     KMCDebugger_AssertBool(!isActive() || isFixedCrystalSeed(), "Non FixedCrystal Site should not be active when reactions are initialized.", info());
 
     if (isFixedCrystalSeed())
@@ -523,7 +529,7 @@ void Site::setNeighboringDirectUpdateFlags()
                 //This approach assumes that recursive updating of non-neighboring sites
                 //WILL NOT ACTIVATE OR DEACTIVATE any sites, simply change their state,
                 //and thus not interfere with any flags set here, not require flags of their own.
-                for (Reaction * reaction : neighbor->siteReactions())
+                for (Reaction * reaction : neighbor->reactions())
                 {
                     reaction->setDirectUpdateFlags(this);
                 }
@@ -635,7 +641,7 @@ void Site::activate()
 
     setNeighboringDirectUpdateFlags();
 
-    for (Reaction * reaction : m_siteReactions)
+    for (Reaction * reaction : m_reactions)
     {
         reaction->setDirectUpdateFlags(this);
     }
@@ -689,8 +695,6 @@ void Site::deactivate()
 
 
     setNeighboringDirectUpdateFlags();
-
-    m_activeReactions.clear();
 
     KMCDebugger_MarkPartialStep("DEACTIVATION COMPLETE");
 
@@ -791,8 +795,6 @@ void Site::introduceNeighborhood()
                         KMCDebugger_AssertBool(!(i == Site::nNeighborsLimit() && j == Site::nNeighborsLimit() && k == Site::nNeighborsLimit()));
                         KMCDebugger_AssertBool(!(neighbor->x() == x() && neighbor->y() == y() && neighbor->z() == z()));
                         KMCDebugger_AssertBool(!(xTrans == x() && yTrans == y() && zTrans == z()));
-
-                        //                        m_allNeighbors.push_back(neighbor);
 
                         if (neighbor->isActive())
                         {
@@ -924,7 +926,7 @@ void Site::queueAffectedSites()
             if (neighbor->isActive())
             {
 
-                for (Reaction * reaction : neighbor->siteReactions())
+                for (Reaction * reaction : neighbor->reactions())
                 {
                     reaction->addUpdateFlag(Reaction::defaultUpdateFlag);
                 }
@@ -981,12 +983,10 @@ void Site::reset()
     setZeroEnergy();
 
 
-    for (Reaction * reaction : siteReactions())
+    for (Reaction * reaction : reactions())
     {
         reaction->reset();
     }
-
-    m_activeReactions.clear();
 
 }
 

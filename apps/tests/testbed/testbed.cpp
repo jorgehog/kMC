@@ -426,7 +426,7 @@ void testBed::testDiffusionSiteMatrixSetup()
                 Boundary::setupCurrentBoundaries(x, y, z);
 
 
-                for (Reaction * r : currentSite.siteReactions())
+                for (Reaction * r : currentSite.reactions())
                 {
 
                     currentDiffReaction = (DiffusionReaction*)r;
@@ -752,8 +752,13 @@ void testBed::testReactionChoise()
                 {
                     for (uint k = 0; k < NZ(); ++k)
                     {
-                        for (Reaction* r : solver->getSite(i, j, k)->activeReactions())
+                        bool notSet = true;
+                        solver->getSite(i, j, k)->forAllActiveReactionsDo([&] (Reaction * r)
                         {
+                            if (!notSet)
+                            {
+                                return;
+                            }
 
                             CHECK_EQUAL(r, solver->allReactions().at(count));
 
@@ -771,12 +776,14 @@ void testBed::testReactionChoise()
                                 j = NY();
                                 k = NZ();
 
-                                break;
+                                notSet = false;
                             }
 
-                            count++;
-
-                        }
+                            if (notSet)
+                            {
+                                count++;
+                            }
+                        });
                     }
                 }
             }
@@ -814,7 +821,7 @@ void testBed::testRateCalculation()
             for (uint k = 0; k < NZ(); ++k)
             {
 
-                for (Reaction* r : solver->getSite(i, j, k)->activeReactions())
+                solver->getSite(i, j, k)->forAllActiveReactionsDo([&] (Reaction * r)
                 {
 
                     E = ((DiffusionReaction*)r)->lastUsedEnergy();
@@ -829,7 +836,7 @@ void testBed::testRateCalculation()
 
                     CHECK_EQUAL(Esp, ((DiffusionReaction*)r)->lastUsedEsp());
 
-                }
+                });
             }
         }
     }
@@ -1215,7 +1222,11 @@ void testBed::testHasCrystalNeighbor()
                 else if (Site::getLevel(abs(i), abs(j), abs(k)) == 2)
                 {
                     CHECK_EQUAL(ParticleStates::solution, solver->getSite(NX()/2 + i, NY()/2 + j, NZ()/2 + k)->particleState());
-                    nActives += solver->getSite(NX()/2 + i, NY()/2 + j, NZ()/2 + k)->activeReactions().size();
+                    solver->getSite(NX()/2 + i, NY()/2 + j, NZ()/2 + k)->forAllActiveReactionsDo([&nActives] (Reaction * r)
+                    {
+                        (void) r;
+                        nActives++;
+                    });
                 }
 
             }
@@ -1306,7 +1317,7 @@ void testBed::testInitialReactionSetup()
 
                     CHECK_EQUAL(ParticleStates::fixedCrystal, currentSite->particleState());
 
-                    CHECK_EQUAL(0, currentSite->siteReactions().size());
+                    CHECK_EQUAL(0, currentSite->reactions().size());
 
                 }
 
@@ -1336,7 +1347,7 @@ void testBed::testInitialReactionSetup()
                         }
                     }
 
-                    CHECK_EQUAL(26, currentSite->siteReactions().size() + nBlocked);
+                    CHECK_EQUAL(26, currentSite->reactions().size() + nBlocked);
 
                 }
 
@@ -1358,7 +1369,7 @@ void testBed::testInitialReactionSetup()
             for (uint k = 0; k < NZ(); ++k)
             {
 
-                for (Reaction* r : solver->getSite(i, j, k)->activeReactions())
+                solver->getSite(i, j, k)->forAllActiveReactionsDo([&] (Reaction * r)
                 {
                     KMCDebugger_AssertBool(solver->getSite(i, j, k)->isActive(),
                                            "DEACTIVE SITE SHOULD HAVE NO REACTIONS",
@@ -1370,11 +1381,11 @@ void testBed::testInitialReactionSetup()
 
                     oldReactions.push_back(r);
                     totRate1 += r->rate();
-                }
+
+                });
             }
         }
     }
-
 
     for (uint i = 0; i < NX(); ++i)
     {
@@ -1385,7 +1396,6 @@ void testBed::testInitialReactionSetup()
 
                 currentSite = solver->getSite(i, j, k);
 
-                currentSite->updateReactions();
                 currentSite->calculateRates();
 
             }
@@ -1403,11 +1413,11 @@ void testBed::testInitialReactionSetup()
             for (uint k = 0; k < NZ(); ++k)
             {
 
-                for (Reaction* r : solver->getSite(i, j, k)->activeReactions())
+                solver->getSite(i, j, k)->forAllActiveReactionsDo([&] (Reaction * r)
                 {
                     reactions.push_back(r);
                     totRate2 += r->rate();
-                }
+                });
             }
         }
     }
@@ -1970,26 +1980,22 @@ void testBed::testDiffusionSeparation()
             {
                 neighbor->activate();
 
-                neighbor->updateReactions();
-
-                CHECK_EQUAL(neighbor->activeReactions().size(), neighbor->siteReactions().size());
+                CHECK_EQUAL(neighbor->nActiveReactions(), neighbor->reactions().size());
 
                 neighbor->deactivate();
 
                 destination = solver->getSite(NX()/2 + sep + 1, NY()/2, NZ()/2);
                 destination->activate();
 
-                destination->updateReactions();
-
                 if (sep == 0)
                 {
-                    CHECK_EQUAL(25, destination->activeReactions().size());
+                    CHECK_EQUAL(25, destination->nActiveReactions());
                 }
 
                 else
                 {
 
-                    CHECK_EQUAL(17, destination->activeReactions().size());
+                    CHECK_EQUAL(17, destination->nActiveReactions());
 
 
                     destination->deactivate();
@@ -1998,9 +2004,7 @@ void testBed::testDiffusionSeparation()
 
                     destination->activate();
 
-                    destination->updateReactions();
-
-                    CHECK_EQUAL(9, destination->activeReactions().size());
+                    CHECK_EQUAL(9, destination->nActiveReactions());
 
 
                     if (sep > 1)
@@ -2012,9 +2016,7 @@ void testBed::testDiffusionSeparation()
 
                         destination->activate();
 
-                        destination->updateReactions();
-
-                        CHECK_EQUAL(0, destination->activeReactions().size());
+                        CHECK_EQUAL(0, destination->nActiveReactions());
 
                     }
 

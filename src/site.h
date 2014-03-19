@@ -153,8 +153,6 @@ public:
 
     void addReaction(Reaction* reaction);
 
-    void updateReactions();
-
     void calculateRates();
 
 
@@ -193,7 +191,9 @@ public:
     const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const;
 
 
-    void forAllNeighborsDo(function<void (Site *)> f) const;
+    void forAllNeighborsDo(function<void (Site *)> applyFunction) const;
+
+    void forAllActiveReactionsDo(function<void (Reaction*)> applyFunction) const;
 
 
     /*
@@ -307,6 +307,8 @@ public:
         return m_nNeighbors(level);
     }
 
+    uint nActiveReactions() const;
+
     uint nNeighborsSum() const;
 
     bool isCrystal() const
@@ -345,14 +347,9 @@ public:
         return m_r(i);
     }
 
-    const vector<Reaction*> & activeReactions() const
+    const vector<Reaction*> & reactions() const
     {
-        return m_activeReactions;
-    }
-
-    const vector<Reaction*> & siteReactions() const
-    {
-        return m_siteReactions;
+        return m_reactions;
     }
 
     const static set<Site*> & affectedSites()
@@ -461,9 +458,7 @@ private:
 
     int m_particleState = ParticleStates::solution;
 
-    vector<Reaction*> m_siteReactions;
-
-    vector<Reaction*> m_activeReactions;
+    vector<Reaction*> m_reactions;
 
 
     void setNewParticleState(int newState);

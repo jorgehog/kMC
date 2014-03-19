@@ -558,13 +558,13 @@ void KMCSolver::getRateVariables()
         {
             for (uint z = 0; z < m_NZ; ++z)
             {
-                for (Reaction* reaction : sites[x][y][z]->activeReactions())
+                sites[x][y][z]->forAllActiveReactionsDo([this] (Reaction * reaction)
                 {
                     assert(reaction->rate() != Reaction::UNSET_RATE);
                     m_kTot += reaction->rate();
                     m_accuAllRates.push_back(m_kTot);
                     m_allReactions.push_back(reaction);
-                }
+                });
             }
         }
     }

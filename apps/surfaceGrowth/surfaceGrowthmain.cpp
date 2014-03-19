@@ -52,7 +52,6 @@ void initialize_surfaceGrowth(KMCSolver * solver, const Setting & root)
 
     const uint & NX = solver->NX();
     const uint & NY = solver->NY();
-    const uint & NZ = solver->NZ();
 
     uint toothWidth   = getSurfaceSetting<uint>(initCFG, "toothWidth");
     uint toothSpacing = getSurfaceSetting<uint>(initCFG, "toothSpacing");
