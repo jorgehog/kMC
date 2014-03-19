@@ -1,3 +1,4 @@
+
 #pragma once
 
 
@@ -40,6 +41,8 @@ public:
     void reset();
 
     void initializeCrystal(const double relativeSeedSize);
+
+    void initializeSolutionBath();
 
     void initializeSiteNeighborhoods();
 

@@ -49,4 +49,11 @@ int main()
 void initialize___name__(KMCSolver * solver, const Setting & root)
 {
 
+    const Setting & initCFG = getSurfaceSetting(root, "Initialization");
+
+    const uint & NX = solver->NX();
+    const uint & NY = solver->NY();
+    const uint & NZ = solver->NZ();
+
+
 }
