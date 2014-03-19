@@ -27,6 +27,7 @@ void ConcentrationWall::update()
     Site * currentSite;
 
     uint c = 0;
+    uint ce = 0;
 
 
 //    crystalBoxTopology = Site::getCurrentCrystalBoxTopology();
@@ -60,25 +61,27 @@ void ConcentrationWall::update()
     std::random_shuffle(boundarySites().begin(), boundarySites().end(), [] (uint n) {return KMC_RNG_UNIFORM()*n;});
 
 
-    while (Site::getCurrentSolutionDensity() > solver()->targetSaturation() && c != m_maxEventsPrCycle)
+    while (Site::getCurrentSolutionDensity() > solver()->targetSaturation() && c != boundarySites().size() && ce != m_maxEventsPrCycle)
     {
         currentSite = boundarySites().at(c);
 
         if (currentSite->isActive())
         {
             currentSite->deactivate();
+            ce++;
         }
 
         c++; //*giggle*
     }
 
-    while (Site::getCurrentSolutionDensity() < solver()->targetSaturation() && c != m_maxEventsPrCycle)
+    while (Site::getCurrentSolutionDensity() < solver()->targetSaturation() && c != boundarySites().size() && ce != m_maxEventsPrCycle)
     {
         currentSite = boundarySites().at(c);
 
         if (currentSite->isLegalToSpawn())
         {
             currentSite->activate();
+            ce++;
         }
 
         c++; //*giggle*
