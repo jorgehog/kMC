@@ -63,18 +63,16 @@ void initialize_diamondSquareSurface(KMCSolver * solver, const Setting & root)
 
     double sigma             = getSurfaceSetting<double>(initCFG, "sigma");
 
-    bool addition            = static_cast<bool>(
-                               getSurfaceSetting<int>   (initCFG, "addition"));
-
-
     uint clearing            = getSurfaceSetting<uint>  (initCFG, "clearing");
+
+    uint maxSpan             = getSurfaceSetting<uint>  (initCFG, "maxSpan");
 
     double occupancyTreshold = getSurfaceSetting<double>(initCFG, "treshold");
 
 
-    double NX = static_cast<double>(solver->NX());
+    uint NX = solver->NX();
 
-    double NY = static_cast<double>(solver->NY());
+    uint NY = solver->NY();
 
 
     //Hack to support non quadratic lattices
@@ -90,78 +88,107 @@ void initialize_diamondSquareSurface(KMCSolver * solver, const Setting & root)
 
     int power2 = ceil(std::log2(NX - 1));
 
+    double rf = 1/std::sqrt(2);
+
     //fsund Diamond Square code:
-    DiamondSquare generator(power2, RNG::Uniform, Seed::initialSeed);
+    DiamondSquare BottomGenerator(power2, RNG::Uniform, Seed::initialSeed);
+    DiamondSquare TopGenerator   (power2, RNG::Uniform, Seed::initialSeed+power2);
 
-    auto Bottom = generator.generate(H,              //Hurst Exponent
-                                     {0, NX, 0, NY}, //Corners
-                                     sigma,          //Deviation of random displacements
-                                     0.5,            //RandomFactor: What the fuck is this?
-                                     addition,       //Some weird shit I don't understand!
-                                     true);          //Periodic Boundary Conditions
+    auto _Bottom = BottomGenerator.generate(H,              //Hurst Exponent
+                                            {},             //Random Corners
+                                            sigma,          //Deviation of random displacements
+                                            rf,             //RandomFactor: What the fuck is this?
+                                            false,          //Addition: Some weird shit I don't understand!
+                                            true);          //Periodic Boundary Conditions
 
-    auto Top    = generator.generate(H,
-                                     {0, NX, 0, NY},
-                                     sigma,
-                                     0.5,
-                                     addition,
-                                     true);
+    auto _Top    = TopGenerator.generate(1-H,
+                                        {},
+                                        sigma,
+                                        rf,
+                                        false,
+                                        true);
 
+    //Don't want to learn how to do this with std::min(fucked up shit)
 
-    uint maxHeight = 0;
-    uint topMax    = 0;
-    uint bottomMax = 0;
+    double bottomMin = INFINITY;
+    double topMin    = INFINITY;
 
-    uint currentHeight;
+    double bottomMax = 0;
+    double topMax = 0;
 
-    //We should be guaranteed to be in range ..!
     for (uint i = 0; i < solver->NX(); ++i)
     {
         for (uint j = 0; j < solver->NY(); ++j)
         {
 
-            uint bottomZ = Bottom.at(i).at(j);
-            uint topZ    = Top.at(i).at(j);
+            double bottomVal = _Bottom.at(i).at(j);
+            double topVal    = _Top.at(i).at(j);
 
-            currentHeight = bottomZ + topZ;
-
-            if (currentHeight > maxHeight)
+            if (topVal < topMin)
             {
-                maxHeight = currentHeight;
+                topMin = topVal;
             }
 
-            if (bottomZ > bottomMax)
+            if (topVal > topMax)
             {
-                bottomMax = bottomZ;
+                topMax = topVal;
             }
 
-            if (topZ > topMax)
+            if (bottomVal < bottomMin)
             {
-                topMax = topZ;
+                bottomMin = bottomVal;
+            }
+
+            if (bottomVal > bottomMax)
+            {
+                bottomMax = bottomVal;
             }
 
         }
     }
 
-    //calculate how many percent of the total z = z' surface is populated
 
-    vec occupancyBottom(bottomMax, fill::zeros);
-    vec occupancyTop   (topMax,    fill::zeros);
+    //Normalize generated boundary to [0 - maxSpan] and rid the std::vectors
+    //Translate from continuous to discrete surface points.
+
+    double bottomSpan = bottomMax - bottomMin;
+    double topSpan = topMax - topMin;
+
+    umat Bottom(NX, NY);
+    umat Top(NX, NY);
 
     for (uint i = 0; i < solver->NX(); ++i)
     {
         for (uint j = 0; j < solver->NY(); ++j)
         {
 
-            uint bottomZ = Bottom.at(i).at(j);
-            uint topZ    = Top.at(i).at(j);
+            Bottom(i, j) = std::round((_Bottom.at(i).at(j) - bottomMin)/bottomSpan*maxSpan);
+            Top(i, j)    = std::round((_Top.at(i).at(j) - topMin)/topSpan*maxSpan);
 
-            for (uint z = 0; z < bottomZ; ++z)
+
+        }
+    }
+
+    _Bottom.clear();
+    _Top.clear();
+
+
+    //calculate how many percent of the total z = z' surface is populated
+
+    vec occupancyBottom(maxSpan, fill::zeros);
+    vec occupancyTop   (maxSpan, fill::zeros);
+
+    for (uint i = 0; i < solver->NX(); ++i)
+    {
+        for (uint j = 0; j < solver->NY(); ++j)
+        {
+
+            for (uint z = 0; z < Bottom(i, j); ++z)
             {
                 occupancyBottom(z)++;
             }
 
-            for (uint z = 0; z < topZ; ++z)
+            for (uint z = 0; z < Top(i, j); ++z)
             {
                 occupancyTop(z)++;
             }
@@ -193,12 +220,9 @@ void initialize_diamondSquareSurface(KMCSolver * solver, const Setting & root)
 
     //calculate the new box height
 
-    uint newNZ =  maxHeight - (topCutoff + bottomCutoff) + clearing;
+    uint newNZ = 2*maxSpan - (topCutoff + bottomCutoff) + clearing;
 
-    uvec newN  = solver->NVec();
-    newN(2) = newNZ;
-
-    solver->setBoxSize(newN);
+    solver->setBoxSize({NX, NY, newNZ});
 
 
     Site * currentSite;
@@ -208,12 +232,12 @@ void initialize_diamondSquareSurface(KMCSolver * solver, const Setting & root)
         for (uint y = 0; y < solver->NY(); ++y)
         {
 
-            uint bottomEnd = static_cast<uint>(Bottom.at(x).at(y));
-            uint topEnd    = static_cast<uint>(Top.at(x).at(y));
+            uint bottomEnd = Bottom(x, y);
+            uint topEnd    = Top(x, y);
 
             //Points below the cutoff are filtered out. Avoiding uints going to negative values (overflow)
             uint bottomSurface = (bottomEnd > bottomCutoff) ? (     (bottomEnd - bottomCutoff)) : 0;
-            uint topSurface    =    (topEnd > topCutoff)    ? (newNZ - (topEnd - topCutoff)   ) : newNZ;
+            uint topSurface    =    (topEnd > topCutoff)    ? (newNZ - (topEnd - topCutoff)) : newNZ;
 
             for (uint z = 1; z < newNZ - 1; ++z)
             {
