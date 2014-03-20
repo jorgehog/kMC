@@ -13,9 +13,7 @@ DiffusionReaction::DiffusionReaction(Site * currentSite, Site *destinationSite) 
     m_destinationSite(destinationSite)
 {
 
-    reactionSite()->distanceTo(destinationSite, path(0), path(1), path(2));
-
-    saddleFieldIndices = conv_to<uvec>::from(path + 1);
+    saddleFieldIndices = conv_to<uvec>::from(getPath() + 1);
 
 }
 
@@ -396,6 +394,15 @@ double DiffusionReaction::getSaddleEnergyContributionFromNeighborAt(const uint &
                                                saddleFieldIndices(2))(2, 0));
 }
 
+ivec3 DiffusionReaction::getPath() const
+{
+    ivec3 path;
+
+    reactionSite()->distanceTo(destinationSite(), path(0), path(1), path(2));
+
+    return path;
+}
+
 umat::fixed<3, 2> DiffusionReaction::makeSaddleOverlapMatrix(const ivec & relCoor)
 {
 
@@ -477,6 +484,8 @@ const string DiffusionReaction::info(int xr, int yr, int zr, string desc) const
     (void) yr;
     (void) zr;
     (void) desc;
+
+    ivec3 path = getPath();
 
     int X = path(0);
     int Y = path(1);

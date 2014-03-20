@@ -59,14 +59,14 @@ void Debugger::setEnabledTo(bool state)
 
     enabled = state;
 
-//    if (enabled)
-//    {
-//        initialize();
-//    }
+    //    if (enabled)
+    //    {
+    //        initialize();
+    //    }
 
-//    else
-//    {
-//        reset();
+    //    else
+    //    {
+    //        reset();
     //    }
 }
 
@@ -264,41 +264,32 @@ std::string Debugger::addFlagsToImplications()
         bool addSite = false;
 
         sitess << "\n" << site->info() << "\n";
-        for (Reaction * r : site->siteReactions())
+
+        site->forEachActiveReactionDo([&] (Reaction * r)
         {
 
             reacss << "    .    " << r->str() << " Flags: ";
-
-            bool addReac = false;
 
             for (int flag : r->updateFlags())
             {
                 reacss << flag << " ";
             }
 
-            if (!r->isAllowed())
-            {
-                reacss << " (blocked)";
-            }
-
-            addReac = true;
             addSite = true;
 
-
-            if (addReac)
-            {
-                sitess << reacss.str() << "\n";
-            }
+            sitess << reacss.str() << "\n";
 
             reacss.str(string());
 
-        }
+        });
+
 
         if (addSite)
         {
             s << sitess.str();
-            sitess.str(string());
         }
+
+        sitess.str(string());
     }
 
     if (s.str().empty())

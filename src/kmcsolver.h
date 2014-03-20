@@ -65,6 +65,11 @@ public:
     void forEachSiteDo_sendIndices(function<void(Site *, uint, uint, uint)> applyFunction) const;
 
 
+    void forEachActiveSiteDo(function<void(Site * site)> applyFunction) const;
+
+    void forEachActiveSiteDo_sendIndices(function<void(Site *, uint, uint, uint)> applyFunction) const;
+
+
     void getRateVariables();
 
     uint getReactionChoice(double R);

@@ -30,7 +30,7 @@ public:
 
     double getSaddleEnergyContributionFromNeighborAt(const uint &i, const uint &j, const uint &k);
 
-
+    ivec3 getPath() const;
 
     static umat::fixed<3, 2> makeSaddleOverlapMatrix(const ivec &relCoor);
 
@@ -112,7 +112,7 @@ private:
     static uint m_separation;
 
     static cube m_potential;
-    static field<cube> m_saddlePotential;
+    static field<cube>  m_saddlePotential;
     static field<umat::fixed<3, 2> > neighborSetIntersectionPoints;
 
 
@@ -125,9 +125,7 @@ private:
         updateKeepSaddle = 2
     };
 
-    ivec::fixed<3> path;
     uvec::fixed<3> saddleFieldIndices;
-
 
     bool allowedGivenNotBlocked() const;
 

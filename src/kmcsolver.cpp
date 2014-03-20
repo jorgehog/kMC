@@ -304,6 +304,41 @@ void KMCSolver::forEachSiteDo_sendIndices(function<void (Site *, uint, uint, uin
     }
 }
 
+void KMCSolver::forEachActiveSiteDo(function<void (Site *)> applyFunction) const
+{
+    for (uint x = 0; x < m_NX; ++x)
+    {
+        for (uint y = 0; y < m_NY; ++y)
+        {
+            for (uint z = 0; z < m_NZ; ++z)
+            {
+                if (sites[x][y][z]->isActive())
+                {
+                    applyFunction(sites[x][y][z]);
+                }
+            }
+        }
+    }
+}
+
+void KMCSolver::forEachActiveSiteDo_sendIndices(function<void (Site *, uint, uint, uint)> applyFunction) const
+{
+    for (uint x = 0; x < m_NX; ++x)
+    {
+        for (uint y = 0; y < m_NY; ++y)
+        {
+            for (uint z = 0; z < m_NZ; ++z)
+            {
+                if (sites[x][y][z]->isActive())
+                {
+                    applyFunction(sites[x][y][z], x, y, z);
+                }
+            }
+        }
+    }
+}
+
+
 void KMCSolver::initializeSites()
 {
 
@@ -514,7 +549,7 @@ void KMCSolver::getRateVariables()
         site->forEachActiveReactionDo([this] (Reaction * reaction)
         {
 
-            assert(reaction->rate() != Reaction::UNSET_RATE);
+            KMCDebugger_Assert(reaction->rate(), !=, Reaction::UNSET_RATE, "Reaction rate should not be unset at this point.");
 
             m_kTot += reaction->rate();
 

@@ -1,7 +1,7 @@
-LIBS += -larmadillo -lconfig++
 CONFIG -= app_bundle
 CONFIG -= qt
 CONFIG += RNG_ZIG
+
 
 QMAKE_CXX = gcc
 
@@ -13,6 +13,9 @@ QMAKE_CXXFLAGS_RELEASE += $$COMMON_CXXFLAGS -O3 -DNDEBUG -DARMA_NO_DEBUG -DKMC_N
 
 INCLUDEPATH += $(HOME)/Dropbox/libs
 
+LIBS += -larmadillo -lconfig++
+
+DEFINES += ARMA_MAT_PREALLOC=3
 
 CONFIG(RNG_ZIG) {
     DEFINES += KMC_RNG_ZIG
