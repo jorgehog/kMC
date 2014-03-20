@@ -591,7 +591,59 @@ void Site::setNeighboringDirectUpdateFlags()
 
             }
         }
+
+        //BUGFIX TMP
+
+        Boundary::setupCurrentBoundaries(x(), y(), z());
+
+        int lim = (int)m_nNeighborsLimit + 1;
+
+        for (int i = -lim; i <= lim; ++i)
+        {
+            for (int j = -lim; j <= lim; ++j)
+            {
+                for (int k = -lim; k <= lim; ++k)
+                {
+
+                    if (Site::getLevel(abs(i), abs(j), abs(k)) == lim - 1)
+                    {
+
+                        uint xTrans = Boundary::currentBoundaries(0)->transformCoordinate(i + (int)x());
+                        uint yTrans = Boundary::currentBoundaries(1)->transformCoordinate(j + (int)y());
+                        uint zTrans = Boundary::currentBoundaries(2)->transformCoordinate(k + (int)z());
+
+                        if (!Boundary::isBlocked(xTrans, yTrans, zTrans))
+                        {
+                            for (Reaction * r : m_solver->getSite(xTrans, yTrans, zTrans)->reactions())
+                            {
+
+                                int xr, yr, zr;
+
+                                static_cast<DiffusionReaction*>(r)->destinationSite()->distanceTo(this, xr, yr, zr, true);
+
+                                uint l = Site::getLevel(xr, yr, zr);
+
+                                if (l < Site::nNeighborsLimit() || true)
+                                {
+                                    r->addUpdateFlag(Reaction::defaultUpdateFlag);
+                                }
+
+                                m_affectedSites.insert(m_solver->getSite(xTrans, yTrans, zTrans));
+
+                            }
+                        }
+                    }
+
+
+                }
+            }
+        }
+
+        //TMP END
+
     });
+
+
 }
 
 bool Site::hasNeighboring(int state, int range) const
@@ -828,9 +880,7 @@ void Site::introduceNeighborhood()
 
                 zTrans = Boundary::currentBoundaries(2)->transformCoordinate((int)m_z + m_originTransformVector(k));
 
-                if (Boundary::isBlocked(xTrans) ||
-                        Boundary::isBlocked(yTrans) ||
-                        Boundary::isBlocked(zTrans))
+                if (Boundary::isBlocked(xTrans, yTrans, zTrans))
                 {
                     m_neighborhood[i][j][k] = NULL;
                 }

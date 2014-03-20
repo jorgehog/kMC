@@ -42,10 +42,14 @@ public:
 
     void distanceFromSite(const Site * site, int & dxi, bool abs = false);
 
-
     static bool isBlocked(const uint xi)
     {
-        return xi == BLOCKED_COORDINATE;
+        return (xi == BLOCKED_COORDINATE);
+    }
+
+    static bool isBlocked(const uint xi, const uint yi, const uint zi)
+    {
+        return isBlocked(xi) || isBlocked(yi) || isBlocked(zi);
     }
 
     static bool isCompatible(const int type1, const int type2, bool reverse = true);
