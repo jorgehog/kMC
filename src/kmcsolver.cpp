@@ -549,7 +549,7 @@ void KMCSolver::getRateVariables()
         site->forEachActiveReactionDo([this] (Reaction * reaction)
         {
 
-            KMCDebugger_Assert(reaction->rate(), !=, Reaction::UNSET_RATE, "Reaction rate should not be unset at this point.");
+            KMCDebugger_Assert(reaction->rate(), !=, Reaction::UNSET_RATE, "Reaction rate should not be unset at this point.", reaction->getFinalizingDebugMessage());
 
             m_kTot += reaction->rate();
 
