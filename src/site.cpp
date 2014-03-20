@@ -51,8 +51,7 @@ Site::~Site()
 
 
 
-void Site::
-updateAffectedSites()
+void Site::updateAffectedSites()
 {
 
     for (Site* site : m_affectedSites)
@@ -62,7 +61,6 @@ updateAffectedSites()
             continue;
         }
 
-        site->updateReactions();
         site->calculateRates();
     }
 
@@ -75,7 +73,7 @@ void Site::selectUpdateFlags()
     for (Site * site : m_affectedSites)
     {
 
-        for (Reaction * reaction : site->siteReactions())
+        for (Reaction * reaction : site->reactions())
         {
             reaction->selectTriumphingUpdateFlag();
         }
@@ -177,7 +175,7 @@ bool Site::isLegalToSpawn()
         return false;
     }
 
-    for (Reaction * r : m_siteReactions)
+    for (Reaction * r : m_reactions)
     {
         if (!r->isAllowed())
         {
@@ -271,40 +269,18 @@ void Site::updateBoundaries()
 
 void Site::addReaction(Reaction *reaction)
 {
-    m_siteReactions.push_back(reaction);
-}
-
-void Site::updateReactions()
-{
-
-    m_activeReactions.clear();
-
-    if (!m_active)
-    {
-        return;
-    }
-
-    for (Reaction* reaction : m_siteReactions)
-    {
-        if (reaction->isAllowed())
-        {
-            m_activeReactions.push_back(reaction);
-        }
-    }
-
+    m_reactions.push_back(reaction);
 }
 
 void Site::clearAllReactions()
 {
 
-    for (Reaction * reaction : m_siteReactions)
+    for (Reaction * reaction : m_reactions)
     {
         delete reaction;
     }
 
-    m_siteReactions.clear();
-
-    m_activeReactions.clear();
+    m_reactions.clear();
 
 }
 
@@ -334,6 +310,122 @@ void Site::deactivateFixedCrystal()
 
     initializeDiffusionReactions();
 
+}
+
+void Site::forEachNeighborDo(function<void (Site *)> applyFunction) const
+{
+
+    Site * neighbor;
+
+    for (uint i = 0; i < m_neighborhoodLength; ++i)
+    {
+        for (uint j = 0; j < m_neighborhoodLength; ++j)
+        {
+            for (uint k = 0; k < m_neighborhoodLength; ++k)
+            {
+
+                neighbor = neighborhood(i, j, k);
+
+                if (neighbor == NULL)
+                {
+                    continue;
+                }
+
+                else if (neighbor == this) {
+                    assert(i == j && j == k && k == m_nNeighborsLimit);
+                    continue;
+                }
+
+
+                applyFunction(neighbor);
+
+
+            }
+        }
+    }
+}
+
+void Site::forEachNeighborDo_sendIndices(function<void (Site *, uint, uint, uint)> applyFunction) const
+{
+
+    Site * neighbor;
+
+    for (uint i = 0; i < m_neighborhoodLength; ++i)
+    {
+        for (uint j = 0; j < m_neighborhoodLength; ++j)
+        {
+            for (uint k = 0; k < m_neighborhoodLength; ++k)
+            {
+
+                neighbor = neighborhood(i, j, k);
+
+                if (neighbor == NULL)
+                {
+                    continue;
+                }
+
+                else if (neighbor == this) {
+                    assert(i == j && j == k && k == m_nNeighborsLimit);
+                    continue;
+                }
+
+
+                applyFunction(neighbor, i, j, k);
+
+
+            }
+        }
+    }
+}
+
+void Site::forEachActiveReactionDo(function<void (Reaction *)> applyFunction) const
+{
+    if (!m_active)
+    {
+        return;
+    }
+
+    for (Reaction * reaction : m_reactions)
+    {
+        if (reaction->isAllowed())
+        {
+            applyFunction(reaction);
+        }
+    }
+}
+
+void Site::forEachActiveReactionDo_sendIndex(function<void (Reaction *, uint)> applyFunction) const
+{
+    if (!m_active)
+    {
+        return;
+    }
+
+    uint i = 0;
+
+    for (Reaction * reaction : m_reactions)
+    {
+        if (reaction->isAllowed())
+        {
+            applyFunction(reaction, i);
+        }
+
+        i++;
+    }
+}
+
+uint Site::nActiveReactions() const
+{
+
+    uint nActiveReactions = 0;
+
+    forEachActiveReactionDo([&nActiveReactions] (Reaction * r)
+    {
+        (void) r;
+        nActiveReactions++;
+    });
+
+    return nActiveReactions;
 }
 
 
@@ -380,18 +472,18 @@ void Site::decrystallize()
 
 void Site::calculateRates()
 {
-    for (Reaction* reaction : m_activeReactions)
+    forEachActiveReactionDo([] (Reaction* reaction)
     {
         reaction->selectTriumphingUpdateFlag();
         reaction->calcRate();
-    }
+    });
 }
 
 void Site::initializeDiffusionReactions()
 {
 
 
-    KMCDebugger_Assert(m_siteReactions.size(), ==, 0, "Sitereactions are already set", info());
+    KMCDebugger_Assert(m_reactions.size(), ==, 0, "Sitereactions are already set", info());
     KMCDebugger_AssertBool(!isActive() || isFixedCrystalSeed(), "Non FixedCrystal Site should not be active when reactions are initialized.", info());
 
     if (isFixedCrystalSeed())
@@ -409,7 +501,7 @@ void Site::initializeDiffusionReactions()
             for (uint k = 0; k < 3; ++k)
             {
 
-                destination = neighborHood(Site::nNeighborsLimit() - 1 + i,
+                destination = neighborhood(Site::nNeighborsLimit() - 1 + i,
                                            Site::nNeighborsLimit() - 1 + j,
                                            Site::nNeighborsLimit() - 1 + k);
 
@@ -482,23 +574,24 @@ double Site::potentialBetween(const Site *other)
 void Site::setNeighboringDirectUpdateFlags()
 {
 
-    for (Site * neighbor : m_allNeighbors)
+    forEachNeighborDo([this] (Site * neighbor)
     {
-        if (neighbor->isActive())
         {
-            //This approach assumes that recursive updating of non-neighboring sites
-            //WILL NOT ACTIVATE OR DEACTIVATE any sites, simply change their state,
-            //and thus not interfere with any flags set here, not require flags of their own.
-            for (Reaction * reaction : neighbor->siteReactions())
+            if (neighbor->isActive())
             {
-                reaction->setDirectUpdateFlags(this);
+                //This approach assumes that recursive updating of non-neighboring sites
+                //WILL NOT ACTIVATE OR DEACTIVATE any sites, simply change their state,
+                //and thus not interfere with any flags set here, not require flags of their own.
+                for (Reaction * reaction : neighbor->reactions())
+                {
+                    reaction->setDirectUpdateFlags(this);
+                }
+
+                m_affectedSites.insert(neighbor);
+
             }
-
-            m_affectedSites.insert(neighbor);
-
         }
-    }
-
+    });
 }
 
 bool Site::hasNeighboring(int state, int range) const
@@ -513,9 +606,9 @@ bool Site::hasNeighboring(int state, int range) const
             for (int k = -range; k <= range; ++k)
             {
 
-                nextNeighbor = m_neighborHood[i + Site::nNeighborsLimit()]
-                        [j + Site::nNeighborsLimit()]
-                        [k + Site::nNeighborsLimit()];
+                nextNeighbor = neighborhood(i + Site::nNeighborsLimit(),
+                                            j + Site::nNeighborsLimit(),
+                                            k + Site::nNeighborsLimit());
 
                 if (nextNeighbor == NULL)
                 {
@@ -555,9 +648,9 @@ uint Site::countNeighboring(int state, int range) const
             for (int k = -range; k <= range; ++k)
             {
 
-                nextNeighbor = m_neighborHood[i + Site::nNeighborsLimit()]
-                        [j + Site::nNeighborsLimit()]
-                        [k + Site::nNeighborsLimit()];
+                nextNeighbor = neighborhood(i + Site::nNeighborsLimit(),
+                                            j + Site::nNeighborsLimit(),
+                                            k + Site::nNeighborsLimit());
 
                 if (nextNeighbor == NULL)
                 {
@@ -601,7 +694,7 @@ void Site::activate()
 
     setNeighboringDirectUpdateFlags();
 
-    for (Reaction * reaction : m_siteReactions)
+    for (Reaction * reaction : m_reactions)
     {
         reaction->setDirectUpdateFlags(this);
     }
@@ -655,8 +748,6 @@ void Site::deactivate()
 
 
     setNeighboringDirectUpdateFlags();
-
-    m_activeReactions.clear();
 
     KMCDebugger_MarkPartialStep("DEACTIVATION COMPLETE");
 
@@ -716,21 +807,21 @@ void Site::introduceNeighborhood()
 
     Boundary::setupCurrentBoundaries(x(), y(), z());
 
-    m_neighborHood = new Site***[m_neighborhoodLength];
+    m_neighborhood = new Site***[m_neighborhoodLength];
 
     for (uint i = 0; i < m_neighborhoodLength; ++i)
     {
 
         xTrans = Boundary::currentBoundaries(0)->transformCoordinate((int)m_x + m_originTransformVector(i));
 
-        m_neighborHood[i] = new Site**[m_neighborhoodLength];
+        m_neighborhood[i] = new Site**[m_neighborhoodLength];
 
         for (uint j = 0; j < m_neighborhoodLength; ++j)
         {
 
             yTrans = Boundary::currentBoundaries(1)->transformCoordinate((int)m_y + m_originTransformVector(j));
 
-            m_neighborHood[i][j] = new Site*[m_neighborhoodLength];
+            m_neighborhood[i][j] = new Site*[m_neighborhoodLength];
 
             for (uint k = 0; k < m_neighborhoodLength; ++k)
             {
@@ -741,7 +832,7 @@ void Site::introduceNeighborhood()
                         Boundary::isBlocked(yTrans) ||
                         Boundary::isBlocked(zTrans))
                 {
-                    m_neighborHood[i][j][k] = NULL;
+                    m_neighborhood[i][j][k] = NULL;
                 }
 
                 else
@@ -749,7 +840,7 @@ void Site::introduceNeighborhood()
 
                     neighbor = m_solver->getSite(xTrans, yTrans, zTrans);
 
-                    m_neighborHood[i][j][k] = neighbor;
+                    m_neighborhood[i][j][k] = neighbor;
 
                     if (neighbor != this)
                     {
@@ -757,8 +848,6 @@ void Site::introduceNeighborhood()
                         KMCDebugger_AssertBool(!(i == Site::nNeighborsLimit() && j == Site::nNeighborsLimit() && k == Site::nNeighborsLimit()));
                         KMCDebugger_AssertBool(!(neighbor->x() == x() && neighbor->y() == y() && neighbor->z() == z()));
                         KMCDebugger_AssertBool(!(xTrans == x() && yTrans == y() && zTrans == z()));
-
-                        m_allNeighbors.push_back(neighbor);
 
                         if (neighbor->isActive())
                         {
@@ -802,9 +891,9 @@ void Site::propagateToNeighbors(int reqOldState, int newState, int range)
             for (int k = -range; k <= range; ++k)
             {
 
-                nextNeighbor = m_neighborHood[i + Site::nNeighborsLimit()]
-                        [j + Site::nNeighborsLimit()]
-                        [k + Site::nNeighborsLimit()];
+                nextNeighbor = neighborhood(i + Site::nNeighborsLimit(),
+                                            j + Site::nNeighborsLimit(),
+                                            k + Site::nNeighborsLimit());
 
                 if (nextNeighbor == NULL)
                 {
@@ -847,7 +936,7 @@ void Site::informNeighborhoodOnChange(int change)
             for (uint k = 0; k < m_neighborhoodLength; ++k)
             {
 
-                neighbor = m_neighborHood[i][j][k];
+                neighbor = neighborhood(i, j, k);
 
                 if (neighbor == NULL)
                 {
@@ -884,19 +973,21 @@ void Site::informNeighborhoodOnChange(int change)
 
 void Site::queueAffectedSites()
 {
-    for (Site * neighbor : m_allNeighbors)
+    forEachNeighborDo([] (Site * neighbor)
     {
-        if (neighbor->isActive())
         {
-
-            for (Reaction * reaction : neighbor->siteReactions())
+            if (neighbor->isActive())
             {
-                reaction->addUpdateFlag(Reaction::defaultUpdateFlag);
-            }
 
-            m_affectedSites.insert(neighbor);
+                for (Reaction * reaction : neighbor->reactions())
+                {
+                    reaction->addUpdateFlag(Reaction::defaultUpdateFlag);
+                }
+
+                m_affectedSites.insert(neighbor);
+            }
         }
-    }
+    });
 }
 
 
@@ -945,12 +1036,10 @@ void Site::reset()
     setZeroEnergy();
 
 
-    for (Reaction * reaction : siteReactions())
+    for (Reaction * reaction : reactions())
     {
         reaction->reset();
     }
-
-    m_activeReactions.clear();
 
 }
 
@@ -962,7 +1051,7 @@ void Site::clearNeighborhood()
     m_energy = 0;
 
 
-    m_allNeighbors.clear();
+    //    m_allNeighbors.clear();
 
     m_nNeighbors.reset();
 
@@ -975,16 +1064,16 @@ void Site::clearNeighborhood()
         {
             for (uint k = 0; k < m_neighborhoodLength; ++k)
             {
-                m_neighborHood[i][j][k] = NULL;
+                m_neighborhood[i][j][k] = NULL;
             }
 
-            delete [] m_neighborHood[i][j];
+            delete [] m_neighborhood[i][j];
         }
 
-        delete [] m_neighborHood[i];
+        delete [] m_neighborhood[i];
     }
 
-    delete [] m_neighborHood;
+    delete [] m_neighborhood;
 
 }
 
@@ -1032,36 +1121,30 @@ umat Site::getCurrentCrystalBoxTopology()
 
     uvec3 r;
 
-    for (uint x = 0; x < NX(); ++x)
+    m_solver->forEachSiteDo_sendIndices([&] (Site * site, uint x, uint y, uint z)
     {
-        for (uint y = 0; y < NY(); ++y)
+        if (site->isCrystal())
         {
-            for (uint z = 0; z < NZ(); ++z)
+
+            r = {x, y, z};
+
+            for (uint xi = 0; xi < 3; ++xi)
             {
-                if (m_solver->getSite(x, y, z)->isCrystal())
+
+                if (r(xi) < boxTop(xi, 0))
                 {
-
-                    r = {x, y, z};
-
-                    for (uint xi = 0; xi < 3; ++xi)
-                    {
-
-                        if (r(xi) < boxTop(xi, 0))
-                        {
-                            boxTop(xi, 0) = r(xi);
-                        }
-
-                        if (r(xi) > boxTop(xi, 1))
-                        {
-                            boxTop(xi, 1) = r(xi);
-                        }
-
-                    }
-
+                    boxTop(xi, 0) = r(xi);
                 }
+
+                if (r(xi) > boxTop(xi, 1))
+                {
+                    boxTop(xi, 1) = r(xi);
+                }
+
             }
+
         }
-    }
+    });
 
     return boxTop;
 }
@@ -1214,7 +1297,7 @@ const string Site::info(int xr, int yr, int zr, string desc) const
             for (uint k = 0; k < m_neighborhoodLength; ++k)
             {
 
-                currentSite = m_neighborHood[i][j][k];
+                currentSite = neighborhood(i, j, k);
 
 
                 if (currentSite == NULL)

@@ -44,9 +44,25 @@ public:
 
     void initializeSolutionBath();
 
-    void initializeSiteNeighborhoods();
+    void initializeSiteNeighborhoods()
+    {
+        forEachSiteDo([] (Site * site)
+        {
+            site->introduceNeighborhood();
+        });
+    }
 
-    void initializeDiffusionReactions();
+    void initializeDiffusionReactions()
+    {
+        forEachSiteDo([] (Site * site)
+        {
+            site->initializeDiffusionReactions();
+        });
+    }
+
+    void forEachSiteDo(function<void(Site * site)> applyFunction) const;
+
+    void forEachSiteDo_sendIndices(function<void(Site *, uint, uint, uint)> applyFunction) const;
 
 
     void getRateVariables();
@@ -148,9 +164,21 @@ public:
 
     //SHOULD BE IN SITE
 
-    void clearSiteNeighborhoods();
+    void clearSiteNeighborhoods()
+    {
+        forEachSiteDo([] (Site * site)
+        {
+            site->clearNeighborhood();
+        });
+    }
 
-    void clearAllReactions();
+    void clearAllReactions()
+    {
+        forEachSiteDo([] (Site * site)
+        {
+            site->clearAllReactions();
+        });
+    }
 
 
 private:

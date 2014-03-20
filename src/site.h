@@ -116,6 +116,7 @@ public:
      * Non-trivial functions
      */
 
+
     void setParticleState(int newState);
 
     bool isLegalToSpawn();
@@ -151,8 +152,6 @@ public:
 
 
     void addReaction(Reaction* reaction);
-
-    void updateReactions();
 
     void calculateRates();
 
@@ -190,6 +189,16 @@ public:
 
 
     const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const;
+
+
+    void forEachNeighborDo(function<void (Site *)> applyFunction) const;
+
+    void forEachNeighborDo_sendIndices(function<void (Site *, uint, uint, uint)> applyFunction) const;
+
+
+    void forEachActiveReactionDo(function<void (Reaction*)> applyFunction) const;
+
+    void forEachActiveReactionDo_sendIndex(function<void (Reaction*, uint)> applyFunction) const;
 
 
     /*
@@ -303,6 +312,8 @@ public:
         return m_nNeighbors(level);
     }
 
+    uint nActiveReactions() const;
+
     uint nNeighborsSum() const;
 
     bool isCrystal() const
@@ -341,19 +352,9 @@ public:
         return m_r(i);
     }
 
-    const vector<Reaction*> & activeReactions() const
+    const vector<Reaction*> & reactions() const
     {
-        return m_activeReactions;
-    }
-
-    const vector<Reaction*> & siteReactions() const
-    {
-        return m_siteReactions;
-    }
-
-    const vector<Site*> & allNeighbors() const
-    {
-        return m_allNeighbors;
+        return m_reactions;
     }
 
     const static set<Site*> & affectedSites()
@@ -361,9 +362,9 @@ public:
         return m_affectedSites;
     }
 
-    Site* neighborHood(const uint x, const uint y, const uint z) const
+    Site* neighborhood(const uint x, const uint y, const uint z) const
     {
-        return m_neighborHood[x][y][z];
+        return m_neighborhood[x][y][z];
     }
 
     double energy() const
@@ -403,6 +404,7 @@ public:
 
     void clearAllReactions();
 
+
 private:
 
     static field<Boundary*> m_boundaries;
@@ -439,9 +441,7 @@ private:
     static KMCSolver* m_solver;
 
 
-    Site**** m_neighborHood;
-
-    vector<Site*> m_allNeighbors;
+    Site**** m_neighborhood;
 
     uvec m_nNeighbors;
 
@@ -463,14 +463,13 @@ private:
 
     int m_particleState = ParticleStates::solution;
 
-    vector<Reaction*> m_siteReactions;
-
-    vector<Reaction*> m_activeReactions;
+    vector<Reaction*> m_reactions;
 
 
     void setNewParticleState(int newState);
 
     void deactivateFixedCrystal();
+
 
 };
 
