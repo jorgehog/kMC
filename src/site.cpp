@@ -505,21 +505,21 @@ void Site::initializeDiffusionReactions()
                                            Site::nNeighborsLimit() - 1 + j,
                                            Site::nNeighborsLimit() - 1 + k);
 
-                //This means that the destination is blocked by boundaries
-                if (destination != NULL)
+                //This ensures that the destination is not blocked by boundaries or equals the origin
+                if (destination != NULL && destination != this)
                 {
-                    //This menas we are not at the current site.
-                    if(destination != this)
-                    {
+
                         DiffusionReaction* diffusionReaction = new DiffusionReaction(this, destination);
                         addReaction(diffusionReaction);
-                    }
 
-                    else
-                    {
-                        KMCDebugger_AssertBool((i == 1) && (j == 1) && (k == 1));
-                    }
+                        m_diffusionReactions[i][j][k] = diffusionReaction;
+
                 }
+                else
+                {
+                    m_diffusionReactions[i][j][k] = NULL;
+                }
+
 
             }
         }

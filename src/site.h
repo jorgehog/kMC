@@ -450,6 +450,8 @@ private:
 
     vector<Reaction*> m_reactions;
 
+    DiffusionReaction* m_diffusionReactions[3][3][3];
+
 
     void setNewParticleState(int newState);
 
