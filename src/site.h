@@ -1,5 +1,7 @@
 #pragma once
 
+#include "particlestates.h"
+
 #include <vector>
 #include <set>
 #include <sys/types.h>
@@ -7,6 +9,7 @@
 #include <assert.h>
 
 #include <libconfig_utils/libconfig_utils.h>
+
 
 using namespace arma;
 
@@ -19,24 +22,6 @@ class KMCSolver;
 class Reaction;
 class DiffusionReaction;
 class Boundary;
-
-struct ParticleStates
-{
-    enum AllStates
-    {
-        crystal,
-        fixedCrystal,
-        solution,
-        surface,
-        any
-    };
-
-    const static vector<string> names;
-    const static vector<string> shortNames;
-
-    static int equalAs(int state);
-
-};
 
 class Site
 {

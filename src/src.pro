@@ -21,7 +21,8 @@ HEADERS = RNG/kMCRNG.h \
     boundary/periodic/periodic.h \
     boundary/concentrationwall/concentrationwall.h \
     boundary/edge/edge.h \
-    boundary/surface/surface.h
+    boundary/surface/surface.h \
+    particlestates.h
 
 SOURCES += \
     reactions/reaction.cpp \
@@ -33,7 +34,8 @@ SOURCES += \
     boundary/boundary.cpp \
     boundary/periodic/periodic.cpp \
     boundary/concentrationwall/concentrationwall.cpp \
-    boundary/surface/surface.cpp
+    boundary/surface/surface.cpp \
+    particlestates.cpp
 
 RNG_ZIG {
 

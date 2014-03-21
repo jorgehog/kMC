@@ -1,10 +1,29 @@
-#ifndef PARTICLESTATES_H
-#define PARTICLESTATES_H
+#pragma once
 
-class ParticleStates
+#include <vector>
+#include <string>
+
+using namespace std;
+
+namespace kMC
 {
-public:
-    ParticleStates();
+
+struct ParticleStates
+{
+    enum AllStates
+    {
+        crystal,
+        fixedCrystal,
+        solution,
+        surface,
+        any
+    };
+
+    const static vector<string> names;
+    const static vector<string> shortNames;
+
+    static int equalAs(int state);
+
 };
 
-#endif // PARTICLESTATES_H
+}
