@@ -5,8 +5,6 @@
 
 #include "boundary/boundary.h"
 
-#include "debugger/debugger.h"
-
 #include <sys/time.h>
 
 #include <armadillo>
@@ -58,7 +56,6 @@ KMCSolver::KMCSolver(const Setting & root)
     boxSize(2) = getSurfaceSetting(SystemSettings, "BoxSize")[2];
 
     setBoxSize(boxSize);
-
 
 }
 

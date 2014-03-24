@@ -68,18 +68,6 @@ void Site::updateAffectedSites()
 
 }
 
-void Site::selectUpdateFlags()
-{
-    for (Site * site : m_affectedSites)
-    {
-
-        for (Reaction * reaction : site->reactions())
-        {
-            reaction->selectTriumphingUpdateFlag();
-        }
-
-    }
-}
 
 
 void Site::setParticleState(int newState)
@@ -266,11 +254,6 @@ void Site::updateBoundaries()
     }
 }
 
-
-void Site::addReaction(Reaction *reaction)
-{
-    m_reactions.push_back(reaction);
-}
 
 void Site::clearAllReactions()
 {
@@ -474,8 +457,8 @@ void Site::calculateRates()
 {
     forEachActiveReactionDo([] (Reaction* reaction)
     {
-        reaction->selectTriumphingUpdateFlag();
         reaction->calcRate();
+        reaction->resetUpdateFlag();
     });
 }
 
@@ -626,7 +609,7 @@ void Site::setNeighboringDirectUpdateFlags()
 
                             if (l < Site::nNeighborsLimit() || true)
                             {
-                                r->addUpdateFlag(Reaction::defaultUpdateFlag);
+                                r->registerUpdateFlag(Reaction::defaultUpdateFlag);
                             }
 
                             m_affectedSites.insert(m_solver->getSite(xTrans, yTrans, zTrans));
@@ -1031,7 +1014,7 @@ void Site::queueAffectedSites()
 
                 for (Reaction * reaction : neighbor->reactions())
                 {
-                    reaction->addUpdateFlag(Reaction::defaultUpdateFlag);
+                    reaction->registerUpdateFlag(Reaction::defaultUpdateFlag);
                 }
 
                 m_affectedSites.insert(neighbor);
@@ -1100,8 +1083,6 @@ void Site::clearNeighborhood()
 
     m_energy = 0;
 
-
-    //    m_allNeighbors.clear();
 
     m_nNeighbors.reset();
 

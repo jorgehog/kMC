@@ -167,9 +167,6 @@ public:
         }
 
 
-
-        //        cerr << _cerr.str() << endl;
-
         dumpFullTrace(line, file, additionalInfo);
 
         throw std::runtime_error(assertMessage.str());

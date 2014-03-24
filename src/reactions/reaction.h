@@ -1,6 +1,7 @@
 #pragma once
 
 #include <sys/types.h>
+#include <climits>
 #include <sstream>
 #include <set>
 
@@ -18,16 +19,18 @@ class Reaction
 {
 public:
 
-    Reaction(Site * currentSite, const string name = "Reaction");
+    Reaction(Site * currentSite);
 
     virtual ~Reaction();
 
-    const string name;
+    static const string name;
 
-
-    void addUpdateFlag(int flag)
+    void registerUpdateFlag(int flag)
     {
-        m_updateFlags.insert(flag);
+        if (flag < m_updateFlag)
+        {
+            m_updateFlag = flag;
+        }
     }
 
     void selectTriumphingUpdateFlag();
@@ -66,7 +69,7 @@ public:
 
 
 
-    const uint & IDCount()
+    const static uint & IDCount()
     {
         return m_IDCount;
     }
@@ -81,24 +84,19 @@ public:
         return m_lastUsedEnergy;
     }
 
-    const set<int> & updateFlags() const
-    {
-        return m_updateFlags;
-    }
-
     const int & updateFlag() const
     {
         return m_updateFlag;
     }
 
+    void resetUpdateFlag()
+    {
+        m_updateFlag = UNSET_UPDATE_FLAG;
+    }
+
     void forceUpdateFlag(int flag)
     {
         m_updateFlag = flag;
-    }
-
-    const uint & ID() const
-    {
-        return m_ID;
     }
 
     const double &  rate() const
@@ -151,13 +149,13 @@ public:
     //! triumphant flag.
     enum AllUpdateFlags
     {
-        UNSET_UPDATE_FLAG = -1,
+        UNSET_UPDATE_FLAG = INT_MAX,
         defaultUpdateFlag = 0
     };
 
-    static const double UNSET_RATE;
+    static constexpr double UNSET_RATE = -1337;
 
-    static const double UNSET_ENERGY;
+    static constexpr double UNSET_ENERGY = -13371337;
 
     const static uint & NX();
 
@@ -174,16 +172,13 @@ private:
 
     static uint m_IDCount;
 
-    const uint m_ID;
-
     Site* m_reactionSite = NULL;
 
     double m_lastUsedEnergy;
 
     double m_rate;
 
-    set<int> m_updateFlags;
-    int      m_updateFlag;
+    int m_updateFlag;
 
 protected:
 

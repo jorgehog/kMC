@@ -59,15 +59,6 @@ void Debugger::setEnabledTo(bool state)
 
     enabled = state;
 
-    //    if (enabled)
-    //    {
-    //        initialize();
-    //    }
-
-    //    else
-    //    {
-    //        reset();
-    //    }
 }
 
 void Debugger::resetEnabled()
@@ -268,12 +259,7 @@ std::string Debugger::addFlagsToImplications()
         site->forEachActiveReactionDo([&] (Reaction * r)
         {
 
-            reacss << "    .    " << r->str() << " Flags: ";
-
-            for (int flag : r->updateFlags())
-            {
-                reacss << flag << " ";
-            }
+            reacss << "    .    " << r->str() << " Flag: " << r->updateFlag();
 
             addSite = true;
 

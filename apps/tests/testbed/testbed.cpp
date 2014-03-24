@@ -1227,6 +1227,11 @@ void testBed::testInitialReactionSetup()
 
     solver->forEachSiteDo([] (Site * currentSite)
     {
+        currentSite->forEachActiveReactionDo([] (Reaction * r)
+        {
+                r->forceUpdateFlag(Reaction::defaultUpdateFlag);
+        });
+
         currentSite->calculateRates();
     });
 
@@ -1248,10 +1253,7 @@ void testBed::testInitialReactionSetup()
 
     for (uint i = 0; i < oldReactions.size(); ++i)
     {
-        uint id1 = reactions.at(i)->ID();
-        uint id2 = oldReactions.at(i)->ID();
-        CHECK_EQUAL(id1, id2);
-
+        CHECK_EQUAL(reactions.at(i), oldReactions.at(i));
     }
 
 

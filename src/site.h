@@ -136,7 +136,10 @@ public:
     void flipDeactive();
 
 
-    void addReaction(Reaction* reaction);
+    void addReaction(Reaction* reaction)
+    {
+        m_reactions.push_back(reaction);
+    }
 
     void calculateRates();
 
@@ -439,10 +442,10 @@ private:
 
     bool m_cannotCrystallize;
 
-    uint m_x;
-    uint m_y;
-    uint m_z;
-    uvec3 m_r;
+    const uint m_x;
+    const uint m_y;
+    const uint m_z;
+    const uvec3 m_r;
 
     double m_energy;
 

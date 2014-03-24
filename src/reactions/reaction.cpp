@@ -7,9 +7,7 @@
 
 using namespace kMC;
 
-Reaction::Reaction(Site *currentSite, const string name):
-    name(name),
-    m_ID(m_IDCount++),
+Reaction::Reaction(Site *currentSite):
     m_reactionSite(currentSite),
     m_lastUsedEnergy(UNSET_ENERGY),
     m_rate(UNSET_RATE),
@@ -28,14 +26,6 @@ const string Reaction::info(int xr, int yr, int zr, string desc) const
     stringstream s;
     s << "[" << name << "]:" << "\n";
     s << "   rate: " << m_rate << "  ";
-    s << "updateFlags: ";
-
-    for (int flag : m_updateFlags)
-    {
-        s << flag;
-    }
-
-    s << "  ";
     s << "Selected flag: " << m_updateFlag << "  ";
     s << "Blocked? " << !isAllowed() << "\n";
     s << "@";
@@ -137,26 +127,14 @@ void Reaction::reset()
 
 }
 
-void Reaction::selectTriumphingUpdateFlag()
-{
+const string Reaction::name = "Reaction";
 
-    m_updateFlag = *std::min_element(m_updateFlags.begin(), m_updateFlags.end());
+KMCSolver*   Reaction::m_solver;
 
-    KMCDebugger_Assert(m_updateFlag, !=, UNSET_UPDATE_FLAG, "Update flag was not initialized correctly.", info());
+double       Reaction::m_beta = 1.0;
+double       Reaction::m_linearRateScale = 1.0;
 
-    m_updateFlags.clear();
-
-}
-
-const double   Reaction::UNSET_RATE = -1337;
-const double   Reaction::UNSET_ENERGY = -13371337;
-
-KMCSolver*     Reaction::m_solver;
-
-double         Reaction::m_beta = 1.0;
-double         Reaction::m_linearRateScale = 1.0;
-
-uint           Reaction::m_IDCount = 0;
+uint         Reaction::m_IDCount = 0;
 
 
 ostream & operator << (ostream& os, const Reaction& ss)

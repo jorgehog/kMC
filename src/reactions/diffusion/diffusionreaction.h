@@ -23,6 +23,8 @@ public:
 
     ~DiffusionReaction();
 
+    static const string name;
+
 
     double getSaddleEnergy();
 
@@ -125,7 +127,7 @@ private:
         updateKeepSaddle = 2
     };
 
-    uvec::fixed<3> saddleFieldIndices;
+    uint saddleFieldIndices[3];
 
     bool allowedGivenNotBlocked() const;
 

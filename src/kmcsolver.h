@@ -4,6 +4,8 @@
 
 #include "site.h"
 
+#include "debugger/debugger.h"
+
 #include "RNG/kMCRNG.h"
 
 #include <sys/types.h>
@@ -58,6 +60,7 @@ public:
         {
             site->initializeDiffusionReactions();
         });
+
     }
 
     void forEachSiteDo(function<void(Site * site)> applyFunction) const;

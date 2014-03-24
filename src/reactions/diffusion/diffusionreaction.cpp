@@ -8,12 +8,16 @@
 using namespace kMC;
 
 DiffusionReaction::DiffusionReaction(Site * currentSite, Site *destinationSite) :
-    Reaction(currentSite, "DiffusionReaction"),
+    Reaction(currentSite),
     m_lastUsedEsp(UNSET_ENERGY),
     m_destinationSite(destinationSite)
 {
 
-    saddleFieldIndices = conv_to<uvec>::from(getPath() + 1);
+    ivec3 path = getPath();
+
+    saddleFieldIndices[0] = path(0) + 1;
+    saddleFieldIndices[1] = path(1) + 1;
+    saddleFieldIndices[2] = path(2) + 1;
 
 }
 
@@ -30,7 +34,6 @@ void DiffusionReaction::loadConfig(const Setting &setting)
     m_scale  = getSurfaceSetting<double>(setting, "scale");
 
     setSeparation(getSurfaceSetting<uint>(setting, "separation"), false);
-
 
 }
 
@@ -297,7 +300,7 @@ void DiffusionReaction::setDirectUpdateFlags(const Site *changedSite)
         }
 
 
-        KMCDebugger_AssertBool(!updateFlags().empty(), "Updateflag should not be empty!", info());
+//        KMCDebugger_AssertBool(!updateFlags().empty(), "Updateflag should not be empty!", info());
     }
 
 
@@ -315,13 +318,13 @@ double DiffusionReaction::getSaddleEnergy()
 
     double Esp = 0;
 
-    const cube & saddlePot = m_saddlePotential(saddleFieldIndices(0),
-                                               saddleFieldIndices(1),
-                                               saddleFieldIndices(2));
+    const cube & saddlePot = m_saddlePotential(saddleFieldIndices[0],
+                                               saddleFieldIndices[1],
+                                               saddleFieldIndices[2]);
 
-    const umat::fixed<3, 2> & myIntersectionPoints = neighborSetIntersectionPoints(saddleFieldIndices(0),
-                                                                                   saddleFieldIndices(1),
-                                                                                   saddleFieldIndices(2));
+    const umat::fixed<3, 2> & myIntersectionPoints = neighborSetIntersectionPoints(saddleFieldIndices[0],
+                                                                                   saddleFieldIndices[1],
+                                                                                   saddleFieldIndices[2]);
 
     for (uint xn = myIntersectionPoints(0, 0); xn < myIntersectionPoints(0, 1); ++xn)
     {
@@ -380,18 +383,18 @@ double DiffusionReaction::getSaddleEnergyContributionFrom(const Site *site)
 
 double DiffusionReaction::getSaddleEnergyContributionFromNeighborAt(const uint &i, const uint &j, const uint &k)
 {
-    return m_saddlePotential(saddleFieldIndices(0),
-                             saddleFieldIndices(1),
-                             saddleFieldIndices(2))
-            (i - neighborSetIntersectionPoints(saddleFieldIndices(0),
-                                               saddleFieldIndices(1),
-                                               saddleFieldIndices(2))(0, 0),
-             j - neighborSetIntersectionPoints(saddleFieldIndices(0),
-                                               saddleFieldIndices(1),
-                                               saddleFieldIndices(2))(1, 0),
-             k - neighborSetIntersectionPoints(saddleFieldIndices(0),
-                                               saddleFieldIndices(1),
-                                               saddleFieldIndices(2))(2, 0));
+    return m_saddlePotential(saddleFieldIndices[0],
+                             saddleFieldIndices[1],
+                             saddleFieldIndices[2])
+            (i - neighborSetIntersectionPoints(saddleFieldIndices[0],
+                                               saddleFieldIndices[1],
+                                               saddleFieldIndices[2])(0, 0),
+             j - neighborSetIntersectionPoints(saddleFieldIndices[0],
+                                               saddleFieldIndices[1],
+                                               saddleFieldIndices[2])(1, 0),
+             k - neighborSetIntersectionPoints(saddleFieldIndices[0],
+                                               saddleFieldIndices[1],
+                                               saddleFieldIndices[2])(2, 0));
 }
 
 ivec3 DiffusionReaction::getPath() const
@@ -442,6 +445,8 @@ void DiffusionReaction::calcRate()
 {
 
     double newRate = 0;
+
+    KMCDebugger_Assert(updateFlag(), !=, UNSET_UPDATE_FLAG);
 
     if (updateFlag() == defaultUpdateFlag)
     {
@@ -520,6 +525,8 @@ void DiffusionReaction::reset()
 
 }
 
+
+const string  DiffusionReaction::name = "DiffusionReaction";
 
 double        DiffusionReaction::m_rPower = 1.0;
 double        DiffusionReaction::m_scale  = 1.0;
