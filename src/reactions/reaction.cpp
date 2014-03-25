@@ -83,8 +83,13 @@ string Reaction::getFinalizingDebugMessage() const
 
 void Reaction::setRate(const double rate)
 {
+
+    m_solver->registerRateChange(m_rate, rate);
+
     m_lastUsedEnergy = m_reactionSite->energy();
+
     m_rate = rate;
+
 }
 
 const uint &Reaction::NX()

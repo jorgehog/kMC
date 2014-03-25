@@ -267,7 +267,7 @@ void DiffusionReaction::setDirectUpdateFlags(const Site *changedSite)
 
     if (rate() == UNSET_RATE || changedSite == reactionSite())
     {
-        addUpdateFlag(defaultUpdateFlag);
+        registerUpdateFlag(defaultUpdateFlag);
     }
 
     else
@@ -279,7 +279,7 @@ void DiffusionReaction::setDirectUpdateFlags(const Site *changedSite)
 
         if (r_maxDistance == 1)
         {
-            addUpdateFlag(defaultUpdateFlag);
+            registerUpdateFlag(defaultUpdateFlag);
         }
 
         else
@@ -290,17 +290,15 @@ void DiffusionReaction::setDirectUpdateFlags(const Site *changedSite)
             if (d_maxDistance > Site::nNeighborsLimit())
             {
                 KMCDebugger_Assert(Site::nNeighborsLimit() + 1, ==,  d_maxDistance);
-                addUpdateFlag(updateKeepSaddle);
+                registerUpdateFlag(updateKeepSaddle);
             }
 
             else
             {
-                addUpdateFlag(defaultUpdateFlag);
+                registerUpdateFlag(defaultUpdateFlag);
             }
         }
 
-
-//        KMCDebugger_AssertBool(!updateFlags().empty(), "Updateflag should not be empty!", info());
     }
 
 

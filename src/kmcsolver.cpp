@@ -101,6 +101,12 @@ void KMCSolver::onConstruct()
 
     outputCounter = 0;
 
+    totalTime = 0;
+
+    cycle = 1;
+
+    m_kTot = 0;
+
     Boundary::setMainSolver(this);
 
     Reaction::setMainSolver(this);
@@ -120,9 +126,6 @@ void KMCSolver::mainloop()
 
     dumpXYZ();
 
-    totalTime = 0;
-    cycle = 1;
-
     KMCDebugger_Init();
 
     while(cycle <= m_nCycles)
@@ -134,7 +137,7 @@ void KMCSolver::mainloop()
 
         choice = getReactionChoice(R);
 
-        selectedReaction = m_allReactions.at(choice);
+        selectedReaction = m_allPossibleReactions.at(choice);
         KMCDebugger_SetActiveReaction(selectedReaction);
 
         selectedReaction->execute();
@@ -170,6 +173,12 @@ void KMCSolver::reset()
     cycle = 1;
 
     outputCounter = 0;
+
+    m_kTot = 0;
+
+    m_allPossibleReactions.clear();
+
+    m_accuAllRates.clear();
 
     Site::clearAffectedSites();
 
@@ -398,7 +407,7 @@ void KMCSolver::clearSites()
 
     Reaction::clearAll();
 
-    m_allReactions.clear();
+    m_allPossibleReactions.clear();
 
 
     KMCDebugger_ResetEnabled();
@@ -530,12 +539,11 @@ void KMCSolver::initializeSolutionBath()
 void KMCSolver::getRateVariables()
 {
 
-
     m_kTot = 0;
 
     m_accuAllRates.clear();
 
-    m_allReactions.clear();
+    m_allPossibleReactions.clear();
 
 
     Site::updateAffectedSites();
@@ -552,10 +560,16 @@ void KMCSolver::getRateVariables()
 
             m_accuAllRates.push_back(m_kTot);
 
-            m_allReactions.push_back(reaction);
+            m_allPossibleReactions.push_back(reaction);
+
+//            KMCDebugger_Assert(m_accuAllRates.at(m_accuAllRates.size()-1), ==, m_accuAllRates2.at(m_accuAllRates.size()-1));
+//            KMCDebugger_Assert(m_allPossibleReactions.at(m_allPossibleReactions.size()-1), ==, reaction);
 
         });
     });
+
+
+    KMCDebugger_Assert(m_kTot, ==, m_kTot2);
 
 }
 

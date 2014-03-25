@@ -442,14 +442,21 @@ private:
 
     bool m_cannotCrystallize;
 
+
     const uint m_x;
+
     const uint m_y;
+
     const uint m_z;
+
     const uvec3 m_r;
+
 
     double m_energy;
 
+
     int m_particleState = ParticleStates::solution;
+
 
     vector<Reaction*> m_reactions;
 

@@ -123,9 +123,9 @@ public:
         return m_accuAllRates;
     }
 
-    const vector<Reaction*> & allReactions() const
+    const vector<Reaction*> & allPossibleReactions() const
     {
-        return m_allReactions;
+        return m_allPossibleReactions;
     }
 
     const double & kTot() const
@@ -170,7 +170,6 @@ public:
         throw std::runtime_error("Exit failure.");
     }
 
-    //SHOULD BE IN SITE
 
     void clearSiteNeighborhoods()
     {
@@ -186,6 +185,20 @@ public:
         {
             site->clearAllReactions();
         });
+    }
+
+
+    //OPTIMIZATION TMP
+
+    void registerRateChange(double prevRate, double newRate)
+    {
+        if (prevRate == Reaction::UNSET_RATE)
+        {
+            prevRate = 0;
+        }
+
+        m_kTot2 += (newRate - prevRate);
+
     }
 
 
@@ -205,7 +218,7 @@ private:
     double m_kTot;
     vector<double> m_accuAllRates;
 
-    vector<Reaction*> m_allReactions;
+    vector<Reaction*> m_allPossibleReactions;
 
     double totalTime;
 
@@ -232,6 +245,13 @@ private:
     void onConstruct();
 
     static uint refCounter;
+
+    //OPTIMIZATION TMP
+
+    double m_kTot2 = 0;
+    vector<double> m_accuAllRates2;
+    vector<Reaction*> m_allPossibleReactions2;
+
 
 
 };

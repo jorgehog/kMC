@@ -679,7 +679,7 @@ void testBed::testReactionChoise()
                                 return;
                             }
 
-                            CHECK_EQUAL(r, solver->allReactions().at(count));
+                            CHECK_EQUAL(r, solver->allPossibleReactions().at(count));
 
                             kTot += r->rate();
 
@@ -707,7 +707,7 @@ void testBed::testReactionChoise()
                 }
             }
 
-            CHECK_EQUAL(solver->allReactions().at(choice), reaction);
+            CHECK_EQUAL(solver->allPossibleReactions().at(choice), reaction);
             CHECK_EQUAL(choice, count);
             CHECK_EQUAL(count, count2);
 
