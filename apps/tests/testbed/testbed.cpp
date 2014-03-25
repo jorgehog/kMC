@@ -1416,7 +1416,7 @@ void testBed::testKnownCase()
 
     Site::resetBoundariesTo(lastBoundaries);
 
-    ConcentrationWall::setMaxEventsPrCycle(15*15);
+    ConcentrationWall::setMaxEventsPrCycle(5);
 
     solver->initializeCrystal(getSetting<double>(root, {"Initialization", "RelativeSeedSize"}));
 
