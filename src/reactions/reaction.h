@@ -66,9 +66,19 @@ public:
         }
     }
 
-    void resetRate()
+    void disable()
     {
         setRate(Reaction::UNSET_RATE);
+    }
+
+    void setAddress(const uint address)
+    {
+        m_address = address;
+    }
+
+    const uint & address() const
+    {
+        return m_address;
     }
 
 
@@ -156,9 +166,11 @@ public:
         defaultUpdateFlag = 0
     };
 
-    static constexpr double UNSET_RATE = -1337;
+    static const double UNSET_RATE;
 
-    static constexpr double UNSET_ENERGY = -13371337;
+    static const double UNSET_ENERGY;
+
+    static const uint UNSET_ADDRESS;
 
     const static uint & NX();
 
@@ -177,11 +189,14 @@ private:
 
     Site* m_reactionSite = NULL;
 
+    //Can this be in the reaction site?
     double m_lastUsedEnergy;
 
     double m_rate;
 
     int m_updateFlag;
+
+    uint m_address;
 
 protected:
 

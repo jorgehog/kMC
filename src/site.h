@@ -143,7 +143,7 @@ public:
         m_reactions.push_back(reaction);
     }
 
-    void calculateRates();
+    void updateReactions();
 
 
     void initializeDiffusionReactions();

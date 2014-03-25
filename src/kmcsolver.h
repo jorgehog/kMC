@@ -188,38 +188,29 @@ public:
     }
 
 
-    //OPTIMIZATION TMP
+    void registerReactionChange(Reaction * reaction, const double &newRate);
 
-    void registerRateChange(const double &prevRate, const double &newRate)
+    void reshuffleReactions();
+
+    void swapReactionAddresses(const uint dest, const uint orig);
+
+    void postReactionShuffleCleanup(const uint nVacancies);
+
+    void updateAccuAllRateElements(const uint from, const uint to, const double value)
     {
-
-
-        if (prevRate == newRate)
+        for (uint i = from; i < to; ++i)
         {
-            return;
+            m_accuAllRates2.at(i) += value;
         }
-
-        else if (prevRate == Reaction::UNSET_RATE)
-        {
-
-            KMCDebugger_Assert(newRate, !=, Reaction::UNSET_RATE);
-
-            m_kTot += newRate;
-
-        }
-
-        else if (newRate == Reaction::UNSET_RATE)
-        {
-            m_kTot -= prevRate;
-        }
-
-        else
-        {
-            m_kTot += (newRate - prevRate);
-        }
-
     }
 
+    bool isEmptyAddress(const uint address);
+
+
+
+    vector<uint>   m_availableReactionSlots;
+
+    //OPTIMIZATION TMP
     vector<Reaction*> prevUpdatedReacs;
     set<Reaction*> prevUpdatedReacsSet;
 

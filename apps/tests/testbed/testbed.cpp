@@ -1242,7 +1242,7 @@ void testBed::testInitialReactionSetup()
                 r->forceUpdateFlag(Reaction::defaultUpdateFlag);
         });
 
-        currentSite->calculateRates();
+        currentSite->updateReactions();
     });
 
 

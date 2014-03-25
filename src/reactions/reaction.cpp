@@ -11,7 +11,8 @@ Reaction::Reaction(Site *currentSite):
     m_reactionSite(currentSite),
     m_lastUsedEnergy(UNSET_ENERGY),
     m_rate(UNSET_RATE),
-    m_updateFlag(UNSET_UPDATE_FLAG)
+    m_updateFlag(UNSET_UPDATE_FLAG),
+    m_address(UNSET_ADDRESS)
 {
 
 }
@@ -26,8 +27,9 @@ const string Reaction::info(int xr, int yr, int zr, string desc) const
     stringstream s;
     s << "[" << name << "]:" << "\n";
     s << "   rate: " << m_rate << "  ";
+    s << "Address: " << m_address << "  ";
     s << "Selected flag: " << m_updateFlag << "  ";
-    s << "Blocked? " << !isAllowed() << "\n";
+    s << "Allowed? " << !isAllowed() << "\n";
     s << "@";
     s << m_reactionSite->info(xr, yr, zr, desc);
     s << "\n";
@@ -89,9 +91,9 @@ void Reaction::setRate(const double rate)
     m_solver->prevUpdatedReacs.push_back(this);
     m_solver->prevUpdatedReacsSet.insert(this);
 
-//    KMCDebugger_Assert(m_solver->prevUpdatedReacs.size(), ==, m_solver->prevUpdatedReacsSet.size());
+    KMCDebugger_Assert(m_solver->prevUpdatedReacs.size(), ==, m_solver->prevUpdatedReacsSet.size());
 
-    m_solver->registerRateChange(m_rate, rate);
+    m_solver->registerReactionChange(this, rate);
 
     m_lastUsedEnergy = m_reactionSite->energy();
 
@@ -137,6 +139,8 @@ void Reaction::reset()
 
     m_updateFlag = UNSET_UPDATE_FLAG;
 
+    m_address = UNSET_ADDRESS;
+
 }
 
 const string Reaction::name = "Reaction";
@@ -147,6 +151,12 @@ double       Reaction::m_beta = 1.0;
 double       Reaction::m_linearRateScale = 1.0;
 
 uint         Reaction::m_IDCount = 0;
+
+const double Reaction::UNSET_RATE     = -1337;
+
+const double Reaction::UNSET_ENERGY   = -13371337;
+
+const uint   Reaction::UNSET_ADDRESS  = std::numeric_limits<uint>::max();
 
 
 ostream & operator << (ostream& os, const Reaction& ss)

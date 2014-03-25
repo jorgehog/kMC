@@ -58,7 +58,7 @@ void Site::updateAffectedSites()
 
     for (Site* site : m_affectedSites)
     {
-        site->calculateRates();
+        site->updateReactions();
     }
 
     clearAffectedSites();
@@ -154,11 +154,6 @@ void Site::setParticleState(int newState)
 //All reactions must be legal if site is allowed to spawn.
 bool Site::isLegalToSpawn()
 {
-
-    if (m_active)
-    {
-        return false;
-    }
 
     for (Reaction * r : m_reactions)
     {
@@ -368,10 +363,6 @@ void Site::forEachNeighborDo_sendIndices(function<void (Site *, uint, uint, uint
 
 void Site::forEachActiveReactionDo(function<void (Reaction *)> applyFunction) const
 {
-    if (!m_active)
-    {
-        return;
-    }
 
     for (Reaction * reaction : m_reactions)
     {
@@ -384,10 +375,6 @@ void Site::forEachActiveReactionDo(function<void (Reaction *)> applyFunction) co
 
 void Site::forEachActiveReactionDo_sendIndex(function<void (Reaction *, uint)> applyFunction) const
 {
-    if (!m_active)
-    {
-        return;
-    }
 
     uint i = 0;
 
@@ -458,11 +445,11 @@ void Site::decrystallize()
 }
 
 
-void Site::calculateRates()
+void Site::updateReactions()
 {
     for (Reaction* reaction : m_reactions)
     {
-        if (isActive() && reaction->isAllowed())
+        if (reaction->isAllowed())
         {
             reaction->calcRate();
             reaction->resetUpdateFlag();
@@ -470,7 +457,7 @@ void Site::calculateRates()
 
         else
         {
-            reaction->resetRate();
+            reaction->disable();
         }
     }
 }
@@ -1306,8 +1293,11 @@ void Site::clearAffectedSites()
 
     m_affectedSites.clear();
 
-    //TMP
+    m_solver->reshuffleReactions();
 
+
+
+    //TMP
     m_solver->prevUpdatedReacs.clear();
     m_solver->prevUpdatedReacsSet.clear();
 
@@ -1454,7 +1444,7 @@ const string Site::info(int xr, int yr, int zr, string desc) const
     numberSearchRepl(ParticleStates::solution,     ParticleStates::shortNames.at(ParticleStates::solution));
 
     numberSearchRepl(_min+0, ".");
-    numberSearchRepl(_min+1, "--");
+    numberSearchRepl(_min+1, "#");
     numberSearchRepl(_min+2, particleStateShortName() + "^");
     numberSearchRepl(_min+3, desc);
 
