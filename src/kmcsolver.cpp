@@ -147,7 +147,6 @@ void KMCSolver::mainloop()
 
         selectedReaction->execute();
 
-
         if (cycle%m_cyclesPerOutput == 0)
         {
             dumpOutput();
@@ -157,7 +156,6 @@ void KMCSolver::mainloop()
 
 
         Site::updateBoundaries();
-        cout << "-------_" << endl;
 
 
         totalTime += Reaction::linearRateScale()/m_kTot;

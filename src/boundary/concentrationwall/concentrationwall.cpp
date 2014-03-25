@@ -30,35 +30,33 @@ void ConcentrationWall::update()
     uint ce = 0;
 
 
-//    crystalBoxTopology = Site::getCurrentCrystalBoxTopology();
+    //    crystalBoxTopology = Site::getCurrentCrystalBoxTopology();
 
-//    bool resize;
+    //    bool resize;
 
-//    switch (orientation()) {
-//    case Near:
-//        resize = crystalBoxTopology(dimension(), Near) < minDistanceFromSurface;
+    //    switch (orientation()) {
+    //    case Near:
+    //        resize = crystalBoxTopology(dimension(), Near) < minDistanceFromSurface;
 
-//        break;
-//    case Far:
-//        resize = crystalBoxTopology(dimension(), Far) > span() - minDistanceFromSurface;
+    //        break;
+    //    case Far:
+    //        resize = crystalBoxTopology(dimension(), Far) > span() - minDistanceFromSurface;
 
-//        break;
-//    }
-
-
-//    if (resize)
-//    {
-
-//        uvec3 N = solver()->NVec();
-
-//        N(dimension()) += systemSizeIncrementSize; //Size size size...
-
-//        solver()->setBoxSize(N, true, true);
-
-//    }
+    //        break;
+    //    }
 
 
-    cout << Site::getCurrentSolutionDensity()/solver()->targetSaturation() << endl;
+    //    if (resize)
+    //    {
+
+    //        uvec3 N = solver()->NVec();
+
+    //        N(dimension()) += systemSizeIncrementSize; //Size size size...
+
+    //        solver()->setBoxSize(N, true, true);
+
+    //    }
+
 
     std::random_shuffle(boundarySites().begin(), boundarySites().end(), [] (uint n) {return KMC_RNG_UNIFORM()*n;});
 
@@ -66,22 +64,20 @@ void ConcentrationWall::update()
     {
         currentSite = boundarySites().at(c);
 
-        if (currentSite->isActive())
+        if (currentSite->isActive() && !currentSite->isAffected())
         {
-            cout << "removing " << c << endl;
             currentSite->deactivate();
-            cout << "new sat " << " " << Site::getCurrentSolutionDensity()/solver()->targetSaturation()  << endl;
             ce++;
         }
 
         c++; //*giggle*
     }
 
-// SHOULD BE STANDARD
-//    if (c != 0)
-//    {
-//        return;
-//    }
+    // SHOULD BE STANDARD
+    //    if (c != 0)
+    //    {
+    //        return;
+    //    }
 
     while (Site::getCurrentSolutionDensity() < solver()->targetSaturation() && c != boundarySites().size() && ce != m_maxEventsPrCycle)
     {
@@ -89,16 +85,12 @@ void ConcentrationWall::update()
 
         if (currentSite->isLegalToSpawn())
         {
-            cout << "adding " << c << endl;
             currentSite->activate();
-            cout << "new sat " << " " << Site::getCurrentSolutionDensity()/solver()->targetSaturation()  << endl;
             ce++;
         }
 
         c++; //*giggle*
     }
-
-    cout << "---- " << ce << endl;
 
 }
 

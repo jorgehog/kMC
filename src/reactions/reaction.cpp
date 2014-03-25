@@ -90,7 +90,7 @@ void Reaction::setRate(const double rate)
     m_solver->prevUpdatedReacs.push_back(this);
     m_solver->prevUpdatedReacsSet.insert(this);
 
-    KMCDebugger_Assert(m_solver->prevUpdatedReacs.size(), ==, m_solver->prevUpdatedReacsSet.size());
+//    KMCDebugger_Assert(m_solver->prevUpdatedReacs.size(), ==, m_solver->prevUpdatedReacsSet.size());
 
     m_solver->registerRateChange(m_rate, rate);
 

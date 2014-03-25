@@ -193,6 +193,7 @@ public:
      * Misc. trivial functions
      */
 
+
     static const uint & nSurfaces()
     {
         return m_totalDeactiveParticles.memptr()[ParticleStates::surface];
@@ -317,6 +318,11 @@ public:
     const bool & isActive() const
     {
         return m_active;
+    }
+
+    bool isAffected()
+    {
+        return m_affectedSites.find(this) != m_affectedSites.end();
     }
 
 

@@ -17,7 +17,9 @@ void testBed::makeSolver()
 
     Site::setInitialBoundaries(Boundary::Periodic);
 
-    Site::setInitialNNeighborsLimit(2);
+    Site::setInitialNNeighborsLimit(2, false);
+
+    DiffusionReaction::setSeparation(1);
 
     Reaction::setBeta(0.5);
 
@@ -119,7 +121,7 @@ void testBed::testTotalParticleStateCounters()
     for (uint sep = 0; sep <= 3 ; ++sep)
     {
 
-        Site::resetNNeighborsLimitTo(sep + 1);
+        Site::resetNNeighborsLimitTo(sep + 1, false);
 
         DiffusionReaction::resetSeparationTo(sep);
 
@@ -448,7 +450,7 @@ void testBed::testPropertyCalculations()
     CHECK_EQUAL(0, Site::nSolutionParticles());
 
     CHECK_EQUAL(0, Site::getCurrentSolutionDensity());
-    CHECK_EQUAL(1.0, 125*Site::getCurrentRelativeCrystalOccupancy());
+    CHECK_EQUAL(1.0, NX()*NY()*NZ()*Site::getCurrentRelativeCrystalOccupancy());
 
     umat boxTop = Site::getCurrentCrystalBoxTopology();
 
@@ -467,13 +469,13 @@ void testBed::testPropertyCalculations()
 
     CHECK_EQUAL(3, Site::nSolutionParticles());
 
-    CHECK_EQUAL(3.0/124, Site::getCurrentSolutionDensity());
+    CHECK_EQUAL(3.0/(NX()*NY()*NZ()- 1), Site::getCurrentSolutionDensity());
 
     activateAllSites();
 
 
     CHECK_EQUAL(0, Site::nSurfaces());
-    CHECK_EQUAL(125, Site::nCrystals());
+    CHECK_EQUAL(NX()*NY()*NZ(), Site::nCrystals());
     CHECK_EQUAL(0, Site::nSolutionParticles());
 
     CHECK_EQUAL(0, Site::getCurrentSolutionDensity());
@@ -495,33 +497,38 @@ void testBed::testPropertyCalculations()
     deactivateAllSites();
 
     center->spawnAsFixedCrystal();
-    solver->getSite(2, 2, 3)->activate();
-    solver->getSite(2, 2, 4)->activate();
 
-    solver->getSite(2, 1, 1)->activate();
-    solver->getSite(2, 1, 2)->activate();
-    solver->getSite(2, 1, 3)->activate();
+    uint sx = NX()/2;
+    uint sy = NY()/2;
+    uint sz = NZ()/2;
+
+    solver->getSite(sx, sy    , sz + 1)->activate();
+    solver->getSite(sx, sy    , sz + 2)->activate();
+
+    solver->getSite(sx, sy - 1, sz - 1)->activate();
+    solver->getSite(sx, sy - 1, sz    )->activate();
+    solver->getSite(sx, sy - 1, sz + 1)->activate();
 
 
-    solver->getSite(2, 3, 3)->activate();
+    solver->getSite(sx, sy + 1, sz + 1)->activate();
 
-    /*
-     *        x x x
+    /*            x
      *          x x x
-     *            x
+     *          x F
+     *          x
      *
      */
 
 
     boxTop = Site::getCurrentCrystalBoxTopology();
 
-    CHECK_EQUAL(2, boxTop(0, 0));
-    CHECK_EQUAL(1, boxTop(1, 0));
-    CHECK_EQUAL(1, boxTop(2, 0));
+    CHECK_EQUAL(sx,     boxTop(0, 0));
+    CHECK_EQUAL(sy - 1, boxTop(1, 0));
+    CHECK_EQUAL(sz - 1, boxTop(2, 0));
 
-    CHECK_EQUAL(2, boxTop(0, 1));
-    CHECK_EQUAL(3, boxTop(1, 1));
-    CHECK_EQUAL(4, boxTop(2, 1));
+    CHECK_EQUAL(sx,     boxTop(0, 1));
+    CHECK_EQUAL(sy + 1, boxTop(1, 1));
+    CHECK_EQUAL(sz + 2, boxTop(2, 1));
 
 }
 
@@ -1279,7 +1286,7 @@ void testBed::testSequential()
 
     const SnapShot & s2 = *testSequentialCore();
 
-    //ConcWall is not reset properly.
+
     CHECK_EQUAL(s1, s2);
 
 
@@ -1351,11 +1358,11 @@ void testBed::initBoundaryTestParameters()
 void testBed::initSimpleSystemParameters()
 {
 
-    solver->setBoxSize({5, 5, 5}, false);
+    solver->setBoxSize({6, 6, 6}, false);
 
     DiffusionReaction::resetSeparationTo(1);
 
-    Site::resetNNeighborsLimitTo(1);
+    Site::resetNNeighborsLimitTo(2);
 
     Site::resetNNeighborsToCrystallizeTo(1);
 
@@ -1740,7 +1747,9 @@ void testBed::testDiffusionSeparation()
 
     for (uint sep : separations)
     {
-        Site::resetNNeighborsLimitTo(sep + 1);
+
+        Site::resetNNeighborsLimitTo(sep + 1, false);
+
         DiffusionReaction::resetSeparationTo(sep);
 
         for (uint i = 1; i <= sep + 2; ++i)

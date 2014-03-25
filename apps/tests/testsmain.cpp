@@ -9,8 +9,8 @@
 #include <sys/types.h>
 
 
-#define focusSuite "ConcentrationWallBoundaries"
-#define focusTest  "Sequential"
+//#define focusSuite "ConcentrationWallBoundaries"
+#define focusTest  "KnownCase"
 
 
 #include "defines.h"
