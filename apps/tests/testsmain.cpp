@@ -9,8 +9,8 @@
 #include <sys/types.h>
 
 
-//#define focusSuite "ConcentrationWallBoundaries"
-//#define focusTest  "KnownCase"
+//#define focusSuite "PeriodicBoundaries"
+//#define focusTest  "AllPossibleRatesStuff"
 
 
 #include "defines.h"
@@ -70,6 +70,8 @@ TESTWRAPPER(UpdateNeigbors)             \
                                         \
 TESTWRAPPER(EnergyAndNeighborSetup)     \
                                         \
+TESTWRAPPER(AllPossibleRatesStuff)      \
+                                        \
 TESTWRAPPER(Sequential)                 \
                                         \
 TESTWRAPPER(KnownCase)
@@ -85,7 +87,7 @@ SUITE(EdgeBoundaries)
     AllBoundaryTests
 }
 
-SUITE(ConcentrationWallBoundaries)
+SUITE(ConcWallBoundaries)
 {
     AllBoundaryTests
 }
@@ -142,7 +144,7 @@ int main()
     exitSuccess += RUNSUITE(runner, "SurfaceBoundaries");
 
     testBed::initBoundarySuite(Boundary::allBoundariesAs(Boundary::ConcentrationWall));
-    exitSuccess += RUNSUITE(runner, "ConcentrationWallBoundaries");
+    exitSuccess += RUNSUITE(runner, "ConcWallBoundaries");
 
     testBed::initBoundarySuite(mixedBoundaries);
     exitSuccess += RUNSUITE(runner, "MixedBoundaries");

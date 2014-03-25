@@ -167,13 +167,14 @@ void KMCSolver::mainloop()
 
 }
 
+
 void KMCSolver::reset()
 {
 
     finalizeObject();
 
     //TMP
-    m_kTot2 = 0;
+    m_kTot = 0;
     m_accuAllRates2.clear();
     m_allPossibleReactions2.clear();
     prevUpdatedReacs.clear();
@@ -551,7 +552,7 @@ void KMCSolver::initializeSolutionBath()
 void KMCSolver::getRateVariables()
 {
 
-    m_kTot = 0;
+    double m_kTot_tmp = 0;
 
     m_accuAllRates.clear();
 
@@ -560,32 +561,21 @@ void KMCSolver::getRateVariables()
 
     Site::updateAffectedSites();
 
-    double minRate = std::numeric_limits<double>::max();
-    forEachSiteDo([this, &minRate] (Site * site)
+    forEachSiteDo([this, &m_kTot_tmp] (Site * site)
     {
-        site->forEachActiveReactionDo([this, &minRate] (Reaction * reaction)
+        site->forEachActiveReactionDo([this, &m_kTot_tmp] (Reaction * reaction)
         {
 
             KMCDebugger_Assert(reaction->rate(), !=, Reaction::UNSET_RATE, "Reaction rate should not be unset at this point.", reaction->getFinalizingDebugMessage());
 
-            m_kTot += reaction->rate();
+            m_kTot_tmp += reaction->rate();
 
-            if (reaction->rate() < minRate)
-            {
-                minRate = reaction->rate();
-            }
-
-            m_accuAllRates.push_back(m_kTot);
+            m_accuAllRates.push_back(m_kTot_tmp);
 
             m_allPossibleReactions.push_back(reaction);
 
-//            KMCDebugger_Assert(m_accuAllRates.at(m_accuAllRates.size()-1), ==, m_accuAllRates2.at(m_accuAllRates.size()-1));
-//            KMCDebugger_Assert(m_allPossibleReactions.at(m_allPossibleReactions.size()-1), ==, reaction);
-
         });
     });
-
-    KMCDebugger_AssertClose(m_kTot, m_kTot2, 1E-5);
 
 }
 
@@ -694,7 +684,7 @@ void KMCSolver::setBoxSize(const uvec3 boxSize, bool check, bool keepSystem)
 void KMCSolver::setRNGSeed(uint seedState, int defaultSeed)
 {
 
-    seed_type prevSeed = Seed::initialSeed;
+//    seed_type prevSeed = Seed::initialSeed;
 
     seed_type seed = -1;
 
@@ -713,12 +703,10 @@ void KMCSolver::setRNGSeed(uint seedState, int defaultSeed)
 
     KMC_INIT_RNG(seed);
 
-
-    if (prevSeed != Seed::initialSeed)
-    {
-        cout << " -- new seed set: " << seed << endl;
-    }
-
+//    if (prevSeed != Seed::initialSeed)
+//    {
+//        cout << " -- new seed set: " << seed << endl;
+//    }
 }
 
 

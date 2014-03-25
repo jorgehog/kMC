@@ -61,6 +61,8 @@ public:
 
     static void testDiffusionSeparation();
 
+    static void testAllPossibleRatesStuff();
+
     static void initBoundarySuite(const umat &boundaries);
 
     static KMCSolver* solver;
@@ -86,6 +88,10 @@ private:
     {
         return solver->NZ();
     }
+
+    static void mainloop_meat();
+
+    static void fill_rate_stuff(vector<double> &accuAllRates, vector<Reaction *> &allPossibleReactions, double &kTot);
 
     static const SnapShot *testSequentialCore();
 

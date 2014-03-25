@@ -204,18 +204,18 @@ public:
 
             KMCDebugger_Assert(newRate, !=, Reaction::UNSET_RATE);
 
-            m_kTot2 += newRate;
+            m_kTot += newRate;
 
         }
 
         else if (newRate == Reaction::UNSET_RATE)
         {
-            m_kTot2 -= prevRate;
+            m_kTot -= prevRate;
         }
 
         else
         {
-            m_kTot2 += (newRate - prevRate);
+            m_kTot += (newRate - prevRate);
         }
 
     }
@@ -272,8 +272,6 @@ private:
     static uint refCounter;
 
     //OPTIMIZATION TMP
-
-    double m_kTot2 = 0;
     vector<double> m_accuAllRates2;
     vector<Reaction*> m_allPossibleReactions2;
 

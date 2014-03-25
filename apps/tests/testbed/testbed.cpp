@@ -296,6 +296,8 @@ void testBed::testDistanceTo()
         });
     });
 
+    initBoundaryTestParameters();
+
 }
 
 void testBed::testDeactivateSurface()
@@ -1823,6 +1825,50 @@ void testBed::testDiffusionSeparation()
 
 }
 
+void testBed::testAllPossibleRatesStuff()
+{
+
+    Reaction::setLinearRateScale(1000);
+
+    solver->initializeCrystal(0.2);
+
+    double kTot;
+    vector<double> accuAllRates;
+    vector<Reaction*> allPossibleReactions;
+
+    uint cycle = 1;
+    uint nCycles = 500;
+
+    while (cycle <= nCycles)
+    {
+
+        solver->getRateVariables();
+
+        fill_rate_stuff(accuAllRates, allPossibleReactions, kTot);
+
+        CHECK_CLOSE(kTot, solver->kTot(), 1E-5);
+
+
+        double R = solver->kTot()*KMC_RNG_UNIFORM();
+
+        uint choice = solver->getReactionChoice(R);
+
+        Reaction * selectedReaction = solver->allPossibleReactions().at(choice);
+
+        selectedReaction->execute();
+
+        Site::updateBoundaries();
+
+        cycle++;
+
+    }
+
+
+    Reaction::setLinearRateScale(1);
+
+
+}
+
 void testBed::initBoundarySuite(const umat & boundaries)
 {
 
@@ -1855,6 +1901,53 @@ void testBed::initBoundarySuite(const umat & boundaries)
 
     initBoundaryTestParameters();
 
+}
+
+void testBed::mainloop_meat()
+{
+
+    solver->getRateVariables();
+
+    double R = solver->kTot()*KMC_RNG_UNIFORM();
+
+    uint choice = solver->getReactionChoice(R);
+
+    Reaction * selectedReaction = solver->allPossibleReactions().at(choice);
+
+    selectedReaction->execute();
+
+    Site::updateBoundaries();
+
+}
+
+void testBed::fill_rate_stuff(vector<double> & accuAllRates, vector<Reaction*> & allPossibleReactions, double & kTot)
+{
+
+    kTot = 0;
+    accuAllRates.clear();
+    allPossibleReactions.clear();
+
+    double minRate = std::numeric_limits<double>::max();
+    solver->forEachSiteDo([&] (Site * site)
+    {
+        site->forEachActiveReactionDo([&] (Reaction * reaction)
+        {
+
+            KMCDebugger_Assert(reaction->rate(), !=, Reaction::UNSET_RATE, "Reaction rate should not be unset at this point.", reaction->getFinalizingDebugMessage());
+
+            kTot += reaction->rate();
+
+            if (reaction->rate() < minRate)
+            {
+                minRate = reaction->rate();
+            }
+
+            accuAllRates.push_back(kTot);
+
+            allPossibleReactions.push_back(reaction);
+
+        });
+    });
 }
 
 
