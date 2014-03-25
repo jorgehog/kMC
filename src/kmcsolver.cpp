@@ -67,15 +67,13 @@ KMCSolver::KMCSolver()
 KMCSolver::~KMCSolver()
 {
 
-    checkRefCounter();
+    finalizeObject();
 
     clearSites();
 
     Site::clearAll();
     DiffusionReaction::clearAll();
     Boundary::clearAll();
-
-    KMCDebugger_Finalize();
 
     refCounter--;
 
@@ -115,6 +113,13 @@ void KMCSolver::onConstruct()
 
     refCounter++;
 
+}
+
+void KMCSolver::finalizeObject()
+{
+    checkRefCounter();
+
+    KMCDebugger_Finalize();
 }
 
 void KMCSolver::mainloop()
@@ -164,9 +169,15 @@ void KMCSolver::mainloop()
 void KMCSolver::reset()
 {
 
-    checkRefCounter();
+    finalizeObject();
 
-    KMCDebugger_Finalize();
+    //TMP
+    m_kTot2 = 0;
+    m_accuAllRates2.clear();
+    m_allPossibleReactions2.clear();
+    prevUpdatedReacs.clear();
+    prevUpdatedReacsSet.clear();
+    //
 
     totalTime = 0;
 
@@ -548,15 +559,20 @@ void KMCSolver::getRateVariables()
 
     Site::updateAffectedSites();
 
-
-    forEachSiteDo([this] (Site * site)
+    double minRate = std::numeric_limits<double>::max();
+    forEachSiteDo([this, &minRate] (Site * site)
     {
-        site->forEachActiveReactionDo([this] (Reaction * reaction)
+        site->forEachActiveReactionDo([this, &minRate] (Reaction * reaction)
         {
 
             KMCDebugger_Assert(reaction->rate(), !=, Reaction::UNSET_RATE, "Reaction rate should not be unset at this point.", reaction->getFinalizingDebugMessage());
 
             m_kTot += reaction->rate();
+
+            if (reaction->rate() < minRate)
+            {
+                minRate = reaction->rate();
+            }
 
             m_accuAllRates.push_back(m_kTot);
 
@@ -571,7 +587,7 @@ void KMCSolver::getRateVariables()
     prevUpdatedReacs.clear();
     prevUpdatedReacsSet.clear();
 
-    KMCDebugger_Assert(m_kTot, ==, m_kTot2);
+    KMCDebugger_AssertClose(m_kTot, m_kTot2, minRate/2);
 
 }
 

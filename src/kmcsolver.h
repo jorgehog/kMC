@@ -11,7 +11,7 @@
 #include <sys/types.h>
 #include <armadillo>
 
-#include <climits>
+#include <limits>
 
 #include <libconfig_utils/libconfig_utils.h>
 
@@ -35,7 +35,7 @@ public:
 
     ~KMCSolver();
 
-    const static uint UNSET_UINT = (uint)ULLONG_MAX;
+    const static uint UNSET_UINT = std::numeric_limits<uint>::max();
 
 
     void mainloop();
@@ -193,7 +193,13 @@ public:
     void registerRateChange(const double &prevRate, const double &newRate)
     {
 
-        if (prevRate == Reaction::UNSET_RATE)
+
+        if (prevRate == newRate)
+        {
+            return;
+        }
+
+        else if (prevRate == Reaction::UNSET_RATE)
         {
 
             KMCDebugger_Assert(newRate, !=, Reaction::UNSET_RATE);
@@ -256,9 +262,12 @@ private:
 
     void dumpOutput();
 
+
     void checkRefCounter();
 
     void onConstruct();
+
+    void finalizeObject();
 
     static uint refCounter;
 

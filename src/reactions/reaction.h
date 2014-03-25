@@ -1,7 +1,7 @@
 #pragma once
 
 #include <sys/types.h>
-#include <climits>
+#include <limits>
 #include <sstream>
 #include <set>
 
@@ -152,7 +152,7 @@ public:
     //! triumphant flag.
     enum AllUpdateFlags
     {
-        UNSET_UPDATE_FLAG = INT_MAX,
+        UNSET_UPDATE_FLAG = std::numeric_limits<int>::max(),
         defaultUpdateFlag = 0
     };
 

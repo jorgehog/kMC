@@ -455,11 +455,19 @@ void Site::decrystallize()
 
 void Site::calculateRates()
 {
-    forEachActiveReactionDo([] (Reaction* reaction)
+    for (Reaction* reaction : m_reactions)
     {
-        reaction->calcRate();
-        reaction->resetUpdateFlag();
-    });
+        if (reaction->isAllowed())
+        {
+            reaction->calcRate();
+            reaction->resetUpdateFlag();
+        }
+
+        else
+        {
+            reaction->resetRate();
+        }
+    }
 }
 
 void Site::initializeDiffusionReactions()
@@ -580,6 +588,8 @@ void Site::setNeighboringDirectUpdateFlags()
 
     Boundary::setupCurrentBoundaries(x(), y(), z());
 
+    Site * neighbor;
+
     int lim = (int)m_nNeighborsLimit + 1;
 
     for (int i = -lim; i <= lim; ++i)
@@ -598,7 +608,15 @@ void Site::setNeighboringDirectUpdateFlags()
 
                     if (!Boundary::isBlocked(xTrans, yTrans, zTrans))
                     {
-                        for (Reaction * r : m_solver->getSite(xTrans, yTrans, zTrans)->reactions())
+
+                        neighbor = m_solver->getSite(xTrans, yTrans, zTrans);
+
+                        if (!neighbor->isActive())
+                        {
+                            continue;
+                        }
+
+                        for (Reaction * r : neighbor->reactions())
                         {
 
                             int xr, yr, zr;
@@ -607,14 +625,17 @@ void Site::setNeighboringDirectUpdateFlags()
 
                             uint l = Site::getLevel(xr, yr, zr);
 
-                            if (l < Site::nNeighborsLimit() || true)
+                            if (l <= Site::nNeighborsLimit() + 1)
                             {
-                                r->registerUpdateFlag(Reaction::defaultUpdateFlag);
+                                if (r->isAllowed())
+                                {
+                                    r->registerUpdateFlag(Reaction::defaultUpdateFlag);
+                                }
                             }
 
-                            m_affectedSites.insert(m_solver->getSite(xTrans, yTrans, zTrans));
-
                         }
+
+                        m_affectedSites.insert(neighbor);
                     }
                 }
 

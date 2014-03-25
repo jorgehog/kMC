@@ -85,7 +85,7 @@ void Reaction::setRate(const double rate)
 {
 
     KMCDebugger_Assert(rate, !=, 0, "This reaction should be deactive.");
-    KMCDebugger_AssertBool(m_reactionSite->isActive() && this->isAllowed());
+    KMCDebugger_AssertBool(m_reactionSite->isActive());
 
     m_solver->prevUpdatedReacs.push_back(this);
     m_solver->prevUpdatedReacsSet.insert(this);
