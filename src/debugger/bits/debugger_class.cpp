@@ -444,4 +444,9 @@ void Debugger::reset()
 
 }
 
+void Debugger::popAffected(Site *site)
+{
+    affectedUnion.erase(affectedUnion.find(site));
+}
+
 #endif

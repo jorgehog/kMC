@@ -63,6 +63,7 @@ public:
     static void setActiveReaction(Reaction * reaction);
     static void initialize();
     static void reset();
+    static void popAffected(Site * site);
     static string fullTrace(int line, const string filename, const string additionalInfo = "");
     static string partialTrace(const uint & i);
     //

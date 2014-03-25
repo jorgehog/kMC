@@ -45,6 +45,8 @@ public:
     static void updateBoundaries();
 
 
+    static void popAffectedSite(Site * site);
+
     static void updateAffectedSites();
 
     static void selectUpdateFlags();

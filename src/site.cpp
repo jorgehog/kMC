@@ -58,11 +58,6 @@ void Site::updateAffectedSites()
 
     for (Site* site : m_affectedSites)
     {
-        if (!site->isActive())
-        {
-            continue;
-        }
-
         site->calculateRates();
     }
 
@@ -254,6 +249,14 @@ void Site::updateBoundaries()
             m_boundaries(i, j)->update();
         }
     }
+}
+
+void Site::popAffectedSite(Site *site)
+{
+    KMCDebugger_AssertBool(site->isAffected());
+    KMCDebugger_PopAffected(site);
+
+    m_affectedSites.erase(m_affectedSites.find(site));
 }
 
 
@@ -459,7 +462,7 @@ void Site::calculateRates()
 {
     for (Reaction* reaction : m_reactions)
     {
-        if (reaction->isAllowed())
+        if (isActive() && reaction->isAllowed())
         {
             reaction->calcRate();
             reaction->resetUpdateFlag();
@@ -841,14 +844,10 @@ void Site::flipDeactive()
     m_totalDeactiveParticles(particleState())++;
 
 
-    forEachActiveReactionDo([] (Reaction * reaction)
-    {
-        reaction->resetRate();
-    });
-
-
     m_active = false;
 
+
+    m_affectedSites.insert(this);
 
     informNeighborhoodOnChange(-1);
 

@@ -67,7 +67,7 @@ void ConcentrationWall::update()
         {
             currentSite = boundarySites().at(c);
 
-            if (currentSite->isActive() && !currentSite->isAffected())
+            if (currentSite->isActive())
             {
                 currentSite->deactivate();
                 ce++;
