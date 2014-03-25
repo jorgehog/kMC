@@ -25,16 +25,6 @@ public:
 
     static const string name;
 
-    void registerUpdateFlag(int flag)
-    {
-        if (flag < m_updateFlag)
-        {
-            m_updateFlag = flag;
-        }
-    }
-
-    void selectTriumphingUpdateFlag();
-
     static void setMainSolver(KMCSolver * m_solver);
 
     static void loadConfig(const Setting & setting);
@@ -67,6 +57,19 @@ public:
 
     virtual const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X")  const;
 
+
+    void registerUpdateFlag(int flag)
+    {
+        if (flag < m_updateFlag)
+        {
+            m_updateFlag = flag;
+        }
+    }
+
+    void resetRate()
+    {
+        setRate(Reaction::UNSET_RATE);
+    }
 
 
     const static uint & IDCount()

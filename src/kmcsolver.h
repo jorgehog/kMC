@@ -173,7 +173,7 @@ public:
 
     void clearSiteNeighborhoods()
     {
-        forEachSiteDo([] (Site * site)
+        forEachSiteDo([] (Site *site)
         {
             site->clearNeighborhood();
         });
@@ -181,7 +181,7 @@ public:
 
     void clearAllReactions()
     {
-        forEachSiteDo([] (Site * site)
+        forEachSiteDo([] (Site *site)
         {
             site->clearAllReactions();
         });
@@ -190,16 +190,32 @@ public:
 
     //OPTIMIZATION TMP
 
-    void registerRateChange(double prevRate, double newRate)
+    void registerRateChange(const double &prevRate, const double &newRate)
     {
+
         if (prevRate == Reaction::UNSET_RATE)
         {
-            prevRate = 0;
+
+            KMCDebugger_Assert(newRate, !=, Reaction::UNSET_RATE);
+
+            m_kTot2 += newRate;
+
         }
 
-        m_kTot2 += (newRate - prevRate);
+        else if (newRate == Reaction::UNSET_RATE)
+        {
+            m_kTot2 -= prevRate;
+        }
+
+        else
+        {
+            m_kTot2 += (newRate - prevRate);
+        }
 
     }
+
+    vector<Reaction*> prevUpdatedReacs;
+    set<Reaction*> prevUpdatedReacsSet;
 
 
 private:
@@ -251,7 +267,6 @@ private:
     double m_kTot2 = 0;
     vector<double> m_accuAllRates2;
     vector<Reaction*> m_allPossibleReactions2;
-
 
 
 };

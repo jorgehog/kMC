@@ -568,6 +568,8 @@ void KMCSolver::getRateVariables()
         });
     });
 
+    prevUpdatedReacs.clear();
+    prevUpdatedReacsSet.clear();
 
     KMCDebugger_Assert(m_kTot, ==, m_kTot2);
 

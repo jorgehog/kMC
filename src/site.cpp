@@ -818,6 +818,12 @@ void Site::flipDeactive()
     m_totalDeactiveParticles(particleState())++;
 
 
+    forEachActiveReactionDo([] (Reaction * reaction)
+    {
+        reaction->resetRate();
+    });
+
+
     m_active = false;
 
 
