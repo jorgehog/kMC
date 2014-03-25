@@ -54,6 +54,8 @@ Site::~Site()
 void Site::updateAffectedSites()
 {
 
+    KMCDebugger_PushTraces();
+
     for (Site* site : m_affectedSites)
     {
         if (!site->isActive())
@@ -1302,8 +1304,6 @@ void Site::finalizeBoundaries()
 
 void Site::clearAffectedSites()
 {
-
-    KMCDebugger_PushTraces();
 
     m_affectedSites.clear();
 

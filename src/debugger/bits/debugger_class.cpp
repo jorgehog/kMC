@@ -68,7 +68,10 @@ void Debugger::resetEnabled()
 
 void Debugger::pushTraces()
 {
-    if (!enabled) return;
+    if (!enabled)
+    {
+        return;
+    }
 
     timerData.push_back(timer.toc());
 
@@ -110,9 +113,13 @@ void Debugger::pushTraces()
 void Debugger::pushImplication(Site * site, const char * _new)
 {
 
-    if (!enabled) return;
-
     using namespace std;
+
+    if (!enabled)
+    {
+        return;
+    }
+
 
     stringstream s;
 
@@ -135,10 +142,13 @@ void Debugger::pushImplication(Site * site, const char * _new)
 
 void Debugger::markPartialStep(const char * msg)
 {
-
-    if (!enabled) return;
-
     using namespace std;
+
+    if (!enabled)
+    {
+        return;
+    }
+
 
     stringstream s;
 
@@ -157,7 +167,10 @@ void Debugger::markPartialStep(const char * msg)
 void Debugger::setActiveReaction(Reaction *reaction)
 {
 
-    if (!enabled) return;
+    if (!enabled)
+    {
+        return;
+    }
 
     currentReaction = reaction;
     lastCurrentReaction = reaction;
@@ -166,7 +179,10 @@ void Debugger::setActiveReaction(Reaction *reaction)
 
 void Debugger::initialize()
 {
-    if (!enabled) return;
+    if (!enabled)
+    {
+        return;
+    }
 
     reset();
 
@@ -296,7 +312,10 @@ std::string Debugger::addFlagsToImplications()
 
 void Debugger::dumpFullTrace(int line, const char * filename, const string additionalInfo)
 {
-    if (!enabled) return;
+    if (!enabled)
+    {
+        return;
+    }
 
 
     using namespace std;
@@ -340,7 +359,10 @@ void Debugger::dumpFullTrace(int line, const char * filename, const string addit
 void Debugger::dumpPartialTrace(const int &i)
 {
 
-    if (!enabled) return;
+    if (!enabled)
+    {
+        return;
+    }
 
     using namespace std;
 
