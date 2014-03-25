@@ -584,9 +584,6 @@ void KMCSolver::getRateVariables()
         });
     });
 
-    prevUpdatedReacs.clear();
-    prevUpdatedReacsSet.clear();
-
     KMCDebugger_AssertClose(m_kTot, m_kTot2, minRate/2);
 
 }

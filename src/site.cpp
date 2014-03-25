@@ -64,7 +64,7 @@ void Site::updateAffectedSites()
         site->calculateRates();
     }
 
-    m_affectedSites.clear();
+    clearAffectedSites();
 
 }
 
@@ -1303,6 +1303,12 @@ void Site::finalizeBoundaries()
 void Site::clearAffectedSites()
 {
     m_affectedSites.clear();
+
+    //TMP
+
+    m_solver->prevUpdatedReacs.clear();
+    m_solver->prevUpdatedReacsSet.clear();
+
 }
 
 void Site::setZeroTotalEnergy()

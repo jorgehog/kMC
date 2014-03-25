@@ -346,6 +346,7 @@ void testBed::testDeactivateSurface()
 
         CHECK_EQUAL(ParticleStates::crystal, origNextNeighbor->particleState());
 
+        Site::clearAffectedSites();
         for (uint i = 1; i < DiffusionReaction::separation(); ++i)
         {
             inBetweenSite = solver->getSite(NX()/2 + 1 + i, NY()/2, NZ()/2);
@@ -1225,7 +1226,7 @@ void testBed::testInitialReactionSetup()
         });
     });
 
-    solver->forEachSiteDo([] (Site * currentSite)
+    solver->forEachActiveSiteDo([] (Site * currentSite)
     {
         currentSite->forEachActiveReactionDo([] (Reaction * r)
         {
@@ -1685,6 +1686,8 @@ void testBed::testnNeighborsToCrystallize()
             }
         }
 
+        Site::clearAffectedSites();
+
         for (int i = -1; i <= 1; ++i)
         {
             for (int j = -1; j <= 1; ++j)
@@ -1711,6 +1714,9 @@ void testBed::testnNeighborsToCrystallize()
 
             }
         }
+
+
+        Site::clearAffectedSites();
 
     }
 
@@ -1796,6 +1802,9 @@ void testBed::testDiffusionSeparation()
 
                 destination->deactivate();
             }
+
+
+            Site::clearAffectedSites();
 
         }
 
