@@ -58,8 +58,9 @@ void ConcentrationWall::update()
 //    }
 
 
-    std::random_shuffle(boundarySites().begin(), boundarySites().end(), [] (uint n) {return KMC_RNG_UNIFORM()*n;});
+    cout << Site::getCurrentSolutionDensity()/solver()->targetSaturation() << endl;
 
+    std::random_shuffle(boundarySites().begin(), boundarySites().end(), [] (uint n) {return KMC_RNG_UNIFORM()*n;});
 
     while (Site::getCurrentSolutionDensity() > solver()->targetSaturation() && c != boundarySites().size() && ce != m_maxEventsPrCycle)
     {
@@ -67,12 +68,20 @@ void ConcentrationWall::update()
 
         if (currentSite->isActive())
         {
+            cout << "removing " << c << endl;
             currentSite->deactivate();
+            cout << "new sat " << " " << Site::getCurrentSolutionDensity()/solver()->targetSaturation()  << endl;
             ce++;
         }
 
         c++; //*giggle*
     }
+
+// SHOULD BE STANDARD
+//    if (c != 0)
+//    {
+//        return;
+//    }
 
     while (Site::getCurrentSolutionDensity() < solver()->targetSaturation() && c != boundarySites().size() && ce != m_maxEventsPrCycle)
     {
@@ -80,12 +89,16 @@ void ConcentrationWall::update()
 
         if (currentSite->isLegalToSpawn())
         {
+            cout << "adding " << c << endl;
             currentSite->activate();
+            cout << "new sat " << " " << Site::getCurrentSolutionDensity()/solver()->targetSaturation()  << endl;
             ce++;
         }
 
         c++; //*giggle*
     }
+
+    cout << "---- " << ce << endl;
 
 }
 

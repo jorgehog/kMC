@@ -259,6 +259,8 @@ std::string Debugger::addFlagsToImplications()
         site->forEachActiveReactionDo([&] (Reaction * r)
         {
 
+            KMCDebugger_Assert(r->updateFlag(), !=, Reaction::UNSET_UPDATE_FLAG);
+
             reacss << "    .    " << r->str() << " Flag: " << r->updateFlag();
 
             addSite = true;

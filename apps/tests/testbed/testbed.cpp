@@ -1265,10 +1265,10 @@ void testBed::testInitialReactionSetup()
 void testBed::testSequential()
 {
 
+    solver->reset();
+
     initBoundaryTestParameters();
 
-
-    solver->reset();
 
     const SnapShot s0(solver);
 

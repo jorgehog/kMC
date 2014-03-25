@@ -586,63 +586,63 @@ void Site::setNeighboringDirectUpdateFlags()
 
     //BUGFIX TMP
 
-    Boundary::setupCurrentBoundaries(x(), y(), z());
+//    Boundary::setupCurrentBoundaries(x(), y(), z());
 
-    Site * neighbor;
+//    Site * neighbor;
 
-    int lim = (int)m_nNeighborsLimit + 1;
+//    int lim = (int)m_nNeighborsLimit + 1;
 
-    for (int i = -lim; i <= lim; ++i)
-    {
-        for (int j = -lim; j <= lim; ++j)
-        {
-            for (int k = -lim; k <= lim; ++k)
-            {
+//    for (int i = -lim; i <= lim; ++i)
+//    {
+//        for (int j = -lim; j <= lim; ++j)
+//        {
+//            for (int k = -lim; k <= lim; ++k)
+//            {
 
-                if (Site::getLevel(abs(i), abs(j), abs(k)) == lim - 1)
-                {
+//                if (Site::getLevel(abs(i), abs(j), abs(k)) == lim - 1)
+//                {
 
-                    uint xTrans = Boundary::currentBoundaries(0)->transformCoordinate(i + (int)x());
-                    uint yTrans = Boundary::currentBoundaries(1)->transformCoordinate(j + (int)y());
-                    uint zTrans = Boundary::currentBoundaries(2)->transformCoordinate(k + (int)z());
+//                    uint xTrans = Boundary::currentBoundaries(0)->transformCoordinate(i + (int)x());
+//                    uint yTrans = Boundary::currentBoundaries(1)->transformCoordinate(j + (int)y());
+//                    uint zTrans = Boundary::currentBoundaries(2)->transformCoordinate(k + (int)z());
 
-                    if (!Boundary::isBlocked(xTrans, yTrans, zTrans))
-                    {
+//                    if (!Boundary::isBlocked(xTrans, yTrans, zTrans))
+//                    {
 
-                        neighbor = m_solver->getSite(xTrans, yTrans, zTrans);
+//                        neighbor = m_solver->getSite(xTrans, yTrans, zTrans);
 
-                        if (!neighbor->isActive())
-                        {
-                            continue;
-                        }
+//                        if (!neighbor->isActive())
+//                        {
+//                            continue;
+//                        }
 
-                        for (Reaction * r : neighbor->reactions())
-                        {
+//                        for (Reaction * r : neighbor->reactions())
+//                        {
 
-                            int xr, yr, zr;
+//                            int xr, yr, zr;
 
-                            static_cast<DiffusionReaction*>(r)->destinationSite()->distanceTo(this, xr, yr, zr, true);
+//                            static_cast<DiffusionReaction*>(r)->destinationSite()->distanceTo(this, xr, yr, zr, true);
 
-                            uint l = Site::getLevel(xr, yr, zr);
+//                            uint l = Site::getLevel(xr, yr, zr);
 
-                            if (l <= Site::nNeighborsLimit() + 1)
-                            {
-                                if (r->isAllowed())
-                                {
-                                    r->registerUpdateFlag(Reaction::defaultUpdateFlag);
-                                }
-                            }
+//                            if (l <= Site::nNeighborsLimit() + 1)
+//                            {
+//                                if (r->isAllowed())
+//                                {
+//                                    r->registerUpdateFlag(Reaction::defaultUpdateFlag);
+//                                }
+//                            }
 
-                        }
+//                        }
 
-                        m_affectedSites.insert(neighbor);
-                    }
-                }
+//                        m_affectedSites.insert(neighbor);
+//                    }
+//                }
 
 
-            }
-        }
-    }
+//            }
+//        }
+//    }
 
     //TMP END
 
@@ -1302,6 +1302,9 @@ void Site::finalizeBoundaries()
 
 void Site::clearAffectedSites()
 {
+
+    KMCDebugger_PushTraces();
+
     m_affectedSites.clear();
 
     //TMP
@@ -1479,9 +1482,9 @@ void Site::setInitialNNeighborsLimit(const uint &nNeighborsLimit, bool check)
         KMCSolver::exit();
     }
 
-    if (nNeighborsLimit < DiffusionReaction::separation() && check)
+    if (nNeighborsLimit <= DiffusionReaction::separation() && check)
     {
-        cerr << "Neighbor reach must be higher or equal than diffusion separation." << endl;
+        cerr << "Neighbor reach must be higher than diffusion separation." << endl;
         KMCSolver::exit();
     }
 

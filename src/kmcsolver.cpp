@@ -146,7 +146,6 @@ void KMCSolver::mainloop()
         KMCDebugger_SetActiveReaction(selectedReaction);
 
         selectedReaction->execute();
-        KMCDebugger_PushTraces();
 
 
         if (cycle%m_cyclesPerOutput == 0)
@@ -156,11 +155,15 @@ void KMCSolver::mainloop()
         }
 
 
+
+        Site::updateBoundaries();
+        cout << "-------_" << endl;
+
+
         totalTime += Reaction::linearRateScale()/m_kTot;
         cycle++;
 
 
-        Site::updateBoundaries();
 
     }
 
@@ -584,7 +587,7 @@ void KMCSolver::getRateVariables()
         });
     });
 
-    KMCDebugger_AssertClose(m_kTot, m_kTot2, minRate/2);
+    KMCDebugger_AssertClose(m_kTot, m_kTot2, 1E-5);
 
 }
 
