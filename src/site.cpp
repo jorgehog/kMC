@@ -154,6 +154,10 @@ void Site::setParticleState(int newState)
 //All reactions must be legal if site is allowed to spawn.
 bool Site::isLegalToSpawn()
 {
+    if (m_active)
+    {
+        return false;
+    }
 
     for (Reaction * r : m_reactions)
     {
