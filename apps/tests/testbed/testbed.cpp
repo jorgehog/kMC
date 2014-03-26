@@ -2069,8 +2069,9 @@ void testBed::testReactionShuffler()
     //this should replace the disabled reaction with the end reaction: Everything is ordered.
     solver->reshuffleReactions();
 
-    CHECK_EQUAL(nReacs - 1, allReacs.at(nReacs/2)->initAddress);
+    CHECK_EQUAL(nReacs - 1, static_cast<DummyReaction*>(solver->m_allPossibleReactions2.at(nReacs/2))->initAddress);
 
+    _reactionShufflerCheck(nReacs - 1);
 
 }
 

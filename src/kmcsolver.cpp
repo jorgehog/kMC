@@ -417,8 +417,8 @@ void KMCSolver::reshuffleReactions()
 void KMCSolver::swapReactionAddresses(const uint dest, const uint orig)
 {
 
-    KMCDebugger_AssertBool(isEmptyAddress(dest),  "destination is not empty.");
-    KMCDebugger_AssertBool(!isEmptyAddress(orig), "origin is not empty.");
+    KMCDebugger_AssertBool(isEmptyAddress(dest),  "destination should be empty.");
+    KMCDebugger_AssertBool(!isEmptyAddress(orig), "origin should not be empty.");
 
     Reaction * swappedReaction = m_allPossibleReactions2.at(orig);
 
@@ -426,6 +426,8 @@ void KMCSolver::swapReactionAddresses(const uint dest, const uint orig)
     KMCDebugger_AssertBool(!m_allPossibleReactions2.at(dest)->isAllowed(), "old reaction should not be allowed.");
 
     m_allPossibleReactions2.at(dest) = swappedReaction;
+
+    swappedReaction->setAddress(dest);
 
     updateAccuAllRateElements(dest, orig, swappedReaction->rate());
 

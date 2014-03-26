@@ -26,7 +26,7 @@ public:
 
     bool isAllowed() const
     {
-        return true;
+        return allowed;
     }
 
     bool isAllowedAndActive() const
