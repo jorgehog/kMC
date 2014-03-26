@@ -2131,7 +2131,6 @@ void testBed::testReactionShuffler()
 
     Site::clearAffectedSites();
 
-    //activate all the elements. reverse order to get right addresses.
     for (uint i = 0; i < nReacs; ++i)
     {
         allReacs.at(i)->allowed = true;
@@ -2156,7 +2155,32 @@ void testBed::testReactionShuffler()
     //up a vacant spot before it is itself vacated?
     //YES SHUFFLE HAPPENS BEFORE VACATING NEW ONES? NO. Why is the address then not in vacant? ADDRESS IS SET WRONGLY.. what induses this?
 
+    bool remove = false;
+    uint c = 0;
+    for (uint i = 0; i < nReacs; ++i)
+    {
 
+        if (remove)
+        {
+            allReacs.at(i)->allowed = false;
+            allReacs.at(i)->disable();
+            c++;
+        }
+
+        if (i % 5 == 0)
+        {
+            remove = !remove;
+        }
+
+    }
+
+    CHECK_EQUAL(c, solver->m_availableReactionSlots.size());
+
+    solver->reshuffleReactions();
+
+    Site::clearAffectedSites();
+
+    _reactionShufflerCheck(nReacs - c);
 
 
 }

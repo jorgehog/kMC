@@ -775,19 +775,8 @@ void KMCSolver::getRateVariables()
 
     Site::updateAffectedSites();
 
-    if (cycle == 119)
-    {
-        cout << "lol" << endl;
-    }
     reshuffleReactions();
 
-    uint iprev = 0;
-    for (uint i = 0; i < m_allPossibleReactions2.size(); ++i)
-    {
-        KMCDebugger_Assert(m_allPossibleReactions2.at(i)->address(), >=, m_allPossibleReactions2.at(iprev)->address(), "address mismatch", getReactionVectorDebugMessage());
-        KMCDebugger_Assert(i, ==, m_allPossibleReactions2.at(i)->address(), "address mismatch", getReactionVectorDebugMessage());
-        iprev = i;
-    }
 
     forEachSiteDo([this, &m_kTot_tmp] (Site * site)
     {
