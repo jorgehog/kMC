@@ -302,7 +302,7 @@ void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate
 
         m_kTot += newRate;
 
-        return;
+ //       return;
 
         //If there is a vacancy, we simply fill it.
         if (!m_availableReactionSlots.empty())
@@ -341,7 +341,7 @@ void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate
         KMCDebugger_AssertBool(!reaction->isAllowedAndActive(), "Allowed reaction set to unset rate.");
 
         m_kTot -= prevRate;
-        return;
+//        return;
 
         KMCDebugger_Assert(reaction->address(), !=, Reaction::UNSET_ADDRESS);
         KMCDebugger_AssertBool(!isEmptyAddress(reaction->address()), "address is already set as empty.");
@@ -361,7 +361,7 @@ void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate
         double deltaRate = (newRate - prevRate);
 
         m_kTot += deltaRate;
-        return;
+  //      return;
 
 
         updateAccuAllRateElements(reaction->address(), m_accuAllRates2.size(), deltaRate);
@@ -372,7 +372,7 @@ void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate
 
 void KMCSolver::reshuffleReactions()
 {
-    return;
+//    return;
 
     uint nVacancies = m_availableReactionSlots.size();
 
@@ -749,7 +749,7 @@ void KMCSolver::getRateVariables()
         });
     });
 
-//    KMCDebugger_Assert(m_allPossibleReactions.size(), ==, m_allPossibleReactions2.size());
+    KMCDebugger_Assert(m_allPossibleReactions.size(), ==, m_allPossibleReactions2.size());
 
 }
 
