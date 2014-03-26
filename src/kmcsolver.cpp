@@ -452,10 +452,12 @@ void KMCSolver::postReactionShuffleCleanup(const uint nVacancies)
     m_availableReactionSlots.clear();
 
     KMCDebugger_Assert(m_allPossibleReactions2.size(), ==, m_accuAllRates2.size(), "These vectors should be equal of length.");
-    KMCDebugger_AssertBool(m_accuAllRates2.size() == 0
-                           ? true
-                           : (m_accuAllRates2.at(m_accuAllRates2.size()- 1) == m_kTot),
-                              "kTot should be the last element of accuAllRates");
+    m_accuAllRates2.size() == 0
+            ? (void) 0
+            : KMCDebugger_AssertClose(m_accuAllRates2.at(m_accuAllRates2.size()- 1),
+                                      m_kTot,
+                                      1E-5,
+                                      "kTot should be the last element of accuAllRates");
 
 }
 
