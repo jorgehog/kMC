@@ -275,19 +275,7 @@ std::string Debugger::addFlagsToImplications()
         for (Reaction * r : site->reactions())
         {
 
-            reacss << "    .    " << r->str() << " Allowed? " << r->isAllowed() << " Flag: ";
-
-            if (r->updateFlag() == Reaction::UNSET_UPDATE_FLAG)
-            {
-                reacss << "UNSET";
-            }
-
-            else
-            {
-                reacss << r->updateFlag();
-            }
-
-            reacss << "  Vacant? " << r->hasVacantStatus();
+            reacss << "    .    " << r->str() << "  " << r->propertyString();
 
             addSite = true;
 

@@ -150,6 +150,8 @@ public:
         return "-";
     }
 
+    string propertyString() const;
+
     bool operator == (const Reaction & other)
     {
         return this == &other;
@@ -158,7 +160,7 @@ public:
     const string str() const
     {
         stringstream s;
-        s << name << "@(" << x() << ", " << y() << ", " << z() << ") [" << getInfoSnippet() << "]";
+        s << name << "@(" << setw(3) << x() << "," << setw(3) << y() << "," << setw(3) << z() << ") [" << getInfoSnippet() << "]";
         return s.str();
     }
 
@@ -217,6 +219,26 @@ protected:
         return m_reactionSite;
     }
 
+    template<typename T1, typename T2>
+    string unsetIf(const T1 val, const T2 unsetVal) const
+    {
+        stringstream s;
+
+        s << setw(5);
+
+        if (val == unsetVal)
+        {
+            s << "UNSET";
+        }
+
+        else
+        {
+            s << setprecision(1) << fixed << val;
+        }
+
+        return s.str();
+
+    }
 
 
 };

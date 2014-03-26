@@ -26,10 +26,7 @@ const string Reaction::info(int xr, int yr, int zr, string desc) const
 {
     stringstream s;
     s << "[" << name << "]:" << "\n";
-    s << "   rate: " << m_rate << "  ";
-    s << "Address: " << m_address << "  ";
-    s << "Selected flag: " << m_updateFlag << "  ";
-    s << "Allowed? " << !isAllowed() << "\n";
+    s << propertyString() << "\n";
     s << "@";
     s << m_reactionSite->info(xr, yr, zr, desc);
     s << "\n";
@@ -92,6 +89,20 @@ string Reaction::getFinalizingDebugMessage() const
 #else
     return "";
 #endif
+}
+
+string Reaction::propertyString() const
+{
+    stringstream s;
+
+    s << "Rate: "          << unsetIf(m_rate,       UNSET_RATE)        << "  ";
+    s << "Address: "       << unsetIf(m_address,    UNSET_ADDRESS)     << "  ";
+    s << "Selected flag: " << unsetIf(m_updateFlag, UNSET_UPDATE_FLAG) << "  ";
+
+    s << "Allowed? " << !isAllowed() << "  ";
+    s << "Vacant? "  << hasVacantStatus();
+
+    return s.str();
 }
 
 void Reaction::setRate(const double rate)
