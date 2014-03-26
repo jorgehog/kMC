@@ -2037,7 +2037,7 @@ void testBed::testReactionVectorUpdate()
 void testBed::testReactionShuffler()
 {
 
-    uint nReacs = 4;
+    uint nReacs = 100;
 
     vector<DummyReaction*> allReacs;
 
@@ -2096,7 +2096,7 @@ void testBed::testReactionShuffler()
         CHECK_EQUAL(r->address(), r->initAddress);
     }
 
-    //remove every other element and add new ones equal to the amount removed
+    //remove every other element
 
     for (uint i = 0; i < nReacs; i += 2)
     {
@@ -2104,11 +2104,47 @@ void testBed::testReactionShuffler()
         allReacs.at(i)->disable();
     }
 
+    CHECK_EQUAL(nReacs/2, solver->m_availableReactionSlots.size());
+
     solver->reshuffleReactions();
 
     _reactionShufflerCheck(nReacs/2);
 
 
+    //remove the rest of the elements
+    for (uint i = 1; i < nReacs; i += 2)
+    {
+        allReacs.at(i)->allowed = false;
+        allReacs.at(i)->disable();
+    }
+
+    CHECK_EQUAL(nReacs/2, solver->m_availableReactionSlots.size());
+
+    solver->reshuffleReactions();
+
+    _reactionShufflerCheck(0);
+
+    Site::clearAffectedSites();
+
+    //activate all the elements. reverse order to get right addresses.
+    for (uint i = 0; i < nReacs; ++i)
+    {
+        allReacs.at(i)->allowed = true;
+        allReacs.at(i)->calcRate();
+    }
+
+    CHECK_EQUAL(0, solver->m_availableReactionSlots.size());
+
+    solver->reshuffleReactions();
+
+    _reactionShufflerCheck(nReacs);
+
+    for (DummyReaction * r : allReacs)
+    {
+        CHECK_EQUAL(r->address(), r->initAddress);
+    }
+
+    Site::clearAffectedSites();
 
 }
 

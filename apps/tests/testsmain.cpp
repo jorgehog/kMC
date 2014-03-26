@@ -9,8 +9,8 @@
 #include <sys/types.h>
 
 
-#define focusSuite "Reactions"
-//#define focusTest  "ReactionShuffler"
+//#define focusSuite "Reactions"
+//#define focusTest  "KnownCase"
 
 
 #include "defines.h"

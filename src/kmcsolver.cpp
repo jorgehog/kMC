@@ -382,6 +382,7 @@ void KMCSolver::reshuffleReactions()
     uint numberOfSwaps = 0;
     uint trailingVacancies   = 0;
 
+    std::sort(m_availableReactionSlots.begin(), m_availableReactionSlots.end());
 
     //While we have not yet filled all vacancies
     while (numberOfSwaps < nVacancies)
@@ -429,7 +430,7 @@ void KMCSolver::swapReactionAddresses(const uint dest, const uint orig)
     Reaction * swappedReaction = m_allPossibleReactions2.at(orig);
 
     KMCDebugger_AssertBool(swappedReaction->isAllowedAndActive(), "swapped reaction should be allowed and active.");
-    KMCDebugger_AssertBool(!m_allPossibleReactions2.at(dest)->isAllowed(), "old reaction should not be allowed.");
+    KMCDebugger_AssertBool(!m_allPossibleReactions2.at(dest)->isAllowedAndActive(), "old reaction should not be allowed.");
 
     m_allPossibleReactions2.at(dest) = swappedReaction;
 
@@ -451,7 +452,10 @@ void KMCSolver::postReactionShuffleCleanup(const uint nVacancies)
     m_availableReactionSlots.clear();
 
     KMCDebugger_Assert(m_allPossibleReactions2.size(), ==, m_accuAllRates2.size(), "These vectors should be equal of length.");
-    KMCDebugger_Assert(m_accuAllRates2.at(m_accuAllRates2.size()- 1), ==, m_kTot, "kTot should be the last element of accuAllRates");
+    KMCDebugger_AssertBool(m_accuAllRates2.size() == 0
+                           ? true
+                           : (m_accuAllRates2.at(m_accuAllRates2.size()- 1) == m_kTot),
+                              "kTot should be the last element of accuAllRates");
 
 }
 
