@@ -428,9 +428,10 @@ void KMCSolver::swapReactionAddresses(const uint dest, const uint orig)
     KMCDebugger_AssertBool(!isEmptyAddress(orig), "origin should not be empty.");
 
     Reaction * swappedReaction = m_allPossibleReactions2.at(orig);
+    Reaction * oldReaction     = m_allPossibleReactions2.at(dest);
 
-    KMCDebugger_AssertBool(swappedReaction->isAllowedAndActive(), "swapped reaction should be allowed and active.");
-    KMCDebugger_AssertBool(!m_allPossibleReactions2.at(dest)->isAllowedAndActive(), "old reaction should not be allowed.");
+    KMCDebugger_AssertBool(swappedReaction->isAllowedAndActive(), "swapped reaction should be allowed and active.", swappedReaction->getFinalizingDebugMessage());
+    KMCDebugger_AssertBool(!oldReaction->isAllowedAndActive()   , "old reaction should not be allowed.",            oldReaction->getFinalizingDebugMessage());
 
     m_allPossibleReactions2.at(dest) = swappedReaction;
 

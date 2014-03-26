@@ -195,6 +195,11 @@ public:
      * Misc. trivial functions
      */
 
+    static const KMCSolver * solver()
+    {
+        return m_solver;
+    }
+
 
     static const uint & nSurfaces()
     {

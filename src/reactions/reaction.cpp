@@ -59,6 +59,11 @@ const uint &Reaction::z() const
     return m_reactionSite->z();
 }
 
+bool Reaction::hasVacantStatus() const
+{
+    return solver()->isEmptyAddress(m_address);
+}
+
 
 string Reaction::getFinalizingDebugMessage() const
 {

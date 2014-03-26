@@ -2146,6 +2146,11 @@ void testBed::testReactionShuffler()
 
     Site::clearAffectedSites();
 
+
+    //Something is active, becomes deactivated, but is initiated to take
+    //up a vacant spot before it is itself vacated?
+    //YES SHUFFLE HAPPENS BEFORE VACATING NEW ONES? NO. Why is the address then not in vacant?
+
 }
 
 void testBed::initBoundarySuite(const umat & boundaries)

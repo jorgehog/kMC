@@ -131,6 +131,8 @@ public:
 
     const uint & z() const;
 
+    bool hasVacantStatus() const;
+
     bool isType(const string name) const
     {
         return name.compare(this->name) == 0;

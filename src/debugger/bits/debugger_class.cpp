@@ -272,20 +272,29 @@ std::string Debugger::addFlagsToImplications()
 
         sitess << "\n" << site->info() << "\n";
 
-        site->forEachActiveReactionDo([&] (Reaction * r)
+        for (Reaction * r : site->reactions())
         {
 
-            KMCDebugger_Assert(r->updateFlag(), !=, Reaction::UNSET_UPDATE_FLAG);
+            reacss << "    .    " << r->str() << " Allowed? " << r->isAllowed() << " Flag: ";
 
-            reacss << "    .    " << r->str() << " Flag: " << r->updateFlag();
+            if (r->updateFlag() == Reaction::UNSET_UPDATE_FLAG)
+            {
+                reacss << "UNSET";
+            }
+
+            else
+            {
+                reacss << r->updateFlag();
+            }
+
+            reacss << "  Vacant? " << r->hasVacantStatus();
 
             addSite = true;
 
             sitess << reacss.str() << "\n";
 
             reacss.str(string());
-
-        });
+        }
 
 
         if (addSite)

@@ -219,7 +219,6 @@ public:
     bool isEmptyAddress(const uint address);
 
 
-
     vector<uint>   m_availableReactionSlots;
 
     //OPTIMIZATION TMP
