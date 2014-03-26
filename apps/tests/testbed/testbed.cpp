@@ -15,6 +15,10 @@ void testBed::makeSolver()
 
     solver->setRNGSeed();
 
+    solver->setNumberOfCycles(1000);
+
+    solver->setTargetSaturation(0.01);
+
     DiffusionReaction::setPotentialParameters(1.0, 0.5, false);
 
     Site::setInitialBoundaries(Boundary::Periodic);
@@ -1878,6 +1882,16 @@ void testBed::testOptimizedRateVectors()
         for (double AR : solver->accuAllRates())
         {
             CHECK_EQUAL(true, prevAR < AR);
+        }
+
+        double kTotSBF = 0;
+        for (uint i = 0; i < solver->allPossibleReactions().size(); ++i)
+        {
+
+            kTotSBF += solver->allPossibleReactions().at(i)->rate();
+
+            CHECK_CLOSE(kTotSBF, solver->accuAllRates().at(i), 1E-5);
+
         }
 
 

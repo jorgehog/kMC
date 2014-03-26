@@ -10,7 +10,7 @@
 
 
 //#define focusSuite "Reactions"
-#define focusTest  "Sequential"
+#define focusTest  "OptimizedRateVectors"
 
 
 #include "defines.h"

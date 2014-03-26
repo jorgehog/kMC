@@ -207,7 +207,7 @@ public:
         {
             m_accuAllRates.at(i) += value;
 
-            if (fabs(m_accuAllRates.at(i)) < 1E-10)
+            if (fabs(m_accuAllRates.at(i)) < 1E-8)
             {
                 m_accuAllRates.at(i) = 0;
             }
@@ -228,7 +228,7 @@ public:
 
 private:
 
-    double m_targetSaturation = 0.01;
+    double m_targetSaturation;
 
     Site**** sites;
 
@@ -247,10 +247,10 @@ private:
 
     vector<uint>   m_availableReactionSlots;
 
+
     double totalTime;
 
-
-    uint m_nCycles = 1000000;
+    uint m_nCycles;
     uint cycle;
 
     uint m_cyclesPerOutput;
