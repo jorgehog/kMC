@@ -1398,9 +1398,9 @@ void testBed::deactivateAllSites()
     });
 }
 
-Site *testBed::getBoxCenter()
+Site *testBed::getBoxCenter(const uint dx, const uint dy, const uint dz)
 {
-    return solver->getSite(NX()/2, NY()/2, NZ()/2);
+    return solver->getSite(NX()/2 + dx, NY()/2 + dy, NZ()/2 + dz);
 }
 
 void testBed::testKnownCase()
@@ -1865,6 +1865,69 @@ void testBed::testAllPossibleRatesStuff()
 
 
     Reaction::setLinearRateScale(1);
+
+
+}
+
+void testBed::testReactionVectorUpdate()
+{
+    double c;
+
+    Site * center = getBoxCenter();
+
+    center->activate();
+
+    for (Site* site : Site::affectedSites())
+    {
+        site->updateReactions();
+    }
+
+    CHECK_EQUAL(0,  solver->m_availableReactionSlots.size());
+    CHECK_EQUAL(26, solver->m_allPossibleReactions2.size());
+    CHECK_EQUAL(26, solver->m_accuAllRates2.size());
+
+    c = 0;
+    for (uint i = 0; i < solver->m_allPossibleReactions2.size(); ++i)
+    {
+        c += solver->m_allPossibleReactions2.at(i)->rate();
+        CHECK_EQUAL(c, solver->m_accuAllRates2.at(i));
+    }
+
+    CHECK_EQUAL(solver->kTot(), *(solver->m_accuAllRates2.end()-1));
+
+    center->deactivate();
+
+    for (Site* site : Site::affectedSites())
+    {
+        site->updateReactions();
+    }
+
+    CHECK_EQUAL(26,  solver->m_availableReactionSlots.size());
+    CHECK_EQUAL(26,  solver->m_allPossibleReactions2.size());
+    CHECK_EQUAL(26,  solver->m_accuAllRates2.size());
+
+    CHECK_EQUAL(0, solver->kTot());
+
+    center->activate();
+
+    for (Site* site : Site::affectedSites())
+    {
+        site->updateReactions();
+    }
+
+
+    CHECK_EQUAL(0,  solver->m_availableReactionSlots.size());
+    CHECK_EQUAL(26, solver->m_allPossibleReactions2.size());
+    CHECK_EQUAL(26, solver->m_accuAllRates2.size());
+
+    CHECK_EQUAL(26*Reaction::linearRateScale(), solver->kTot());
+
+    c = 0;
+    for (uint i = 0; i < solver->m_allPossibleReactions2.size(); ++i)
+    {
+        c += solver->m_allPossibleReactions2.at(i)->rate();
+        CHECK_EQUAL(c, solver->m_accuAllRates2.at(i));
+    }
 
 
 }

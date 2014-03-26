@@ -201,7 +201,14 @@ public:
         for (uint i = from; i < to; ++i)
         {
             m_accuAllRates2.at(i) += value;
+
+            KMCDebugger_Assert(m_accuAllRates2.at(i), >=, 0);
         }
+    }
+
+    double prevAccuAllRatesValue(const uint address) const
+    {
+        return address == 0 ? 0 : m_accuAllRates2.at(address - 1);
     }
 
     bool isEmptyAddress(const uint address);
@@ -214,6 +221,9 @@ public:
     vector<Reaction*> prevUpdatedReacs;
     set<Reaction*> prevUpdatedReacsSet;
 
+    //OPTIMIZATION TMP
+    vector<double> m_accuAllRates2;
+    vector<Reaction*> m_allPossibleReactions2;
 
 private:
 
@@ -262,9 +272,6 @@ private:
 
     static uint refCounter;
 
-    //OPTIMIZATION TMP
-    vector<double> m_accuAllRates2;
-    vector<Reaction*> m_allPossibleReactions2;
 
 
 };

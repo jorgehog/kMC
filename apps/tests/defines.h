@@ -9,7 +9,7 @@
     std::stringstream s;\
     s << "Running test " << UnitTestSuite::GetSuiteName() << "::" << #which; \
     \
-    std::cout << std::left << std::setfill('.') << std::setw(65); \
+    std::cout << std::left << std::setfill(' ') << std::setw(65); \
     std::cout << s.str(); \
     \
     testBed::timer.tic(); \

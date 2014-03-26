@@ -63,6 +63,11 @@ public:
 
     static void testAllPossibleRatesStuff();
 
+    static void testReactionVectorUpdate();
+
+
+
+
     static void initBoundarySuite(const umat &boundaries);
 
     static KMCSolver* solver;
@@ -103,11 +108,10 @@ private:
 
     static void deactivateAllSites();
 
-    static Site * getBoxCenter();
+    static Site * getBoxCenter(const uint dx = 0, const uint dy = 0, const uint dz = 0);
 
     static string lastBoundariesName;
 
     static umat lastBoundaries;
-
 
 };

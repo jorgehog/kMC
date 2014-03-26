@@ -63,6 +63,8 @@ void Site::updateAffectedSites()
 
     clearAffectedSites();
 
+    m_solver->reshuffleReactions();
+
 }
 
 
@@ -1292,9 +1294,6 @@ void Site::clearAffectedSites()
 {
 
     m_affectedSites.clear();
-
-    m_solver->reshuffleReactions();
-
 
 
     //TMP

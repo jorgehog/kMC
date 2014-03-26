@@ -9,8 +9,8 @@
 #include <sys/types.h>
 
 
-//#define focusSuite "PeriodicBoundaries"
-//#define focusTest  "AllPossibleRatesStuff"
+#define focusSuite "Reactions"
+#define focusTest  "ReactionVectorUpdate"
 
 
 #include "defines.h"
@@ -32,6 +32,8 @@ SUITE(Reactions)
     TESTWRAPPER(RateCalculation)
 
     TESTWRAPPER(ReactionChoise)
+
+    TESTWRAPPER(ReactionVectorUpdate)
 
 }
 
