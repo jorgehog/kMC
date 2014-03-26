@@ -379,17 +379,20 @@ void KMCSolver::reshuffleReactions()
     uint firstVacancy;
     uint lastReaction = m_allPossibleReactions2.size() - 1;
 
-    uint firstVacancyCounter = 0;
+    uint numberOfSwaps = 0;
     uint trailingVacancies   = 0;
 
 
     //While we have not yet filled all vacancies
-    while (firstVacancyCounter < nVacancies)
+    while (numberOfSwaps < nVacancies)
     {
 
-        firstVacancy = m_availableReactionSlots.at(firstVacancyCounter++);
+        firstVacancy = m_availableReactionSlots.at(numberOfSwaps);
 
-        while (lastReaction == m_availableReactionSlots.at(nVacancies - trailingVacancies - 1))
+        //(trailingVacancies - numberOfSwaps) is the number of additional shifts we need to make away
+        //from the last vacant spot. This is greater than zero only if we have trailing vacant sites
+        //present before swapping.
+        while (lastReaction == m_availableReactionSlots.at((nVacancies - 1) - (trailingVacancies - numberOfSwaps)))
         {
             lastReaction--;
             trailingVacancies++;
@@ -407,6 +410,9 @@ void KMCSolver::reshuffleReactions()
         swapReactionAddresses(firstVacancy, lastReaction);
 
         lastReaction--;
+        trailingVacancies++;
+
+        numberOfSwaps++;
 
     }
 

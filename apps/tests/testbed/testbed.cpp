@@ -2037,7 +2037,7 @@ void testBed::testReactionVectorUpdate()
 void testBed::testReactionShuffler()
 {
 
-    uint nReacs = 100;
+    uint nReacs = 4;
 
     vector<DummyReaction*> allReacs;
 
@@ -2072,6 +2072,43 @@ void testBed::testReactionShuffler()
     CHECK_EQUAL(nReacs - 1, static_cast<DummyReaction*>(solver->m_allPossibleReactions2.at(nReacs/2))->initAddress);
 
     _reactionShufflerCheck(nReacs - 1);
+
+    //resetting, so far we have swapped the last and the middle element.
+    Site::clearAffectedSites();
+
+    allReacs.at(nReacs - 1)->allowed = false;
+    allReacs.at(nReacs - 1)->disable();
+
+    allReacs.at(nReacs/2)->allowed = true;
+    allReacs.at(nReacs/2)->calcRate();
+
+    Site::clearAffectedSites();
+
+    allReacs.at(nReacs - 1)->allowed = true;
+    allReacs.at(nReacs - 1)->calcRate();
+
+    Site::clearAffectedSites();
+
+    _reactionShufflerCheck(nReacs);
+
+    for (DummyReaction * r : allReacs)
+    {
+        CHECK_EQUAL(r->address(), r->initAddress);
+    }
+
+    //remove every other element and add new ones equal to the amount removed
+
+    for (uint i = 0; i < nReacs; i += 2)
+    {
+        allReacs.at(i)->allowed = false;
+        allReacs.at(i)->disable();
+    }
+
+    solver->reshuffleReactions();
+
+    _reactionShufflerCheck(nReacs/2);
+
+
 
 }
 
