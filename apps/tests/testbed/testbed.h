@@ -108,7 +108,7 @@ private:
 
     static void deactivateAllSites();
 
-    static Site * getBoxCenter(const uint dx = 0, const uint dy = 0, const uint dz = 0);
+    static Site * getBoxCenter(const int dx = 0, const int dy = 0, const int dz = 0);
 
     static string lastBoundariesName;
 

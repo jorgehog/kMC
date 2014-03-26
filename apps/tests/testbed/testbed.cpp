@@ -1398,7 +1398,7 @@ void testBed::deactivateAllSites()
     });
 }
 
-Site *testBed::getBoxCenter(const uint dx, const uint dy, const uint dz)
+Site *testBed::getBoxCenter(const int dx, const int dy, const int dz)
 {
     return solver->getSite(NX()/2 + dx, NY()/2 + dy, NZ()/2 + dz);
 }
@@ -1956,7 +1956,7 @@ void testBed::testReactionVectorUpdate()
     //activating a new particle independent of the others should now only induce 25 more spots,
     //since one is already vacant.
 
-    Site * distantCousin = getBoxCenter(0, Site::nNeighborsLimit() + 1);
+    Site * distantCousin = getBoxCenter(-(int)DiffusionReaction::separation()-2);
 
     CHECK_EQUAL(true, distantCousin->isLegalToSpawn());
 
