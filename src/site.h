@@ -383,14 +383,14 @@ public:
         return m_cannotCrystallize;
     }
 
+    const uint & ID() const
+    {
+        return m_ID;
+    }
+
     bool operator == (const Site & other) const
     {
         return this == &other;
-    }
-
-    bool operator < (const Site & other) const
-    {
-        return m_x*m_y*m_z < other.x()*other.y()*other.z();
     }
 
     const string str() const
@@ -461,6 +461,9 @@ private:
     bool m_cannotCrystallize;
 
 
+    const uint m_ID;
+
+
     const uint m_x;
 
     const uint m_y;
@@ -468,6 +471,7 @@ private:
     const uint m_z;
 
     const uvec3 m_r;
+
 
 
     double m_energy;
@@ -485,6 +489,8 @@ private:
 
     void deactivateFixedCrystal();
 
+
+    static uint refCounter;
 
 };
 

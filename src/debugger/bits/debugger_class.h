@@ -50,7 +50,9 @@ public:
 
     static wall_clock timer;
 
-    static set<Site*> affectedUnion;
+    static set<Site*, function<bool(Site*, Site*)> > affectedUnion;
+//    static set<Site*> affectedUnion;
+
 
     //CALLED FROM MACROS
     static void setFilename(const string &filename);

@@ -22,8 +22,7 @@ std::vector<std::string> Debugger::reactionTraceAfter;
 std::vector<std::string> Debugger::implicationTrace;
 std::vector<double>      Debugger::timerData;
 
-std::set<Site*>          Debugger::affectedUnion;
-
+std::set<Site*, function<bool(Site*, Site*)> > Debugger::affectedUnion = std::set<Site*, function<bool(Site*, Site*)> >([](Site* s1, Site* s2) {return s1->ID() < s2->ID();});
 
 std::string Debugger::implications;
 std::string Debugger::reactionString;

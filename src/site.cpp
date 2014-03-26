@@ -18,6 +18,7 @@ Site::Site(uint _x, uint _y, uint _z) :
     m_active(false),
     m_isFixedCrystalSeed(false),
     m_cannotCrystallize(false),
+    m_ID(refCounter++),
     m_x(_x),
     m_y(_y),
     m_z(_z),
@@ -46,6 +47,8 @@ Site::~Site()
 
     m_totalDeactiveParticles(particleState())--;
 
+    refCounter--;
+
 }
 
 
@@ -56,8 +59,14 @@ void Site::updateAffectedSites()
 
     KMCDebugger_PushTraces();
 
+    vector<Site*> already;
     for (Site* site : m_affectedSites)
     {
+        for (Site *s2 : already)
+        {
+            KMCDebugger_Assert(s2, !=, site);
+        }
+        already.push_back(site);
         site->updateReactions();
     }
 
@@ -1628,8 +1637,7 @@ double     Site::m_totalEnergy = 0;
 
 
 //Don't panic: Just states that the sets pointers should be sorted by the site objects and not their random valued pointers.
-set<Site*, function<bool(Site*, Site*)> > Site::m_affectedSites = set<Site*, function<bool(Site*, Site*)> >([] (Site * s1, Site * s2) {return *s1 < *s2;});
-
+set<Site*, function<bool(Site*, Site*)> > Site::m_affectedSites = set<Site*, function<bool(Site*, Site*)> >([] (Site * s1, Site * s2) {return s1->ID() < s2->ID();});
 
 field<Boundary*> Site::m_boundaries;
 
@@ -1637,6 +1645,7 @@ field<const Setting*> Site::m_boundaryConfigs;
 
 umat Site::m_boundaryTypes;
 
+uint Site::refCounter = 0;
 
 
 
