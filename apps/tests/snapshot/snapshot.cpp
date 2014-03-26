@@ -37,7 +37,13 @@ SnapShot::SnapShot(KMCSolver *solver)
 
 ostream & operator << (ostream& os, const SnapShot& ss)
 {
-    os << "snapshot@" << &ss;
+
+    (void) ss;
+
+    os << (SnapShot::_switch ? ":-)" : ":-(");
+
+    SnapShot::_switch = !SnapShot::_switch;
+
     return os;
 }
 
@@ -51,11 +57,14 @@ bool SnapShot::operator==(const SnapShot &other) const
         double diff = abs(allRates.at(l) - other.allRates.at(l));
         if (diff > 1E-10)
         {
-            cout << "mismatch in snapshot rate calculation" << endl;
-            cout << allRates.at(l) << " != " << other.allRates.at(l) << " for l = " << l << endl;
-            cout << "diff: "<< setprecision(16) << diff << endl;
+            cout << "mismatch in snapshot rates: " << allRates.at(l) << " != " << other.allRates.at(l) << " for l = " << l << " diff: "<< setprecision(16) << diff << " (";
 
-            cout << allreactions.at(l).t();
+            for (uint rc : allreactions.at(l))
+            {
+                cout << rc << " ";
+            }
+
+            cout << ")" << endl;
 
             equal = false;
             break;
@@ -71,9 +80,7 @@ bool SnapShot::operator==(const SnapShot &other) const
 
                 if (siteBox(i, j, k) != other.siteBox(i, j, k))
                 {
-                    cout << "mismatch in snapshot sites" << endl;
-                    cout << siteBox(i, j, k) << " != " << other.siteBox(i, j, k);
-                    cout << "  for i, j, k = " << i << " " << j << " " << k << endl;
+                    cout << "mismatch in snapshot sites: " << siteBox(i, j, k) << " != " << other.siteBox(i, j, k) << "  for i, j, k = " << i << " " << j << " " << k << endl;
                     return false;
                 }
 
@@ -84,3 +91,6 @@ bool SnapShot::operator==(const SnapShot &other) const
     return equal;
 
 }
+
+
+bool SnapShot::_switch = true;

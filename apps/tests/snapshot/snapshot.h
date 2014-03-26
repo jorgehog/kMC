@@ -12,6 +12,8 @@ public:
 
     SnapShot(KMCSolver* solver);
 
+    static bool _switch;
+
     ucube siteBox;
 
     vector<double> allRates;

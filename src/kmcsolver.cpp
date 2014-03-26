@@ -90,21 +90,22 @@ void KMCSolver::checkRefCounter()
     }
 }
 
-void KMCSolver::
-onConstruct()
+void KMCSolver::onConstruct()
 {
 
     m_NX = UNSET_UINT;
     m_NY = UNSET_UINT;
     m_NZ = UNSET_UINT;
 
-    outputCounter = 0;
 
     totalTime = 0;
 
     cycle = 1;
 
+    outputCounter = 0;
+
     m_kTot = 0;
+
 
     Boundary::setMainSolver(this);
 
@@ -183,11 +184,13 @@ void KMCSolver::reset()
 
     m_kTot = 0;
 
+
     m_allPossibleReactions.clear();
 
     m_accuAllRates.clear();
 
     m_availableReactionSlots.clear();
+
 
     Site::clearAffectedSites();
 

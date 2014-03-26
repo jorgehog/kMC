@@ -1285,17 +1285,16 @@ void testBed::testSequential()
     initBoundaryTestParameters();
 
 
-    const SnapShot s0(solver);
+    const SnapShot s00(solver);
 
     const SnapShot & s1 = *testSequentialCore();
 
 
     solver->reset();
 
+    const SnapShot s01(solver);
+
     const SnapShot & s2 = *testSequentialCore();
-
-
-    CHECK_EQUAL(s1, s2);
 
 
 
@@ -1305,7 +1304,7 @@ void testBed::testSequential()
 
     initBoundaryTestParameters();
 
-    const SnapShot s00(solver);
+    const SnapShot s02(solver);
 
     const SnapShot & s3 = *testSequentialCore();
 
@@ -1314,19 +1313,28 @@ void testBed::testSequential()
 
     makeSolver();
 
-    initBoundaryTestParameters();
+    const SnapShot s03(solver);
 
+    initBoundaryTestParameters();
 
     const SnapShot & s4 = *testSequentialCore();
 
 
-    CHECK_EQUAL(s3, s4);
 
+    CHECK_EQUAL(s00, s01);
+    CHECK_EQUAL(s01, s02);
+    CHECK_EQUAL(s02, s03);
+    CHECK_EQUAL(s01, s02);
+    CHECK_EQUAL(s01, s03);
+    CHECK_EQUAL(s02, s03);
 
-    CHECK_EQUAL(s0, s00);
+    CHECK_EQUAL(s1, s2);
+    CHECK_EQUAL(s3, s4); //!
 
-
-    CHECK_EQUAL(s2, s3);
+    CHECK_EQUAL(s1, s3); //!
+    CHECK_EQUAL(s2, s3); //!
+    CHECK_EQUAL(s1, s4); //!
+    CHECK_EQUAL(s2, s4); //!
 
 
 }
