@@ -2120,6 +2120,11 @@ void testBed::testReactionShuffler()
 
     CHECK_EQUAL(nReacs/2, solver->m_availableReactionSlots.size());
 
+    for (uint addr : solver->m_availableReactionSlots)
+    {
+        CHECK_EQUAL(Reaction::UNSET_ADDRESS, solver->m_allPossibleReactions2.at(addr)->address());
+    }
+
     solver->reshuffleReactions();
 
     _reactionShufflerCheck(0);
@@ -2149,7 +2154,10 @@ void testBed::testReactionShuffler()
 
     //Something is active, becomes deactivated, but is initiated to take
     //up a vacant spot before it is itself vacated?
-    //YES SHUFFLE HAPPENS BEFORE VACATING NEW ONES? NO. Why is the address then not in vacant?
+    //YES SHUFFLE HAPPENS BEFORE VACATING NEW ONES? NO. Why is the address then not in vacant? ADDRESS IS SET WRONGLY.. what induses this?
+
+
+
 
 }
 

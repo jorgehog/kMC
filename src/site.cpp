@@ -461,7 +461,6 @@ void Site::decrystallize()
 void Site::updateReactions()
 {
 
-
     for (Reaction* reaction : m_reactions)
     {
         if (reaction->isAllowedAndActive())

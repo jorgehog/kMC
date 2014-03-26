@@ -218,6 +218,7 @@ public:
 
     bool isEmptyAddress(const uint address);
 
+    string getReactionVectorDebugMessage();
 
     vector<uint>   m_availableReactionSlots;
 

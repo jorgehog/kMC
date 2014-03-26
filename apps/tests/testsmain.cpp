@@ -9,7 +9,7 @@
 #include <sys/types.h>
 
 
-//#define focusSuite "Reactions"
+#define focusSuite "Reactions"
 //#define focusTest  "KnownCase"
 
 
