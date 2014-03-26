@@ -97,10 +97,13 @@ void KMCSolver::onConstruct()
     m_NY = UNSET_UINT;
     m_NZ = UNSET_UINT;
 
+    m_targetSaturation = 0;
 
     totalTime = 0;
 
     cycle = 1;
+
+    m_nCycles = 0;
 
     outputCounter = 0;
 
@@ -156,14 +159,11 @@ void KMCSolver::mainloop()
         }
 
 
-
         Site::updateBoundaries();
 
 
         totalTime += Reaction::linearRateScale()/m_kTot;
         cycle++;
-
-
 
     }
 

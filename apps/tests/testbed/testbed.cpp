@@ -1245,7 +1245,7 @@ void testBed::testInitialReactionSetup()
     {
         currentSite->forEachActiveReactionDo([] (Reaction * r)
         {
-                r->forceUpdateFlag(Reaction::defaultUpdateFlag);
+            r->forceUpdateFlag(Reaction::defaultUpdateFlag);
         });
 
         currentSite->updateReactions();
@@ -1313,9 +1313,9 @@ void testBed::testSequential()
 
     makeSolver();
 
-    const SnapShot s03(solver);
-
     initBoundaryTestParameters();
+
+    const SnapShot s03(solver);
 
     const SnapShot & s4 = *testSequentialCore();
 
@@ -1357,6 +1357,8 @@ const SnapShot * testBed::testSequentialCore()
 void testBed::initBoundaryTestParameters()
 {
 
+    solver->setRNGSeed(Seed::specific, baseSeed);
+
     solver->setBoxSize({10, 10, 10}, false);
 
     Site::resetBoundariesTo(lastBoundaries);
@@ -1366,8 +1368,6 @@ void testBed::initBoundaryTestParameters()
     DiffusionReaction::resetSeparationTo(1);
 
     Site::resetNNeighborsToCrystallizeTo(1);
-
-    solver->setRNGSeed(Seed::specific, baseSeed);
 
 }
 

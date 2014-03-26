@@ -358,7 +358,7 @@ public:
         return m_reactions;
     }
 
-    const static set<Site*> & affectedSites()
+    const static set<Site*, function<bool(Site*, Site*)> > & affectedSites()
     {
         return m_affectedSites;
     }
@@ -386,6 +386,11 @@ public:
     bool operator == (const Site & other) const
     {
         return this == &other;
+    }
+
+    bool operator < (const Site & other) const
+    {
+        return m_x*m_y*m_z < other.x()*other.y()*other.z();
     }
 
     const string str() const
@@ -437,7 +442,7 @@ private:
     static double m_totalEnergy;
 
 
-    static set<Site*> m_affectedSites;
+    static set<Site*, function<bool(Site*, Site*)> > m_affectedSites;
 
     static KMCSolver* m_solver;
 

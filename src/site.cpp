@@ -591,68 +591,6 @@ void Site::setNeighboringDirectUpdateFlags()
         }
     });
 
-    //BUGFIX TMP
-
-//    Boundary::setupCurrentBoundaries(x(), y(), z());
-
-//    Site * neighbor;
-
-//    int lim = (int)m_nNeighborsLimit + 1;
-
-//    for (int i = -lim; i <= lim; ++i)
-//    {
-//        for (int j = -lim; j <= lim; ++j)
-//        {
-//            for (int k = -lim; k <= lim; ++k)
-//            {
-
-//                if (Site::getLevel(abs(i), abs(j), abs(k)) == lim - 1)
-//                {
-
-//                    uint xTrans = Boundary::currentBoundaries(0)->transformCoordinate(i + (int)x());
-//                    uint yTrans = Boundary::currentBoundaries(1)->transformCoordinate(j + (int)y());
-//                    uint zTrans = Boundary::currentBoundaries(2)->transformCoordinate(k + (int)z());
-
-//                    if (!Boundary::isBlocked(xTrans, yTrans, zTrans))
-//                    {
-
-//                        neighbor = m_solver->getSite(xTrans, yTrans, zTrans);
-
-//                        if (!neighbor->isActive())
-//                        {
-//                            continue;
-//                        }
-
-//                        for (Reaction * r : neighbor->reactions())
-//                        {
-
-//                            int xr, yr, zr;
-
-//                            static_cast<DiffusionReaction*>(r)->destinationSite()->distanceTo(this, xr, yr, zr, true);
-
-//                            uint l = Site::getLevel(xr, yr, zr);
-
-//                            if (l <= Site::nNeighborsLimit() + 1)
-//                            {
-//                                if (r->isAllowed())
-//                                {
-//                                    r->registerUpdateFlag(Reaction::defaultUpdateFlag);
-//                                }
-//                            }
-
-//                        }
-
-//                        m_affectedSites.insert(neighbor);
-//                    }
-//                }
-
-
-//            }
-//        }
-//    }
-
-    //TMP END
-
 
 
 }
@@ -1689,7 +1627,8 @@ uvec4      Site::m_totalDeactiveParticles;
 double     Site::m_totalEnergy = 0;
 
 
-set<Site*> Site::m_affectedSites;
+//Don't panic: Just states that the sets pointers should be sorted by the site objects and not their random valued pointers.
+set<Site*, function<bool(Site*, Site*)> > Site::m_affectedSites = set<Site*, function<bool(Site*, Site*)> >([] (Site * s1, Site * s2) {return *s1 < *s2;});
 
 
 field<Boundary*> Site::m_boundaries;

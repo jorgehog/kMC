@@ -6,6 +6,7 @@ SnapShot::SnapShot(KMCSolver *solver)
 {
 
     timeWhenTaken = time(NULL);
+    seed = Seed::initialSeed;
 
     siteBox.set_size(solver->NX(), solver->NY(), solver->NZ());
 
@@ -51,6 +52,12 @@ bool SnapShot::operator==(const SnapShot &other) const
 {
 
     bool equal = true;
+
+    if (seed != other.seed)
+    {
+        cout << "mismatch in snapshot seeds: " << seed << " != " << other.seed << endl;
+        return false;
+    }
 
     for (uint l = 0; l < allRates.size(); ++l)
     {

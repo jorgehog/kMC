@@ -21,6 +21,8 @@ public:
 
     uint timeWhenTaken;
 
+    seed_type seed;
+
     bool operator==(const SnapShot& other) const;
 
 };
