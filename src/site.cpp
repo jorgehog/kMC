@@ -63,8 +63,6 @@ void Site::updateAffectedSites()
 
     clearAffectedSites();
 
-    m_solver->reshuffleReactions();
-
 }
 
 
@@ -365,6 +363,10 @@ void Site::forEachNeighborDo_sendIndices(function<void (Site *, uint, uint, uint
 
 void Site::forEachActiveReactionDo(function<void (Reaction *)> applyFunction) const
 {
+    if (!m_active)
+    {
+        return;
+    }
 
     for (Reaction * reaction : m_reactions)
     {
@@ -377,6 +379,11 @@ void Site::forEachActiveReactionDo(function<void (Reaction *)> applyFunction) co
 
 void Site::forEachActiveReactionDo_sendIndex(function<void (Reaction *, uint)> applyFunction) const
 {
+
+    if (!m_active)
+    {
+        return;
+    }
 
     uint i = 0;
 
@@ -451,7 +458,7 @@ void Site::updateReactions()
 {
     for (Reaction* reaction : m_reactions)
     {
-        if (reaction->isAllowed())
+        if (reaction->isAllowedAndActive())
         {
             reaction->calcRate();
             reaction->resetUpdateFlag();

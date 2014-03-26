@@ -202,6 +202,11 @@ public:
         {
             m_accuAllRates2.at(i) += value;
 
+            if (fabs(m_accuAllRates2.at(i)) < 1E-10)
+            {
+                m_accuAllRates2.at(i) = 0;
+            }
+
             KMCDebugger_Assert(m_accuAllRates2.at(i), >=, 0);
         }
     }

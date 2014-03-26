@@ -1875,12 +1875,13 @@ void testBed::testReactionVectorUpdate()
 
     Site * center = getBoxCenter();
 
+    Reaction::setLinearRateScale(1000);
+
+
+    //Activating the center, this should add 26 reactions with unit rate.
     center->activate();
 
-    for (Site* site : Site::affectedSites())
-    {
-        site->updateReactions();
-    }
+    Site::updateAffectedSites();
 
     CHECK_EQUAL(0,  solver->m_availableReactionSlots.size());
     CHECK_EQUAL(26, solver->m_allPossibleReactions2.size());
@@ -1895,12 +1896,10 @@ void testBed::testReactionVectorUpdate()
 
     CHECK_EQUAL(solver->kTot(), *(solver->m_accuAllRates2.end()-1));
 
+    //Deactivating it should set all 26 reactions as available to overwrite.
     center->deactivate();
 
-    for (Site* site : Site::affectedSites())
-    {
-        site->updateReactions();
-    }
+    Site::updateAffectedSites();
 
     CHECK_EQUAL(26,  solver->m_availableReactionSlots.size());
     CHECK_EQUAL(26,  solver->m_allPossibleReactions2.size());
@@ -1908,13 +1907,16 @@ void testBed::testReactionVectorUpdate()
 
     CHECK_EQUAL(0, solver->kTot());
 
-    center->activate();
-
-    for (Site* site : Site::affectedSites())
+    for (uint i = 0; i < solver->m_allPossibleReactions2.size(); ++i)
     {
-        site->updateReactions();
+        CHECK_EQUAL(0, solver->m_accuAllRates2.at(i));
     }
 
+    //Activating again should reset back to original case. Not trivial because this
+    //time the vacancy list is not empty.
+    center->activate();
+
+    Site::updateAffectedSites();
 
     CHECK_EQUAL(0,  solver->m_availableReactionSlots.size());
     CHECK_EQUAL(26, solver->m_allPossibleReactions2.size());
@@ -1929,6 +1931,89 @@ void testBed::testReactionVectorUpdate()
         CHECK_EQUAL(c, solver->m_accuAllRates2.at(i));
     }
 
+
+    //activating a fixed crystal next to center particle. Fixed crystal has no
+    //reactions so it should only induce 1 blocked reaction.
+    Site * neighbor = getBoxCenter(1);
+    neighbor->spawnAsFixedCrystal();
+
+    Site::updateAffectedSites();
+
+    CHECK_EQUAL(1,  solver->m_availableReactionSlots.size());
+
+    c = 0;
+    for (uint i = 0; i < solver->m_allPossibleReactions2.size(); ++i)
+    {
+        if (i == solver->m_availableReactionSlots.at(0))
+        {
+            continue;
+        }
+
+        c += solver->m_allPossibleReactions2.at(i)->rate();
+        CHECK_CLOSE(c, solver->m_accuAllRates2.at(i), 0.00001);
+    }
+
+    //activating a new particle independent of the others should now only induce 25 more spots,
+    //since one is already vacant.
+
+    Site * distantCousin = getBoxCenter(0, Site::nNeighborsLimit() + 1);
+
+    CHECK_EQUAL(true, distantCousin->isLegalToSpawn());
+
+    distantCousin->activate();
+
+    Site::updateAffectedSites();
+
+    CHECK_EQUAL(0,  solver->m_availableReactionSlots.size());
+    CHECK_EQUAL(26+25, solver->m_allPossibleReactions2.size());
+    CHECK_EQUAL(26+25, solver->m_accuAllRates2.size());
+
+    c = 0;
+    for (uint i = 0; i < solver->m_allPossibleReactions2.size(); ++i)
+    {
+        c += solver->m_allPossibleReactions2.at(i)->rate();
+        CHECK_CLOSE(c, solver->m_accuAllRates2.at(i), 0.00001);
+    }
+
+
+    //deactivating the neighbor should create two decoupled systems
+    neighbor->deactivate();
+
+    Site::updateAffectedSites();
+
+    CHECK_EQUAL(0,    solver->m_availableReactionSlots.size());
+    CHECK_EQUAL(2*26, solver->m_allPossibleReactions2.size());
+    CHECK_EQUAL(2*26, solver->m_accuAllRates2.size());
+
+    CHECK_CLOSE(2*26*Reaction::linearRateScale(), solver->kTot(), 0.00001);
+
+    c = 0;
+    for (uint i = 0; i < solver->m_allPossibleReactions2.size(); ++i)
+    {
+        c += solver->m_allPossibleReactions2.at(i)->rate();
+        CHECK_CLOSE(c, solver->m_accuAllRates2.at(i), 0.00001);
+    }
+
+    //removing both the particles should bring us back to initial state
+
+    center->deactivate();
+    distantCousin->deactivate();
+
+    Site::updateAffectedSites();
+
+    CHECK_EQUAL(2*26, solver->m_availableReactionSlots.size());
+    CHECK_EQUAL(2*26, solver->m_allPossibleReactions2.size());
+    CHECK_EQUAL(2*26, solver->m_accuAllRates2.size());
+
+    CHECK_CLOSE(0, solver->kTot(), 0.00001);
+
+    for (uint i = 0; i < solver->m_allPossibleReactions2.size(); ++i)
+    {
+        CHECK_CLOSE(0, solver->m_accuAllRates2.at(i), 0.00001);
+    }
+
+
+    Reaction::setLinearRateScale(1);
 
 }
 

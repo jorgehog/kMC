@@ -91,7 +91,7 @@ void Reaction::setRate(const double rate)
     m_solver->prevUpdatedReacs.push_back(this);
     m_solver->prevUpdatedReacsSet.insert(this);
 
-//    KMCDebugger_Assert(m_solver->prevUpdatedReacs.size(), ==, m_solver->prevUpdatedReacsSet.size());
+    KMCDebugger_Assert(m_solver->prevUpdatedReacs.size(), ==, m_solver->prevUpdatedReacsSet.size());
 
     m_solver->registerReactionChange(this, rate);
 
@@ -141,6 +141,11 @@ void Reaction::reset()
 
     m_address = UNSET_ADDRESS;
 
+}
+
+bool Reaction::isAllowedAndActive() const
+{
+    return isAllowed() && reactionSite()->isActive();
 }
 
 const string Reaction::name = "Reaction";

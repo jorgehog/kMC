@@ -336,7 +336,7 @@ void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate
     else if (newRate == Reaction::UNSET_RATE)
     {
 
-        KMCDebugger_AssertBool(!reaction->isAllowed(), "Allowed reaction set to unset rate.");
+        KMCDebugger_AssertBool(!reaction->isAllowedAndActive(), "Allowed reaction set to unset rate.");
         KMCDebugger_Assert(reaction->address(), !=, Reaction::UNSET_ADDRESS);
         KMCDebugger_AssertBool(!isEmptyAddress(reaction->address()), "address is already set as empty.");
 
@@ -415,7 +415,7 @@ void KMCSolver::swapReactionAddresses(const uint dest, const uint orig)
 
     Reaction * swappedReaction = m_allPossibleReactions2.at(orig);
 
-    KMCDebugger_AssertBool(swappedReaction->isAllowed(), "swapped reaction should be allowed.");
+    KMCDebugger_AssertBool(swappedReaction->isAllowedAndActive(), "swapped reaction should be allowed and active.");
     KMCDebugger_AssertBool(!m_allPossibleReactions2.at(dest)->isAllowed(), "old reaction should not be allowed.");
 
     m_allPossibleReactions2.at(dest) = swappedReaction;
@@ -723,6 +723,8 @@ void KMCSolver::getRateVariables()
 
 
     Site::updateAffectedSites();
+
+    reshuffleReactions();
 
     forEachSiteDo([this, &m_kTot_tmp] (Site * site)
     {

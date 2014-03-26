@@ -511,7 +511,7 @@ const string DiffusionReaction::info(int xr, int yr, int zr, string desc) const
 
 bool DiffusionReaction::isAllowed() const
 {
-    return reactionSite()->isActive() && !m_destinationSite->isActive() && allowedGivenNotBlocked();
+    return !m_destinationSite->isActive() && allowedGivenNotBlocked();
 }
 
 void DiffusionReaction::reset()
