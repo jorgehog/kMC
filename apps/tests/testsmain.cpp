@@ -10,7 +10,7 @@
 
 
 //#define focusSuite "Reactions"
-//#define focusTest  "KnownCase"
+#define focusTest  "Sequential"
 
 
 #include "defines.h"
@@ -74,7 +74,7 @@ TESTWRAPPER(UpdateNeigbors)             \
                                         \
 TESTWRAPPER(EnergyAndNeighborSetup)     \
                                         \
-TESTWRAPPER(AllPossibleRatesStuff)      \
+TESTWRAPPER(OptimizedRateVectors)       \
                                         \
 TESTWRAPPER(Sequential)                 \
                                         \

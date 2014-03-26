@@ -174,13 +174,6 @@ void KMCSolver::reset()
 
     finalizeObject();
 
-    //TMP
-    m_availableReactionSlots.clear();
-    m_accuAllRates2.clear();
-    m_allPossibleReactions2.clear();
-    prevUpdatedReacs.clear();
-    prevUpdatedReacsSet.clear();
-    //
 
     totalTime = 0;
 
@@ -193,6 +186,8 @@ void KMCSolver::reset()
     m_allPossibleReactions.clear();
 
     m_accuAllRates.clear();
+
+    m_availableReactionSlots.clear();
 
     Site::clearAffectedSites();
 
@@ -302,7 +297,6 @@ void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate
 
         m_kTot += newRate;
 
-        //       return;
 
         //If there is a vacancy, we simply fill it.
         if (!m_availableReactionSlots.empty())
@@ -312,12 +306,12 @@ void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate
 
             reaction->setAddress(slot);
 
-            m_allPossibleReactions2.at(slot) = reaction;
+            m_allPossibleReactions.at(slot) = reaction;
 
-            m_accuAllRates2.at(slot) = prevAccuAllRatesValue(slot);
+            m_accuAllRates.at(slot) = prevAccuAllRatesValue(slot);
 
 
-            updateAccuAllRateElements(slot, m_accuAllRates2.size(), newRate);
+            updateAccuAllRateElements(slot, m_accuAllRates.size(), newRate);
 
 
             m_availableReactionSlots.pop_back();
@@ -327,11 +321,11 @@ void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate
         //if not, we make a new element
         else
         {
-            m_allPossibleReactions2.push_back(reaction);
+            m_allPossibleReactions.push_back(reaction);
 
-            m_accuAllRates2.push_back(m_kTot);
+            m_accuAllRates.push_back(m_kTot);
 
-            reaction->setAddress(m_allPossibleReactions2.size()-1);
+            reaction->setAddress(m_allPossibleReactions.size()-1);
         }
 
     }
@@ -342,7 +336,7 @@ void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate
         KMCDebugger_AssertBool(!reaction->isAllowedAndActive(), "Allowed reaction set to unset rate.");
 
         m_kTot -= prevRate;
-        //        return;
+
 
         KMCDebugger_Assert(reaction->address(), !=, Reaction::UNSET_ADDRESS);
         KMCDebugger_AssertBool(!isEmptyAddress(reaction->address()), "address is already set as empty.");
@@ -351,9 +345,9 @@ void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate
 
         //reset the accuallrates value to the previous value or zero, so that when we swap in a reaction to a vacant spot,
         //we simply add the rate value on top of all higher elements.
-        m_accuAllRates2.at(reaction->address()) = prevAccuAllRatesValue(reaction->address());
+        m_accuAllRates.at(reaction->address()) = prevAccuAllRatesValue(reaction->address());
 
-        updateAccuAllRateElements(reaction->address() + 1, m_accuAllRates2.size(), -prevRate);
+        updateAccuAllRateElements(reaction->address() + 1, m_accuAllRates.size(), -prevRate);
 
         reaction->setAddress(Reaction::UNSET_ADDRESS);
 
@@ -364,10 +358,9 @@ void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate
         double deltaRate = (newRate - prevRate);
 
         m_kTot += deltaRate;
-        //      return;
 
 
-        updateAccuAllRateElements(reaction->address(), m_accuAllRates2.size(), deltaRate);
+        updateAccuAllRateElements(reaction->address(), m_accuAllRates.size(), deltaRate);
 
     }
 
@@ -375,12 +368,11 @@ void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate
 
 void KMCSolver::reshuffleReactions()
 {
-    //    return;
 
     uint nVacancies = m_availableReactionSlots.size();
 
     uint firstVacancy;
-    uint lastReaction = m_allPossibleReactions2.size() - 1;
+    uint lastReaction = m_allPossibleReactions.size() - 1;
 
     uint numberOfSwaps = 0;
     uint trailingVacancies   = 0;
@@ -430,8 +422,8 @@ void KMCSolver::swapReactionAddresses(const uint dest, const uint orig)
     KMCDebugger_AssertBool(isEmptyAddress(dest),  "destination should be empty.");
     KMCDebugger_AssertBool(!isEmptyAddress(orig), "origin should not be empty.");
 
-    Reaction * swappedReaction = m_allPossibleReactions2.at(orig);
-    Reaction * oldReaction     = m_allPossibleReactions2.at(dest);
+    Reaction * swappedReaction = m_allPossibleReactions.at(orig);
+    Reaction * oldReaction     = m_allPossibleReactions.at(dest);
 
     KMCDebugger_Assert(orig,                    ==, swappedReaction->address(), "mismatch in address.", swappedReaction->getFinalizingDebugMessage());
     KMCDebugger_Assert(Reaction::UNSET_ADDRESS, ==, oldReaction->address(),     "mismatch in address.", oldReaction->getFinalizingDebugMessage());
@@ -439,7 +431,7 @@ void KMCSolver::swapReactionAddresses(const uint dest, const uint orig)
     KMCDebugger_AssertBool(swappedReaction->isAllowedAndActive(), "swapped reaction should be allowed and active.", swappedReaction->getFinalizingDebugMessage());
     KMCDebugger_AssertBool(!oldReaction->isAllowedAndActive()   , "old reaction should not be allowed.",            oldReaction->getFinalizingDebugMessage());
 
-    m_allPossibleReactions2.at(dest) = swappedReaction;
+    m_allPossibleReactions.at(dest) = swappedReaction;
 
     swappedReaction->setAddress(dest);
     oldReaction->setAddress(Reaction::UNSET_ADDRESS);
@@ -454,15 +446,15 @@ void KMCSolver::postReactionShuffleCleanup(const uint nVacancies)
 {
 
     //Optimize further: Do not use resize, but rather keep the limit in memory.
-    m_allPossibleReactions2.resize(m_allPossibleReactions2.size() - nVacancies);
-    m_accuAllRates2.resize(m_accuAllRates2.size() - nVacancies);
+    m_allPossibleReactions.resize(m_allPossibleReactions.size() - nVacancies);
+    m_accuAllRates.resize(m_accuAllRates.size() - nVacancies);
 
     m_availableReactionSlots.clear();
 
-    KMCDebugger_Assert(m_allPossibleReactions2.size(), ==, m_accuAllRates2.size(), "These vectors should be equal of length.");
-    m_accuAllRates2.size() == 0
+    KMCDebugger_Assert(m_allPossibleReactions.size(), ==, m_accuAllRates.size(), "These vectors should be equal of length.");
+    m_accuAllRates.size() == 0
             ? (void) 0
-            : KMCDebugger_AssertClose(m_accuAllRates2.at(m_accuAllRates2.size()- 1),
+            : KMCDebugger_AssertClose(m_accuAllRates.at(m_accuAllRates.size()- 1),
                                       m_kTot,
                                       1E-5,
                                       "kTot should be the last element of accuAllRates");
@@ -489,7 +481,7 @@ string KMCSolver::getReactionVectorDebugMessage()
 
     s << "\npossible reactions: \n";
 
-    for (Reaction * r : m_allPossibleReactions2)
+    for (Reaction * r : m_allPossibleReactions)
     {
         s << r->str() << " " << r->propertyString() << "\n";
     }
@@ -636,6 +628,10 @@ void KMCSolver::clearSites()
 
     m_allPossibleReactions.clear();
 
+    m_accuAllRates.clear();
+
+    m_availableReactionSlots.clear();
+
 
     KMCDebugger_ResetEnabled();
 
@@ -766,35 +762,9 @@ void KMCSolver::initializeSolutionBath()
 void KMCSolver::getRateVariables()
 {
 
-    double m_kTot_tmp = 0;
-
-    m_accuAllRates.clear();
-
-    m_allPossibleReactions.clear();
-
-
     Site::updateAffectedSites();
 
     reshuffleReactions();
-
-
-    forEachSiteDo([this, &m_kTot_tmp] (Site * site)
-    {
-        site->forEachActiveReactionDo([this, &m_kTot_tmp] (Reaction * reaction)
-        {
-
-            KMCDebugger_Assert(reaction->rate(), !=, Reaction::UNSET_RATE, "Reaction rate should not be unset at this point.", reaction->getFinalizingDebugMessage());
-
-            m_kTot_tmp += reaction->rate();
-
-            m_accuAllRates.push_back(m_kTot_tmp);
-
-            m_allPossibleReactions.push_back(reaction);
-
-        });
-    });
-
-    KMCDebugger_Assert(m_allPossibleReactions.size(), ==, m_allPossibleReactions2.size());
 
 }
 

@@ -61,7 +61,7 @@ public:
 
     static void testDiffusionSeparation();
 
-    static void testAllPossibleRatesStuff();
+    static void testOptimizedRateVectors();
 
     static void testReactionVectorUpdate();
 

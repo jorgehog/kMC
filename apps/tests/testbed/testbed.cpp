@@ -1408,14 +1408,14 @@ Site *testBed::getBoxCenter(const int dx, const int dy, const int dz)
 void testBed::_reactionShufflerCheck(uint nReacs)
 {
 
-    CHECK_EQUAL(nReacs, solver->m_allPossibleReactions2.size());
-    CHECK_EQUAL(nReacs, solver->m_accuAllRates2.size());
-    CHECK_EQUAL(0,      solver->m_availableReactionSlots.size());
+    CHECK_EQUAL(nReacs, solver->allPossibleReactions().size());
+    CHECK_EQUAL(nReacs, solver->accuAllRates().size());
+    CHECK_EQUAL(0,      solver->availableReactionSlots().size());
 
     for (uint i = 0; i < nReacs; ++i)
     {
-        CHECK_EQUAL(i + 1, solver->m_accuAllRates2.at(i));
-        CHECK_EQUAL(i,     solver->m_allPossibleReactions2.at(i)->address());
+        CHECK_EQUAL(i + 1, solver->accuAllRates().at(i));
+        CHECK_EQUAL(i,     solver->allPossibleReactions().at(i)->address());
     }
 
 }
@@ -1842,28 +1842,43 @@ void testBed::testDiffusionSeparation()
 
 }
 
-void testBed::testAllPossibleRatesStuff()
+void testBed::testOptimizedRateVectors()
 {
 
     Reaction::setLinearRateScale(1000);
 
     solver->initializeCrystal(0.2);
 
-    double kTot;
-    vector<double> accuAllRates;
-    vector<Reaction*> allPossibleReactions;
+    double kTotBF;
+    vector<double> accuAllRatesBF;
+    vector<Reaction*> allPossibleReactionsBF;
 
     uint cycle = 1;
     uint nCycles = 500;
+
+    bool containsReaction;
 
     while (cycle <= nCycles)
     {
 
         solver->getRateVariables();
 
-        fill_rate_stuff(accuAllRates, allPossibleReactions, kTot);
+        fill_rate_stuff(accuAllRatesBF, allPossibleReactionsBF, kTotBF);
 
-        CHECK_CLOSE(kTot, solver->kTot(), 1E-5);
+        CHECK_CLOSE(kTotBF, solver->kTot(), 1E-5);
+        CHECK_CLOSE(kTotBF, *(solver->accuAllRates().end() - 1), 1E-5);
+
+        for (Reaction * r : solver->allPossibleReactions())
+        {
+            containsReaction = std::find(allPossibleReactionsBF.begin(), allPossibleReactionsBF.end(), r) != allPossibleReactionsBF.end();
+            CHECK_EQUAL(true, containsReaction);
+        }
+
+        double prevAR = 0;
+        for (double AR : solver->accuAllRates())
+        {
+            CHECK_EQUAL(true, prevAR < AR);
+        }
 
 
         double R = solver->kTot()*KMC_RNG_UNIFORM();
@@ -1900,33 +1915,33 @@ void testBed::testReactionVectorUpdate()
 
     Site::updateAffectedSites();
 
-    CHECK_EQUAL(0,  solver->m_availableReactionSlots.size());
-    CHECK_EQUAL(26, solver->m_allPossibleReactions2.size());
-    CHECK_EQUAL(26, solver->m_accuAllRates2.size());
+    CHECK_EQUAL(0,  solver->availableReactionSlots().size());
+    CHECK_EQUAL(26, solver->allPossibleReactions().size());
+    CHECK_EQUAL(26, solver->accuAllRates().size());
 
     c = 0;
-    for (uint i = 0; i < solver->m_allPossibleReactions2.size(); ++i)
+    for (uint i = 0; i < solver->allPossibleReactions().size(); ++i)
     {
-        c += solver->m_allPossibleReactions2.at(i)->rate();
-        CHECK_EQUAL(c, solver->m_accuAllRates2.at(i));
+        c += solver->allPossibleReactions().at(i)->rate();
+        CHECK_EQUAL(c, solver->accuAllRates().at(i));
     }
 
-    CHECK_EQUAL(solver->kTot(), *(solver->m_accuAllRates2.end()-1));
+    CHECK_EQUAL(solver->kTot(), *(solver->accuAllRates().end()-1));
 
     //Deactivating it should set all 26 reactions as available to overwrite.
     center->deactivate();
 
     Site::updateAffectedSites();
 
-    CHECK_EQUAL(26,  solver->m_availableReactionSlots.size());
-    CHECK_EQUAL(26,  solver->m_allPossibleReactions2.size());
-    CHECK_EQUAL(26,  solver->m_accuAllRates2.size());
+    CHECK_EQUAL(26,  solver->availableReactionSlots().size());
+    CHECK_EQUAL(26,  solver->allPossibleReactions().size());
+    CHECK_EQUAL(26,  solver->accuAllRates().size());
 
     CHECK_EQUAL(0, solver->kTot());
 
-    for (uint i = 0; i < solver->m_allPossibleReactions2.size(); ++i)
+    for (uint i = 0; i < solver->allPossibleReactions().size(); ++i)
     {
-        CHECK_EQUAL(0, solver->m_accuAllRates2.at(i));
+        CHECK_EQUAL(0, solver->accuAllRates().at(i));
     }
 
     //Activating again should reset back to original case. Not trivial because this
@@ -1935,17 +1950,17 @@ void testBed::testReactionVectorUpdate()
 
     Site::updateAffectedSites();
 
-    CHECK_EQUAL(0,  solver->m_availableReactionSlots.size());
-    CHECK_EQUAL(26, solver->m_allPossibleReactions2.size());
-    CHECK_EQUAL(26, solver->m_accuAllRates2.size());
+    CHECK_EQUAL(0,  solver->availableReactionSlots().size());
+    CHECK_EQUAL(26, solver->allPossibleReactions().size());
+    CHECK_EQUAL(26, solver->accuAllRates().size());
 
     CHECK_EQUAL(26*Reaction::linearRateScale(), solver->kTot());
 
     c = 0;
-    for (uint i = 0; i < solver->m_allPossibleReactions2.size(); ++i)
+    for (uint i = 0; i < solver->allPossibleReactions().size(); ++i)
     {
-        c += solver->m_allPossibleReactions2.at(i)->rate();
-        CHECK_EQUAL(c, solver->m_accuAllRates2.at(i));
+        c += solver->allPossibleReactions().at(i)->rate();
+        CHECK_EQUAL(c, solver->accuAllRates().at(i));
     }
 
 
@@ -1956,18 +1971,18 @@ void testBed::testReactionVectorUpdate()
 
     Site::updateAffectedSites();
 
-    CHECK_EQUAL(1,  solver->m_availableReactionSlots.size());
+    CHECK_EQUAL(1,  solver->availableReactionSlots().size());
 
     c = 0;
-    for (uint i = 0; i < solver->m_allPossibleReactions2.size(); ++i)
+    for (uint i = 0; i < solver->allPossibleReactions().size(); ++i)
     {
-        if (i == solver->m_availableReactionSlots.at(0))
+        if (i == solver->availableReactionSlots().at(0))
         {
             continue;
         }
 
-        c += solver->m_allPossibleReactions2.at(i)->rate();
-        CHECK_CLOSE(c, solver->m_accuAllRates2.at(i), 0.00001);
+        c += solver->allPossibleReactions().at(i)->rate();
+        CHECK_CLOSE(c, solver->accuAllRates().at(i), 0.00001);
     }
 
     //activating a new particle independent of the others should now only induce 25 more spots,
@@ -1981,15 +1996,15 @@ void testBed::testReactionVectorUpdate()
 
     Site::updateAffectedSites();
 
-    CHECK_EQUAL(0,  solver->m_availableReactionSlots.size());
-    CHECK_EQUAL(26+25, solver->m_allPossibleReactions2.size());
-    CHECK_EQUAL(26+25, solver->m_accuAllRates2.size());
+    CHECK_EQUAL(0,  solver->availableReactionSlots().size());
+    CHECK_EQUAL(26+25, solver->allPossibleReactions().size());
+    CHECK_EQUAL(26+25, solver->accuAllRates().size());
 
     c = 0;
-    for (uint i = 0; i < solver->m_allPossibleReactions2.size(); ++i)
+    for (uint i = 0; i < solver->allPossibleReactions().size(); ++i)
     {
-        c += solver->m_allPossibleReactions2.at(i)->rate();
-        CHECK_CLOSE(c, solver->m_accuAllRates2.at(i), 0.00001);
+        c += solver->allPossibleReactions().at(i)->rate();
+        CHECK_CLOSE(c, solver->accuAllRates().at(i), 0.00001);
     }
 
 
@@ -1998,17 +2013,17 @@ void testBed::testReactionVectorUpdate()
 
     Site::updateAffectedSites();
 
-    CHECK_EQUAL(0,    solver->m_availableReactionSlots.size());
-    CHECK_EQUAL(2*26, solver->m_allPossibleReactions2.size());
-    CHECK_EQUAL(2*26, solver->m_accuAllRates2.size());
+    CHECK_EQUAL(0,    solver->availableReactionSlots().size());
+    CHECK_EQUAL(2*26, solver->allPossibleReactions().size());
+    CHECK_EQUAL(2*26, solver->accuAllRates().size());
 
     CHECK_CLOSE(2*26*Reaction::linearRateScale(), solver->kTot(), 0.00001);
 
     c = 0;
-    for (uint i = 0; i < solver->m_allPossibleReactions2.size(); ++i)
+    for (uint i = 0; i < solver->allPossibleReactions().size(); ++i)
     {
-        c += solver->m_allPossibleReactions2.at(i)->rate();
-        CHECK_CLOSE(c, solver->m_accuAllRates2.at(i), 0.00001);
+        c += solver->allPossibleReactions().at(i)->rate();
+        CHECK_CLOSE(c, solver->accuAllRates().at(i), 0.00001);
     }
 
     //removing both the particles should bring us back to initial state
@@ -2018,15 +2033,15 @@ void testBed::testReactionVectorUpdate()
 
     Site::updateAffectedSites();
 
-    CHECK_EQUAL(2*26, solver->m_availableReactionSlots.size());
-    CHECK_EQUAL(2*26, solver->m_allPossibleReactions2.size());
-    CHECK_EQUAL(2*26, solver->m_accuAllRates2.size());
+    CHECK_EQUAL(2*26, solver->availableReactionSlots().size());
+    CHECK_EQUAL(2*26, solver->allPossibleReactions().size());
+    CHECK_EQUAL(2*26, solver->accuAllRates().size());
 
     CHECK_CLOSE(0, solver->kTot(), 0.00001);
 
-    for (uint i = 0; i < solver->m_allPossibleReactions2.size(); ++i)
+    for (uint i = 0; i < solver->allPossibleReactions().size(); ++i)
     {
-        CHECK_CLOSE(0, solver->m_accuAllRates2.at(i), 0.00001);
+        CHECK_CLOSE(0, solver->accuAllRates().at(i), 0.00001);
     }
 
 
@@ -2069,7 +2084,7 @@ void testBed::testReactionShuffler()
     //this should replace the disabled reaction with the end reaction: Everything is ordered.
     solver->reshuffleReactions();
 
-    CHECK_EQUAL(nReacs - 1, static_cast<DummyReaction*>(solver->m_allPossibleReactions2.at(nReacs/2))->initAddress);
+    CHECK_EQUAL(nReacs - 1, static_cast<DummyReaction*>(solver->allPossibleReactions().at(nReacs/2))->initAddress);
 
     _reactionShufflerCheck(nReacs - 1);
 
@@ -2104,7 +2119,7 @@ void testBed::testReactionShuffler()
         allReacs.at(i)->disable();
     }
 
-    CHECK_EQUAL(nReacs/2, solver->m_availableReactionSlots.size());
+    CHECK_EQUAL(nReacs/2, solver->availableReactionSlots().size());
 
     solver->reshuffleReactions();
 
@@ -2118,11 +2133,11 @@ void testBed::testReactionShuffler()
         allReacs.at(i)->disable();
     }
 
-    CHECK_EQUAL(nReacs/2, solver->m_availableReactionSlots.size());
+    CHECK_EQUAL(nReacs/2, solver->availableReactionSlots().size());
 
-    for (uint addr : solver->m_availableReactionSlots)
+    for (uint addr : solver->availableReactionSlots())
     {
-        CHECK_EQUAL(Reaction::UNSET_ADDRESS, solver->m_allPossibleReactions2.at(addr)->address());
+        CHECK_EQUAL(Reaction::UNSET_ADDRESS, solver->allPossibleReactions().at(addr)->address());
     }
 
     solver->reshuffleReactions();
@@ -2137,7 +2152,7 @@ void testBed::testReactionShuffler()
         allReacs.at(i)->calcRate();
     }
 
-    CHECK_EQUAL(0, solver->m_availableReactionSlots.size());
+    CHECK_EQUAL(0, solver->availableReactionSlots().size());
 
     solver->reshuffleReactions();
 
@@ -2174,7 +2189,7 @@ void testBed::testReactionShuffler()
 
     }
 
-    CHECK_EQUAL(c, solver->m_availableReactionSlots.size());
+    CHECK_EQUAL(c, solver->availableReactionSlots().size());
 
     solver->reshuffleReactions();
 
@@ -2243,7 +2258,6 @@ void testBed::fill_rate_stuff(vector<double> & accuAllRates, vector<Reaction*> &
     accuAllRates.clear();
     allPossibleReactions.clear();
 
-    double minRate = std::numeric_limits<double>::max();
     solver->forEachSiteDo([&] (Site * site)
     {
         site->forEachActiveReactionDo([&] (Reaction * reaction)
@@ -2252,11 +2266,6 @@ void testBed::fill_rate_stuff(vector<double> & accuAllRates, vector<Reaction*> &
             KMCDebugger_Assert(reaction->rate(), !=, Reaction::UNSET_RATE, "Reaction rate should not be unset at this point.", reaction->getFinalizingDebugMessage());
 
             kTot += reaction->rate();
-
-            if (reaction->rate() < minRate)
-            {
-                minRate = reaction->rate();
-            }
 
             accuAllRates.push_back(kTot);
 

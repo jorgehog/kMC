@@ -128,6 +128,11 @@ public:
         return m_allPossibleReactions;
     }
 
+    const vector<uint> & availableReactionSlots() const
+    {
+        return m_availableReactionSlots;
+    }
+
     const double & kTot() const
     {
         return m_kTot;
@@ -200,35 +205,26 @@ public:
     {
         for (uint i = from; i < to; ++i)
         {
-            m_accuAllRates2.at(i) += value;
+            m_accuAllRates.at(i) += value;
 
-            if (fabs(m_accuAllRates2.at(i)) < 1E-10)
+            if (fabs(m_accuAllRates.at(i)) < 1E-10)
             {
-                m_accuAllRates2.at(i) = 0;
+                m_accuAllRates.at(i) = 0;
             }
 
-            KMCDebugger_Assert(m_accuAllRates2.at(i), >=, 0);
+            KMCDebugger_Assert(m_accuAllRates.at(i), >=, 0);
         }
     }
 
     double prevAccuAllRatesValue(const uint address) const
     {
-        return address == 0 ? 0 : m_accuAllRates2.at(address - 1);
+        return address == 0 ? 0 : m_accuAllRates.at(address - 1);
     }
 
     bool isEmptyAddress(const uint address);
 
     string getReactionVectorDebugMessage();
 
-    vector<uint>   m_availableReactionSlots;
-
-    //OPTIMIZATION TMP
-    vector<Reaction*> prevUpdatedReacs;
-    set<Reaction*> prevUpdatedReacsSet;
-
-    //OPTIMIZATION TMP
-    vector<double> m_accuAllRates2;
-    vector<Reaction*> m_allPossibleReactions2;
 
 private:
 
@@ -244,9 +240,12 @@ private:
 
 
     double m_kTot;
+
     vector<double> m_accuAllRates;
 
     vector<Reaction*> m_allPossibleReactions;
+
+    vector<uint>   m_availableReactionSlots;
 
     double totalTime;
 

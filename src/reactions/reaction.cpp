@@ -108,12 +108,7 @@ string Reaction::propertyString() const
 void Reaction::setRate(const double rate)
 {
 
-    KMCDebugger_Assert(rate, !=, 0, "This reaction should be deactive.");
-
-    m_solver->prevUpdatedReacs.push_back(this);
-    m_solver->prevUpdatedReacsSet.insert(this);
-
-    KMCDebugger_Assert(m_solver->prevUpdatedReacs.size(), ==, m_solver->prevUpdatedReacsSet.size());
+    KMCDebugger_Assert(rate, !=, 0, "This reaction should be deactive.", getFinalizingDebugMessage());
 
     m_solver->registerReactionChange(this, rate);
 
