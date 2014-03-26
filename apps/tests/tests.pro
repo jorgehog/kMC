@@ -11,7 +11,8 @@ SOURCES = testsmain.cpp \
 
 HEADERS += testbed/testbed.h \
     snapshot/snapshot.h \
-    defines.h
+    defines.h \
+    dummyreaction.h
 
 OTHER_FILES += infiles/knowncase.cfg
 

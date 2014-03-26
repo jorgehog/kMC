@@ -9,8 +9,8 @@
 #include <sys/types.h>
 
 
-//#define focusSuite "Reactions"
-//#define focusTest  "ReactionVectorUpdate"
+#define focusSuite "Reactions"
+//#define focusTest  "ReactionShuffler"
 
 
 #include "defines.h"
@@ -34,6 +34,8 @@ SUITE(Reactions)
     TESTWRAPPER(ReactionChoise)
 
     TESTWRAPPER(ReactionVectorUpdate)
+
+    TESTWRAPPER(ReactionShuffler)
 
 }
 

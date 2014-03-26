@@ -2,6 +2,8 @@
 
 #include "../snapshot/snapshot.h"
 
+#include "../dummyreaction.h"
+
 #include <unittest++/UnitTest++.h>
 
 #include <iostream>
@@ -1403,6 +1405,21 @@ Site *testBed::getBoxCenter(const int dx, const int dy, const int dz)
     return solver->getSite(NX()/2 + dx, NY()/2 + dy, NZ()/2 + dz);
 }
 
+void testBed::_reactionShufflerCheck(uint nReacs)
+{
+
+    CHECK_EQUAL(nReacs, solver->m_allPossibleReactions2.size());
+    CHECK_EQUAL(nReacs, solver->m_accuAllRates2.size());
+    CHECK_EQUAL(0,      solver->m_availableReactionSlots.size());
+
+    for (uint i = 0; i < nReacs; ++i)
+    {
+        CHECK_EQUAL(i + 1, solver->m_accuAllRates2.at(i));
+        CHECK_EQUAL(i,     solver->m_allPossibleReactions2.at(i)->address());
+    }
+
+}
+
 void testBed::testKnownCase()
 {
 
@@ -2014,6 +2031,46 @@ void testBed::testReactionVectorUpdate()
 
 
     Reaction::setLinearRateScale(1);
+
+}
+
+void testBed::testReactionShuffler()
+{
+
+    uint nReacs = 100;
+
+    vector<DummyReaction*> allReacs;
+
+    //Initialize nReacs reactions and check that accuallrates is equal to 1, 2, 3 ...
+    //and that the addresses are correct.
+    for (uint i = 0; i < nReacs; ++i)
+    {
+        allReacs.push_back(new DummyReaction(i));
+    }
+
+
+    for (Reaction * r : allReacs)
+    {
+        r->calcRate();
+    }
+
+    Site::clearAffectedSites();
+
+    _reactionShufflerCheck(nReacs);
+
+    //this should do nothing: Everything is ordered.
+    solver->reshuffleReactions();
+
+    _reactionShufflerCheck(nReacs);
+
+    allReacs.at(nReacs/2)->allowed = false;
+    allReacs.at(nReacs/2)->disable();
+
+    //this should replace the disabled reaction with the end reaction: Everything is ordered.
+    solver->reshuffleReactions();
+
+    CHECK_EQUAL(nReacs - 1, allReacs.at(nReacs/2)->initAddress);
+
 
 }
 

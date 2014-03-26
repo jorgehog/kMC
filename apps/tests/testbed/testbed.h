@@ -65,6 +65,8 @@ public:
 
     static void testReactionVectorUpdate();
 
+    static void testReactionShuffler();
+
 
 
 
@@ -113,5 +115,7 @@ private:
     static string lastBoundariesName;
 
     static umat lastBoundaries;
+
+    static void _reactionShufflerCheck(uint nReacs);
 
 };

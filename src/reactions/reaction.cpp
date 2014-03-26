@@ -38,6 +38,12 @@ const string Reaction::info(int xr, int yr, int zr, string desc) const
 
 }
 
+void Reaction::setLastUsedEnergy()
+{
+     m_lastUsedEnergy = m_reactionSite->energy();
+}
+
+
 const uint &Reaction::x() const
 {
     return m_reactionSite->x();
@@ -94,8 +100,6 @@ void Reaction::setRate(const double rate)
     KMCDebugger_Assert(m_solver->prevUpdatedReacs.size(), ==, m_solver->prevUpdatedReacsSet.size());
 
     m_solver->registerReactionChange(this, rate);
-
-    m_lastUsedEnergy = m_reactionSite->energy();
 
     m_rate = rate;
 
