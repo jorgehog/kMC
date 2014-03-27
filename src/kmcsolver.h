@@ -15,6 +15,7 @@
 
 #include <libconfig_utils/libconfig_utils.h>
 
+#include <ignis.h>
 
 using namespace arma;
 
@@ -35,12 +36,18 @@ public:
 
     ~KMCSolver();
 
+    void reset();
+
     const static uint UNSET_UINT = std::numeric_limits<uint>::max();
 
 
     void mainloop();
 
-    void reset();
+    inline void initialize();
+
+    inline void singleLoop();
+
+
 
     void initializeCrystal(const double relativeSeedSize);
 
@@ -248,7 +255,15 @@ private:
     vector<uint>   m_availableReactionSlots;
 
 
+    Reaction * selectedReaction;
+
+
+    uint choice;
+
+    double R;
+
     double totalTime;
+
 
     uint m_nCycles;
     uint cycle;
@@ -279,5 +294,43 @@ private:
 
 
 };
+
+
+void KMCSolver::initialize()
+{
+    dumpXYZ();
+
+    KMCDebugger_Init();
+}
+
+void KMCSolver::singleLoop()
+{
+
+    getRateVariables();
+
+    R = m_kTot*KMC_RNG_UNIFORM();
+
+    choice = getReactionChoice(R);
+
+    selectedReaction = m_allPossibleReactions.at(choice);
+    KMCDebugger_SetActiveReaction(selectedReaction);
+
+    selectedReaction->execute();
+
+    if (cycle%m_cyclesPerOutput == 0)
+    {
+        dumpOutput();
+        dumpXYZ();
+    }
+
+
+    Site::updateBoundaries();
+
+
+    totalTime += Reaction::linearRateScale()/m_kTot;
+    cycle++;
+
+}
+
 
 }

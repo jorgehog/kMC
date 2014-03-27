@@ -17,3 +17,4 @@
 #include "../src/boundary/surface/surface.h"
 #include "../src/boundary/concentrationwall/concentrationwall.h"
 
+#include "../src/events/solverevent.h"

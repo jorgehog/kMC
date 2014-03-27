@@ -15,7 +15,7 @@ INCLUDEPATH += $(HOME)/Dropbox/libs $$PWD/ignis/include
 
 LIBS += -larmadillo -lconfig++ -L$$PWD/ignis/lib -lignis
 
-DEFINES += ARMA_MAT_PREALLOC=3
+DEFINES += ARMA_MAT_PREALLOC=3 NO_DCVIZ
 
 CONFIG(RNG_ZIG) {
     DEFINES += KMC_RNG_ZIG

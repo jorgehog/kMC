@@ -22,7 +22,8 @@ HEADERS = RNG/kMCRNG.h \
     boundary/concentrationwall/concentrationwall.h \
     boundary/edge/edge.h \
     boundary/surface/surface.h \
-    particlestates.h
+    particlestates.h \
+    events/solverevent.h
 
 SOURCES += \
     reactions/reaction.cpp \

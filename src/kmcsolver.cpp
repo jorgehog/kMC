@@ -130,41 +130,11 @@ void KMCSolver::finalizeObject()
 void KMCSolver::mainloop()
 {
 
-    Reaction * selectedReaction;
-    uint choice;
-    double R;
-
-    dumpXYZ();
-
-    KMCDebugger_Init();
+    initialize();
 
     while(cycle <= m_nCycles)
     {
-
-        getRateVariables();
-
-        R = m_kTot*KMC_RNG_UNIFORM();
-
-        choice = getReactionChoice(R);
-
-        selectedReaction = m_allPossibleReactions.at(choice);
-        KMCDebugger_SetActiveReaction(selectedReaction);
-
-        selectedReaction->execute();
-
-        if (cycle%m_cyclesPerOutput == 0)
-        {
-            dumpOutput();
-            dumpXYZ();
-        }
-
-
-        Site::updateBoundaries();
-
-
-        totalTime += Reaction::linearRateScale()/m_kTot;
-        cycle++;
-
+       singleLoop();
     }
 
 }
