@@ -17,7 +17,6 @@
 
 #include <libconfig_utils/libconfig_utils.h>
 
-#include <ignis.h>
 
 using namespace arma;
 
@@ -123,6 +122,11 @@ public:
     const uvec3 NVec() const
     {
         return m_N;
+    }
+
+    const uint & nCycles() const
+    {
+        return m_nCycles;
     }
 
     const vector<double> & accuAllRates() const

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../kmcsolver.h"
+#include <kMC>
 #include <ignis.h>
 
 using ignis::Event;
