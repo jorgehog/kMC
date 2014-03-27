@@ -1,3 +1,6 @@
 [submodule "apps/diamondSquareSurface/diamondSquare"]
 	path = apps/diamondSquareSurface/diamondSquare
 	url = git@github.com:jorgehog/diamondSquare.git
+[submodule "ignis"]
+	path = ignis
+	url = git@github.com:jorgehog/ignis.git
