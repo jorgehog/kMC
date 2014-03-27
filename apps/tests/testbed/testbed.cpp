@@ -110,7 +110,6 @@ void testBed::testTotalParticleStateCounters()
 
         C0--;
         C1++;
-
     });
 
     deactivateAllSites();
