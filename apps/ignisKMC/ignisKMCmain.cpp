@@ -64,7 +64,7 @@ MainMesh *initialize_ignisKMC(KMCSolver * solver, const Setting & root)
 
     solver->initializeSolutionBath();
 
-    Ensemble *ens = new Ensemble(vec({0}));
+    Particles *ens = new Particles(vec({0}));
 
     MainMesh *mainMesh = new MainMesh(topology, *ens);
 
