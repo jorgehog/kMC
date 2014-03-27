@@ -87,9 +87,9 @@ string DiffusionReaction::getFinalizingDebugMessage() const
 void DiffusionReaction::setSeparation(const uint separation, bool check)
 {
 
-    if (separation > Site::nNeighborsLimit() && check)
+    if (separation >= Site::nNeighborsLimit() && check)
     {
-        cerr << "Forced particle separation cannot exceed the site neighborlimit." << endl;
+        cerr << "Forced particle separation cannot exceed or equal the site neighborlimit." << endl;
         KMCSolver::exit();
     }
 

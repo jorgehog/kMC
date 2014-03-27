@@ -18,6 +18,7 @@ Site::Site(uint _x, uint _y, uint _z) :
     m_active(false),
     m_isFixedCrystalSeed(false),
     m_cannotCrystallize(false),
+    m_ID(refCounter++),
     m_x(_x),
     m_y(_y),
     m_z(_z),
@@ -46,6 +47,8 @@ Site::~Site()
 
     m_totalDeactiveParticles(particleState())--;
 
+    refCounter--;
+
 }
 
 
@@ -54,17 +57,14 @@ Site::~Site()
 void Site::updateAffectedSites()
 {
 
+    KMCDebugger_PushTraces();
+
     for (Site* site : m_affectedSites)
     {
-        if (!site->isActive())
-        {
-            continue;
-        }
-
-        site->calculateRates();
+        site->updateReactions();
     }
 
-    m_affectedSites.clear();
+    clearAffectedSites();
 
 }
 
@@ -157,7 +157,6 @@ void Site::setParticleState(int newState)
 //All reactions must be legal if site is allowed to spawn.
 bool Site::isLegalToSpawn()
 {
-
     if (m_active)
     {
         return false;
@@ -252,6 +251,14 @@ void Site::updateBoundaries()
             m_boundaries(i, j)->update();
         }
     }
+}
+
+void Site::popAffectedSite(Site *site)
+{
+    KMCDebugger_AssertBool(site->isAffected());
+    KMCDebugger_PopAffected(site);
+
+    m_affectedSites.erase(m_affectedSites.find(site));
 }
 
 
@@ -379,6 +386,7 @@ void Site::forEachActiveReactionDo(function<void (Reaction *)> applyFunction) co
 
 void Site::forEachActiveReactionDo_sendIndex(function<void (Reaction *, uint)> applyFunction) const
 {
+
     if (!m_active)
     {
         return;
@@ -453,13 +461,23 @@ void Site::decrystallize()
 }
 
 
-void Site::calculateRates()
+void Site::updateReactions()
 {
-    forEachActiveReactionDo([] (Reaction* reaction)
+
+    for (Reaction* reaction : m_reactions)
     {
-        reaction->calcRate();
-        reaction->resetUpdateFlag();
-    });
+        if (reaction->isAllowedAndActive())
+        {
+            reaction->calcRate();
+            reaction->setLastUsedEnergy();
+            reaction->resetUpdateFlag();
+        }
+
+        else
+        {
+            reaction->disable();
+        }
+    }
 }
 
 void Site::initializeDiffusionReactions()
@@ -575,55 +593,6 @@ void Site::setNeighboringDirectUpdateFlags()
             }
         }
     });
-
-    //BUGFIX TMP
-
-    Boundary::setupCurrentBoundaries(x(), y(), z());
-
-    int lim = (int)m_nNeighborsLimit + 1;
-
-    for (int i = -lim; i <= lim; ++i)
-    {
-        for (int j = -lim; j <= lim; ++j)
-        {
-            for (int k = -lim; k <= lim; ++k)
-            {
-
-                if (Site::getLevel(abs(i), abs(j), abs(k)) == lim - 1)
-                {
-
-                    uint xTrans = Boundary::currentBoundaries(0)->transformCoordinate(i + (int)x());
-                    uint yTrans = Boundary::currentBoundaries(1)->transformCoordinate(j + (int)y());
-                    uint zTrans = Boundary::currentBoundaries(2)->transformCoordinate(k + (int)z());
-
-                    if (!Boundary::isBlocked(xTrans, yTrans, zTrans))
-                    {
-                        for (Reaction * r : m_solver->getSite(xTrans, yTrans, zTrans)->reactions())
-                        {
-
-                            int xr, yr, zr;
-
-                            static_cast<DiffusionReaction*>(r)->destinationSite()->distanceTo(this, xr, yr, zr, true);
-
-                            uint l = Site::getLevel(xr, yr, zr);
-
-                            if (l < Site::nNeighborsLimit() || true)
-                            {
-                                r->registerUpdateFlag(Reaction::defaultUpdateFlag);
-                            }
-
-                            m_affectedSites.insert(m_solver->getSite(xTrans, yTrans, zTrans));
-
-                        }
-                    }
-                }
-
-
-            }
-        }
-    }
-
-    //TMP END
 
 
 
@@ -820,6 +789,8 @@ void Site::flipDeactive()
 
     m_active = false;
 
+
+    m_affectedSites.insert(this);
 
     informNeighborhoodOnChange(-1);
 
@@ -1275,7 +1246,9 @@ void Site::finalizeBoundaries()
 
 void Site::clearAffectedSites()
 {
+
     m_affectedSites.clear();
+
 }
 
 void Site::setZeroTotalEnergy()
@@ -1419,7 +1392,7 @@ const string Site::info(int xr, int yr, int zr, string desc) const
     numberSearchRepl(ParticleStates::solution,     ParticleStates::shortNames.at(ParticleStates::solution));
 
     numberSearchRepl(_min+0, ".");
-    numberSearchRepl(_min+1, "--");
+    numberSearchRepl(_min+1, "#");
     numberSearchRepl(_min+2, particleStateShortName() + "^");
     numberSearchRepl(_min+3, desc);
 
@@ -1446,9 +1419,9 @@ void Site::setInitialNNeighborsLimit(const uint &nNeighborsLimit, bool check)
         KMCSolver::exit();
     }
 
-    if (nNeighborsLimit < DiffusionReaction::separation() && check)
+    if (nNeighborsLimit <= DiffusionReaction::separation() && check)
     {
-        cerr << "Neighbor reach must be higher or equal than diffusion separation." << endl;
+        cerr << "Neighbor reach must be higher than diffusion separation." << endl;
         KMCSolver::exit();
     }
 
@@ -1657,8 +1630,8 @@ uvec4      Site::m_totalDeactiveParticles;
 double     Site::m_totalEnergy = 0;
 
 
-set<Site*> Site::m_affectedSites;
-
+//Don't panic: Just states that the sets pointers should be sorted by the site objects and not their random valued pointers.
+set<Site*, function<bool(Site*, Site*)> > Site::m_affectedSites = set<Site*, function<bool(Site*, Site*)> >([] (Site * s1, Site * s2) {return s1->ID() < s2->ID();});
 
 field<Boundary*> Site::m_boundaries;
 
@@ -1666,6 +1639,7 @@ field<const Setting*> Site::m_boundaryConfigs;
 
 umat Site::m_boundaryTypes;
 
+uint Site::refCounter = 0;
 
 
 

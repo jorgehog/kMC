@@ -5,7 +5,7 @@
 
 #include "../debugger/debugger.h"
 
-#include <climits>
+#include <limits>
 
 #include <armadillo>
 
@@ -169,7 +169,7 @@ void Boundary::setupCurrentBoundaries(const uint x, const uint y, const uint z)
 }
 
 
-uint Boundary::BLOCKED_COORDINATE = (uint)ULLONG_MAX;
+uint Boundary::BLOCKED_COORDINATE = std::numeric_limits<uint>::max();
 
 KMCSolver* Boundary::m_solver;
 

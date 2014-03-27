@@ -11,7 +11,8 @@ Reaction::Reaction(Site *currentSite):
     m_reactionSite(currentSite),
     m_lastUsedEnergy(UNSET_ENERGY),
     m_rate(UNSET_RATE),
-    m_updateFlag(UNSET_UPDATE_FLAG)
+    m_updateFlag(UNSET_UPDATE_FLAG),
+    m_address(UNSET_ADDRESS)
 {
 
 }
@@ -25,9 +26,7 @@ const string Reaction::info(int xr, int yr, int zr, string desc) const
 {
     stringstream s;
     s << "[" << name << "]:" << "\n";
-    s << "   rate: " << m_rate << "  ";
-    s << "Selected flag: " << m_updateFlag << "  ";
-    s << "Blocked? " << !isAllowed() << "\n";
+    s << propertyString() << "\n";
     s << "@";
     s << m_reactionSite->info(xr, yr, zr, desc);
     s << "\n";
@@ -35,6 +34,12 @@ const string Reaction::info(int xr, int yr, int zr, string desc) const
     return s.str();
 
 }
+
+void Reaction::setLastUsedEnergy()
+{
+     m_lastUsedEnergy = m_reactionSite->energy();
+}
+
 
 const uint &Reaction::x() const
 {
@@ -49,6 +54,11 @@ const uint &Reaction::y() const
 const uint &Reaction::z() const
 {
     return m_reactionSite->z();
+}
+
+bool Reaction::hasVacantStatus() const
+{
+    return solver()->isEmptyAddress(m_address);
 }
 
 
@@ -81,10 +91,29 @@ string Reaction::getFinalizingDebugMessage() const
 #endif
 }
 
+string Reaction::propertyString() const
+{
+    stringstream s;
+
+    s << "Rate: "          << unsetIf(m_rate,       UNSET_RATE)        << "  ";
+    s << "Address: "       << unsetIf(m_address,    UNSET_ADDRESS)     << "  ";
+    s << "Selected flag: " << unsetIf(m_updateFlag, UNSET_UPDATE_FLAG) << "  ";
+
+    s << "Allowed? " << !isAllowed() << "  ";
+    s << "Vacant? "  << hasVacantStatus();
+
+    return s.str();
+}
+
 void Reaction::setRate(const double rate)
 {
-    m_lastUsedEnergy = m_reactionSite->energy();
+
+    KMCDebugger_Assert(rate, !=, 0, "This reaction should be deactive.", getFinalizingDebugMessage());
+
+    m_solver->registerReactionChange(this, rate);
+
     m_rate = rate;
+
 }
 
 const uint &Reaction::NX()
@@ -125,6 +154,13 @@ void Reaction::reset()
 
     m_updateFlag = UNSET_UPDATE_FLAG;
 
+    m_address = UNSET_ADDRESS;
+
+}
+
+bool Reaction::isAllowedAndActive() const
+{
+    return isAllowed() && reactionSite()->isActive();
 }
 
 const string Reaction::name = "Reaction";
@@ -135,6 +171,12 @@ double       Reaction::m_beta = 1.0;
 double       Reaction::m_linearRateScale = 1.0;
 
 uint         Reaction::m_IDCount = 0;
+
+const double Reaction::UNSET_RATE     = -1337;
+
+const double Reaction::UNSET_ENERGY   = -13371337;
+
+const uint   Reaction::UNSET_ADDRESS  = std::numeric_limits<uint>::max();
 
 
 ostream & operator << (ostream& os, const Reaction& ss)

@@ -11,7 +11,7 @@
 #include <sys/types.h>
 #include <armadillo>
 
-#include <climits>
+#include <limits>
 
 #include <libconfig_utils/libconfig_utils.h>
 
@@ -35,7 +35,7 @@ public:
 
     ~KMCSolver();
 
-    const static uint UNSET_UINT = (uint)ULLONG_MAX;
+    const static uint UNSET_UINT = std::numeric_limits<uint>::max();
 
 
     void mainloop();
@@ -123,9 +123,14 @@ public:
         return m_accuAllRates;
     }
 
-    const vector<Reaction*> & allReactions() const
+    const vector<Reaction*> & allPossibleReactions() const
     {
-        return m_allReactions;
+        return m_allPossibleReactions;
+    }
+
+    const vector<uint> & availableReactionSlots() const
+    {
+        return m_availableReactionSlots;
     }
 
     const double & kTot() const
@@ -170,11 +175,10 @@ public:
         throw std::runtime_error("Exit failure.");
     }
 
-    //SHOULD BE IN SITE
 
     void clearSiteNeighborhoods()
     {
-        forEachSiteDo([] (Site * site)
+        forEachSiteDo([] (Site *site)
         {
             site->clearNeighborhood();
         });
@@ -182,16 +186,49 @@ public:
 
     void clearAllReactions()
     {
-        forEachSiteDo([] (Site * site)
+        forEachSiteDo([] (Site *site)
         {
             site->clearAllReactions();
         });
     }
 
 
+    void registerReactionChange(Reaction * reaction, const double &newRate);
+
+    void reshuffleReactions();
+
+    void swapReactionAddresses(const uint dest, const uint orig);
+
+    void postReactionShuffleCleanup(const uint nVacancies);
+
+    void updateAccuAllRateElements(const uint from, const uint to, const double value)
+    {
+        for (uint i = from; i < to; ++i)
+        {
+            m_accuAllRates.at(i) += value;
+
+            if (fabs(m_accuAllRates.at(i)) < 1E-8)
+            {
+                m_accuAllRates.at(i) = 0;
+            }
+
+            KMCDebugger_Assert(m_accuAllRates.at(i), >=, 0);
+        }
+    }
+
+    double prevAccuAllRatesValue(const uint address) const
+    {
+        return address == 0 ? 0 : m_accuAllRates.at(address - 1);
+    }
+
+    bool isEmptyAddress(const uint address);
+
+    string getReactionVectorDebugMessage();
+
+
 private:
 
-    double m_targetSaturation = 0.01;
+    double m_targetSaturation;
 
     Site**** sites;
 
@@ -203,14 +240,17 @@ private:
 
 
     double m_kTot;
+
     vector<double> m_accuAllRates;
 
-    vector<Reaction*> m_allReactions;
+    vector<Reaction*> m_allPossibleReactions;
+
+    vector<uint>   m_availableReactionSlots;
+
 
     double totalTime;
 
-
-    uint m_nCycles = 1000000;
+    uint m_nCycles;
     uint cycle;
 
     uint m_cyclesPerOutput;
@@ -227,11 +267,15 @@ private:
 
     void dumpOutput();
 
+
     void checkRefCounter();
 
     void onConstruct();
 
+    void finalizeObject();
+
     static uint refCounter;
+
 
 
 };

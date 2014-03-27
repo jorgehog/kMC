@@ -69,8 +69,11 @@
 
 
 //DEBUGGER FEEDER FUNCTIONS
+#define KMCDebugger_PopAffected(site) \
+    kMC::Debugger::popAffected(site)
+
 #define KMCDebugger_MarkPre(pre) \
-    kMC::Debugger::queuePre(pre);
+    kMC::Debugger::queuePre(pre)
 
 #define KMCDebugger_SetActiveReaction(reaction) \
     kMC::Debugger::setActiveReaction(reaction)

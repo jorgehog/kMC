@@ -2,6 +2,8 @@
 
 #include "../snapshot/snapshot.h"
 
+#include "../dummyreaction.h"
+
 #include <unittest++/UnitTest++.h>
 
 #include <iostream>
@@ -13,11 +15,17 @@ void testBed::makeSolver()
 
     solver->setRNGSeed();
 
+    solver->setNumberOfCycles(1000);
+
+    solver->setTargetSaturation(0.01);
+
     DiffusionReaction::setPotentialParameters(1.0, 0.5, false);
 
     Site::setInitialBoundaries(Boundary::Periodic);
 
-    Site::setInitialNNeighborsLimit(2);
+    Site::setInitialNNeighborsLimit(2, false);
+
+    DiffusionReaction::setSeparation(1);
 
     Reaction::setBeta(0.5);
 
@@ -119,7 +127,7 @@ void testBed::testTotalParticleStateCounters()
     for (uint sep = 0; sep <= 3 ; ++sep)
     {
 
-        Site::resetNNeighborsLimitTo(sep + 1);
+        Site::resetNNeighborsLimitTo(sep + 1, false);
 
         DiffusionReaction::resetSeparationTo(sep);
 
@@ -294,6 +302,8 @@ void testBed::testDistanceTo()
         });
     });
 
+    initBoundaryTestParameters();
+
 }
 
 void testBed::testDeactivateSurface()
@@ -346,6 +356,7 @@ void testBed::testDeactivateSurface()
 
         CHECK_EQUAL(ParticleStates::crystal, origNextNeighbor->particleState());
 
+        Site::clearAffectedSites();
         for (uint i = 1; i < DiffusionReaction::separation(); ++i)
         {
             inBetweenSite = solver->getSite(NX()/2 + 1 + i, NY()/2, NZ()/2);
@@ -447,7 +458,7 @@ void testBed::testPropertyCalculations()
     CHECK_EQUAL(0, Site::nSolutionParticles());
 
     CHECK_EQUAL(0, Site::getCurrentSolutionDensity());
-    CHECK_EQUAL(1.0, 125*Site::getCurrentRelativeCrystalOccupancy());
+    CHECK_EQUAL(1.0, NX()*NY()*NZ()*Site::getCurrentRelativeCrystalOccupancy());
 
     umat boxTop = Site::getCurrentCrystalBoxTopology();
 
@@ -466,13 +477,13 @@ void testBed::testPropertyCalculations()
 
     CHECK_EQUAL(3, Site::nSolutionParticles());
 
-    CHECK_EQUAL(3.0/124, Site::getCurrentSolutionDensity());
+    CHECK_EQUAL(3.0/(NX()*NY()*NZ()- 1), Site::getCurrentSolutionDensity());
 
     activateAllSites();
 
 
     CHECK_EQUAL(0, Site::nSurfaces());
-    CHECK_EQUAL(125, Site::nCrystals());
+    CHECK_EQUAL(NX()*NY()*NZ(), Site::nCrystals());
     CHECK_EQUAL(0, Site::nSolutionParticles());
 
     CHECK_EQUAL(0, Site::getCurrentSolutionDensity());
@@ -494,33 +505,38 @@ void testBed::testPropertyCalculations()
     deactivateAllSites();
 
     center->spawnAsFixedCrystal();
-    solver->getSite(2, 2, 3)->activate();
-    solver->getSite(2, 2, 4)->activate();
 
-    solver->getSite(2, 1, 1)->activate();
-    solver->getSite(2, 1, 2)->activate();
-    solver->getSite(2, 1, 3)->activate();
+    uint sx = NX()/2;
+    uint sy = NY()/2;
+    uint sz = NZ()/2;
+
+    solver->getSite(sx, sy    , sz + 1)->activate();
+    solver->getSite(sx, sy    , sz + 2)->activate();
+
+    solver->getSite(sx, sy - 1, sz - 1)->activate();
+    solver->getSite(sx, sy - 1, sz    )->activate();
+    solver->getSite(sx, sy - 1, sz + 1)->activate();
 
 
-    solver->getSite(2, 3, 3)->activate();
+    solver->getSite(sx, sy + 1, sz + 1)->activate();
 
-    /*
-     *        x x x
+    /*            x
      *          x x x
-     *            x
+     *          x F
+     *          x
      *
      */
 
 
     boxTop = Site::getCurrentCrystalBoxTopology();
 
-    CHECK_EQUAL(2, boxTop(0, 0));
-    CHECK_EQUAL(1, boxTop(1, 0));
-    CHECK_EQUAL(1, boxTop(2, 0));
+    CHECK_EQUAL(sx,     boxTop(0, 0));
+    CHECK_EQUAL(sy - 1, boxTop(1, 0));
+    CHECK_EQUAL(sz - 1, boxTop(2, 0));
 
-    CHECK_EQUAL(2, boxTop(0, 1));
-    CHECK_EQUAL(3, boxTop(1, 1));
-    CHECK_EQUAL(4, boxTop(2, 1));
+    CHECK_EQUAL(sx,     boxTop(0, 1));
+    CHECK_EQUAL(sy + 1, boxTop(1, 1));
+    CHECK_EQUAL(sz + 2, boxTop(2, 1));
 
 }
 
@@ -679,7 +695,7 @@ void testBed::testReactionChoise()
                                 return;
                             }
 
-                            CHECK_EQUAL(r, solver->allReactions().at(count));
+                            CHECK_EQUAL(r, solver->allPossibleReactions().at(count));
 
                             kTot += r->rate();
 
@@ -707,7 +723,7 @@ void testBed::testReactionChoise()
                 }
             }
 
-            CHECK_EQUAL(solver->allReactions().at(choice), reaction);
+            CHECK_EQUAL(solver->allPossibleReactions().at(choice), reaction);
             CHECK_EQUAL(choice, count);
             CHECK_EQUAL(count, count2);
 
@@ -1225,14 +1241,14 @@ void testBed::testInitialReactionSetup()
         });
     });
 
-    solver->forEachSiteDo([] (Site * currentSite)
+    solver->forEachActiveSiteDo([] (Site * currentSite)
     {
         currentSite->forEachActiveReactionDo([] (Reaction * r)
         {
-                r->forceUpdateFlag(Reaction::defaultUpdateFlag);
+            r->forceUpdateFlag(Reaction::defaultUpdateFlag);
         });
 
-        currentSite->calculateRates();
+        currentSite->updateReactions();
     });
 
 
@@ -1264,22 +1280,21 @@ void testBed::testInitialReactionSetup()
 void testBed::testSequential()
 {
 
+    solver->reset();
+
     initBoundaryTestParameters();
 
 
-    solver->reset();
-
-    const SnapShot s0(solver);
+    const SnapShot s00(solver);
 
     const SnapShot & s1 = *testSequentialCore();
 
 
     solver->reset();
 
-    const SnapShot & s2 = *testSequentialCore();
+    const SnapShot s01(solver);
 
-    //ConcWall is not reset properly.
-    CHECK_EQUAL(s1, s2);
+    const SnapShot & s2 = *testSequentialCore();
 
 
 
@@ -1289,7 +1304,7 @@ void testBed::testSequential()
 
     initBoundaryTestParameters();
 
-    const SnapShot s00(solver);
+    const SnapShot s02(solver);
 
     const SnapShot & s3 = *testSequentialCore();
 
@@ -1300,17 +1315,26 @@ void testBed::testSequential()
 
     initBoundaryTestParameters();
 
+    const SnapShot s03(solver);
 
     const SnapShot & s4 = *testSequentialCore();
 
 
-    CHECK_EQUAL(s3, s4);
 
+    CHECK_EQUAL(s00, s01);
+    CHECK_EQUAL(s01, s02);
+    CHECK_EQUAL(s02, s03);
+    CHECK_EQUAL(s01, s02);
+    CHECK_EQUAL(s01, s03);
+    CHECK_EQUAL(s02, s03);
 
-    CHECK_EQUAL(s0, s00);
+    CHECK_EQUAL(s1, s2);
+    CHECK_EQUAL(s3, s4); //!
 
-
-    CHECK_EQUAL(s2, s3);
+    CHECK_EQUAL(s1, s3); //!
+    CHECK_EQUAL(s2, s3); //!
+    CHECK_EQUAL(s1, s4); //!
+    CHECK_EQUAL(s2, s4); //!
 
 
 }
@@ -1333,6 +1357,8 @@ const SnapShot * testBed::testSequentialCore()
 void testBed::initBoundaryTestParameters()
 {
 
+    solver->setRNGSeed(Seed::specific, baseSeed);
+
     solver->setBoxSize({10, 10, 10}, false);
 
     Site::resetBoundariesTo(lastBoundaries);
@@ -1343,18 +1369,16 @@ void testBed::initBoundaryTestParameters()
 
     Site::resetNNeighborsToCrystallizeTo(1);
 
-    solver->setRNGSeed(Seed::specific, baseSeed);
-
 }
 
 void testBed::initSimpleSystemParameters()
 {
 
-    solver->setBoxSize({5, 5, 5}, false);
+    solver->setBoxSize({6, 6, 6}, false);
 
     DiffusionReaction::resetSeparationTo(1);
 
-    Site::resetNNeighborsLimitTo(1);
+    Site::resetNNeighborsLimitTo(2);
 
     Site::resetNNeighborsToCrystallizeTo(1);
 
@@ -1388,9 +1412,24 @@ void testBed::deactivateAllSites()
     });
 }
 
-Site *testBed::getBoxCenter()
+Site *testBed::getBoxCenter(const int dx, const int dy, const int dz)
 {
-    return solver->getSite(NX()/2, NY()/2, NZ()/2);
+    return solver->getSite(NX()/2 + dx, NY()/2 + dy, NZ()/2 + dz);
+}
+
+void testBed::_reactionShufflerCheck(uint nReacs)
+{
+
+    CHECK_EQUAL(nReacs, solver->allPossibleReactions().size());
+    CHECK_EQUAL(nReacs, solver->accuAllRates().size());
+    CHECK_EQUAL(0,      solver->availableReactionSlots().size());
+
+    for (uint i = 0; i < nReacs; ++i)
+    {
+        CHECK_EQUAL(i + 1, solver->accuAllRates().at(i));
+        CHECK_EQUAL(i,     solver->allPossibleReactions().at(i)->address());
+    }
+
 }
 
 void testBed::testKnownCase()
@@ -1408,7 +1447,7 @@ void testBed::testKnownCase()
 
     Site::resetBoundariesTo(lastBoundaries);
 
-    ConcentrationWall::setMaxEventsPrCycle(15*15);
+    ConcentrationWall::setMaxEventsPrCycle(5);
 
     solver->initializeCrystal(getSetting<double>(root, {"Initialization", "RelativeSeedSize"}));
 
@@ -1685,6 +1724,8 @@ void testBed::testnNeighborsToCrystallize()
             }
         }
 
+        Site::clearAffectedSites();
+
         for (int i = -1; i <= 1; ++i)
         {
             for (int j = -1; j <= 1; ++j)
@@ -1712,6 +1753,9 @@ void testBed::testnNeighborsToCrystallize()
             }
         }
 
+
+        Site::clearAffectedSites();
+
     }
 
 
@@ -1734,7 +1778,9 @@ void testBed::testDiffusionSeparation()
 
     for (uint sep : separations)
     {
-        Site::resetNNeighborsLimitTo(sep + 1);
+
+        Site::resetNNeighborsLimitTo(sep + 1, false);
+
         DiffusionReaction::resetSeparationTo(sep);
 
         for (uint i = 1; i <= sep + 2; ++i)
@@ -1797,11 +1843,382 @@ void testBed::testDiffusionSeparation()
                 destination->deactivate();
             }
 
+
+            Site::clearAffectedSites();
+
         }
 
     }
 
     DiffusionReaction::resetSeparationTo(1);
+
+}
+
+void testBed::testOptimizedRateVectors()
+{
+
+    Reaction::setLinearRateScale(1000);
+
+    solver->initializeCrystal(0.2);
+
+    double kTotBF;
+    vector<double> accuAllRatesBF;
+    vector<Reaction*> allPossibleReactionsBF;
+
+    uint cycle = 1;
+    uint nCycles = 500;
+
+    bool containsReaction;
+
+    while (cycle <= nCycles)
+    {
+
+        solver->getRateVariables();
+
+        fill_rate_stuff(accuAllRatesBF, allPossibleReactionsBF, kTotBF);
+
+        CHECK_CLOSE(kTotBF, solver->kTot(), 1E-5);
+        CHECK_CLOSE(kTotBF, *(solver->accuAllRates().end() - 1), 1E-5);
+
+        for (Reaction * r : solver->allPossibleReactions())
+        {
+            containsReaction = std::find(allPossibleReactionsBF.begin(), allPossibleReactionsBF.end(), r) != allPossibleReactionsBF.end();
+            CHECK_EQUAL(true, containsReaction);
+        }
+
+        double prevAR = 0;
+        for (double AR : solver->accuAllRates())
+        {
+            CHECK_EQUAL(true, prevAR < AR);
+        }
+
+        double kTotSBF = 0;
+        for (uint i = 0; i < solver->allPossibleReactions().size(); ++i)
+        {
+
+            kTotSBF += solver->allPossibleReactions().at(i)->rate();
+
+            CHECK_CLOSE(kTotSBF, solver->accuAllRates().at(i), 1E-5);
+
+        }
+
+
+        double R = solver->kTot()*KMC_RNG_UNIFORM();
+
+        uint choice = solver->getReactionChoice(R);
+
+        Reaction * selectedReaction = solver->allPossibleReactions().at(choice);
+
+        selectedReaction->execute();
+
+        Site::updateBoundaries();
+
+        cycle++;
+
+    }
+
+
+    Reaction::setLinearRateScale(1);
+
+
+}
+
+void testBed::testReactionVectorUpdate()
+{
+    double c;
+
+    Site * center = getBoxCenter();
+
+    Reaction::setLinearRateScale(1000);
+
+
+    //Activating the center, this should add 26 reactions with unit rate.
+    center->activate();
+
+    Site::updateAffectedSites();
+
+    CHECK_EQUAL(0,  solver->availableReactionSlots().size());
+    CHECK_EQUAL(26, solver->allPossibleReactions().size());
+    CHECK_EQUAL(26, solver->accuAllRates().size());
+
+    c = 0;
+    for (uint i = 0; i < solver->allPossibleReactions().size(); ++i)
+    {
+        c += solver->allPossibleReactions().at(i)->rate();
+        CHECK_EQUAL(c, solver->accuAllRates().at(i));
+    }
+
+    CHECK_EQUAL(solver->kTot(), *(solver->accuAllRates().end()-1));
+
+    //Deactivating it should set all 26 reactions as available to overwrite.
+    center->deactivate();
+
+    Site::updateAffectedSites();
+
+    CHECK_EQUAL(26,  solver->availableReactionSlots().size());
+    CHECK_EQUAL(26,  solver->allPossibleReactions().size());
+    CHECK_EQUAL(26,  solver->accuAllRates().size());
+
+    CHECK_EQUAL(0, solver->kTot());
+
+    for (uint i = 0; i < solver->allPossibleReactions().size(); ++i)
+    {
+        CHECK_EQUAL(0, solver->accuAllRates().at(i));
+    }
+
+    //Activating again should reset back to original case. Not trivial because this
+    //time the vacancy list is not empty.
+    center->activate();
+
+    Site::updateAffectedSites();
+
+    CHECK_EQUAL(0,  solver->availableReactionSlots().size());
+    CHECK_EQUAL(26, solver->allPossibleReactions().size());
+    CHECK_EQUAL(26, solver->accuAllRates().size());
+
+    CHECK_EQUAL(26*Reaction::linearRateScale(), solver->kTot());
+
+    c = 0;
+    for (uint i = 0; i < solver->allPossibleReactions().size(); ++i)
+    {
+        c += solver->allPossibleReactions().at(i)->rate();
+        CHECK_EQUAL(c, solver->accuAllRates().at(i));
+    }
+
+
+    //activating a fixed crystal next to center particle. Fixed crystal has no
+    //reactions so it should only induce 1 blocked reaction.
+    Site * neighbor = getBoxCenter(1);
+    neighbor->spawnAsFixedCrystal();
+
+    Site::updateAffectedSites();
+
+    CHECK_EQUAL(1,  solver->availableReactionSlots().size());
+
+    c = 0;
+    for (uint i = 0; i < solver->allPossibleReactions().size(); ++i)
+    {
+        if (i == solver->availableReactionSlots().at(0))
+        {
+            continue;
+        }
+
+        c += solver->allPossibleReactions().at(i)->rate();
+        CHECK_CLOSE(c, solver->accuAllRates().at(i), 0.00001);
+    }
+
+    //activating a new particle independent of the others should now only induce 25 more spots,
+    //since one is already vacant.
+
+    Site * distantCousin = getBoxCenter(-(int)DiffusionReaction::separation()-2);
+
+    CHECK_EQUAL(true, distantCousin->isLegalToSpawn());
+
+    distantCousin->activate();
+
+    Site::updateAffectedSites();
+
+    CHECK_EQUAL(0,  solver->availableReactionSlots().size());
+    CHECK_EQUAL(26+25, solver->allPossibleReactions().size());
+    CHECK_EQUAL(26+25, solver->accuAllRates().size());
+
+    c = 0;
+    for (uint i = 0; i < solver->allPossibleReactions().size(); ++i)
+    {
+        c += solver->allPossibleReactions().at(i)->rate();
+        CHECK_CLOSE(c, solver->accuAllRates().at(i), 0.00001);
+    }
+
+
+    //deactivating the neighbor should create two decoupled systems
+    neighbor->deactivate();
+
+    Site::updateAffectedSites();
+
+    CHECK_EQUAL(0,    solver->availableReactionSlots().size());
+    CHECK_EQUAL(2*26, solver->allPossibleReactions().size());
+    CHECK_EQUAL(2*26, solver->accuAllRates().size());
+
+    CHECK_CLOSE(2*26*Reaction::linearRateScale(), solver->kTot(), 0.00001);
+
+    c = 0;
+    for (uint i = 0; i < solver->allPossibleReactions().size(); ++i)
+    {
+        c += solver->allPossibleReactions().at(i)->rate();
+        CHECK_CLOSE(c, solver->accuAllRates().at(i), 0.00001);
+    }
+
+    //removing both the particles should bring us back to initial state
+
+    center->deactivate();
+    distantCousin->deactivate();
+
+    Site::updateAffectedSites();
+
+    CHECK_EQUAL(2*26, solver->availableReactionSlots().size());
+    CHECK_EQUAL(2*26, solver->allPossibleReactions().size());
+    CHECK_EQUAL(2*26, solver->accuAllRates().size());
+
+    CHECK_CLOSE(0, solver->kTot(), 0.00001);
+
+    for (uint i = 0; i < solver->allPossibleReactions().size(); ++i)
+    {
+        CHECK_CLOSE(0, solver->accuAllRates().at(i), 0.00001);
+    }
+
+
+    Reaction::setLinearRateScale(1);
+
+}
+
+void testBed::testReactionShuffler()
+{
+
+    uint nReacs = 100;
+
+    vector<DummyReaction*> allReacs;
+
+    //Initialize nReacs reactions and check that accuallrates is equal to 1, 2, 3 ...
+    //and that the addresses are correct.
+    for (uint i = 0; i < nReacs; ++i)
+    {
+        allReacs.push_back(new DummyReaction(i));
+    }
+
+
+    for (Reaction * r : allReacs)
+    {
+        r->calcRate();
+    }
+
+    Site::clearAffectedSites();
+
+    _reactionShufflerCheck(nReacs);
+
+    //this should do nothing: Everything is ordered.
+    solver->reshuffleReactions();
+
+    _reactionShufflerCheck(nReacs);
+
+    allReacs.at(nReacs/2)->allowed = false;
+    allReacs.at(nReacs/2)->disable();
+
+    //this should replace the disabled reaction with the end reaction: Everything is ordered.
+    solver->reshuffleReactions();
+
+    CHECK_EQUAL(nReacs - 1, static_cast<DummyReaction*>(solver->allPossibleReactions().at(nReacs/2))->initAddress);
+
+    _reactionShufflerCheck(nReacs - 1);
+
+    //resetting, so far we have swapped the last and the middle element.
+    Site::clearAffectedSites();
+
+    allReacs.at(nReacs - 1)->allowed = false;
+    allReacs.at(nReacs - 1)->disable();
+
+    allReacs.at(nReacs/2)->allowed = true;
+    allReacs.at(nReacs/2)->calcRate();
+
+    Site::clearAffectedSites();
+
+    allReacs.at(nReacs - 1)->allowed = true;
+    allReacs.at(nReacs - 1)->calcRate();
+
+    Site::clearAffectedSites();
+
+    _reactionShufflerCheck(nReacs);
+
+    for (DummyReaction * r : allReacs)
+    {
+        CHECK_EQUAL(r->address(), r->initAddress);
+    }
+
+    //remove every other element
+
+    for (uint i = 0; i < nReacs; i += 2)
+    {
+        allReacs.at(i)->allowed = false;
+        allReacs.at(i)->disable();
+    }
+
+    CHECK_EQUAL(nReacs/2, solver->availableReactionSlots().size());
+
+    solver->reshuffleReactions();
+
+    _reactionShufflerCheck(nReacs/2);
+
+
+    //remove the rest of the elements
+    for (uint i = 1; i < nReacs; i += 2)
+    {
+        allReacs.at(i)->allowed = false;
+        allReacs.at(i)->disable();
+    }
+
+    CHECK_EQUAL(nReacs/2, solver->availableReactionSlots().size());
+
+    for (uint addr : solver->availableReactionSlots())
+    {
+        CHECK_EQUAL(Reaction::UNSET_ADDRESS, solver->allPossibleReactions().at(addr)->address());
+    }
+
+    solver->reshuffleReactions();
+
+    _reactionShufflerCheck(0);
+
+    Site::clearAffectedSites();
+
+    for (uint i = 0; i < nReacs; ++i)
+    {
+        allReacs.at(i)->allowed = true;
+        allReacs.at(i)->calcRate();
+    }
+
+    CHECK_EQUAL(0, solver->availableReactionSlots().size());
+
+    solver->reshuffleReactions();
+
+    _reactionShufflerCheck(nReacs);
+
+    for (DummyReaction * r : allReacs)
+    {
+        CHECK_EQUAL(r->address(), r->initAddress);
+    }
+
+    Site::clearAffectedSites();
+
+
+    //Something is active, becomes deactivated, but is initiated to take
+    //up a vacant spot before it is itself vacated?
+    //YES SHUFFLE HAPPENS BEFORE VACATING NEW ONES? NO. Why is the address then not in vacant? ADDRESS IS SET WRONGLY.. what induses this?
+
+    bool remove = false;
+    uint c = 0;
+    for (uint i = 0; i < nReacs; ++i)
+    {
+
+        if (remove)
+        {
+            allReacs.at(i)->allowed = false;
+            allReacs.at(i)->disable();
+            c++;
+        }
+
+        if (i % 5 == 0)
+        {
+            remove = !remove;
+        }
+
+    }
+
+    CHECK_EQUAL(c, solver->availableReactionSlots().size());
+
+    solver->reshuffleReactions();
+
+    Site::clearAffectedSites();
+
+    _reactionShufflerCheck(nReacs - c);
+
 
 }
 
@@ -1837,6 +2254,47 @@ void testBed::initBoundarySuite(const umat & boundaries)
 
     initBoundaryTestParameters();
 
+}
+
+void testBed::mainloop_meat()
+{
+
+    solver->getRateVariables();
+
+    double R = solver->kTot()*KMC_RNG_UNIFORM();
+
+    uint choice = solver->getReactionChoice(R);
+
+    Reaction * selectedReaction = solver->allPossibleReactions().at(choice);
+
+    selectedReaction->execute();
+
+    Site::updateBoundaries();
+
+}
+
+void testBed::fill_rate_stuff(vector<double> & accuAllRates, vector<Reaction*> & allPossibleReactions, double & kTot)
+{
+
+    kTot = 0;
+    accuAllRates.clear();
+    allPossibleReactions.clear();
+
+    solver->forEachSiteDo([&] (Site * site)
+    {
+        site->forEachActiveReactionDo([&] (Reaction * reaction)
+        {
+
+            KMCDebugger_Assert(reaction->rate(), !=, Reaction::UNSET_RATE, "Reaction rate should not be unset at this point.", reaction->getFinalizingDebugMessage());
+
+            kTot += reaction->rate();
+
+            accuAllRates.push_back(kTot);
+
+            allPossibleReactions.push_back(reaction);
+
+        });
+    });
 }
 
 

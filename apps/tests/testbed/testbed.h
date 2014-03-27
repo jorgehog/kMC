@@ -61,6 +61,15 @@ public:
 
     static void testDiffusionSeparation();
 
+    static void testOptimizedRateVectors();
+
+    static void testReactionVectorUpdate();
+
+    static void testReactionShuffler();
+
+
+
+
     static void initBoundarySuite(const umat &boundaries);
 
     static KMCSolver* solver;
@@ -87,6 +96,10 @@ private:
         return solver->NZ();
     }
 
+    static void mainloop_meat();
+
+    static void fill_rate_stuff(vector<double> &accuAllRates, vector<Reaction *> &allPossibleReactions, double &kTot);
+
     static const SnapShot *testSequentialCore();
 
     static void initBoundaryTestParameters();
@@ -97,11 +110,12 @@ private:
 
     static void deactivateAllSites();
 
-    static Site * getBoxCenter();
+    static Site * getBoxCenter(const int dx = 0, const int dy = 0, const int dz = 0);
 
     static string lastBoundariesName;
 
     static umat lastBoundaries;
 
+    static void _reactionShufflerCheck(uint nReacs);
 
 };

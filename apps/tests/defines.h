@@ -1,14 +1,20 @@
 #pragma once
 
 #include <unittest++/UnitTest++.h>
+#include <sstream>
+#include <iomanip>
 
 
 #define TESTCORE(which, ...) \
-    std::cout << "Running test " << UnitTestSuite::GetSuiteName() << "::" << #which << std::endl; \
+    std::stringstream s;\
+    s << "Running test " << UnitTestSuite::GetSuiteName() << "::" << #which; \
+    \
+    std::cout << std::left << std::setfill(' ') << std::setw(65); \
+    std::cout << s.str(); \
     \
     testBed::timer.tic(); \
     testBed::test##which(__VA_ARGS__); \
-    std::cout << "Done (" << testBed::timer.toc() << " s)" << std::endl; \
+    std::cout << "Done (" << std::setprecision(1) << std::fixed << testBed::timer.toc() << " s)" << std::endl; \
     \
     testBed::solver->reset()
 

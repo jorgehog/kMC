@@ -45,6 +45,8 @@ public:
     static void updateBoundaries();
 
 
+    static void popAffectedSite(Site * site);
+
     static void updateAffectedSites();
 
     static void selectUpdateFlags();
@@ -141,7 +143,7 @@ public:
         m_reactions.push_back(reaction);
     }
 
-    void calculateRates();
+    void updateReactions();
 
 
     void initializeDiffusionReactions();
@@ -192,6 +194,12 @@ public:
     /*
      * Misc. trivial functions
      */
+
+    static const KMCSolver * solver()
+    {
+        return m_solver;
+    }
+
 
     static const uint & nSurfaces()
     {
@@ -319,6 +327,11 @@ public:
         return m_active;
     }
 
+    bool isAffected()
+    {
+        return m_affectedSites.find(this) != m_affectedSites.end();
+    }
+
 
     const uint & x() const
     {
@@ -345,7 +358,7 @@ public:
         return m_reactions;
     }
 
-    const static set<Site*> & affectedSites()
+    const static set<Site*, function<bool(Site*, Site*)> > & affectedSites()
     {
         return m_affectedSites;
     }
@@ -368,6 +381,11 @@ public:
     const bool & cannotCrystallize()
     {
         return m_cannotCrystallize;
+    }
+
+    const uint & ID() const
+    {
+        return m_ID;
     }
 
     bool operator == (const Site & other) const
@@ -424,7 +442,7 @@ private:
     static double m_totalEnergy;
 
 
-    static set<Site*> m_affectedSites;
+    static set<Site*, function<bool(Site*, Site*)> > m_affectedSites;
 
     static KMCSolver* m_solver;
 
@@ -442,14 +460,25 @@ private:
 
     bool m_cannotCrystallize;
 
+
+    const uint m_ID;
+
+
     const uint m_x;
+
     const uint m_y;
+
     const uint m_z;
+
     const uvec3 m_r;
+
+
 
     double m_energy;
 
+
     int m_particleState = ParticleStates::solution;
+
 
     vector<Reaction*> m_reactions;
 
@@ -460,6 +489,8 @@ private:
 
     void deactivateFixedCrystal();
 
+
+    static uint refCounter;
 
 };
 

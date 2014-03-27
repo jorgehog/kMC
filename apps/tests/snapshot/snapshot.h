@@ -12,12 +12,16 @@ public:
 
     SnapShot(KMCSolver* solver);
 
+    static bool _switch;
+
     ucube siteBox;
 
     vector<double> allRates;
     vector<uvec> allreactions;
 
     uint timeWhenTaken;
+
+    seed_type seed;
 
     bool operator==(const SnapShot& other) const;
 

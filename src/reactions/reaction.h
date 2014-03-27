@@ -1,7 +1,7 @@
 #pragma once
 
 #include <sys/types.h>
-#include <climits>
+#include <limits>
 #include <sstream>
 #include <set>
 
@@ -24,16 +24,6 @@ public:
     virtual ~Reaction();
 
     static const string name;
-
-    void registerUpdateFlag(int flag)
-    {
-        if (flag < m_updateFlag)
-        {
-            m_updateFlag = flag;
-        }
-    }
-
-    void selectTriumphingUpdateFlag();
 
     static void setMainSolver(KMCSolver * m_solver);
 
@@ -64,9 +54,35 @@ public:
 
     virtual void reset();
 
+    virtual bool isAllowedAndActive() const;
 
     virtual const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X")  const;
 
+
+    void registerUpdateFlag(int flag)
+    {
+        if (flag < m_updateFlag)
+        {
+            m_updateFlag = flag;
+        }
+    }
+
+    void setLastUsedEnergy();
+
+    void disable()
+    {
+        setRate(Reaction::UNSET_RATE);
+    }
+
+    void setAddress(const uint address)
+    {
+        m_address = address;
+    }
+
+    const uint & address() const
+    {
+        return m_address;
+    }
 
 
     const static uint & IDCount()
@@ -115,6 +131,8 @@ public:
 
     const uint & z() const;
 
+    bool hasVacantStatus() const;
+
     bool isType(const string name) const
     {
         return name.compare(this->name) == 0;
@@ -132,6 +150,8 @@ public:
         return "-";
     }
 
+    string propertyString() const;
+
     bool operator == (const Reaction & other)
     {
         return this == &other;
@@ -140,7 +160,7 @@ public:
     const string str() const
     {
         stringstream s;
-        s << name << "@(" << x() << ", " << y() << ", " << z() << ") [" << getInfoSnippet() << "]";
+        s << name << "@(" << setw(3) << x() << "," << setw(3) << y() << "," << setw(3) << z() << ") [" << getInfoSnippet() << "]";
         return s.str();
     }
 
@@ -149,13 +169,15 @@ public:
     //! triumphant flag.
     enum AllUpdateFlags
     {
-        UNSET_UPDATE_FLAG = INT_MAX,
+        UNSET_UPDATE_FLAG = std::numeric_limits<int>::max(),
         defaultUpdateFlag = 0
     };
 
-    static constexpr double UNSET_RATE = -1337;
+    static const double UNSET_RATE;
 
-    static constexpr double UNSET_ENERGY = -13371337;
+    static const double UNSET_ENERGY;
+
+    static const uint UNSET_ADDRESS;
 
     const static uint & NX();
 
@@ -174,15 +196,18 @@ private:
 
     Site* m_reactionSite = NULL;
 
+    //Can this be in the reaction site?
     double m_lastUsedEnergy;
 
     double m_rate;
 
     int m_updateFlag;
 
+    uint m_address;
+
 protected:
 
-    void setRate(const double rate);
+    void setRate(double rate);
 
     static KMCSolver * solver()
     {
@@ -194,6 +219,26 @@ protected:
         return m_reactionSite;
     }
 
+    template<typename T1, typename T2>
+    string unsetIf(const T1 val, const T2 unsetVal) const
+    {
+        stringstream s;
+
+        s << setw(5);
+
+        if (val == unsetVal)
+        {
+            s << "UNSET";
+        }
+
+        else
+        {
+            s << setprecision(1) << fixed << val;
+        }
+
+        return s.str();
+
+    }
 
 
 };

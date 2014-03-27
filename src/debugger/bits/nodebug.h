@@ -3,6 +3,8 @@
 #define _KMCDebugger_IGNORE(expr) static_cast<void>(expr)
 
 //Ignore everything if we are not debugging.
+#define KMCDebugger_PopAffected(site) \
+    _KMCDebugger_IGNORE(site)
 #define KMCDebugger_MarkPre(pre) \
     _KMCDebugger_IGNORE(pre)
 #define KMCDebugger_SetEnabledTo(state) \

@@ -50,7 +50,9 @@ public:
 
     static wall_clock timer;
 
-    static set<Site*> affectedUnion;
+    static set<Site*, function<bool(Site*, Site*)> > affectedUnion;
+//    static set<Site*> affectedUnion;
+
 
     //CALLED FROM MACROS
     static void setFilename(const string &filename);
@@ -63,6 +65,7 @@ public:
     static void setActiveReaction(Reaction * reaction);
     static void initialize();
     static void reset();
+    static void popAffected(Site * site);
     static string fullTrace(int line, const string filename, const string additionalInfo = "");
     static string partialTrace(const uint & i);
     //
