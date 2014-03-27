@@ -4,6 +4,8 @@
 
 #include "site.h"
 
+#include "reactions/reaction.h"
+
 #include "debugger/debugger.h"
 
 #include "RNG/kMCRNG.h"
@@ -22,8 +24,6 @@ using namespace arma;
 
 namespace kMC
 {
-
-class Reaction;
 
 class KMCSolver
 {
@@ -319,7 +319,6 @@ void KMCSolver::singleLoop()
 
     if (cycle%m_cyclesPerOutput == 0)
     {
-        dumpOutput();
         dumpXYZ();
     }
 

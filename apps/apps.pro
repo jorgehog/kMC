@@ -4,8 +4,8 @@ CONFIG += ordered
 SUBDIRS += tests \
            centerCrystal \
            surfaceGrowth \
+           diamondSquareSurface \
            realChalkSetup #__next_app__
-          # diamondSquareSurface
 
 OTHER_FILES += defaults/default.pro.bones \
                defaults/defaultmain.cpp.bones \

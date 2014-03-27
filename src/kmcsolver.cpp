@@ -134,7 +134,13 @@ void KMCSolver::mainloop()
 
     while(cycle <= m_nCycles)
     {
-       singleLoop();
+
+        if (cycle % m_cyclesPerOutput == 0)
+        {
+            dumpOutput();
+        }
+
+        singleLoop();
     }
 
 }
@@ -469,7 +475,7 @@ void KMCSolver::dumpOutput()
     cout << setw(5) << right << setprecision(1) << fixed
          << (double)cycle/m_nCycles*100 << "%   "
          << outputCounter
-         << endl;
+         << "\n";
     cout << setprecision(6);
 }
 
