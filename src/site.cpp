@@ -128,8 +128,8 @@ void Site::setParticleState(int newState)
     {
 
 
-        KMCDebugger_Assert(newState, !=, ParticleStates::crystal, "should never happen.", info());
-        KMCDebugger_Assert(newState, ==, ParticleStates::surface, "should allways happen.", info());
+        KMCDebugger_Assert(newState, !=, ParticleStates::crystal, "Solvants should not crystallize directly.", info());
+        KMCDebugger_Assert(newState, ==, ParticleStates::surface, "Solvants should allways change into surfaces.", info());
 
 
         /* ##################     solution -> surface     ################### */
