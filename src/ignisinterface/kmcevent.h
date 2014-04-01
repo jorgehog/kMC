@@ -31,7 +31,7 @@ public:
 
 protected:
 
-    static KMCSolver *solver()
+    KMCSolver *solver()
     {
         return particles().solver();
     }

@@ -1,4 +1,4 @@
-#include <kMC_ignis>
+#include <kMC>
 #include <libconfig_utils/libconfig_utils.h>
 
 using namespace libconfig;
@@ -6,7 +6,7 @@ using namespace kMC;
 using namespace ignis;
 
 
-MainMesh *initialize_ignisKMC(KMCSolver * solver, const Setting & root);
+void initialize_ignisKMC(KMCSolver * solver, const Setting & root);
 
 int main()
 {
@@ -27,12 +27,12 @@ int main()
 
     KMCSolver* solver = new KMCSolver(root);
 
-    MainMesh* mainMesh = initialize_ignisKMC(solver, root);
+    initialize_ignisKMC(solver, root);
 
 
     t.tic();
 
-    mainMesh->eventLoop(solver->nCycles());
+    solver->mainloop();
 
     cout << "Simulation ended after " << t.toc() << " seconds" << endl;
 
@@ -47,7 +47,7 @@ int main()
 }
 
 
-MainMesh *initialize_ignisKMC(KMCSolver * solver, const Setting & root)
+void initialize_ignisKMC(KMCSolver * solver, const Setting & root)
 {
 
     const Setting & initCFG = getSurfaceSetting(root, "Initialization");
@@ -56,25 +56,25 @@ MainMesh *initialize_ignisKMC(KMCSolver * solver, const Setting & root)
     const uint & NY = solver->NY();
     const uint & NZ = solver->NZ();
 
-    mat topology;
-    topology << 0 << NX << endr << 0 << NY << endr << 0 << NZ;
-
     solver->initializeSolutionBath();
 
-    Particles *ens = new Particles(vec({0}));
+    KMCParticles *ens = new KMCParticles(solver);
 
-    MainMesh *mainMesh = new MainMesh(topology, *ens);
+    MainLattice::setCurrentParticles(*ens);
+
+    MainLattice *mainMesh = new MainLattice({0, NX,
+                                             0, NY,
+                                             0, NZ});
 
 
-    ReportProgress* a = new ReportProgress;
+
+    ReportProgress* a = new ReportProgress();
     mainMesh->addEvent(*a);
 
     SolverEvent *se = new SolverEvent(solver);
 
     mainMesh->addEvent(*se);
 
-
-    return mainMesh;
 
 
 }

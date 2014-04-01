@@ -37,13 +37,13 @@ public:
 
     uint operator ()(const uint n, const uint d) const
     {
-        cout << "fixme" << endl;
+        cout << "fixme " << n << " " << d << endl;
         return 0;
     }
 
     uint  &operator ()(const uint n, const uint d)
     {
-        cout << "fixme" << endl;
+        cout << "fixme " << n << " " << d << endl;
         uint * a = new uint(10);
         return *a;
     }
