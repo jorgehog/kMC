@@ -1,5 +1,4 @@
 include(../app_defaults.pri)
-include(../ignisDefaults.pri)
 
 TARGET  = ignisKMC
 
@@ -8,6 +7,7 @@ SOURCES = ignisKMCmain.cpp
 
 OTHER_FILES += infiles/ignisKMC.cfg
 
+#SKAL IKKE MK INN HER?
 
 copydata.commands = $(COPY_DIR) $$PWD/infiles $$OUT_PWD
 createDirs.commands = $(MKDIR) $$mkcommands

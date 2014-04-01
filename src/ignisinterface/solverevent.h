@@ -1,20 +1,20 @@
 #pragma once
 
-#include <kMC>
-#include <ignis.h>
+#include "kmcevent.h"
+
+#include "../kmcsolver.h"
 
 using ignis::Event;
 
 namespace kMC
 {
 
-
-class SolverEvent : public Event
+class SolverEvent : public KMCEvent
 {
 public:
 
     SolverEvent(KMCSolver *solver) :
-        Event("kmC::SolverEvent"),
+        KMCEvent("kmC::SolverEvent"),
         m_solver(solver)
     {
 

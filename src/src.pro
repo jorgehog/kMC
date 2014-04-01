@@ -24,7 +24,9 @@ HEADERS = RNG/kMCRNG.h \
     boundary/concentrationwall/concentrationwall.h \
     boundary/edge/edge.h \
     boundary/surface/surface.h \
-    particlestates.h
+    particlestates.h \
+    ignisinterface/ignisevent.h \
+    ignisinterface/kmcparticles.h
 
 SOURCES += \
     reactions/reaction.cpp \
@@ -38,6 +40,12 @@ SOURCES += \
     boundary/concentrationwall/concentrationwall.cpp \
     boundary/surface/surface.cpp \
     particlestates.cpp
+
+
+OTHER_FILES += \
+    ignisinterface/solverevent.h \
+    ignisinterface/kmcevent.h \
+    ignisinterface/kmcparticles.h
 
 RNG_ZIG {
 

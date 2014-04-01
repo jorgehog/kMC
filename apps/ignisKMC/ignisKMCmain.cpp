@@ -1,8 +1,5 @@
-#include <kMC>
+#include <kMC_ignis>
 #include <libconfig_utils/libconfig_utils.h>
-#include <ignis.h>
-
-#include <solverevent.h>
 
 using namespace libconfig;
 using namespace kMC;

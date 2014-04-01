@@ -3,9 +3,18 @@ include(../defaults.pri)
 TEMPLATE = app
 CONFIG += console
 
-INCLUDEPATH += $$TOP_PWD/include
+INCLUDEPATH  += \
+    $$TOP_PWD/include \
+    $$TOP_PWD/ignis/include
 
-LIBS += -L$$TOP_PWD/lib -lkMC
+QMAKE_LIBDIR += \
+    $$TOP_PWD/lib \
+    $$TOP_PWD/ignis/lib
+
+LIBS += \
+    -lkMC \
+    -lignis
+
 
 DIRS = outfiles
 
