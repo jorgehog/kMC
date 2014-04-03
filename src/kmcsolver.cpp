@@ -78,6 +78,8 @@ KMCSolver::~KMCSolver()
     DiffusionReaction::clearAll();
     Boundary::clearAll();
 
+    delete m_mainLattice;
+
     refCounter--;
 
 }
