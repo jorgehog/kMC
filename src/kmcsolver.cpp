@@ -5,6 +5,9 @@
 
 #include "boundary/boundary.h"
 
+#include "ignisinterface/solverevent.h"
+#include "ignisinterface/kmcparticles.h"
+
 #include <sys/time.h>
 
 #include <armadillo>
@@ -116,6 +119,14 @@ void KMCSolver::onConstruct()
 
     Site::setMainSolver(this);
 
+    KMCParticles *particles = new KMCParticles(this);
+    MainLattice::setCurrentParticles(*particles);
+
+    m_mainLattice = new MainLattice();
+
+    SolverEvent *solverEvent = new SolverEvent(this);
+    m_mainLattice->addEvent(*solverEvent);
+
     refCounter++;
 
 }
@@ -129,20 +140,7 @@ void KMCSolver::finalizeObject()
 
 void KMCSolver::mainloop()
 {
-
-    initialize();
-
-    while(cycle <= m_nCycles)
-    {
-
-        if (cycle % m_cyclesPerOutput == 0)
-        {
-            dumpOutput();
-        }
-
-        singleLoop();
-    }
-
+    m_mainLattice->eventLoop(m_nCycles);
 }
 
 
@@ -846,6 +844,10 @@ void KMCSolver::setBoxSize(const uvec3 boxSize, bool check, bool keepSystem)
     Site::initializeBoundaries();
 
     initializeDiffusionReactions();
+
+    m_mainLattice->setTopology({0, m_NX,
+                                0, m_NY,
+                                0, m_NZ});
 
 }
 

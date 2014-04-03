@@ -21,11 +21,15 @@ QMAKE_CXXFLAGS_RELEASE += \
     -DKMC_NO_DEBUG
 
 INCLUDEPATH += \
-    $(HOME)/Dropbox/libs
+    $(HOME)/Dropbox/libs \
+    $$PWD/ignis/include
+
+QMAKE_LIBDIR += $$PWD/ignis/lib
 
 LIBS += \
     -larmadillo \
     -lconfig++
+    -lignis
 
 DEFINES += \
     ARMA_MAT_PREALLOC=3

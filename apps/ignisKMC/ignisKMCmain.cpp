@@ -58,23 +58,5 @@ void initialize_ignisKMC(KMCSolver * solver, const Setting & root)
 
     solver->initializeSolutionBath();
 
-    KMCParticles *ens = new KMCParticles(solver);
-
-    MainLattice::setCurrentParticles(*ens);
-
-    MainLattice *mainMesh = new MainLattice({0, NX,
-                                             0, NY,
-                                             0, NZ});
-
-
-
-    ReportProgress* a = new ReportProgress();
-    mainMesh->addEvent(*a);
-
-    SolverEvent *se = new SolverEvent(solver);
-
-    mainMesh->addEvent(*se);
-
-
 
 }

@@ -10,6 +10,8 @@
 
 #include "RNG/kMCRNG.h"
 
+#include "ignisinterface/kmcevent.h"
+
 #include <sys/types.h>
 #include <armadillo>
 
@@ -46,6 +48,16 @@ public:
 
     inline void singleLoop();
 
+
+    void addEvent(KMCEvent &event)
+    {
+        m_mainLattice->addEvent(event);
+    }
+
+    void addSubLattice(lattice &subLattice)
+    {
+        m_mainLattice->addSubField(subLattice);
+    }
 
 
     void initializeCrystal(const double relativeSeedSize);
@@ -240,6 +252,8 @@ public:
 private:
 
     double m_targetSaturation;
+
+    MainLattice *m_mainLattice;
 
     Site**** sites;
 
