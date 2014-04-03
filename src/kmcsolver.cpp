@@ -78,8 +78,6 @@ KMCSolver::~KMCSolver()
     DiffusionReaction::clearAll();
     Boundary::clearAll();
 
-    delete m_mainLattice;
-
     refCounter--;
 
 }
@@ -138,6 +136,11 @@ void KMCSolver::finalizeObject()
     checkRefCounter();
 
     KMCDebugger_Finalize();
+
+    //tmp
+    delete m_mainLattice;
+    Event<uint>::resetEventParameters();
+
 }
 
 void KMCSolver::mainloop()
@@ -192,6 +195,16 @@ void KMCSolver::reset()
     Site::initializeBoundaries();
 
     KMCDebugger_Init();
+
+
+    //TMP
+    KMCParticles *particles = new KMCParticles(this);
+    MainLattice::setCurrentParticles(*particles);
+
+    m_mainLattice = new MainLattice();
+
+    SolverEvent *solverEvent = new SolverEvent(this);
+    m_mainLattice->addEvent(*solverEvent);
 
 }
 

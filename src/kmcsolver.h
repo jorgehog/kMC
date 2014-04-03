@@ -179,6 +179,8 @@ public:
     void setCyclesPerOutput(const uint cyclesPerOutput)
     {
         m_cyclesPerOutput = cyclesPerOutput;
+        //tmp
+        MainLattice::nCyclesPerOutput = cyclesPerOutput;
     }
 
 
