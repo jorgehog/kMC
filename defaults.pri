@@ -28,7 +28,7 @@ QMAKE_LIBDIR += $$PWD/ignis/lib
 
 LIBS += \
     -larmadillo \
-    -lconfig++
+    -lconfig++ \
     -lignis
 
 DEFINES += \
@@ -36,8 +36,8 @@ DEFINES += \
 
 CONFIG(RNG_ZIG) {
 
-    DEFINES += \
-         KMC_RNG_ZIG
+    DEFINES += KMC_RNG_ZIG
+
 }
 
 TOP_PWD = $$PWD

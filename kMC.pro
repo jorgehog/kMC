@@ -7,5 +7,4 @@ SUBDIRS += ignis src apps
 
 OTHER_FILES += infiles/config.cfg \
                include/kMC \
-               include/kMC_ignis \
                .gitignore

@@ -58,5 +58,7 @@ void initialize_ignisKMC(KMCSolver * solver, const Setting & root)
 
     solver->initializeSolutionBath();
 
+    MainLattice::enableEventFile(false);
+
 
 }
