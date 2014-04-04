@@ -217,6 +217,7 @@ public:
         });
     }
 
+    void onAllRatesChanged();
 
     void registerReactionChange(Reaction * reaction, const double &newRate);
 

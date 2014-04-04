@@ -83,6 +83,11 @@ public:
 
 
     //static setters
+    static void setBetaChangeScaleFactor(const double factor)
+    {
+        m_betaChangeScaleFactor = factor;
+    }
+
     static void setSeparation(const uint separation, bool check = true);
 
     static void resetSeparationTo(const uint separation);
@@ -109,6 +114,8 @@ private:
     static double m_rPower;
 
     static double m_scale;
+
+    static double m_betaChangeScaleFactor;
 
 
     static uint m_separation;
@@ -143,6 +150,8 @@ public:
     bool isAllowed() const;
 
     void reset();
+
+    void registerBetaChange(const double newBeta);
 
     const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const;
 

@@ -1,5 +1,7 @@
 #include "reaction.h"
 
+#include "diffusion/diffusionreaction.h"
+
 #include "../kmcsolver.h"
 #include "site.h"
 
@@ -37,7 +39,7 @@ const string Reaction::info(int xr, int yr, int zr, string desc) const
 
 void Reaction::setLastUsedEnergy()
 {
-     m_lastUsedEnergy = m_reactionSite->energy();
+    m_lastUsedEnergy = m_reactionSite->energy();
 }
 
 
@@ -142,6 +144,22 @@ void Reaction::loadConfig(const Setting &setting)
 
     m_beta            = getSurfaceSetting<double>(setting, "beta");
     m_linearRateScale = getSurfaceSetting<double>(setting, "scale");
+
+}
+
+void Reaction::setBeta(const double beta)
+{
+
+    DiffusionReaction::setBetaChangeScaleFactor(exp(beta/m_beta));
+
+    for (Reaction * r : m_solver->allPossibleReactions())
+    {
+        r->registerBetaChange(beta);
+    }
+
+    solver()->onAllRatesChanged();
+
+    m_beta = beta;
 
 }
 

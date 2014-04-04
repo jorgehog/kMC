@@ -272,6 +272,23 @@ void KMCSolver::dumpXYZ()
 
 }
 
+void KMCSolver::onAllRatesChanged()
+{
+    //Change if added reactions are not on form ..exp(beta...)
+
+    uint i = 0;
+    m_kTot = 0;
+    for (Reaction * r : m_allPossibleReactions)
+    {
+        m_kTot += r->rate();
+
+        m_accuAllRates.at(i) = m_kTot;
+
+        i++;
+    }
+
+}
+
 void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate)
 {
 

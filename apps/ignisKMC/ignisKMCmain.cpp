@@ -46,6 +46,42 @@ int main()
 
 }
 
+class tempChange : public KMCEvent
+{
+public:
+
+    tempChange(const double T1) :
+        KMCEvent("tempChange", "T0", true, true),
+        T1(T1)
+    {
+
+    }
+
+    void initialize()
+    {
+        T0 = DiffusionReaction::beta();
+
+        dT = (T1 - T0)/eventLength;
+
+    }
+
+    void execute()
+    {
+        DiffusionReaction::setBeta(T0 + dT*(nTimesExecuted+1));
+        setValue(DiffusionReaction::beta());
+    }
+
+
+
+private:
+
+    double T0;
+    const double T1;
+
+    double dT;
+
+
+};
 
 void initialize_ignisKMC(KMCSolver * solver, const Setting & root)
 {
@@ -56,9 +92,13 @@ void initialize_ignisKMC(KMCSolver * solver, const Setting & root)
     const uint & NY = solver->NY();
     const uint & NZ = solver->NZ();
 
+    KMCEvent *tChange = new tempChange(10);
+    solver->addEvent(*tChange);
     solver->initializeSolutionBath();
 
-    MainLattice::enableEventFile(false);
+
+
+
 
 
 }

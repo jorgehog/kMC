@@ -29,10 +29,7 @@ public:
 
     static void loadConfig(const Setting & setting);
 
-    static void setBeta(const double beta)
-    {
-        m_beta = beta;
-    }
+    static void setBeta(const double beta);
 
     static void setLinearRateScale(const double linearRateScale)
     {
@@ -56,6 +53,11 @@ public:
 
     virtual bool isAllowedAndActive() const;
 
+    virtual void registerBetaChange(const double newBeta)
+    {
+        (void) newBeta;
+    }
+
     virtual const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X")  const;
 
 
@@ -66,6 +68,7 @@ public:
             m_updateFlag = flag;
         }
     }
+
 
     void setLastUsedEnergy();
 
@@ -120,7 +123,7 @@ public:
         return m_rate;
     }
 
-    const double & beta() const
+    static const double & beta()
     {
         return m_beta;
     }
@@ -207,7 +210,12 @@ private:
 
 protected:
 
-    void setRate(double rate);
+    void setRate(const double rate);
+
+    void _setRate(const double rate)
+    {
+        m_rate = rate;
+    }
 
     static KMCSolver * solver()
     {

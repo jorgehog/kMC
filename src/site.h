@@ -368,6 +368,11 @@ public:
         return m_neighborhood[x][y][z];
     }
 
+    DiffusionReaction* diffusionReactions(const uint i, const uint j, const uint k)
+    {
+        return m_diffusionReactions[i][j][k];
+    }
+
     double energy() const
     {
         return m_energy;
