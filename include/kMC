@@ -17,3 +17,7 @@
 #include "../src/boundary/surface/surface.h"
 #include "../src/boundary/concentrationwall/concentrationwall.h"
 
+
+#include "../ignis/include/ignis.h"
+
+#include "../src/ignisinterface/kmcevent.h"

@@ -3,9 +3,10 @@
 
 using namespace libconfig;
 using namespace kMC;
+using namespace ignis;
 
 
-void initialize___name__(KMCSolver * solver, const Setting & root);
+void initialize_ignisKMC(KMCSolver * solver, const Setting & root);
 
 int main()
 {
@@ -14,19 +15,19 @@ int main()
     wall_clock t;
 
 
-    cfg.readFile("infiles/__name__.cfg");
+    cfg.readFile("infiles/ignisKMC.cfg");
 
     const Setting & root = cfg.getRoot();
 
 
-    KMCDebugger_SetFilename("__name__");
+    KMCDebugger_SetFilename("ignisKMC");
 
     KMCDebugger_SetEnabledTo(getSurfaceSetting<int>(root, "buildTrace") == 0 ? false : true);
 
 
     KMCSolver* solver = new KMCSolver(root);
 
-    initialize___name__(solver, root);
+    initialize_ignisKMC(solver, root);
 
 
     t.tic();
@@ -46,7 +47,7 @@ int main()
 }
 
 
-void initialize___name__(KMCSolver * solver, const Setting & root)
+void initialize_ignisKMC(KMCSolver * solver, const Setting & root)
 {
 
     const Setting & initCFG = getSurfaceSetting(root, "Initialization");
@@ -54,6 +55,10 @@ void initialize___name__(KMCSolver * solver, const Setting & root)
     const uint & NX = solver->NX();
     const uint & NY = solver->NY();
     const uint & NZ = solver->NZ();
+
+    solver->initializeSolutionBath();
+
+    MainLattice::enableEventFile(false);
 
 
 }

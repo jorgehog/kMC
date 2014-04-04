@@ -4,9 +4,13 @@
 
 #include "site.h"
 
+#include "reactions/reaction.h"
+
 #include "debugger/debugger.h"
 
 #include "RNG/kMCRNG.h"
+
+#include "ignisinterface/kmcevent.h"
 
 #include <sys/types.h>
 #include <armadillo>
@@ -22,8 +26,6 @@ using namespace arma;
 namespace kMC
 {
 
-class Reaction;
-
 class KMCSolver
 {
 public:
@@ -35,12 +37,28 @@ public:
 
     ~KMCSolver();
 
+    void reset();
+
     const static uint UNSET_UINT = std::numeric_limits<uint>::max();
 
 
     void mainloop();
 
-    void reset();
+    inline void initialize();
+
+    inline void singleLoop();
+
+
+    void addEvent(KMCEvent &event)
+    {
+        m_mainLattice->addEvent(event);
+    }
+
+    void addSubLattice(lattice &subLattice)
+    {
+        m_mainLattice->addSubField(subLattice);
+    }
+
 
     void initializeCrystal(const double relativeSeedSize);
 
@@ -118,6 +136,11 @@ public:
         return m_N;
     }
 
+    const uint & nCycles() const
+    {
+        return m_nCycles;
+    }
+
     const vector<double> & accuAllRates() const
     {
         return m_accuAllRates;
@@ -156,6 +179,8 @@ public:
     void setCyclesPerOutput(const uint cyclesPerOutput)
     {
         m_cyclesPerOutput = cyclesPerOutput;
+        //tmp
+        MainLattice::nCyclesPerOutput = cyclesPerOutput;
     }
 
 
@@ -230,6 +255,8 @@ private:
 
     double m_targetSaturation;
 
+    MainLattice *m_mainLattice;
+
     Site**** sites;
 
     uint m_NX;
@@ -248,7 +275,15 @@ private:
     vector<uint>   m_availableReactionSlots;
 
 
+    Reaction * selectedReaction;
+
+
+    uint choice;
+
+    double R;
+
     double totalTime;
+
 
     uint m_nCycles;
     uint cycle;
@@ -279,5 +314,42 @@ private:
 
 
 };
+
+
+void KMCSolver::initialize()
+{
+    dumpXYZ();
+
+    KMCDebugger_Init();
+}
+
+void KMCSolver::singleLoop()
+{
+
+    getRateVariables();
+
+    R = m_kTot*KMC_RNG_UNIFORM();
+
+    choice = getReactionChoice(R);
+
+    selectedReaction = m_allPossibleReactions.at(choice);
+    KMCDebugger_SetActiveReaction(selectedReaction);
+
+    selectedReaction->execute();
+
+    if (cycle%m_cyclesPerOutput == 0)
+    {
+        dumpXYZ();
+    }
+
+
+    Site::updateBoundaries();
+
+
+    totalTime += Reaction::linearRateScale()/m_kTot;
+    cycle++;
+
+}
+
 
 }

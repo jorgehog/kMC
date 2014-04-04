@@ -1,7 +1,9 @@
 include(../defaults.pri)
 
 TEMPLATE = lib
+
 TARGET = ../lib/kMC
+
 
 QMAKE_LFLAGS += -g
 
@@ -22,7 +24,10 @@ HEADERS = RNG/kMCRNG.h \
     boundary/concentrationwall/concentrationwall.h \
     boundary/edge/edge.h \
     boundary/surface/surface.h \
-    particlestates.h
+    particlestates.h \
+    ignisinterface/solverevent.h \
+    ignisinterface/kmcevent.h \
+    ignisinterface/kmcparticles.h
 
 SOURCES += \
     reactions/reaction.cpp \
@@ -37,6 +42,7 @@ SOURCES += \
     boundary/surface/surface.cpp \
     particlestates.cpp
 
+
 RNG_ZIG {
 
 HEADERS += RNG/zigrandom.h \
@@ -47,8 +53,9 @@ SOURCES += RNG/zigrandom.cpp \
 
 }
 
-
 !equals(PWD, $${OUT_PWD}) {
     QMAKE_POST_LINK += $(COPY_DIR) $$OUT_PWD/../lib $$TOP_PWD
 }
+
+
 

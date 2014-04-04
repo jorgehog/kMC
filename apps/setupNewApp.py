@@ -6,7 +6,7 @@ from os.path import join
 def main():
     
     if len(sys.argv) == 1:
-        print "Appname missing from cml."
+        print "Usage: python %s [app name]" % sys.argv[0]
         return
         
     appName = sys.argv[1]
