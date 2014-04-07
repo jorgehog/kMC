@@ -67,8 +67,9 @@ public:
 
     void execute()
     {
+
         DiffusionReaction::setBeta(T0 + dT*(nTimesExecuted+1));
-        setValue(DiffusionReaction::beta());
+        setValue(DiffusionReaction::beta()/T0);
     }
 
 
@@ -101,10 +102,12 @@ protected:
             c++;
         });
 
-        setValue(cN/double(c));
+        setValue(cN/(double(c)));
     }
 
 };
+
+
 
 void initialize_ignisKMC(KMCSolver * solver, const Setting & root)
 {
@@ -115,8 +118,8 @@ void initialize_ignisKMC(KMCSolver * solver, const Setting & root)
     const uint & NY = solver->NY();
     const uint & NZ = solver->NZ();
 
-    KMCEvent *tChange      = new tempChange(10);
-    KMCEvent *avgNeighbors = new AverageNeighbors();
+    KMCEvent *tChange       = new tempChange(1.5);
+    KMCEvent *avgNeighbors  = new AverageNeighbors();
 
     solver->addEvent(*tChange);
     solver->addEvent(*avgNeighbors);

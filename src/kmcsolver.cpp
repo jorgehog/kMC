@@ -212,6 +212,7 @@ void KMCSolver::reset()
 
 void KMCSolver::dumpXYZ()
 {
+    cout << "Storing XYZ: " << outputCounter << endl;
 
     stringstream s;
     s << "kMC" << outputCounter++ << ".xyz";
@@ -243,7 +244,11 @@ void KMCSolver::dumpXYZ()
 
                 if (currentSite->isActive() || isSurface)
                 {
-                    s << "\n" << ParticleStates::shortNames.at(sites[i][j][k]->particleState()) << " " << i << " " << j << " " << k << " " << sites[i][j][k]->nNeighbors();
+                    s << "\n"
+                      << ParticleStates::shortNames.at(sites[i][j][k]->particleState()) << " "
+                      << i << " " << j << " " << k << " "
+                      << sites[i][j][k]->nNeighborsSum() << " "
+                      << sites[i][j][k]->energy();
 
                     if (isSurface)
                     {

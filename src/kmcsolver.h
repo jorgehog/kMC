@@ -315,9 +315,10 @@ private:
 
     double minRateThreshold()
     {
-        return (*std::min_element(m_allPossibleReactions.begin(),
+        return max((*std::min_element(m_allPossibleReactions.begin(),
                                   m_allPossibleReactions.end(),
-                                  [] (const Reaction *r1, const Reaction *r2) {return r1->rate() < r2->rate();}))->rate()/2;
+                                  [] (const Reaction *r1, const Reaction *r2) {return r1->rate() < r2->rate();}))->rate()/2,
+                   1E-8);
     }
 
 
@@ -330,12 +331,12 @@ void KMCSolver::initialize()
     dumpXYZ();
 
     KMCDebugger_Init();
+
+    getRateVariables();
 }
 
 void KMCSolver::singleLoop()
 {
-
-    getRateVariables();
 
     R = m_kTot*KMC_RNG_UNIFORM();
 
@@ -351,9 +352,9 @@ void KMCSolver::singleLoop()
         dumpXYZ();
     }
 
-
     Site::updateBoundaries();
 
+    getRateVariables();
 
     totalTime += Reaction::linearRateScale()/m_kTot;
     cycle++;
