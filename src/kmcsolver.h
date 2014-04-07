@@ -313,6 +313,14 @@ private:
     static uint refCounter;
 
 
+    double minRateThreshold()
+    {
+        return (*std::min_element(m_allPossibleReactions.begin(),
+                                  m_allPossibleReactions.end(),
+                                  [] (const Reaction *r1, const Reaction *r2) {return r1->rate() < r2->rate();}))->rate()/2;
+    }
+
+
 
 };
 

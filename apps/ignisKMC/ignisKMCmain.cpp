@@ -83,6 +83,29 @@ private:
 
 };
 
+class AverageNeighbors : public KMCEvent
+{
+public:
+
+    AverageNeighbors() : KMCEvent("avgN", "", true, true) {}
+
+protected:
+
+    void execute()
+    {
+        uint cN = 0;
+        uint c  = 0;
+        solver()->forEachActiveSiteDo([&cN, &c] (Site * currentSite)
+        {
+            cN += currentSite->nNeighbors();
+            c++;
+        });
+
+        setValue(cN/double(c));
+    }
+
+};
+
 void initialize_ignisKMC(KMCSolver * solver, const Setting & root)
 {
 
@@ -92,8 +115,11 @@ void initialize_ignisKMC(KMCSolver * solver, const Setting & root)
     const uint & NY = solver->NY();
     const uint & NZ = solver->NZ();
 
-    KMCEvent *tChange = new tempChange(10);
+    KMCEvent *tChange      = new tempChange(10);
+    KMCEvent *avgNeighbors = new AverageNeighbors();
+
     solver->addEvent(*tChange);
+    solver->addEvent(*avgNeighbors);
     solver->initializeSolutionBath();
 
 
