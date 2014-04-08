@@ -92,7 +92,8 @@ void initialize_ignisKMC(KMCSolver * solver, const Setting & root)
     const uint & NY = solver->NY();
     const uint & NZ = solver->NZ();
 
-    KMCEvent *tChange = new tempChange(10);
+    MainLattice::enableEventFile(false);
+    KMCEvent *tChange = new tempChange(2);
     solver->addEvent(*tChange);
     solver->initializeSolutionBath();
 
