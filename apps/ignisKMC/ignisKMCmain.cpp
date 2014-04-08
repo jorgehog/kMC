@@ -67,8 +67,9 @@ public:
 
     void execute()
     {
+
         DiffusionReaction::setBeta(T0 + dT*(nTimesExecuted+1));
-        setValue(DiffusionReaction::beta());
+        setValue(DiffusionReaction::beta()/T0);
     }
 
 
@@ -83,6 +84,31 @@ private:
 
 };
 
+class AverageNeighbors : public KMCEvent
+{
+public:
+
+    AverageNeighbors() : KMCEvent("avgN", "", true, true) {}
+
+protected:
+
+    void execute()
+    {
+        uint cN = 0;
+        uint c  = 0;
+        solver()->forEachActiveSiteDo([&cN, &c] (Site * currentSite)
+        {
+            cN += currentSite->nNeighbors();
+            c++;
+        });
+
+        setValue(cN/(double(c)));
+    }
+
+};
+
+
+
 void initialize_ignisKMC(KMCSolver * solver, const Setting & root)
 {
 
@@ -92,9 +118,12 @@ void initialize_ignisKMC(KMCSolver * solver, const Setting & root)
     const uint & NY = solver->NY();
     const uint & NZ = solver->NZ();
 
-    MainLattice::enableEventFile(false);
-    KMCEvent *tChange = new tempChange(2);
+
+    KMCEvent *tChange       = new tempChange(1.5);
+    KMCEvent *avgNeighbors  = new AverageNeighbors();
+
     solver->addEvent(*tChange);
+    solver->addEvent(*avgNeighbors);
     solver->initializeSolutionBath();
 
 

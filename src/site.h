@@ -216,6 +216,11 @@ public:
         return m_totalActiveParticles.memptr()[ParticleStates::solution];
     }
 
+    static uint nParticles()
+    {
+        return nSolutionParticles() + nCrystals();
+    }
+
 
     static const uint &boundaryTypes(const uint i, const uint j = 0)
     {

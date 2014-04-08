@@ -150,7 +150,7 @@ void Reaction::loadConfig(const Setting &setting)
 void Reaction::setBeta(const double beta)
 {
 
-    DiffusionReaction::setBetaChangeScaleFactor(exp(beta/m_beta));
+    DiffusionReaction::setBetaChangeScaleFactor(std::exp(beta - m_beta));
 
     for (Reaction * r : m_solver->allPossibleReactions())
     {

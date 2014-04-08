@@ -212,6 +212,7 @@ void KMCSolver::reset()
 
 void KMCSolver::dumpXYZ()
 {
+    cout << "Storing XYZ: " << outputCounter << endl;
 
     stringstream s;
     s << "kMC" << outputCounter++ << ".xyz";
@@ -243,7 +244,11 @@ void KMCSolver::dumpXYZ()
 
                 if (currentSite->isActive() || isSurface)
                 {
-                    s << "\n" << ParticleStates::shortNames.at(sites[i][j][k]->particleState()) << " " << i << " " << j << " " << k << " " << sites[i][j][k]->nNeighbors();
+                    s << "\n"
+                      << ParticleStates::shortNames.at(sites[i][j][k]->particleState()) << " "
+                      << i << " " << j << " " << k << " "
+                      << sites[i][j][k]->nNeighborsSum() << " "
+                      << sites[i][j][k]->energy();
 
                     if (isSurface)
                     {
@@ -276,15 +281,23 @@ void KMCSolver::onAllRatesChanged()
 {
     //Change if added reactions are not on form ..exp(beta...)
 
-    uint i = 0;
     m_kTot = 0;
+
+
+    uint i = 0;
     for (Reaction * r : m_allPossibleReactions)
     {
+
+        KMCDebugger_Assert(r->rate(), !=, Reaction::UNSET_RATE, "Rates should not be all changed before they are set once.");
+        KMCDebugger_Assert(r->rate(), >, 0, "Rate should be positive.");
+        KMCDebugger_AssertBool(!r->hasVacantStatus(), "Reaction should be enabled.");
+
         m_kTot += r->rate();
 
-        m_accuAllRates.at(i) = m_kTot;
+        m_accuAllRates.at(r->address()) = m_kTot;
 
         i++;
+
     }
 
 }
@@ -464,8 +477,7 @@ void KMCSolver::postReactionShuffleCleanup(const uint nVacancies)
     m_accuAllRates.size() == 0
             ? (void) 0
             : KMCDebugger_AssertClose(m_accuAllRates.at(m_accuAllRates.size()- 1),
-                                      m_kTot,
-                                      1E-5,
+                                      m_kTot, minRateThreshold(),
                                       "kTot should be the last element of accuAllRates");
 
 }
