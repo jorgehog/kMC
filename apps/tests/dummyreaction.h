@@ -19,9 +19,9 @@ public:
 
     // Reaction interface
 public:
-    void setDirectUpdateFlags(const Site *changedSite)
+    void setDirectUpdateFlags(const SoluteParticle *changedReactant)
     {
-        (void) changedSite;
+        (void) changedReactant;
     }
 
     bool isAllowed() const

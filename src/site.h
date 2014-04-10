@@ -21,6 +21,7 @@ namespace kMC
 class KMCSolver;
 class Reaction;
 class DiffusionReaction;
+class SoluteParticle;
 class Boundary;
 
 class Site
@@ -45,22 +46,11 @@ public:
     static void updateBoundaries();
 
 
-    static void popAffectedSite(Site * site);
-
-    static void updateAffectedSites();
-
-    static void selectUpdateFlags();
-
-
     /*
      *  Misc static property functions
      */
 
     static uint getLevel(uint i, uint j, uint k);
-
-    static double getCurrentSolutionDensity();
-
-    static double getCurrentRelativeCrystalOccupancy();
 
     static umat getCurrentCrystalBoxTopology();
 
@@ -76,21 +66,17 @@ public:
 
     static void setInitialBoundaries(const int boundaryType);
 
-    static void setInitialNNeighborsToCrystallize(const uint & nNeighborsToCrystallize);
 
+
+    static void resetNNeighborsLimitTo(const uint & nNeighborsLimit, bool check = true);
 
     static void resetBoundariesTo(const umat & boundaryMatrix);
 
     static void resetBoundariesTo(const int boundaryType);
 
-    static void resetNNeighborsLimitTo(const uint & nNeighborsLimit, bool check = true);
-
-    static void resetNNeighborsToCrystallizeTo(const uint & nNeighborsToCrystallize);
 
 
     static void clearAll();
-
-    static void clearAffectedSites();
 
     static void clearBoundaries();
 
@@ -99,64 +85,22 @@ public:
 
     static void setZeroTotalEnergy();
 
+
     /*
      * Non-trivial functions
      */
 
 
-    void setParticleState(int newState);
-
-    bool isLegalToSpawn();
-
-
-    bool qualifiesAsCrystal();
-
-    bool qualifiesAsSurface();
-
-
-    void spawnAsFixedCrystal();
-
-    void spawnAsCrystal();
-
-
-    void blockCrystallizationOnSite();
-
-    void allowCrystallizationOnSite();
-
-
-    void crystallize();
-
-    void decrystallize();
-
-
-    void activate();
-
-    void deactivate();
-
-    void flipActive();
-
-    void flipDeactive();
-
-
-    void addReaction(Reaction* reaction)
-    {
-        m_reactions.push_back(reaction);
-    }
-
-    void updateReactions();
-
-
-    void initializeDiffusionReactions();
-
     void introduceNeighborhood();
 
 
-    bool hasNeighboring(int state, int range) const;
+    bool hasNeighboring(int state) const;
 
-    uint countNeighboring(int state, int range) const;
+    uint countNeighboring(int state) const;
 
 
-    void propagateToNeighbors(int reqOldState, int newState, int range);
+    SoluteParticle* getAssociatedParticle() const;
+
 
     void informNeighborhoodOnChange(int change);
 
@@ -165,13 +109,6 @@ public:
 
     uint maxDistanceTo(const Site * other) const;
 
-    double potentialBetween(const Site * other);
-
-    void setNeighboringDirectUpdateFlags();
-
-    void queueAffectedSites();
-
-    void setZeroEnergy();
 
     void reset();
 
@@ -186,9 +123,7 @@ public:
     void forEachNeighborDo_sendIndices(function<void (Site *, uint, uint, uint)> applyFunction) const;
 
 
-    void forEachActiveReactionDo(function<void (Reaction*)> applyFunction) const;
-
-    void forEachActiveReactionDo_sendIndex(function<void (Reaction*, uint)> applyFunction) const;
+    void setZeroEnergy();
 
 
     /*
@@ -200,36 +135,9 @@ public:
         return m_solver;
     }
 
-
-    static const uint & nSurfaces()
-    {
-        return m_totalDeactiveParticles.memptr()[ParticleStates::surface];
-    }
-
-    static uint nCrystals()
-    {
-        return m_totalActiveParticles(ParticleStates::crystal) + m_totalActiveParticles(ParticleStates::fixedCrystal);
-    }
-
-    static const uint & nSolutionParticles()
-    {
-        return m_totalActiveParticles.memptr()[ParticleStates::solution];
-    }
-
-    static uint nParticles()
-    {
-        return nSolutionParticles() + nCrystals();
-    }
-
-
     static const uint &boundaryTypes(const uint i, const uint j = 0)
     {
         return m_boundaryTypes(i, j);
-    }
-
-    static const uint &nNeighborsToCrystallize()
-    {
-        return m_nNeighborsToCrystallize;
     }
 
     static const uint &nNeighborsLimit()
@@ -252,35 +160,6 @@ public:
         return m_originTransformVector(i);
     }
 
-    static const uint & totalActiveSites()
-    {
-        return m_totalActiveSites;
-    }
-
-    static const uvec4 & totalActiveParticlesVector()
-    {
-        return m_totalActiveParticles;
-    }
-
-    static const uvec4 & totalDeactiveParticlesVector()
-    {
-        return m_totalDeactiveParticles;
-    }
-
-    static const uint & totalActiveParticles(const uint i)
-    {
-        return m_totalActiveParticles(i);
-    }
-
-    static const uint & totalDeactiveParticles(const uint i)
-    {
-        return m_totalDeactiveParticles(i);
-    }
-
-    static const double & totalEnergy()
-    {
-        return m_totalEnergy;
-    }
 
     static const Boundary * boundaries(const uint xyz, const uint loc)
     {
@@ -292,51 +171,40 @@ public:
         return m_boundaries;
     }
 
-
-    const int & particleState() const
+    static const double & totalEnergy()
     {
-        return m_particleState;
+        return m_totalEnergy;
     }
 
-    string particleStateName() const
+    void activate()
     {
-        return ParticleStates::names.at(m_particleState);
+        m_active = true;
     }
 
-    string particleStateShortName() const
+    void deactivate()
     {
-        return ParticleStates::shortNames.at(m_particleState);
+        m_active = false;
     }
+
 
     uint nNeighbors(uint level = 0) const
     {
         return m_nNeighbors(level);
     }
 
-    uint nActiveReactions() const;
 
     uint nNeighborsSum() const;
 
-    bool isCrystal() const
-    {
-        return ((m_particleState == ParticleStates::crystal) || (m_particleState == ParticleStates::fixedCrystal));
-    }
 
-    bool isSurface() const
+    double energy() const
     {
-        return m_particleState == ParticleStates::surface;
+        return m_energy;
     }
 
     const bool & isActive() const
     {
         return m_active;
     }
-
-    bool isAffected()
-    {
-        return m_affectedSites.find(this) != m_affectedSites.end();
-    }
-
 
     const uint & x() const
     {
@@ -358,44 +226,10 @@ public:
         return m_r(i);
     }
 
-    const vector<Reaction*> & reactions() const
-    {
-        return m_reactions;
-    }
-
-    const static set<Site*, function<bool(Site*, Site*)> > & affectedSites()
-    {
-        return m_affectedSites;
-    }
 
     Site* neighborhood(const uint x, const uint y, const uint z) const
     {
         return m_neighborhood[x][y][z];
-    }
-
-    DiffusionReaction* diffusionReactions(const uint i, const uint j, const uint k)
-    {
-        return m_diffusionReactions[i][j][k];
-    }
-
-    double energy() const
-    {
-        return m_energy;
-    }
-
-    const bool & isFixedCrystalSeed()
-    {
-        return m_isFixedCrystalSeed;
-    }
-
-    const bool & cannotCrystallize()
-    {
-        return m_cannotCrystallize;
-    }
-
-    const uint & ID() const
-    {
-        return m_ID;
     }
 
     bool operator == (const Site & other) const
@@ -416,11 +250,6 @@ public:
 
     const static uint & NZ();
 
-    //should be in site.. all sites in sites and jazz jazz..
-
-    void clearAllReactions();
-
-
 private:
 
     static field<Boundary*> m_boundaries;
@@ -435,24 +264,13 @@ private:
     static uint m_neighborhoodLength;
 
 
-    static uint m_nNeighborsToCrystallize;
-
-
     static ucube m_levelMatrix;
 
     static ivec m_originTransformVector;
 
 
-    static uint m_totalActiveSites;
-
-    static uvec4 m_totalActiveParticles;
-
-    static uvec4 m_totalDeactiveParticles;
-
     static double m_totalEnergy;
 
-
-    static set<Site*, function<bool(Site*, Site*)> > m_affectedSites;
 
     static KMCSolver* m_solver;
 
@@ -463,15 +281,10 @@ private:
 
     uint m_nNeighborsSum;
 
+    double m_energy;
+
 
     bool m_active;
-
-    bool m_isFixedCrystalSeed;
-
-    bool m_cannotCrystallize;
-
-
-    const uint m_ID;
 
 
     const uint m_x;
@@ -481,23 +294,6 @@ private:
     const uint m_z;
 
     const uvec3 m_r;
-
-
-
-    double m_energy;
-
-
-    int m_particleState = ParticleStates::solution;
-
-
-    vector<Reaction*> m_reactions;
-
-    DiffusionReaction* m_diffusionReactions[3][3][3];
-
-
-    void setNewParticleState(int newState);
-
-    void deactivateFixedCrystal();
 
 
     static uint refCounter;

@@ -12,17 +12,15 @@ struct ParticleStates
 {
     enum AllStates
     {
-        crystal,
-        fixedCrystal,
-        solution,
+        solvant,
         surface,
-        any
+        crystal
     };
 
     const static vector<string> names;
     const static vector<string> shortNames;
 
-    static int equalAs(int state);
+    const static uint nStates;
 
 };
 

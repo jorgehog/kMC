@@ -4,6 +4,8 @@
 
 #include "../../ignis/include/ignis.h"
 
+#include "../soluteparticle.h"
+
 namespace kMC
 {
 
@@ -32,7 +34,7 @@ private:
 public:
     uint count() const
     {
-        return Site::nCrystals() + Site::nSolutionParticles();
+        return SoluteParticle::nParticles();
     }
 
     uint operator ()(const uint n, const uint d) const

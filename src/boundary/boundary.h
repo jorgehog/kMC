@@ -73,7 +73,6 @@ public:
     {
         Periodic,
         Edge,
-        Surface,
         ConcentrationWall
     };
 

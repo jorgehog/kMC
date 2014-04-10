@@ -60,16 +60,16 @@ void ConcentrationWall::update()
 
     std::random_shuffle(boundarySites().begin(), boundarySites().end(), [] (uint n) {return KMC_RNG_UNIFORM()*n;});
 
-    if (Site::getCurrentSolutionDensity() > solver()->targetSaturation())
+    if (SoluteParticle::getCurrentConcentration() > solver()->targetConcentration())
     {
 
-        while (Site::getCurrentSolutionDensity() > solver()->targetSaturation() && c != boundarySites().size() && ce != m_maxEventsPrCycle)
+        while (SoluteParticle::getCurrentConcentration() > solver()->targetConcentration() && c != boundarySites().size() && ce != m_maxEventsPrCycle)
         {
             currentSite = boundarySites().at(c);
 
             if (currentSite->isActive())
             {
-                currentSite->deactivate();
+                solver()->despawnParticle(currentSite);
                 ce++;
             }
 
@@ -81,40 +81,42 @@ void ConcentrationWall::update()
     else
     {
 
-        while (Site::getCurrentSolutionDensity() < solver()->targetSaturation() && c != boundarySites().size() && ce != m_maxEventsPrCycle)
-        {
-            currentSite = boundarySites().at(c);
+        bool spawned;
 
-            if (currentSite->isLegalToSpawn())
+        while (ce != m_maxEventsPrCycle && SoluteParticle::getCurrentConcentration() < solver()->targetConcentration())
+        {
+
+            spawned = false;
+
+            SoluteParticle *particle = new SoluteParticle();
+
+            while (c != boundarySites().size() && !spawned)
             {
-                currentSite->activate();
-                ce++;
+                currentSite = boundarySites().at(c);
+
+                spawned = solver()->spawnParticle(particle, currentSite, false);
+
+                if (spawned)
+                {
+                    ce++;
+                }
+
+                c++; //*giggle*
             }
 
-            c++; //*giggle*
+            if (!spawned)
+            {
+                delete particle;
+                break;
+            }
+
         }
-
     }
-
 }
 
 void ConcentrationWall::initialize()
 {
     setupBoundarySites();
-
-    for (Site * site: boundarySites())
-    {
-        site->blockCrystallizationOnSite();
-    }
-
-}
-
-void ConcentrationWall::finalize()
-{
-    for (Site * site : boundarySites())
-    {
-        site->allowCrystallizationOnSite();
-    }
 }
 
 

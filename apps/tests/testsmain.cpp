@@ -144,9 +144,6 @@ int main()
     testBed::initBoundarySuite(Boundary::allBoundariesAs(Boundary::Edge));
     exitSuccess += RUNSUITE(runner, "EdgeBoundaries");
 
-    testBed::initBoundarySuite(Boundary::allBoundariesAs(Boundary::Surface));
-    exitSuccess += RUNSUITE(runner, "SurfaceBoundaries");
-
     testBed::initBoundarySuite(Boundary::allBoundariesAs(Boundary::ConcentrationWall));
     exitSuccess += RUNSUITE(runner, "ConcWallBoundaries");
 

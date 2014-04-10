@@ -3,25 +3,29 @@
 #include "diffusion/diffusionreaction.h"
 
 #include "../kmcsolver.h"
-#include "site.h"
+#include "../soluteparticle.h"
 
 #include "../debugger/debugger.h"
 
 using namespace kMC;
 
-Reaction::Reaction(Site *currentSite):
-    m_reactionSite(currentSite),
+Reaction::Reaction(SoluteParticle *reactant):
+    m_reactant(reactant),
     m_lastUsedEnergy(UNSET_ENERGY),
     m_rate(UNSET_RATE),
     m_updateFlag(UNSET_UPDATE_FLAG),
     m_address(UNSET_ADDRESS)
 {
-
+    refCount++;
 }
 
 Reaction::~Reaction()
 {
-    m_reactionSite = NULL;
+    m_reactant = NULL;
+
+    KMCDebugger_Assert(refCount, !=, 0);
+
+    refCount--;
 }
 
 const string Reaction::info(int xr, int yr, int zr, string desc) const
@@ -30,7 +34,7 @@ const string Reaction::info(int xr, int yr, int zr, string desc) const
     s << "[" << name << "]:" << "\n";
     s << propertyString() << "\n";
     s << "@";
-    s << m_reactionSite->info(xr, yr, zr, desc);
+    s << m_reactant->info(xr, yr, zr, desc);
     s << "\n";
 
     return s.str();
@@ -39,23 +43,23 @@ const string Reaction::info(int xr, int yr, int zr, string desc) const
 
 void Reaction::setLastUsedEnergy()
 {
-    m_lastUsedEnergy = m_reactionSite->energy();
+    m_lastUsedEnergy = m_reactant->energy();
 }
 
 
 const uint &Reaction::x() const
 {
-    return m_reactionSite->x();
+    return m_reactant->x();
 }
 
 const uint &Reaction::y() const
 {
-    return m_reactionSite->y();
+    return m_reactant->y();
 }
 
 const uint &Reaction::z() const
 {
-    return m_reactionSite->z();
+    return m_reactant->z();
 }
 
 bool Reaction::hasVacantStatus() const
@@ -63,6 +67,10 @@ bool Reaction::hasVacantStatus() const
     return solver()->isEmptyAddress(m_address);
 }
 
+const Site *Reaction::site() const
+{
+    return m_reactant->site();
+}
 
 string Reaction::getFinalizingDebugMessage() const
 {
@@ -81,11 +89,11 @@ string Reaction::getFinalizingDebugMessage() const
 
     if (lastReaction != NULL)
     {
-        m_reactionSite->distanceTo(lastReaction->reactionSite(), X, Y, Z);
+        site()->distanceTo(lastReaction->site(), X, Y, Z);
     }
     s << info();
     s << "\nLast active reaction site marked on current site:\n\n";
-    s << m_reactionSite->info(X, Y, Z);
+    s << site()->info(X, Y, Z);
 
     return s.str();
 #else
@@ -176,10 +184,6 @@ void Reaction::reset()
 
 }
 
-bool Reaction::isAllowedAndActive() const
-{
-    return isAllowed() && reactionSite()->isActive();
-}
 
 const string Reaction::name = "Reaction";
 
@@ -188,7 +192,7 @@ KMCSolver*   Reaction::m_solver;
 double       Reaction::m_beta = 1.0;
 double       Reaction::m_linearRateScale = 1.0;
 
-uint         Reaction::m_IDCount = 0;
+uint         Reaction::refCount = 0;
 
 const double Reaction::UNSET_RATE     = -1337;
 

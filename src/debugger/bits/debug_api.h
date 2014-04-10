@@ -69,8 +69,8 @@
 
 
 //DEBUGGER FEEDER FUNCTIONS
-#define KMCDebugger_PopAffected(site) \
-    kMC::Debugger::popAffected(site)
+#define KMCDebugger_PopAffected(particle) \
+    kMC::Debugger::popAffected(particle)
 
 #define KMCDebugger_MarkPre(pre) \
     kMC::Debugger::queuePre(pre)
@@ -81,8 +81,8 @@
 #define KMCDebugger_MarkPartialStep(_msg) \
     kMC::Debugger::markPartialStep(_msg)
 
-#define KMCDebugger_PushImplication(site, _new) \
-    kMC::Debugger::pushImplication(site,  _new)
+#define KMCDebugger_PushImplication(particle, _new) \
+    kMC::Debugger::pushImplication(particle,  _new)
 
 #define KMCDebugger_PushTraces() \
     kMC::Debugger::pushTraces()

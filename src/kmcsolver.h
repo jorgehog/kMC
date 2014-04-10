@@ -59,6 +59,11 @@ public:
         m_mainLattice->addSubField(subLattice);
     }
 
+    bool spawnParticle(SoluteParticle *particle, uint x, uint y, uint z, bool checkIfLegal);
+
+    bool spawnParticle(SoluteParticle *particle, Site *site, bool checkIfLegal);
+
+    void despawnParticle(Site *site);
 
     void initializeCrystal(const double relativeSeedSize);
 
@@ -72,14 +77,15 @@ public:
         });
     }
 
-    void initializeDiffusionReactions()
-    {
-        forEachSiteDo([] (Site * site)
-        {
-            site->initializeDiffusionReactions();
-        });
+//    void initializeDiffusionReactions()
+//    {
+//        forEachSiteDo([] (Site * site)
+//        {
+//            cout << "derp" << endl;
+////            site->initializeDiffusionReactions();
+//        });
 
-    }
+//    }
 
     void forEachSiteDo(function<void(Site * site)> applyFunction) const;
 
@@ -109,6 +115,11 @@ public:
     Site* getSite(const uint i, const uint j, const uint k) const
     {
         return sites[i][j][k];
+    }
+
+    const vector<SoluteParticle*> & particles() const
+    {
+        return m_particles;
     }
 
     const uint &NX () const
@@ -161,9 +172,9 @@ public:
         return m_kTot;
     }
 
-    const double & targetSaturation()
+    const double & targetConcentration()
     {
-        return m_targetSaturation;
+        return m_targetConcentration;
     }
 
 
@@ -186,7 +197,7 @@ public:
 
     void setTargetSaturation(const double saturation)
     {
-        m_targetSaturation = saturation;
+        m_targetConcentration = saturation;
     }
 
     void setRNGSeed(uint seedState = Seed::fromTime, int defaultSeed = 0);
@@ -213,7 +224,8 @@ public:
     {
         forEachSiteDo([] (Site *site)
         {
-            site->clearAllReactions();
+            cout << "derp" << endl;
+//            site->clearAllReactions();
         });
     }
 
@@ -254,11 +266,13 @@ public:
 
 private:
 
-    double m_targetSaturation;
+    double m_targetConcentration;
 
     MainLattice *m_mainLattice;
 
     Site**** sites;
+
+    vector<SoluteParticle*> m_particles;
 
     uint m_NX;
     uint m_NY;

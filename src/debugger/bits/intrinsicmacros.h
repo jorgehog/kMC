@@ -19,8 +19,8 @@
 #define _KMCDebugger_REACTION_STR() \
     kMC::Debugger::currentReaction->info()
 
-#define _KMCDebugger_SITE_STR(site) \
-    site->info()
+#define _KMCDebugger_PARTICLE_STR(particle) \
+    particle->info()
 
 #else
 
@@ -32,8 +32,8 @@
 
 #endif
 
-#define _KMCDebugger_MAKE_IMPLICATION_MESSAGE(site, _pre, _new) \
-    (_KMCDebugger_SITE_STR(site) + \
+#define _KMCDebugger_MAKE_IMPLICATION_MESSAGE(particle, _pre, _new) \
+    (_KMCDebugger_PARTICLE_STR(particle) + \
     ("  What? " + \
     ((std::string)_pre + (" -> " + (std::string)_new + \
     ("\n\n")))))

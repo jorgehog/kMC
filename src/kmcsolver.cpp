@@ -1,5 +1,7 @@
 #include "kmcsolver.h"
 
+#include "soluteparticle.h"
+
 #include "reactions/reaction.h"
 #include "reactions/diffusion/diffusionreaction.h"
 
@@ -100,7 +102,7 @@ void KMCSolver::onConstruct()
     m_NY = UNSET_UINT;
     m_NZ = UNSET_UINT;
 
-    m_targetSaturation = 0;
+    m_targetConcentration = 0;
 
     totalTime = 0;
 
@@ -134,6 +136,11 @@ void KMCSolver::onConstruct()
 void KMCSolver::finalizeObject()
 {
     checkRefCounter();
+
+    for (SoluteParticle *particle : m_particles)
+    {
+        delete particle;
+    }
 
     KMCDebugger_Finalize();
 
@@ -171,20 +178,20 @@ void KMCSolver::reset()
     m_availableReactionSlots.clear();
 
 
-    Site::clearAffectedSites();
+    SoluteParticle::clearAffectedParticles();
 
     forEachSiteDo([] (Site * site)
     {
         site->reset();
     });
 
-    KMCDebugger_Assert(accu(Site::totalActiveParticlesVector()), ==, 0);
+    KMCDebugger_Assert(accu(SoluteParticle::totalParticlesVector()), ==, 0);
 
-    KMCDebugger_Assert(Site::totalDeactiveParticles(ParticleStates::solution), ==, m_NX*m_NY*m_NZ);
+    //    KMCDebugger_Assert(Site::totalDeactiveParticles(ParticleStates::solution), ==, m_NX*m_NY*m_NZ);
 
     KMCDebugger_AssertClose(Site::totalEnergy(), 0, 1E-5);
 
-    KMCDebugger_Assert(Site::totalActiveSites(), ==, 0);
+    KMCDebugger_Assert(SoluteParticle::nParticles(), ==, 0);
 
     Site::setZeroTotalEnergy();
 
@@ -229,47 +236,33 @@ void KMCSolver::dumpXYZ()
     uint nLines = 0;
     s.str(string());
 
-    Site* currentSite;
-
-    for (uint i = 0; i < m_NX; ++i)
+    for (SoluteParticle *particle : m_particles)
     {
-        for (uint j = 0; j < m_NY; ++j)
+
+        s << "\n"
+          << particle->particleStateShortName() << " "
+          << particle->x() << " " << particle->y() << " " << particle->z() << " "
+          << particle->nNeighborsSum() << " "
+          << particle->energy();
+
+        if (particle->isSurface())
         {
-            for (uint k = 0; k < m_NZ; ++k)
-            {
-
-                currentSite = sites[i][j][k];
-
-                bool isSurface = currentSite->isSurface();
-
-                if (currentSite->isActive() || isSurface)
-                {
-                    s << "\n"
-                      << ParticleStates::shortNames.at(sites[i][j][k]->particleState()) << " "
-                      << i << " " << j << " " << k << " "
-                      << sites[i][j][k]->nNeighborsSum() << " "
-                      << sites[i][j][k]->energy();
-
-                    if (isSurface)
-                    {
-                        surface << s.str();
-                    }
-
-                    else if (currentSite->isCrystal())
-                    {
-                        crystal << s.str();
-                    }
-
-                    else
-                    {
-                        solution << s.str();
-                    }
-
-                    s.str(string());
-                    nLines++;
-                }
-            }
+            surface << s.str();
         }
+
+        else if (particle->isCrystal())
+        {
+            crystal << s.str();
+        }
+
+        else
+        {
+            solution << s.str();
+        }
+
+        s.str(string());
+        nLines++;
+
     }
 
     o << nLines << "\n - " << surface.str() << crystal.str() << solution.str();
@@ -355,7 +348,7 @@ void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate
     else if (newRate == Reaction::UNSET_RATE)
     {
 
-        KMCDebugger_AssertBool(!reaction->isAllowedAndActive(), "Allowed reaction set to unset rate.");
+        KMCDebugger_AssertBool(!reaction->isAllowed(), "Allowed reaction set to unset rate.");
 
         m_kTot -= prevRate;
 
@@ -450,8 +443,8 @@ void KMCSolver::swapReactionAddresses(const uint dest, const uint orig)
     KMCDebugger_Assert(orig,                    ==, swappedReaction->address(), "mismatch in address.", swappedReaction->getFinalizingDebugMessage());
     KMCDebugger_Assert(Reaction::UNSET_ADDRESS, ==, oldReaction->address(),     "mismatch in address.", oldReaction->getFinalizingDebugMessage());
 
-    KMCDebugger_AssertBool(swappedReaction->isAllowedAndActive(), "swapped reaction should be allowed and active.", swappedReaction->getFinalizingDebugMessage());
-    KMCDebugger_AssertBool(!oldReaction->isAllowedAndActive()   , "old reaction should not be allowed.",            oldReaction->getFinalizingDebugMessage());
+    KMCDebugger_AssertBool(swappedReaction->isAllowed(), "swapped reaction should be allowed and active.", swappedReaction->getFinalizingDebugMessage());
+    KMCDebugger_AssertBool(!oldReaction->isAllowed()   , "old reaction should not be allowed.",            oldReaction->getFinalizingDebugMessage());
 
     m_allPossibleReactions.at(dest) = swappedReaction;
 
@@ -634,15 +627,11 @@ void KMCSolver::clearSites()
     delete [] sites;
 
 
-    KMCDebugger_Assert(accu(Site::totalActiveParticlesVector()), ==, 0);
-
-    KMCDebugger_Assert(accu(Site::totalDeactiveParticlesVector()), ==, 0);
+    KMCDebugger_Assert(accu(SoluteParticle::totalParticlesVector()), ==, 0);
 
     KMCDebugger_AssertClose(Site::totalEnergy(), 0, 1E-5);
 
-    KMCDebugger_Assert(Site::totalActiveSites(), ==, 0);
-
-    Site::clearAffectedSites();
+    SoluteParticle::clearAffectedParticles();
     Site::setZeroTotalEnergy();
 
     Reaction::clearAll();
@@ -666,6 +655,64 @@ void KMCSolver::setBoxSize_KeepSites(const uvec3 &boxSizes)
 }
 
 
+bool KMCSolver::spawnParticle(SoluteParticle *particle, uint x, uint y, uint z, bool checkIfLegal)
+{
+    spawnParticle(particle, getSite(x, y, z), checkIfLegal);
+}
+
+
+bool KMCSolver::spawnParticle(SoluteParticle *particle, Site *site, bool checkIfLegal)
+{
+
+    KMCDebugger_AssertBool(!(site->isActive() && !checkIfLegal), "spawning particle on top of another");
+
+    if (site->isActive())
+    {
+        return false;
+    }
+
+    particle->trySite(site);
+
+    if (checkIfLegal)
+    {
+        if (!particle->isLegalToSpawn())
+        {
+            return false;
+        }
+    }
+
+    particle->setSite(site);
+
+    m_particles.push_back(particle);
+
+    KMCDebugger_PushTraces();
+
+    return true;
+
+}
+
+void KMCSolver::despawnParticle(Site *site)
+{
+
+    KMCDebugger_AssertBool(site->isActive());
+
+    uint i = 0;
+
+    for (SoluteParticle *particle : m_particles)
+    {
+        if (particle->site() == site)
+        {
+            break;
+        }
+        i++;
+    }
+
+    KMCDebugger_Assert(i, !=, m_particles.size());
+
+    m_particles.erase(m_particles.begin() + i);
+
+}
+
 
 void KMCSolver::initializeCrystal(const double relativeSeedSize)
 {
@@ -682,14 +729,7 @@ void KMCSolver::initializeCrystal(const double relativeSeedSize)
         KMCSolver::exit();
     }
 
-    bool noSeed = false;
     KMCDebugger_SetEnabledTo(false);
-
-    if (!noSeed)
-    {
-        sites[m_NX/2][m_NY/2][m_NZ/2]->spawnAsFixedCrystal();
-        KMCDebugger_PushTraces();
-    }
 
     uint crystalSizeX = round(m_NX*relativeSeedSize);
     uint crystalSizeY = round(m_NY*relativeSeedSize);
@@ -703,16 +743,6 @@ void KMCSolver::initializeCrystal(const double relativeSeedSize)
     uint crystalEndY = crystalStartY + crystalSizeY;
     uint crystalEndZ = crystalStartZ + crystalSizeZ;
 
-    uint solutionEndX = crystalStartX - Site::nNeighborsLimit();
-    uint solutionEndY = crystalStartY - Site::nNeighborsLimit();
-    uint solutionEndZ = crystalStartZ - Site::nNeighborsLimit();
-
-    uint solutionStartX = crystalEndX + Site::nNeighborsLimit();
-    uint solutionStartY = crystalEndY + Site::nNeighborsLimit();
-    uint solutionStartZ = crystalEndZ + Site::nNeighborsLimit();
-
-
-
     for (uint i = 0; i < m_NX; ++i)
     {
         for (uint j = 0; j < m_NY; ++j)
@@ -720,43 +750,28 @@ void KMCSolver::initializeCrystal(const double relativeSeedSize)
             for (uint k = 0; k < m_NZ; ++k)
             {
 
-                if (!noSeed)
-                {
 
-                    if (i >= crystalStartX && i < crystalEndX)
+                if (i >= crystalStartX && i < crystalEndX)
+                {
+                    if (j >= crystalStartY && j < crystalEndY)
                     {
-                        if (j >= crystalStartY && j < crystalEndY)
+                        if (k >= crystalStartZ && k < crystalEndZ)
                         {
-                            if (k >= crystalStartZ && k < crystalEndZ)
+                            if (!((i == m_NX/2 && j == m_NY/2 && k == m_NZ/2)))
                             {
-                                if (!((i == m_NX/2 && j == m_NY/2 && k == m_NZ/2)))
-                                {
-                                    sites[i][j][k]->activate();
-                                    KMCDebugger_PushTraces();
-                                }
-
-                                continue;
-
+                                SoluteParticle * particle = new SoluteParticle();
+                                (void)spawnParticle(particle, i, j, k, false);
                             }
-                        }
-                    }
 
-                }
-
-                if (noSeed || ((i < solutionEndX) || (i >= solutionStartX) || (j < solutionEndY) || (j >= solutionStartY) || (k < solutionEndZ) || (k >= solutionStartZ)))
-                {
-                    if (KMC_RNG_UNIFORM() < m_targetSaturation)
-                    {
-                        if(sites[i][j][k]->isLegalToSpawn())
-                        {
-                            sites[i][j][k]->activate();
-                            KMCDebugger_PushTraces();
                         }
                     }
                 }
+
             }
         }
     }
+
+    initializeSolutionBath();
 
     KMCDebugger_ResetEnabled();
 
@@ -765,16 +780,37 @@ void KMCSolver::initializeCrystal(const double relativeSeedSize)
 void KMCSolver::initializeSolutionBath()
 {
 
-    forEachSiteDo([this] (Site * site)
+    uint x, y, z, N, n;
+    bool spawned;
+
+
+    N = (NX()*NY()*NZ() - SoluteParticle::nParticles())*targetConcentration();
+
+    n = 0;
+
+    while (n != N)
     {
-        if (site->isLegalToSpawn())
+
+
+        SoluteParticle *particle = new SoluteParticle();
+
+        spawned = false;
+
+        while (!spawned)
         {
-            if (KMC_RNG_UNIFORM() < targetSaturation())
-            {
-                site->activate();
-            }
+
+            x = KMC_RNG_UNIFORM()*NX();
+
+            y = KMC_RNG_UNIFORM()*NY();
+
+            z = KMC_RNG_UNIFORM()*NZ();
+
+            spawned = spawnParticle(particle, x, y, z, true);
+
         }
-    });
+
+        n++;
+    }
 }
 
 
@@ -783,7 +819,7 @@ void KMCSolver::initializeSolutionBath()
 void KMCSolver::getRateVariables()
 {
 
-    Site::updateAffectedSites();
+    SoluteParticle::updateAffectedParticles();
 
     reshuffleReactions();
 
@@ -887,7 +923,7 @@ void KMCSolver::setBoxSize(const uvec3 boxSize, bool check, bool keepSystem)
 
     Site::initializeBoundaries();
 
-    initializeDiffusionReactions();
+    //    initializeDiffusionReactions();
 
     m_mainLattice->setTopology({0, m_NX,
                                 0, m_NY,

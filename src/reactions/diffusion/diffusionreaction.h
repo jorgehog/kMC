@@ -19,7 +19,7 @@ class DiffusionReaction : public Reaction
 public:
 
 
-    DiffusionReaction(Site *currentSite, Site *destinationSite);
+    DiffusionReaction(SoluteParticle *reactant, int dx, int dy, int dz);
 
     ~DiffusionReaction();
 
@@ -50,11 +50,6 @@ public:
     }
 
 
-    static uint separation()
-    {
-        return m_separation;
-    }
-
     static const double & potential(const uint & x, const uint & y, const uint & z)
     {
         return m_potential(x, y, z);
@@ -65,10 +60,7 @@ public:
         return m_potential;
     }
 
-    const Site* destinationSite() const
-    {
-        return m_destinationSite;
-    }
+    Site *destinationSite() const;
 
     const double & lastUsedEsp() const
     {
@@ -87,10 +79,6 @@ public:
     {
         m_betaChangeScaleFactor = factor;
     }
-
-    static void setSeparation(const uint separation, bool check = true);
-
-    static void resetSeparationTo(const uint separation);
 
     static void setPotentialParameters(const double rPower, const double scale, bool setup = true)
     {
@@ -117,17 +105,12 @@ private:
 
     static double m_betaChangeScaleFactor;
 
-
-    static uint m_separation;
-
     static cube m_potential;
     static field<cube>  m_saddlePotential;
     static field<umat::fixed<3, 2> > neighborSetIntersectionPoints;
 
 
     double m_lastUsedEsp;
-
-    Site* m_destinationSite = NULL;
 
     enum SpecificUpdateFlags
     {
@@ -136,12 +119,12 @@ private:
 
     uint saddleFieldIndices[3];
 
-    bool allowedGivenNotBlocked() const;
+    int path[3];
 
     // Reaction interface
 public:
 
-    void setDirectUpdateFlags(const Site * changedSite);
+    void setDirectUpdateFlags(const SoluteParticle* changedReactant);
 
     void calcRate();
 

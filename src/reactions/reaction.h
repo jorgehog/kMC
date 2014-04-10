@@ -11,15 +11,15 @@
 namespace kMC
 {
 
-
 class Site;
+class SoluteParticle;
 class KMCSolver;
 
 class Reaction
 {
 public:
 
-    Reaction(Site * currentSite);
+    Reaction(SoluteParticle * reactant);
 
     virtual ~Reaction();
 
@@ -38,10 +38,10 @@ public:
 
     static void clearAll()
     {
-        m_IDCount = 0;
+        refCount = 0;
     }
 
-    virtual void setDirectUpdateFlags(const Site * changedSite) = 0;
+    virtual void setDirectUpdateFlags(const SoluteParticle *changedReactant) = 0;
 
     virtual bool isAllowed() const = 0;
 
@@ -50,8 +50,6 @@ public:
     virtual void execute() = 0;
 
     virtual void reset();
-
-    virtual bool isAllowedAndActive() const;
 
     virtual void registerBetaChange(const double newBeta)
     {
@@ -88,9 +86,9 @@ public:
     }
 
 
-    const static uint & IDCount()
+    const static uint & nReactions()
     {
-        return m_IDCount;
+        return refCount;
     }
 
     const static double & linearRateScale()
@@ -141,10 +139,12 @@ public:
         return name.compare(this->name) == 0;
     }
 
-    const Site * getReactionSite() const
+    SoluteParticle * reactant() const
     {
-        return m_reactionSite;
+        return m_reactant;
     }
+
+    const Site *site() const;
 
     virtual string getFinalizingDebugMessage() const;
 
@@ -195,9 +195,9 @@ private:
     static double m_beta;
     static double m_linearRateScale;
 
-    static uint m_IDCount;
+    static uint refCount;
 
-    Site* m_reactionSite = NULL;
+    SoluteParticle* m_reactant = NULL;
 
     //Can this be in the reaction site?
     double m_lastUsedEnergy;
@@ -220,11 +220,6 @@ protected:
     static KMCSolver * solver()
     {
         return m_solver;
-    }
-
-    Site * reactionSite() const
-    {
-        return m_reactionSite;
     }
 
     template<typename T1, typename T2>

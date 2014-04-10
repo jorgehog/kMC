@@ -50,8 +50,7 @@ public:
 
     static wall_clock timer;
 
-    static set<Site*, function<bool(Site*, Site*)> > affectedUnion;
-//    static set<Site*> affectedUnion;
+    static set<SoluteParticle*, function<bool(SoluteParticle*, SoluteParticle*)> > affectedUnion;
 
 
     //CALLED FROM MACROS
@@ -60,12 +59,12 @@ public:
     static void setEnabledTo(bool state);
     static void resetEnabled();
     static void pushTraces();
-    static void pushImplication(Site *site, const char *_new);
+    static void pushImplication(SoluteParticle *particle, const char *_new);
     static void markPartialStep(const char * msg);
     static void setActiveReaction(Reaction * reaction);
     static void initialize();
     static void reset();
-    static void popAffected(Site * site);
+    static void popAffected(SoluteParticle *particle);
     static string fullTrace(int line, const string filename, const string additionalInfo = "");
     static string partialTrace(const uint & i);
     //

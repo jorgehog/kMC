@@ -2,7 +2,7 @@
 
 #ifndef KMC_NO_DEBUG
 
-#include "../../site.h"
+#include "../../soluteparticle.h"
 #include "../../reactions/reaction.h"
 
 #include <fstream>
@@ -22,7 +22,7 @@ std::vector<std::string> Debugger::reactionTraceAfter;
 std::vector<std::string> Debugger::implicationTrace;
 std::vector<double>      Debugger::timerData;
 
-std::set<Site*, function<bool(Site*, Site*)> > Debugger::affectedUnion = std::set<Site*, function<bool(Site*, Site*)> >([](Site* s1, Site* s2) {return s1->ID() < s2->ID();});
+std::set<SoluteParticle*, function<bool(SoluteParticle*, SoluteParticle*)> > Debugger::affectedUnion = std::set<SoluteParticle*, function<bool(SoluteParticle*, SoluteParticle*)> >([](SoluteParticle* s1, SoluteParticle* s2) {return s1->ID() < s2->ID();});
 
 std::string Debugger::implications;
 std::string Debugger::reactionString;
@@ -76,7 +76,7 @@ void Debugger::pushTraces()
 
     stringstream s;
 
-    if (affectedUnion.size() != Site::affectedSites().size())
+    if (affectedUnion.size() != SoluteParticle::affectedParticles().size())
     {
         s << setupAffectedUnion();
 
@@ -91,7 +91,7 @@ void Debugger::pushTraces()
 
     if (currentReaction != NULL)
     {
-        reactionTraceAfter.push_back(_KMCDebugger_SITE_STR(currentReaction->getReactionSite()));
+        reactionTraceAfter.push_back(_KMCDebugger_PARTICLE_STR(currentReaction->site()));
     }
 
     else
@@ -109,7 +109,7 @@ void Debugger::pushTraces()
 
 }
 
-void Debugger::pushImplication(Site * site, const char * _new)
+void Debugger::pushImplication(SoluteParticle *particle, const char * _new)
 {
 
     using namespace std;
@@ -125,7 +125,7 @@ void Debugger::pushImplication(Site * site, const char * _new)
     s << "[Implication"; \
     if (currentReaction == NULL) s << " (standalone)";
     s << " " << implicationCount << "]\n";
-    s << _KMCDebugger_MAKE_IMPLICATION_MESSAGE(site, _pre, _new);
+    s << _KMCDebugger_MAKE_IMPLICATION_MESSAGE(particle, _pre, _new);
     _pre = "";
 
     s << setupAffectedUnion();
@@ -206,43 +206,44 @@ std::string Debugger::setupAffectedUnion()
 
     stringstream s;
 
-    vector<Site*> intersect;
+    vector<SoluteParticle*> intersect;
 
-    bool currentSiteInPrev;
+    bool currentInPrev;
 
-    for (Site * currentSite : Site::affectedSites())
+    for (SoluteParticle *currentParticle : SoluteParticle::affectedParticles())
     {
 
-        currentSiteInPrev = false;
-        for (Site * previousSite : affectedUnion)
+        currentInPrev = false;
+        for (SoluteParticle *previousParticle : affectedUnion)
         {
-            if (currentSite == previousSite)
+            if (currentParticle == previousParticle)
             {
-                currentSiteInPrev = true;
+                currentInPrev = true;
                 break;
             }
         }
 
-        if (!currentSiteInPrev)
+        if (!currentInPrev)
         {
-            intersect.push_back(currentSite);
+            intersect.push_back(currentParticle);
         }
     }
 
     int X, Y, Z;
-    for (Site * site : intersect)
+    for (SoluteParticle *particle : intersect)
     {
-        s << "   -" << site->str();
+        s << "   -" << particle->str();
 
         if (currentReaction != NULL)
         {
-            currentReaction->getReactionSite()->distanceTo(site, X, Y, Z);
+            currentReaction->site()->distanceTo(particle->site(), X, Y, Z);
             s << " [" << X << ", " << Y  << ", " << Z << "]";
         }
 
         s << "\n";
 
-        affectedUnion.insert(site);
+        affectedUnion.insert(particle);
+
     }
 
     if (intersect.size() == 0)
@@ -253,7 +254,7 @@ std::string Debugger::setupAffectedUnion()
     s << "Total: " << intersect.size() << endl;
     intersect.clear();
 
-    KMCDebugger_Assert(affectedUnion.size(), ==, Site::affectedSites().size());
+    KMCDebugger_Assert(affectedUnion.size(), ==, SoluteParticle::affectedParticles().size());
 
     return "New affected site(s):\n" + s.str();
 
@@ -265,13 +266,13 @@ std::string Debugger::addFlagsToImplications()
 #ifdef KMC_VERBOSE_DEBUG
     stringstream s, sitess, reacss;
 
-    for (Site * site : affectedUnion)
+    for (SoluteParticle *particle : affectedUnion)
     {
         bool addSite = false;
 
-        sitess << "\n" << site->info() << "\n";
+        sitess << "\n" << particle->info() << "\n";
 
-        for (Reaction * r : site->reactions())
+        for (Reaction * r : particle->reactions())
         {
 
             reacss << "    .    " << r->str() << "  " << r->propertyString();
@@ -440,9 +441,9 @@ void Debugger::reset()
 
 }
 
-void Debugger::popAffected(Site *site)
+void Debugger::popAffected(SoluteParticle *particle)
 {
-    affectedUnion.erase(affectedUnion.find(site));
+    affectedUnion.erase(affectedUnion.find(particle));
 }
 
 #endif
