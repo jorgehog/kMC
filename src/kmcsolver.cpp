@@ -39,6 +39,8 @@ KMCSolver::KMCSolver(const Setting & root)
 
     Site::loadConfig(SystemSettings);
 
+    SoluteParticle::loadConfig(SystemSettings);
+
 
     setNumberOfCycles(
                 getSurfaceSetting<uint>(SolverSettings, "nCycles"));
@@ -50,7 +52,7 @@ KMCSolver::KMCSolver(const Setting & root)
                 getSurfaceSetting<uint>(SolverSettings, "seedType"),
                 getSurfaceSetting<int>(SolverSettings, "specificSeed"));
 
-    setTargetSaturation(
+    setTargetConcentration(
                 getSurfaceSetting<double>(SystemSettings, "SaturationLevel"));
 
 
@@ -691,6 +693,13 @@ bool KMCSolver::spawnParticle(SoluteParticle *particle, Site *site, bool checkIf
 
 }
 
+void KMCSolver::forceSpawnParticle(Site *site)
+{
+    SoluteParticle *particle = new SoluteParticle();
+
+    spawnParticle(particle, site, false);
+}
+
 void KMCSolver::despawnParticle(Site *site)
 {
 
@@ -708,6 +717,8 @@ void KMCSolver::despawnParticle(Site *site)
     }
 
     KMCDebugger_Assert(i, !=, m_particles.size());
+
+    delete m_particles.at(i);
 
     m_particles.erase(m_particles.begin() + i);
 

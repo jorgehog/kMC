@@ -65,7 +65,7 @@ public:
     static double getCurrentRelativeCrystalOccupancy();
 
 
-    static void setInitialNNeighborsToCrystallize(const uint & nNeighborsToCrystallize);
+    static void setNNeighborsToCrystallize(const uint & nNeighborsToCrystallize);
 
 
     /*
@@ -75,6 +75,8 @@ public:
     static void clearAll();
 
     static void clearAffectedParticles();
+
+    static void setInitialNNeighborsToCrystallize(const uint &nNeighborsToCrystallize);
 
     static void resetNNeighborsToCrystallizeTo(const uint & nNeighborsToCrystallize);
 

@@ -63,6 +63,8 @@ public:
 
     bool spawnParticle(SoluteParticle *particle, Site *site, bool checkIfLegal);
 
+    void forceSpawnParticle(Site *site);
+
     void despawnParticle(Site *site);
 
     void initializeCrystal(const double relativeSeedSize);
@@ -195,9 +197,9 @@ public:
     }
 
 
-    void setTargetSaturation(const double saturation)
+    void setTargetConcentration(const double concentration)
     {
-        m_targetConcentration = saturation;
+        m_targetConcentration = concentration;
     }
 
     void setRNGSeed(uint seedState = Seed::fromTime, int defaultSeed = 0);

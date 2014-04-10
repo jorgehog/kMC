@@ -147,7 +147,7 @@ void SoluteParticle::setParticleState(int newState)
 bool SoluteParticle::qualifiesAsCrystal()
 {
 
-    if (m_site->countNeighboring(ParticleStates::crystal) >= m_nNeighborsToCrystallize)
+    if (m_site->nNeighbors() >= m_nNeighborsToCrystallize)
     {
         return true;
     }
@@ -158,7 +158,7 @@ bool SoluteParticle::qualifiesAsCrystal()
 
 bool SoluteParticle::qualifiesAsSurface()
 {
-    return m_site->hasNeighboring(ParticleStates::crystal);
+    return m_site->hasNeighboring(ParticleStates::crystal) && !qualifiesAsCrystal();
 }
 
 //All reactions must be legal if site is allowed to spawn.
@@ -441,14 +441,7 @@ double SoluteParticle::getCurrentRelativeCrystalOccupancy()
 
 void SoluteParticle::setInitialNNeighborsToCrystallize(const uint &nNeighborsToCrystallize)
 {
-    if (nNeighborsToCrystallize == 0)
-    {
-        cerr << "With nNeighborsToCrystallize = 0, all particles will qualify as crystals." << endl;
-        KMCSolver::exit();
-    }
-
     m_nNeighborsToCrystallize = nNeighborsToCrystallize;
-
 }
 
 

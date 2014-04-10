@@ -122,7 +122,7 @@ int main()
     mixedBoundaries(1, 0) = Boundary::Edge;
     mixedBoundaries(1, 1) = Boundary::Edge;
 
-    mixedBoundaries(2, 0) = Boundary::Surface;
+    mixedBoundaries(2, 0) = Boundary::Edge;
     mixedBoundaries(2, 1) = Boundary::ConcentrationWall;
 
 

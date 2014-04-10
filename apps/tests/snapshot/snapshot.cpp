@@ -21,13 +21,16 @@ SnapShot::SnapShot(KMCSolver *solver)
                 currentSite = solver->getSite(i, j, k);
                 siteBox(i, j, k) = currentSite->isActive();
 
-                for (Reaction * r : currentSite->reactions())
+                if (currentSite->isActive())
                 {
-                    allRates.push_back(r->rate());
-                    allreactions.push_back({r->x(), r->y(), r->z(),
-                                            ((DiffusionReaction*)r)->xD(),
-                                           ((DiffusionReaction*)r)->yD(),
-                                           ((DiffusionReaction*)r)->zD()});
+                    for (Reaction * r : currentSite->getAssociatedParticle()->reactions())
+                    {
+                        allRates.push_back(r->rate());
+                        allreactions.push_back({r->x(), r->y(), r->z(),
+                                                ((DiffusionReaction*)r)->xD(),
+                                                ((DiffusionReaction*)r)->yD(),
+                                                ((DiffusionReaction*)r)->zD()});
+                    }
                 }
 
             }
