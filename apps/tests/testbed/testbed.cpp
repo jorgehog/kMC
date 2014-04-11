@@ -662,7 +662,8 @@ void testBed::testRateCalculation()
 
     double E, Esp;
 
-    solver->initializeCrystal(0.3);
+    solver->setTargetConcentration(0.01);
+    solver->initializeSolutionBath();
 
     solver->getRateVariables();
 
@@ -671,10 +672,12 @@ void testBed::testRateCalculation()
         particle->forEachActiveReactionDo([&] (Reaction * r)
         {
 
-            if (!(r->name == "DiffusionReaction"))
+            if (!r->isType("DiffusionReaction"))
             {
+                cout << r->name() << endl;
                 return;
             }
+            cout << "lala" << endl;
 
             E = ((DiffusionReaction*)r)->lastUsedEnergy();
 
@@ -1819,6 +1822,7 @@ void testBed::testNeighborlist()
         nn(level)--;
 
         CHECK_EQUAL(getBoxCenter()->associatedParticle()->isNeighbor(site->associatedParticle(), level), false);
+
 
         CHECK_EQUAL(c, NNSUMBF(getBoxCenter()));
         CHECK_EQUAL(nn(level), getBoxCenter()->associatedParticle()->neighbouringParticles(level).size());

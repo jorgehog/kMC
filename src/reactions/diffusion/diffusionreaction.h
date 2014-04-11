@@ -23,8 +23,10 @@ public:
 
     ~DiffusionReaction();
 
-    static const string name;
-
+    string name() const
+    {
+        return "DiffusionReaction";
+    }
 
     double getSaddleEnergy();
 

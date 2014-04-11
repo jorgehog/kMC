@@ -23,7 +23,10 @@ public:
 
     virtual ~Reaction();
 
-    static const string name;
+    virtual string name() const
+    {
+        return "Reaction";
+    }
 
     static void setMainSolver(KMCSolver * m_solver);
 
@@ -136,7 +139,7 @@ public:
 
     bool isType(const string name) const
     {
-        return name.compare(this->name) == 0;
+        return name.compare(this->name()) == 0;
     }
 
     SoluteParticle * reactant() const
@@ -163,7 +166,7 @@ public:
     const string str() const
     {
         stringstream s;
-        s << name << "@(" << setw(3) << x() << "," << setw(3) << y() << "," << setw(3) << z() << ") [" << getInfoSnippet() << "]";
+        s << name() << "@(" << setw(3) << x() << "," << setw(3) << y() << "," << setw(3) << z() << ") [" << getInfoSnippet() << "]";
         return s.str();
     }
 

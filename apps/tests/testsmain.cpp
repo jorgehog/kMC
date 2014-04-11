@@ -9,8 +9,8 @@
 #include <sys/types.h>
 
 
-#define focusSuite "Misc"
-#define focusTest  "Neighborlist"
+#define focusSuite "Reactions"
+#define focusTest  "RateCalculation"
 
 
 #include "defines.h"

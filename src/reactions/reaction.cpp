@@ -31,7 +31,7 @@ Reaction::~Reaction()
 const string Reaction::info(int xr, int yr, int zr, string desc) const
 {
     stringstream s;
-    s << "[" << name << "]:" << "\n";
+    s << "[" << name() << "]:" << "\n";
     s << propertyString() << "\n";
     s << "@";
     s << m_reactant->info(xr, yr, zr, desc);
@@ -184,9 +184,6 @@ void Reaction::reset()
     m_address = UNSET_ADDRESS;
 
 }
-
-
-const string Reaction::name = "Reaction";
 
 KMCSolver*   Reaction::m_solver;
 

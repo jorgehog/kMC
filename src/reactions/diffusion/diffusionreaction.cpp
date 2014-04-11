@@ -477,8 +477,6 @@ void DiffusionReaction::registerBetaChange(const double newBeta)
 }
 
 
-const string  DiffusionReaction::name = "DiffusionReaction";
-
 double        DiffusionReaction::m_rPower = 1.0;
 double        DiffusionReaction::m_scale  = 1.0;
 
