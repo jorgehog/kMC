@@ -24,6 +24,11 @@ SUITE(Misc)
     TESTWRAPPER(TotalParticleStateCounters)
 
     TESTWRAPPER(PropertyCalculations)
+
+    TESTWRAPPER(nNeiborsLimit)
+
+    TESTWRAPPER(StateChanges)
+
 }
 
 SUITE(Reactions)
@@ -39,32 +44,12 @@ SUITE(Reactions)
 
 }
 
-SUITE(StateChanges)
-{
-    TESTWRAPPER(HasCrystalNeighbor)
-
-    TESTWRAPPER(DeactivateSurface)
-}
-
-SUITE(Parameters)
-{
-
-    TESTWRAPPER(nNeiborsLimit)
-
-    TESTWRAPPER(nNeighborsToCrystallize)
-
-    TESTWRAPPER(DiffusionSeparation)
-
-}
-
 #define AllBoundaryTests                \
 TESTWRAPPER(InitialReactionSetup)       \
                                         \
 TESTWRAPPER(BoxSizes)                   \
                                         \
 TESTWRAPPER(DistanceTo)                 \
-                                        \
-TESTWRAPPER(InitializationOfCrystal)    \
                                         \
 TESTWRAPPER(DiffusionSiteMatrixSetup)   \
                                         \
@@ -135,8 +120,6 @@ int main()
 
     exitSuccess += RUNSUITE(runner, "Misc");
     exitSuccess += RUNSUITE(runner, "Reactions");
-    exitSuccess += RUNSUITE(runner, "StateChanges");
-    exitSuccess += RUNSUITE(runner, "Parameters");
 
     testBed::initBoundarySuite(Boundary::allBoundariesAs(Boundary::Periodic));
     exitSuccess += RUNSUITE(runner, "PeriodicBoundaries");

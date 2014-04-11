@@ -2,6 +2,8 @@
 
 #include "../../kmcsolver.h"
 
+#include "../../soluteparticle.h"
+
 #include "../../debugger/debugger.h"
 
 using namespace kMC;

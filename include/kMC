@@ -4,6 +4,8 @@
 
 #include "../src/site.h"
 
+#include "../src/soluteparticle.h"
+
 #include "../src/reactions/reaction.h"
 #include "../src/reactions/diffusion/diffusionreaction.h"
 

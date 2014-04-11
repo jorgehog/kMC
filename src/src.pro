@@ -40,7 +40,8 @@ SOURCES += \
     boundary/periodic/periodic.cpp \
     boundary/concentrationwall/concentrationwall.cpp \
     particlestates.cpp \
-    soluteparticle.cpp
+    soluteparticle.cpp \
+    ignisinterface/kmcparticles.cpp
 
 
 RNG_ZIG {

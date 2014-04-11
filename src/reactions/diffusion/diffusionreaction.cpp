@@ -1,6 +1,8 @@
-
 #include "diffusionreaction.h"
+
 #include "../../kmcsolver.h"
+
+#include "../../soluteparticle.h"
 
 #include "../../debugger/debugger.h"
 

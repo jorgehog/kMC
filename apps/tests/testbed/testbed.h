@@ -23,11 +23,11 @@ public:
 
     static void testDistanceTo();
 
-    static void testDeactivateSurface();
-
     static void testDiffusionSiteMatrixSetup();
 
     static void testNeighbors();
+
+    static void testStateChanges();
 
     static void testPropertyCalculations();
 
@@ -43,10 +43,6 @@ public:
 
     static void testUpdateNeigbors();
 
-    static void testHasCrystalNeighbor();
-
-    static void testInitializationOfCrystal();
-
     static void testInitialReactionSetup();
 
     static void testSequential();
@@ -56,10 +52,6 @@ public:
     static void testBoxSizes();
 
     static void testnNeiborsLimit();
-
-    static void testnNeighborsToCrystallize();
-
-    static void testDiffusionSeparation();
 
     static void testOptimizedRateVectors();
 

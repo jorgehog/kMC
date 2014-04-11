@@ -135,7 +135,7 @@ public:
      * Misc. trivial functions
      */
 
-    static const KMCSolver * solver()
+    static KMCSolver * solver()
     {
         return m_solver;
     }

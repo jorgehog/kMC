@@ -48,26 +48,6 @@ void testBed::testTotalParticleStateCounters()
     CHECK_EQUAL(NX()*NY()*NZ(), accu(SoluteParticle::totalParticlesVector()));
     CHECK_EQUAL(NX()*NY()*NZ(), SoluteParticle::totalParticles(ParticleStates::crystal));
 
-    //    Site * boxCenter = solver->getSite(NX()/2, NY()/2, NZ()/2);
-
-    //    boxCenter->deactivate();
-
-    //    boxCenter->spawnAsFixedCrystal();
-
-    //    CHECK_EQUAL(0, Site::totalActiveParticles(ParticleStates::surface));
-    //    CHECK_EQUAL(0, accu(Site::totalDeactiveParticlesVector()));
-    //    CHECK_EQUAL(NX()*NY()*NZ(), accu(Site::totalActiveParticlesVector()));
-    //    CHECK_EQUAL(NX()*NY()*NZ() - 1, Site::totalActiveParticles(ParticleStates::crystal));
-
-    //    boxCenter->deactivate();
-
-    //    boxCenter->activate();
-
-    //    CHECK_EQUAL(0, Site::totalActiveParticles(ParticleStates::surface));
-    //    CHECK_EQUAL(0, accu(Site::totalDeactiveParticlesVector()));
-    //    CHECK_EQUAL(NX()*NY()*NZ(), accu(Site::totalActiveParticlesVector()));
-    //    CHECK_EQUAL(NX()*NY()*NZ(), Site::totalActiveParticles(ParticleStates::crystal));
-
     deactivateAllSites();
 
     CHECK_EQUAL(0, SoluteParticle::totalParticles(ParticleStates::surface));
@@ -86,10 +66,6 @@ void testBed::testTotalParticleStateCounters()
 
     uint C1 = 0;
 
-    uint preNNC = SoluteParticle::nNeighborsToCrystallize();
-
-    SoluteParticle::resetNNeighborsToCrystallizeTo(100);
-
     solver->forEachSiteDo([&C1] (Site * currentSite)
     {
         CHECK_EQUAL(C1, accu(SoluteParticle::totalParticlesVector()));
@@ -99,32 +75,11 @@ void testBed::testTotalParticleStateCounters()
         C1++;
     });
 
-    SoluteParticle::resetNNeighborsToCrystallizeTo(preNNC);
-
     deactivateAllSites();
 
     CHECK_EQUAL(0, accu(SoluteParticle::totalParticlesVector()));
 
     solver->setBoxSize({10, 10, 10});
-
-    //    boxCenter = solver->getSite(NX()/2, NY()/2, NZ()/2);
-
-    //    for (uint sep = 0; sep <= 3 ; ++sep)
-    //    {
-
-    //        Site::resetNNeighborsLimitTo(sep + 1, false);
-
-    //        DiffusionReaction::resetSeparationTo(sep);
-
-    //        boxCenter->spawnAsFixedCrystal();
-
-    //        CHECK_EQUAL(pow(2*sep + 1, 3) - 1, Site::totalDeactiveParticles(ParticleStates::surface));
-
-    //        boxCenter->deactivate();
-
-    //    }
-
-    //    DiffusionReaction::resetSeparationTo(3);
 
     solver->forEachSiteDo_sendIndices([] (Site * site, uint x, uint y, uint z)
     {
@@ -288,76 +243,6 @@ void testBed::testDistanceTo()
 
 }
 
-void testBed::testDeactivateSurface()
-{
-
-    //    solver->setBoxSize({10, 10, 10}, false);
-    //    SoluteParticle::resetNNeighborsToCrystallizeTo(1);
-
-    //    Site * orig = solver->getSite(NX()/2, NY()/2, NZ()/2);
-    //    Site * origNeighbor = solver->getSite(NX()/2+1, NY()/2, NZ()/2);
-    //    Site * origNextNeighbor;
-    //    Site * inBetweenSite;
-
-    //    orig->spawnAsFixedCrystal();
-
-    //    CHECK_EQUAL(ParticleStates::fixedCrystal, orig->particleState());
-    //    CHECK_EQUAL(ParticleStates::surface, origNeighbor->particleState());
-
-
-    //    uvec separations = {1, 2, 3};
-
-    //    for (uint sep: separations)
-    //    {
-
-    //        Site::resetNNeighborsLimitTo(sep + 1);
-    //        DiffusionReaction::resetSeparationTo(sep);
-
-    //        orig->deactivate();
-    //        orig->spawnAsFixedCrystal();
-
-
-    //        CHECK_EQUAL(ParticleStates::fixedCrystal, orig->particleState());
-    //        CHECK_EQUAL(ParticleStates::surface, origNeighbor->particleState());
-
-    //        origNeighbor->activate();
-
-    //        CHECK_EQUAL(ParticleStates::crystal, origNeighbor->particleState());
-
-    //        origNextNeighbor = solver->getSite(NX()/2 + 1 + DiffusionReaction::separation(), NY()/2, NZ()/2);
-
-    //        CHECK_EQUAL(ParticleStates::surface, origNextNeighbor->particleState());
-
-    //        origNextNeighbor->activate();
-
-    //        for (uint i = 1; i < DiffusionReaction::separation(); ++i)
-    //        {
-    //            inBetweenSite = solver->getSite(NX()/2 + 1 + i, NY()/2, NZ()/2);
-    //            inBetweenSite->activate();
-    //        }
-
-    //        CHECK_EQUAL(ParticleStates::crystal, origNextNeighbor->particleState());
-
-    //        Site::clearAffectedSites();
-    //        for (uint i = 1; i < DiffusionReaction::separation(); ++i)
-    //        {
-    //            inBetweenSite = solver->getSite(NX()/2 + 1 + i, NY()/2, NZ()/2);
-    //            inBetweenSite->deactivate();
-    //        }
-
-    //        origNeighbor->deactivate();
-
-    //        CHECK_EQUAL(ParticleStates::fixedCrystal, orig->particleState());
-    //        CHECK_EQUAL(ParticleStates::surface, origNeighbor->particleState());
-
-    //        CHECK_EQUAL(false, origNextNeighbor->hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation()));
-    //        CHECK_EQUAL(ParticleStates::solvant, origNextNeighbor->particleState());
-
-    //        origNextNeighbor->deactivate();
-
-    //    }
-
-}
 
 void testBed::testDiffusionSiteMatrixSetup()
 {
@@ -385,7 +270,7 @@ void testBed::testDiffusionSiteMatrixSetup()
                     const Site & site = *(currentDiffReaction->site());
                     const Site & dest  = *(currentDiffReaction->destinationSite());
 
-                    CHECK_EQUAL(particle->site(), site);
+                    CHECK_EQUAL(particle->site(), &site);
 
                     site.distanceTo(&dest, _i, _j, _k);
 
@@ -430,6 +315,11 @@ void testBed::testNeighbors()
     });
 }
 
+void testBed::testStateChanges()
+{
+    CHECK_EQUAL(0, 1337);
+}
+
 void testBed::testPropertyCalculations()
 {
 
@@ -439,15 +329,6 @@ void testBed::testPropertyCalculations()
     CHECK_EQUAL(0, SoluteParticle::nCrystals());
     CHECK_EQUAL(0, SoluteParticle::nSolutionParticles());
     CHECK_EQUAL(0, SoluteParticle::getCurrentConcentration());
-
-
-//    Site * center = getBoxCenter();
-
-//    center->spawnAsFixedCrystal();
-
-//    CHECK_EQUAL(26, Site::nSurfaces());
-//    CHECK_EQUAL(1, Site::nCrystals());
-//    CHECK_EQUAL(0, Site::nSolutionParticles());
 
     solver->setTargetConcentration(0);
 
@@ -518,8 +399,6 @@ void testBed::testPropertyCalculations()
     uint sx = NX()/2;
     uint sy = NY()/2;
     uint sz = NZ()/2;
-
-    SoluteParticle::setNNeighborsToCrystallize(1);
 
     solver->forceSpawnParticle(solver->getSite(sx, sy    , sz    ));
 
@@ -693,47 +572,45 @@ void testBed::testReactionChoise()
 
             count = 0;
 
-            for (uint i = 0; i < NX(); ++i)
+            for (SoluteParticle *particle : solver->particles())
             {
-                for (uint j = 0; j < NY(); ++j)
+
+                bool notSet = true;
+
+                particle->forEachActiveReactionDo([&] (Reaction *r)
                 {
-                    for (uint k = 0; k < NZ(); ++k)
+                    if (!notSet)
                     {
-                        bool notSet = true;
-                        solver->getSite(i, j, k)->forEachActiveReactionDo([&] (Reaction * r)
-                        {
-                            if (!notSet)
-                            {
-                                return;
-                            }
-
-                            CHECK_EQUAL(r, solver->allPossibleReactions().at(count));
-
-                            kTot += r->rate();
-
-                            CHECK_EQUAL(kTot, solver->accuAllRates().at(count));
-
-                            //if by adding this reaction we surpass the limit, we
-                            //are done searching.
-                            if (kTot > R)
-                            {
-                                reaction = r;
-
-                                i = NX();
-                                j = NY();
-                                k = NZ();
-
-                                notSet = false;
-                            }
-
-                            if (notSet)
-                            {
-                                count++;
-                            }
-                        });
+                        return;
                     }
+
+                    CHECK_EQUAL(r, solver->allPossibleReactions().at(count));
+
+                    kTot += r->rate();
+
+                    CHECK_EQUAL(kTot, solver->accuAllRates().at(count));
+
+                    //if by adding this reaction we surpass the limit, we
+                    //are done searching.
+                    if (kTot > R)
+                    {
+                        reaction = r;
+
+                        notSet = false;
+                    }
+
+                    if (notSet)
+                    {
+                        count++;
+                    }
+                });
+
+                if (!notSet)
+                {
+                    break;
                 }
             }
+
 
             CHECK_EQUAL(solver->allPossibleReactions().at(choice), reaction);
             CHECK_EQUAL(choice, count);
@@ -747,9 +624,9 @@ void testBed::testReactionChoise()
         n++;
 
     }
-
-
 }
+
+
 
 void testBed::testRateCalculation()
 {
@@ -761,10 +638,15 @@ void testBed::testRateCalculation()
 
     solver->getRateVariables();
 
-    solver->forEachSiteDo([&] (Site * site)
+    for (SoluteParticle *particle : solver->particles())
     {
-        site->forEachActiveReactionDo([&] (Reaction * r)
+        particle->forEachActiveReactionDo([&] (Reaction * r)
         {
+
+            if (!(r->name == "DiffusionReaction"))
+            {
+                return;
+            }
 
             E = ((DiffusionReaction*)r)->lastUsedEnergy();
 
@@ -779,7 +661,7 @@ void testBed::testRateCalculation()
             CHECK_EQUAL(Esp, ((DiffusionReaction*)r)->lastUsedEsp());
 
         });
-    });
+    }
 }
 
 void testBed::testEnergyAndNeighborSetup()
@@ -798,6 +680,11 @@ void testBed::testEnergyAndNeighborSetup()
 
     solver->forEachSiteDo([&] (Site * currentSite)
     {
+
+        if (!currentSite->isActive())
+        {
+            return;
+        }
 
         E = 0;
         C = 0;
@@ -858,10 +745,10 @@ void testBed::testEnergyAndNeighborSetup()
 
         for (uint K = 0; K < Site::nNeighborsLimit(); ++K)
         {
-            CHECK_EQUAL(nn(K), currentSite->nNeighbors(K));
+            CHECK_EQUAL(nn(K), currentSite->associatedParticle()->nNeighbors(K));
         }
 
-        CHECK_CLOSE(E, currentSite->energy(), 0.00001);
+        CHECK_CLOSE(E, currentSite->associatedParticle()->energy(), 0.00001);
 
     });
 
@@ -881,6 +768,8 @@ void testBed::testUpdateNeigbors()
 
     solver->forEachSiteDo([&] (Site * currentSite)
     {
+        CHECK_EQUAL(true, currentSite->isActive());
+
         blockedE = 0;
         nBlocked.zeros();
 
@@ -902,379 +791,71 @@ void testBed::testUpdateNeigbors()
 
         for (uint K = 0; K < Site::nNeighborsLimit(); ++K)
         {
-            CHECK_EQUAL(2*(12*(K+1)*(K+1) + 1), currentSite->nNeighbors(K) + nBlocked(K));
+            CHECK_EQUAL(2*(12*(K+1)*(K+1) + 1), currentSite->associatedParticle()->nNeighbors(K) + nBlocked(K));
         }
 
-        CHECK_CLOSE(eMax, currentSite->energy() + blockedE, 0.001);
+        CHECK_CLOSE(eMax, currentSite->associatedParticle()->energy() + blockedE, 0.001);
 
         accuBlockedE += blockedE;
 
     });
 
     CHECK_EQUAL(NX()*NY()*NZ(), SoluteParticle::nParticles());
-    CHECK_CLOSE(NX()*NY()*NZ()*eMax, Site::totalEnergy() + accuBlockedE, 0.001);
+    CHECK_CLOSE(NX()*NY()*NZ()*eMax, SoluteParticle::totalEnergy() + accuBlockedE, 0.001);
 
     deactivateAllSites();
 
-    solver->forEachSiteDo([&] (Site * site)
-    {
-
-        for (uint K = 0; K < Site::nNeighborsLimit(); ++K)
-        {
-            CHECK_EQUAL(0, site->nNeighbors(K));
-        }
-
-        CHECK_CLOSE(0, site->energy(), 0.001);
-
-    });
-
     CHECK_EQUAL(0, SoluteParticle::nParticles());
-    CHECK_CLOSE(0, Site::totalEnergy(), 0.001);
+    CHECK_CLOSE(0, SoluteParticle::totalEnergy(), 0.001);
 
 }
 
-
-void testBed::testHasCrystalNeighbor()
-{
-
-    Site::resetNNeighborsLimitTo(2, false);
-    solver->setBoxSize({10, 10, 10});
-
-    Site::resetBoundariesTo(Boundary::Edge);
-
-    DiffusionReaction::resetSeparationTo(1);
-
-    Site::resetNNeighborsToCrystallizeTo(1);
-
-    //Spawn a seed in the middle of the box.
-    solver->getSite(NX()/2, NY()/2, NZ()/2)->spawnAsFixedCrystal();
-    Site* initCrystal = solver->getSite(NX()/2, NY()/2, NZ()/2);
-
-    Site *neighbor;
-    uint level;
-
-    //First we build a shell around the seed a distance 3 away which is all filled with particles.
-    for (int i = -3; i < 4; ++i)
-    {
-
-        for (int j = -3; j < 4; ++j)
-        {
-
-            for (int k = -3; k < 4; ++k)
-            {
-
-                if (Site::getLevel(abs(i), abs(j), abs(k)) == 2)
-                {
-                    solver->getSite(NX()/2 + i, NY()/2 + j, NZ()/2 + k)->activate();
-                    CHECK_EQUAL(ParticleStates::solvant, solver->getSite(NX()/2 + i, NY()/2 + j, NZ()/2 + k)->particleState());
-                }
-
-            }
-
-        }
-
-    }
-
-    uint nReactions = 8; //eight corners are free to move.
-    for (int i = -2; i < 3; ++i)
-    {
-
-        for (int j = -2; j < 3; ++j)
-        {
-
-            for (int k = -2; k < 3; ++k)
-            {
-
-                uint level = Site::getLevel(abs(i), abs(j), abs(k));
-                if (level == 1)
-                {
-                    nReactions += solver->getSite(NX()/2 + i, NY()/2 + j, NZ()/2 + k)->nNeighbors();
-                }
-
-            }
-
-        }
-
-    }
-
-
-    for (uint i = 0; i < Site::neighborhoodLength(); ++i)
-    {
-
-        for (uint j = 0; j < Site::neighborhoodLength(); ++j)
-        {
-
-            for (uint k = 0; k < Site::neighborhoodLength(); ++k)
-            {
-
-
-                neighbor = initCrystal->neighborhood(i, j, k);
-
-                //Then we check weather the middle is actually a crystal
-                if (neighbor == initCrystal)
-                {
-                    assert(i == j && j == k && k == Site::nNeighborsLimit());
-
-                    CHECK_EQUAL(ParticleStates::fixedCrystal, neighbor->particleState());
-
-                    //it should not have any crystal neighbors
-                    CHECK_EQUAL(false, neighbor->hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation()));
-                    continue;
-                }
-
-                level = Site::levelMatrix(i, j, k);
-
-                //The first layer should now be a surface, which should be unblocked with a crystal neighbor.
-                if (level == 0)
-                {
-                    CHECK_EQUAL(ParticleStates::surface, neighbor->particleState());
-                    CHECK_EQUAL(true, neighbor->hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation()));
-                }
-
-                //The second layer should be blocked because of the shell at distance 3, should be standard solution particles
-                //without a crystal neighbor.
-                else if (level == 1)
-                {
-                    CHECK_EQUAL(ParticleStates::solvant, neighbor->particleState());
-                    CHECK_EQUAL(false, neighbor->hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation()));
-                }
-
-            }
-        }
-    }
-
-    //deactivating the seed should bring everything to solutions except init seed which is surface.
-    initCrystal->deactivate();
-
-    //we now activate all neighbors. This should not make anything crystals.
-    for (uint i = 0; i < 3; ++i)
-    {
-
-        for (uint j = 0; j < 3; ++j)
-        {
-
-            for (uint k = 0; k < 3; ++k)
-            {
-                neighbor = initCrystal->neighborhood(Site::nNeighborsLimit() - 1 + i,
-                                                     Site::nNeighborsLimit() - 1 + j,
-                                                     Site::nNeighborsLimit() - 1 + k);
-
-                if (neighbor != initCrystal)
-                {
-                    neighbor->activate();
-                }
-
-            }
-
-        }
-
-    }
-
-    for (uint i = 0; i < 3; ++i)
-    {
-
-        for (uint j = 0; j < 3; ++j)
-        {
-
-            for (uint k = 0; k < 3; ++k)
-            {
-                neighbor = initCrystal->neighborhood(Site::nNeighborsLimit() - 1 + i,
-                                                     Site::nNeighborsLimit() - 1 + j,
-                                                     Site::nNeighborsLimit() - 1 + k);
-
-
-                CHECK_EQUAL(ParticleStates::solvant, neighbor->particleState());
-
-            }
-
-        }
-
-    }
-
-    //activating the seed. Should make closest neighbors crystals.
-    initCrystal->spawnAsFixedCrystal();
-    Site::updateAffectedSites();
-
-    uint nActives = 0;
-    for (int i = -3; i < 4; ++i)
-    {
-
-        for (int j = -3; j < 4; ++j)
-        {
-
-            for (int k = -3; k < 4; ++k)
-            {
-
-                if (Site::getLevel(abs(i), abs(j), abs(k)) == 0)
-                {
-                    CHECK_EQUAL(ParticleStates::crystal, solver->getSite(NX()/2 + i, NY()/2 + j, NZ()/2 + k)->particleState());
-                }
-                else if (Site::getLevel(abs(i), abs(j), abs(k)) == 1)
-                {
-                    CHECK_EQUAL(ParticleStates::surface, solver->getSite(NX()/2 + i, NY()/2 + j, NZ()/2 + k)->particleState());
-                }
-                else if (Site::getLevel(abs(i), abs(j), abs(k)) == 2)
-                {
-                    CHECK_EQUAL(ParticleStates::solvant, solver->getSite(NX()/2 + i, NY()/2 + j, NZ()/2 + k)->particleState());
-                    solver->getSite(NX()/2 + i, NY()/2 + j, NZ()/2 + k)->forEachActiveReactionDo([&nActives] (Reaction * r)
-                    {
-                        (void) r;
-                        nActives++;
-                    });
-                }
-
-            }
-
-        }
-
-    }
-
-    //The number of possible reactions on the level=2 rim should be 1310
-    CHECK_EQUAL(nReactions, nActives);
-
-
-
-}
-
-void testBed::testInitializationOfCrystal()
-{
-
-    solver->initializeCrystal(0.3);
-
-    solver->forEachSiteDo([&] (Site * currentSite)
-    {
-        switch (currentSite->particleState())
-        {
-        case ParticleStates::solvant:
-
-            //After initialization, a solution particle should not be blocked in any direction.
-            if (currentSite->isActive())
-            {
-                CHECK_EQUAL(0, currentSite->nNeighbors());
-            }
-
-            break;
-
-        case ParticleStates::surface:
-
-            CHECK_EQUAL(true, !currentSite->isActive());
-            CHECK_EQUAL(true, currentSite->hasNeighboring(ParticleStates::crystal, DiffusionReaction::separation()));
-            CHECK_EQUAL(true, currentSite->nNeighbors() > 0);
-
-            break;
-
-        case ParticleStates::crystal:
-
-            CHECK_EQUAL(true, currentSite->isActive());
-
-        default:
-            break;
-        }
-
-    });
-
-}
 
 void testBed::testInitialReactionSetup()
 {
 
-    KMCDebugger_Init();
-
-    Site * neighbor;
-
-    uint nBlocked;
-
-    solver->forEachSiteDo([&] (Site * currentSite)
-    {
-
-        if (currentSite->isActive())
-        {
-
-            CHECK_EQUAL(ParticleStates::fixedCrystal, currentSite->particleState());
-
-            CHECK_EQUAL(0, currentSite->reactions().size());
-
-        }
-
-        else
-        {
-
-            nBlocked = 0;
-
-
-            for (uint x = 0; x < 3; ++x)
-            {
-                for (uint y = 0; y < 3; ++y)
-                {
-                    for (uint z = 0; z < 3; ++z)
-                    {
-
-                        neighbor = currentSite->neighborhood(Site::nNeighborsLimit() - 1 + x,
-                                                             Site::nNeighborsLimit() - 1 + y,
-                                                             Site::nNeighborsLimit() - 1 + z);
-
-                        if (neighbor == NULL)
-                        {
-                            nBlocked++;
-                        }
-
-                    }
-                }
-            }
-
-            CHECK_EQUAL(26, currentSite->reactions().size() + nBlocked);
-
-        }
-
-
-    });
+    CHECK_EQUAL(0, SoluteParticle::nParticles());
+    CHECK_EQUAL(0, Reaction::nReactions());
 
     solver->initializeCrystal(0.3);
-    Site::updateAffectedSites();
+    SoluteParticle::updateAffectedParticles();
 
     std::vector<Reaction*> oldReactions;
     double totRate1 = 0;
 
-    solver->forEachSiteDo([&] (Site * currentSite)
+    for (SoluteParticle *particle : solver->particles())
     {
-        currentSite->forEachActiveReactionDo([&] (Reaction * r)
+        particle->forEachActiveReactionDo([&] (Reaction * r)
         {
-            KMCDebugger_AssertBool(currentSite->isActive(),
-                                   "DEACTIVE SITE SHOULD HAVE NO REACTIONS",
-                                   currentSite->info());
-
-            KMCDebugger_AssertBool(r->isAllowed(),
-                                   "REACTION NOT DEACTIVATED PROPERLY:",
-                                   r->info());
-
             oldReactions.push_back(r);
             totRate1 += r->rate();
 
         });
-    });
+    }
 
-    solver->forEachActiveSiteDo([] (Site * currentSite)
+    for (SoluteParticle *particle : solver->particles())
     {
-        currentSite->forEachActiveReactionDo([] (Reaction * r)
+        particle->forEachActiveReactionDo([] (Reaction * r)
         {
             r->forceUpdateFlag(Reaction::defaultUpdateFlag);
         });
 
-        currentSite->updateReactions();
-    });
+        particle->updateReactions();
+
+    }
 
 
     std::vector<Reaction*> reactions;
     double totRate2 = 0;
 
-    solver->forEachSiteDo([&] (Site * currentSite)
+    for (SoluteParticle *particle : solver->particles())
     {
-        currentSite->forEachActiveReactionDo([&] (Reaction * r)
+        particle->forEachActiveReactionDo([&] (Reaction * r)
         {
             reactions.push_back(r);
             totRate2 += r->rate();
         });
-    });
+    }
 
     CHECK_CLOSE(totRate1, totRate2, 0.000000001);
     CHECK_EQUAL(oldReactions.size(), reactions.size());
@@ -1377,10 +958,6 @@ void testBed::initBoundaryTestParameters()
 
     Site::resetNNeighborsLimitTo(3);
 
-    DiffusionReaction::resetSeparationTo(1);
-
-    Site::resetNNeighborsToCrystallizeTo(1);
-
 }
 
 void testBed::initSimpleSystemParameters()
@@ -1390,10 +967,7 @@ void testBed::initSimpleSystemParameters()
 
     Site::resetNNeighborsLimitTo(2);
 
-    SoluteParticle::resetNNeighborsToCrystallizeTo(1);
-
     Site::resetBoundariesTo(Boundary::Periodic);
-
 
 }
 
@@ -1679,191 +1253,6 @@ void testBed::testnNeiborsLimit()
 
 }
 
-void testBed::testnNeighborsToCrystallize()
-{
-
-
-    uvec nntcs = {1, 2, 3, 4, 5, 6, 7};
-
-    Site * crystallizingSite;
-
-    Site * initialSeedSite = solver->getSite(NX()/2, NY()/2, NZ()/2);
-
-    Site * trialSite = solver->getSite(NX()/2 + 2, NY()/2, NZ()/2);
-
-    uint totCrystalNeighbors;
-
-    DiffusionReaction::resetSeparationTo(1);
-
-    initialSeedSite->spawnAsFixedCrystal();
-
-    trialSite->activate();
-
-
-    for (uint nnts : nntcs)
-    {
-
-        Site::resetNNeighborsToCrystallizeTo(nnts);
-        totCrystalNeighbors = 0;
-
-        //Fill a 3x3 surface with crystals.
-        for (int i = -1; i <= 1; ++i)
-        {
-            for (int j = -1; j <= 1; ++j)
-            {
-
-                crystallizingSite = solver->getSite(NX()/2 + 1, NY()/2 + i, NZ()/2 + j);
-
-                crystallizingSite->activate();
-
-                totCrystalNeighbors++;
-
-                CHECK_EQUAL(ParticleStates::crystal, crystallizingSite->particleState());
-
-
-                if (totCrystalNeighbors >= nnts)
-                {
-                    CHECK_EQUAL(ParticleStates::crystal, trialSite->particleState());
-                }
-
-                else
-                {
-                    CHECK_EQUAL(ParticleStates::solvant, trialSite->particleState());
-                }
-
-
-            }
-        }
-
-        Site::clearAffectedSites();
-
-        for (int i = -1; i <= 1; ++i)
-        {
-            for (int j = -1; j <= 1; ++j)
-            {
-
-                crystallizingSite = solver->getSite(NX()/2 + 1, NY()/2 + i, NZ()/2 + j);
-
-                crystallizingSite->deactivate();
-
-                totCrystalNeighbors--;
-
-                CHECK_EQUAL(ParticleStates::surface, crystallizingSite->particleState());
-
-
-                if (totCrystalNeighbors >= nnts)
-                {
-                    CHECK_EQUAL(ParticleStates::crystal, trialSite->particleState());
-                }
-
-                else
-                {
-                    CHECK_EQUAL(ParticleStates::solvant, trialSite->particleState());
-                }
-
-            }
-        }
-
-
-        Site::clearAffectedSites();
-
-    }
-
-
-
-}
-
-void testBed::testDiffusionSeparation()
-{
-
-    solver->setBoxSize({15, 15, 15}, false);
-
-
-    Site * neighbor;
-    Site * destination;
-    Site * origin = solver->getSite(NX()/2, NY()/2, NZ()/2);
-
-    origin->activate();
-
-    uvec separations = {0, 1, 2, 3, 4, 5};
-
-    for (uint sep : separations)
-    {
-
-        Site::resetNNeighborsLimitTo(sep + 1, false);
-
-        DiffusionReaction::resetSeparationTo(sep);
-
-        for (uint i = 1; i <= sep + 2; ++i)
-        {
-
-            neighbor = solver->getSite(NX()/2 + i, NY()/2, NZ()/2);
-
-            bool allowed = neighbor->isLegalToSpawn();
-
-            //sites only allowed to spawn if no reactions are blocked.
-            //reaction blocked for up to sep + 1
-            CHECK_EQUAL(!allowed, i <= sep + 1);
-
-            if (i == sep + 2)
-            {
-                neighbor->activate();
-
-                CHECK_EQUAL(neighbor->nActiveReactions(), neighbor->reactions().size());
-
-                neighbor->deactivate();
-
-                destination = solver->getSite(NX()/2 + sep + 1, NY()/2, NZ()/2);
-                destination->activate();
-
-                if (sep == 0)
-                {
-                    CHECK_EQUAL(25, destination->nActiveReactions());
-                }
-
-                else
-                {
-
-                    CHECK_EQUAL(17, destination->nActiveReactions());
-
-
-                    destination->deactivate();
-
-                    destination = solver->getSite(NX()/2 + sep, NY()/2, NZ()/2);
-
-                    destination->activate();
-
-                    CHECK_EQUAL(9, destination->nActiveReactions());
-
-
-                    if (sep > 1)
-                    {
-
-                        destination->deactivate();
-
-                        destination = solver->getSite(NX()/2 + sep - 1, NY()/2, NZ()/2);
-
-                        destination->activate();
-
-                        CHECK_EQUAL(0, destination->nActiveReactions());
-
-                    }
-
-                }
-
-                destination->deactivate();
-            }
-
-
-            Site::clearAffectedSites();
-
-        }
-
-    }
-
-    DiffusionReaction::resetSeparationTo(1);
-
-}
 
 void testBed::testOptimizedRateVectors()
 {
@@ -1944,9 +1333,9 @@ void testBed::testReactionVectorUpdate()
 
 
     //Activating the center, this should add 26 reactions with unit rate.
-    center->activate();
+    solver->forceSpawnParticle(center);
 
-    Site::updateAffectedSites();
+    SoluteParticle::updateAffectedParticles();
 
     CHECK_EQUAL(0,  solver->availableReactionSlots().size());
     CHECK_EQUAL(26, solver->allPossibleReactions().size());
@@ -1962,9 +1351,9 @@ void testBed::testReactionVectorUpdate()
     CHECK_EQUAL(solver->kTot(), *(solver->accuAllRates().end()-1));
 
     //Deactivating it should set all 26 reactions as available to overwrite.
-    center->deactivate();
+    solver->despawnParticle(center);
 
-    Site::updateAffectedSites();
+    SoluteParticle::updateAffectedParticles();
 
     CHECK_EQUAL(26,  solver->availableReactionSlots().size());
     CHECK_EQUAL(26,  solver->allPossibleReactions().size());
@@ -1979,9 +1368,9 @@ void testBed::testReactionVectorUpdate()
 
     //Activating again should reset back to original case. Not trivial because this
     //time the vacancy list is not empty.
-    center->activate();
+    solver->forceSpawnParticle(center);
 
-    Site::updateAffectedSites();
+    SoluteParticle::updateAffectedParticles();
 
     CHECK_EQUAL(0,  solver->availableReactionSlots().size());
     CHECK_EQUAL(26, solver->allPossibleReactions().size());
@@ -2000,9 +1389,9 @@ void testBed::testReactionVectorUpdate()
     //activating a fixed crystal next to center particle. Fixed crystal has no
     //reactions so it should only induce 1 blocked reaction.
     Site * neighbor = getBoxCenter(1);
-    neighbor->spawnAsFixedCrystal();
+    solver->forceSpawnParticle(neighbor);
 
-    Site::updateAffectedSites();
+    SoluteParticle::updateAffectedParticles();
 
     CHECK_EQUAL(1,  solver->availableReactionSlots().size());
 
@@ -2021,13 +1410,12 @@ void testBed::testReactionVectorUpdate()
     //activating a new particle independent of the others should now only induce 25 more spots,
     //since one is already vacant.
 
-    Site * distantCousin = getBoxCenter(-(int)DiffusionReaction::separation()-2);
+    Site * distantCousin = getBoxCenter(-2);
 
-    CHECK_EQUAL(true, distantCousin->isLegalToSpawn());
+    SoluteParticle *p = new SoluteParticle();
+    CHECK_EQUAL(true, solver->spawnParticle(p, distantCousin, true));
 
-    distantCousin->activate();
-
-    Site::updateAffectedSites();
+    SoluteParticle::updateAffectedParticles();
 
     CHECK_EQUAL(0,  solver->availableReactionSlots().size());
     CHECK_EQUAL(26+25, solver->allPossibleReactions().size());
@@ -2042,9 +1430,9 @@ void testBed::testReactionVectorUpdate()
 
 
     //deactivating the neighbor should create two decoupled systems
-    neighbor->deactivate();
+    solver->despawnParticle(neighbor);
 
-    Site::updateAffectedSites();
+    SoluteParticle::updateAffectedParticles();
 
     CHECK_EQUAL(0,    solver->availableReactionSlots().size());
     CHECK_EQUAL(2*26, solver->allPossibleReactions().size());
@@ -2061,10 +1449,10 @@ void testBed::testReactionVectorUpdate()
 
     //removing both the particles should bring us back to initial state
 
-    center->deactivate();
-    distantCousin->deactivate();
+    solver->despawnParticle(center);
+    solver->despawnParticle(distantCousin);
 
-    Site::updateAffectedSites();
+    SoluteParticle::updateAffectedParticles();
 
     CHECK_EQUAL(2*26, solver->availableReactionSlots().size());
     CHECK_EQUAL(2*26, solver->allPossibleReactions().size());
@@ -2102,7 +1490,7 @@ void testBed::testReactionShuffler()
         r->calcRate();
     }
 
-    Site::clearAffectedSites();
+    SoluteParticle::clearAffectedParticles();
 
     _reactionShufflerCheck(nReacs);
 
@@ -2122,7 +1510,7 @@ void testBed::testReactionShuffler()
     _reactionShufflerCheck(nReacs - 1);
 
     //resetting, so far we have swapped the last and the middle element.
-    Site::clearAffectedSites();
+    SoluteParticle::clearAffectedParticles();
 
     allReacs.at(nReacs - 1)->allowed = false;
     allReacs.at(nReacs - 1)->disable();
@@ -2130,12 +1518,12 @@ void testBed::testReactionShuffler()
     allReacs.at(nReacs/2)->allowed = true;
     allReacs.at(nReacs/2)->calcRate();
 
-    Site::clearAffectedSites();
+    SoluteParticle::clearAffectedParticles();
 
     allReacs.at(nReacs - 1)->allowed = true;
     allReacs.at(nReacs - 1)->calcRate();
 
-    Site::clearAffectedSites();
+    SoluteParticle::clearAffectedParticles();
 
     _reactionShufflerCheck(nReacs);
 
@@ -2177,7 +1565,7 @@ void testBed::testReactionShuffler()
 
     _reactionShufflerCheck(0);
 
-    Site::clearAffectedSites();
+    SoluteParticle::clearAffectedParticles();
 
     for (uint i = 0; i < nReacs; ++i)
     {
@@ -2196,7 +1584,7 @@ void testBed::testReactionShuffler()
         CHECK_EQUAL(r->address(), r->initAddress);
     }
 
-    Site::clearAffectedSites();
+    SoluteParticle::clearAffectedParticles();
 
 
     //Something is active, becomes deactivated, but is initiated to take
@@ -2226,7 +1614,7 @@ void testBed::testReactionShuffler()
 
     solver->reshuffleReactions();
 
-    Site::clearAffectedSites();
+    SoluteParticle::clearAffectedParticles();
 
     _reactionShufflerCheck(nReacs - c);
 
@@ -2288,9 +1676,9 @@ void testBed::fill_rate_stuff(vector<double> & accuAllRates, vector<Reaction*> &
     accuAllRates.clear();
     allPossibleReactions.clear();
 
-    solver->forEachSiteDo([&] (Site * site)
+    for (SoluteParticle *particle : solver->particles())
     {
-        site->forEachActiveReactionDo([&] (Reaction * reaction)
+        particle->forEachActiveReactionDo([&] (Reaction * reaction)
         {
 
             KMCDebugger_Assert(reaction->rate(), !=, Reaction::UNSET_RATE, "Reaction rate should not be unset at this point.", reaction->getFinalizingDebugMessage());
@@ -2302,7 +1690,7 @@ void testBed::fill_rate_stuff(vector<double> & accuAllRates, vector<Reaction*> &
             allPossibleReactions.push_back(reaction);
 
         });
-    });
+    }
 }
 
 

@@ -1,13 +1,11 @@
 #pragma once
 
-#include "../kmcsolver.h"
-
 #include "../../ignis/include/ignis.h"
-
-#include "../soluteparticle.h"
 
 namespace kMC
 {
+
+class KMCSolver;
 
 class KMCParticles : public ignis::PositionHandler<uint>
 {
@@ -32,23 +30,9 @@ private:
 
     // PositionHandler interface
 public:
-    uint count() const
-    {
-        return SoluteParticle::nParticles();
-    }
+    uint count() const;
 
-    uint operator ()(const uint n, const uint d) const
-    {
-        cout << "fixme " << n << " " << d << endl;
-        return 0;
-    }
-
-    uint  &operator ()(const uint n, const uint d)
-    {
-        cout << "fixme " << n << " " << d << endl;
-        uint * a = new uint(10);
-        return *a;
-    }
+    uint operator ()(const uint n, const uint d) const;
 };
 
 }

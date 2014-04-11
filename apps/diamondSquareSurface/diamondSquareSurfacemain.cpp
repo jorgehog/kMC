@@ -246,21 +246,15 @@ void initialize_diamondSquareSurface(KMCSolver * solver, const Setting & root)
                 //Fill in crystals below the bottom and above the top surface
                 if ((z < bottomSurface) || (z >= topSurface))
                 {
-                    currentSite->spawnAsCrystal();
-                }
-
-                //Fill the cavity with solution
-                else if (currentSite->isLegalToSpawn())
-                {
-                    if (KMC_RNG_UNIFORM() < solver->targetConcentration())
-                    {
-                        currentSite->activate();
-                    }
+                    solver->forceSpawnParticle(currentSite);
                 }
 
             }
         }
 
     }
+
+    solver->initializeSolutionBath();
+
 }
 

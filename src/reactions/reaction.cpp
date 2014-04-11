@@ -120,25 +120,26 @@ void Reaction::setRate(const double rate)
 
     KMCDebugger_Assert(rate, !=, 0, "This reaction should be deactive.", getFinalizingDebugMessage());
 
-    m_solver->registerReactionChange(this, rate);
+    solver()->registerReactionChange(this, rate);
 
     m_rate = rate;
 
 }
 
+
 const uint &Reaction::NX()
 {
-    return m_solver->NX();
+    return solver()->NX();
 }
 
 const uint &Reaction::NY()
 {
-    return m_solver->NY();
+    return solver()->NY();
 }
 
 const uint &Reaction::NZ()
 {
-    return m_solver->NZ();
+    return solver()->NZ();
 }
 
 
@@ -160,7 +161,7 @@ void Reaction::setBeta(const double beta)
 
     DiffusionReaction::setBetaChangeScaleFactor(std::exp(beta - m_beta));
 
-    for (Reaction * r : m_solver->allPossibleReactions())
+    for (Reaction * r : solver()->allPossibleReactions())
     {
         r->registerBetaChange(beta);
     }

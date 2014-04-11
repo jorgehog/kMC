@@ -1,4 +1,3 @@
-
 #pragma once
 
 
@@ -71,19 +70,7 @@ public:
 
     void initializeSolutionBath();
 
-    void initializeSiteNeighborhoods()
-    {
-        forEachSiteDo([] (Site * site)
-        {
-            site->introduceNeighborhood();
-        });
-
-        for (SoluteParticle *particle : m_particles)
-        {
-            particle->setVectorSizes();
-            particle->setupAllNeighbors();
-        }
-    }
+    void initializeSiteNeighborhoods();
 
 
     void forEachSiteDo(function<void(Site * site)> applyFunction) const;
@@ -109,6 +96,12 @@ public:
     const vector<SoluteParticle*> & particles() const
     {
         return m_particles;
+    }
+
+
+    SoluteParticle *particle(const uint n) const
+    {
+        return m_particles.at(n);
     }
 
     const uint &NX () const
@@ -240,7 +233,7 @@ public:
         return address == 0 ? 0 : m_accuAllRates.at(address - 1);
     }
 
-    bool isEmptyAddress(const uint address);
+    bool isEmptyAddress(const uint address) const;
 
     string getReactionVectorDebugMessage();
 

@@ -96,11 +96,12 @@ protected:
     {
         uint cN = 0;
         uint c  = 0;
-        solver()->forEachActiveSiteDo([&cN, &c] (Site * currentSite)
+
+        for (SoluteParticle *particle : solver()->particles())
         {
-            cN += currentSite->nNeighbors();
+            cN += particle->nNeighbors();
             c++;
-        });
+        }
 
         setValue(cN/(double(c)));
     }

@@ -7,6 +7,7 @@
 
 #include "boundary/boundary.h"
 
+#include "ignisinterface/kmcevent.h"
 #include "ignisinterface/solverevent.h"
 #include "ignisinterface/kmcparticles.h"
 
@@ -476,7 +477,7 @@ void KMCSolver::postReactionShuffleCleanup(const uint nVacancies)
 }
 
 
-bool KMCSolver::isEmptyAddress(const uint address)
+bool KMCSolver::isEmptyAddress(const uint address) const
 {
     return std::find(m_availableReactionSlots.begin(), m_availableReactionSlots.end(), address)
             != m_availableReactionSlots.end();
@@ -819,6 +820,20 @@ void KMCSolver::initializeSolutionBath()
         }
 
         n++;
+    }
+}
+
+void KMCSolver::initializeSiteNeighborhoods()
+{
+    forEachSiteDo([] (Site * site)
+    {
+        site->introduceNeighborhood();
+    });
+
+    for (SoluteParticle *particle : m_particles)
+    {
+        particle->setVectorSizes();
+        particle->setupAllNeighbors();
     }
 }
 
