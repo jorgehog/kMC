@@ -124,7 +124,7 @@ private:
     // Reaction interface
 public:
 
-    void setDirectUpdateFlags(const SoluteParticle* changedReactant, uint level);
+    void setDirectUpdateFlags(const SoluteParticle* changedReactant);
 
     void calcRate();
 

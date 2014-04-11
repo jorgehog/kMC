@@ -206,9 +206,11 @@ public:
             return m_z;
             break;
         default:
-            return 0;
             break;
         }
+
+        return m_x;
+
     }
 
 

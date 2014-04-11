@@ -19,7 +19,8 @@ SoluteParticle::SoluteParticle() :
 
     initializeDiffusionReactions();
 
-    m_neighboringParticles.resize(Site::nNeighborsLimit());
+    setVectorSizes();
+
 
     refCounter++;
 
@@ -28,11 +29,12 @@ SoluteParticle::SoluteParticle() :
 SoluteParticle::~SoluteParticle()
 {
 
+    KMCDebugger_Assert(refCounter, !=, 0);
+
     removeCurrentSite();
 
     clearAllReactions();
 
-    KMCDebugger_Assert(refCounter, !=, 0);
 
     refCounter--;
 
@@ -155,7 +157,7 @@ void SoluteParticle::setParticleState(int newState)
 bool SoluteParticle::qualifiesAsCrystal()
 {
 
-    if (m_site->nNeighbors() >= m_nNeighborsToCrystallize)
+    if (nNeighbors() == 26)
     {
         return true;
     }
@@ -241,6 +243,16 @@ void SoluteParticle::setZeroEnergy()
 {
     KMCDebugger_Assert(m_nNeighborsSum, ==, 0, "Energy is not zero.", info());
     m_energy = 0;
+
+}
+
+void SoluteParticle::setVectorSizes()
+{
+
+    m_neighboringParticles.resize(Site::nNeighborsLimit());
+
+    m_nNeighbors.resize(Site::nNeighborsLimit());
+
 }
 
 uint SoluteParticle::nActiveReactions() const
@@ -281,7 +293,25 @@ void SoluteParticle::setupAllNeighbors()
 
     m_neighboringParticles.resize(Site::nNeighborsLimit());
 
+    m_nNeighbors.zeros();
+
+    m_nNeighborsSum = 0;
+
+    m_totalEnergy -= m_energy;
+
+    m_energy = 0;
+
+
+    for (vector<SoluteParticle*> & neighborShell : m_neighboringParticles)
+    {
+        neighborShell.clear();
+    }
+
+
+    double dE;
+
     uint level;
+
     site()->forEachNeighborDo_sendIndices([&level, this] (Site * neighbor, uint i, uint j, uint k)
     {
 
@@ -293,6 +323,16 @@ void SoluteParticle::setupAllNeighbors()
         level = Site::levelMatrix(i, j, k);
 
         m_neighboringParticles.at(level).push_back(neighbor->getAssociatedParticle());
+
+        m_nNeighbors(level)++;
+
+        m_nNeighborsSum++;
+
+        dE = DiffusionReaction::potential(i,  j,  k);
+
+        m_energy += dE;
+
+        m_totalEnergy += dE;
 
     });
 

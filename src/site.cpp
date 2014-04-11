@@ -304,8 +304,6 @@ void Site::introduceNeighborhood()
     Site * neighbor;
 
 
-    m_nNeighbors.zeros(m_nNeighborsLimit);
-
     Boundary::setupCurrentBoundaries(x(), y(), z());
 
     m_neighborhood = new Site***[m_neighborhoodLength];
@@ -341,31 +339,6 @@ void Site::introduceNeighborhood()
 
                     m_neighborhood[i][j][k] = neighbor;
 
-                    if (neighbor != this)
-                    {
-                        cout << "DERP: should be in solute " << endl;
-                        KMCDebugger_AssertBool(!(i == Site::nNeighborsLimit() && j == Site::nNeighborsLimit() && k == Site::nNeighborsLimit()));
-                        KMCDebugger_AssertBool(!(neighbor->x() == x() && neighbor->y() == y() && neighbor->z() == z()));
-                        KMCDebugger_AssertBool(!(xTrans == x() && yTrans == y() && zTrans == z()));
-
-                        if (neighbor->isActive())
-                        {
-
-                            uint level = m_levelMatrix(i, j, k);
-
-                            m_nNeighbors(level)++;
-
-                            m_nNeighborsSum++;
-
-                            double dE = DiffusionReaction::potential(i,  j,  k);
-
-                            m_energy += dE;
-
-                            m_totalEnergy += dE;
-
-                        }
-
-                    }
                 }
 
             }
@@ -379,14 +352,6 @@ void Site::introduceNeighborhood()
 
 void Site::reset()
 {
-
-    //    if (isActive())
-    //    {
-    ////        m_totalActiveSites--;
-
-    //        m_active = false;
-
-    //    }
 
 }
 
@@ -561,14 +526,19 @@ const string Site::info(int xr, int yr, int zr, string desc) const
     {
         s_full << "Active";
 
-        for (SoluteParticle *particle : solver()->particles())
+        SoluteParticle *particle = getAssociatedParticle();
+
+        s_full << " " << particle->particleStateName();
+
+        s_full << " * Neighbors: ";
+
+        for (uint i = 0; i < Site::nNeighborsLimit(); ++i)
         {
-            if (particle->site() == this)
-            {
-                s_full << " " << particle->particleStateName();
-                break;
-            }
+            s_full << particle->nNeighbors(i) << " ";
+
         }
+
+
     }
 
     else
@@ -576,14 +546,6 @@ const string Site::info(int xr, int yr, int zr, string desc) const
         s_full << "Deactive";
     }
 
-
-    s_full << " * Neighbors: ";
-
-    for (uint n : m_nNeighbors)
-    {
-        s_full << n << " ";
-
-    }
 
     s_full << "\n";
 

@@ -631,10 +631,10 @@ void KMCSolver::clearSites()
 
     KMCDebugger_Assert(accu(SoluteParticle::totalParticlesVector()), ==, 0);
 
-    KMCDebugger_AssertClose(Site::totalEnergy(), 0, 1E-5);
+    KMCDebugger_AssertClose(SoluteParticle::totalEnergy(), 0, 1E-5);
 
     SoluteParticle::clearAffectedParticles();
-    Site::setZeroTotalEnergy();
+    SoluteParticle::setZeroTotalEnergy();
 
     Reaction::clearAll();
 

@@ -204,10 +204,10 @@ Site *DiffusionReaction::destinationSite() const
 }
 
 
-void DiffusionReaction::setDirectUpdateFlags(const SoluteParticle *changedReactant, uint level)
+void DiffusionReaction::setDirectUpdateFlags(const SoluteParticle *changedReactant)
 {
 
-    uint d_maxDistance;
+    uint d_maxDistance, r_maxDistance;
 
 
     if (rate() == UNSET_RATE || changedReactant == reactant())
@@ -218,11 +218,9 @@ void DiffusionReaction::setDirectUpdateFlags(const SoluteParticle *changedReacta
     else
     {
 
-//        r_maxDistance = site()->maxDistanceTo(changedReactant->site());
+        r_maxDistance = site()->maxDistanceTo(changedReactant->site());
 
-//        r_maxDistance = level + 1;
-
-        if (level == 0)
+        if (r_maxDistance == 1)
         {
             registerUpdateFlag(defaultUpdateFlag);
         }

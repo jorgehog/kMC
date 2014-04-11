@@ -80,19 +80,11 @@ public:
 
         for (SoluteParticle *particle : m_particles)
         {
+            particle->setVectorSizes();
             particle->setupAllNeighbors();
         }
     }
 
-//    void initializeDiffusionReactions()
-//    {
-//        forEachSiteDo([] (Site * site)
-//        {
-//            cout << "derp" << endl;
-////            site->initializeDiffusionReactions();
-//        });
-
-//    }
 
     void forEachSiteDo(function<void(Site * site)> applyFunction) const;
 
@@ -108,16 +100,6 @@ public:
 
     uint getReactionChoice(double R);
 
-
-    uint nNeighbors(uint & x, uint & y, uint & z)
-    {
-        return sites[x][y][z]->nNeighbors(0);
-    }
-
-    uint nNextNeighbors(uint & x, uint & y, uint & z)
-    {
-        return sites[x][y][z]->nNeighbors(1);
-    }
 
     Site* getSite(const uint i, const uint j, const uint k) const
     {

@@ -204,6 +204,11 @@ public:
         return m_site->x();
     }
 
+    const uint & r(const uint i) const
+    {
+        return m_site->r(i);
+    }
+
 
     const vector<Reaction*> & reactions() const
     {
@@ -288,6 +293,8 @@ public:
 
 
     void setZeroEnergy();
+
+    void setVectorSizes();
 
 
 private:
