@@ -204,10 +204,10 @@ Site *DiffusionReaction::destinationSite() const
 }
 
 
-void DiffusionReaction::setDirectUpdateFlags(const SoluteParticle *changedReactant)
+void DiffusionReaction::setDirectUpdateFlags(const SoluteParticle *changedReactant, uint level)
 {
 
-    uint d_maxDistance, r_maxDistance;
+    uint d_maxDistance;
 
 
     if (rate() == UNSET_RATE || changedReactant == reactant())
@@ -218,11 +218,11 @@ void DiffusionReaction::setDirectUpdateFlags(const SoluteParticle *changedReacta
     else
     {
 
-        r_maxDistance = site()->maxDistanceTo(changedReactant->site());
+//        r_maxDistance = site()->maxDistanceTo(changedReactant->site());
 
-        KMCDebugger_Assert(r_maxDistance, !=, 0, "This should be handled by other test.", getFinalizingDebugMessage());
+//        r_maxDistance = level + 1;
 
-        if (r_maxDistance == 1)
+        if (level == 0)
         {
             registerUpdateFlag(defaultUpdateFlag);
         }

@@ -15,13 +15,10 @@ using namespace kMC;
 
 
 Site::Site(uint _x, uint _y, uint _z) :
-    m_nNeighborsSum(0),
-    m_energy(0),
     m_active(false),
     m_x(_x),
     m_y(_y),
-    m_z(_z),
-    m_r({_x, _y, _z})
+    m_z(_z)
 {
     refCounter++;
     //    m_totalDeactiveParticles(ParticleStates::solution)++;
@@ -31,16 +28,14 @@ Site::Site(uint _x, uint _y, uint _z) :
 Site::~Site()
 {
 
-    m_totalEnergy -= m_energy;
-
     clearNeighborhood();
 
-//    if (isActive())
-//    {
-////        m_totalActiveSites--;
-//        //        m_totalActiveParticles(particleState())--;
-//        //        m_totalDeactiveParticles(particleState())++;
-//    }
+    //    if (isActive())
+    //    {
+    ////        m_totalActiveSites--;
+    //        //        m_totalActiveParticles(particleState())--;
+    //        //        m_totalDeactiveParticles(particleState())++;
+    //    }
 
 
     //    m_totalDeactiveParticles(particleState())--;
@@ -161,13 +156,6 @@ void Site::forEachNeighborDo_sendIndices(function<void (Site *, uint, uint, uint
     }
 }
 
-
-//! Sets the site energy to zero. Used to avoid round-off error zeros.
-void Site::setZeroEnergy()
-{
-    KMCDebugger_Assert(m_nNeighborsSum, ==, 0, "Energy is not zero.", info());
-    m_energy = 0;
-}
 
 
 void Site::setMainSolver(KMCSolver *solver)
@@ -355,7 +343,7 @@ void Site::introduceNeighborhood()
 
                     if (neighbor != this)
                     {
-
+                        cout << "DERP: should be in solute " << endl;
                         KMCDebugger_AssertBool(!(i == Site::nNeighborsLimit() && j == Site::nNeighborsLimit() && k == Site::nNeighborsLimit()));
                         KMCDebugger_AssertBool(!(neighbor->x() == x() && neighbor->y() == y() && neighbor->z() == z()));
                         KMCDebugger_AssertBool(!(xTrans == x() && yTrans == y() && zTrans == z()));
@@ -387,90 +375,23 @@ void Site::introduceNeighborhood()
 }
 
 
-//Should have neighbor list in particle?
-void Site::informNeighborhoodOnChange(int change)
-{
-
-    Site *neighbor;
-    uint level;
-    double dE;
-
-    for (uint i = 0; i < m_neighborhoodLength; ++i)
-    {
-        for (uint j = 0; j < m_neighborhoodLength; ++j)
-        {
-            for (uint k = 0; k < m_neighborhoodLength; ++k)
-            {
-
-                neighbor = neighborhood(i, j, k);
-
-                if (neighbor == NULL)
-                {
-                    continue;
-                }
-
-                else if (neighbor == this) {
-                    assert(i == j && j == k && k == m_nNeighborsLimit);
-                    continue;
-                }
-
-                level = m_levelMatrix(i, j, k);
-
-
-                KMCDebugger_AssertBool(!((change < 0) && (neighbor->nNeighborsSum() == 0)), "Call initiated to set negative nNeighbors.", neighbor->info());
-                KMCDebugger_AssertBool(!((change < 0) && (neighbor->nNeighbors(level) == 0)), "Call initiated to set negative neighbor.", neighbor->info());
-
-
-                neighbor->m_nNeighbors(level)+= change;
-                neighbor->m_nNeighborsSum += change;
-
-
-                dE = change*DiffusionReaction::potential(i,  j,  k);
-
-                neighbor->m_energy += dE;
-
-                m_totalEnergy += dE;
-
-            }
-        }
-    }
-
-
-}
 
 
 void Site::reset()
 {
 
-//    if (isActive())
-//    {
-////        m_totalActiveSites--;
+    //    if (isActive())
+    //    {
+    ////        m_totalActiveSites--;
 
-//        m_active = false;
+    //        m_active = false;
 
-//    }
-
-    m_totalEnergy -= m_energy;
-
-    setZeroEnergy();
-
-    m_nNeighbors.zeros();
-
-    m_nNeighborsSum = 0;
+    //    }
 
 }
 
 void Site::clearNeighborhood()
 {
-
-    //    m_totalEnergy -= m_energy;
-
-    //    m_energy = 0;
-
-    m_nNeighbors.reset();
-
-    m_nNeighborsSum = 0;
-
 
     for (uint i = 0; i < m_neighborhoodLength; ++i)
     {
@@ -580,7 +501,7 @@ void Site::resetBoundariesTo(const umat &boundaryMatrix)
 
     Site::initializeBoundaries();
 
-//    m_solver->initializeDiffusionReactions();
+    //    m_solver->initializeDiffusionReactions();
 
 
 }
@@ -625,15 +546,6 @@ void Site::finalizeBoundaries()
             m_boundaries(i, j)->finalize();
         }
     }
-}
-
-void Site::setZeroTotalEnergy()
-{
-    m_totalEnergy = 0;
-
-    m_totalEnergy = 0;
-
-    //CHECK IF NOT OCCUPIED?
 }
 
 
@@ -924,8 +836,6 @@ ucube      Site::m_levelMatrix;
 
 ivec       Site::m_originTransformVector;
 
-
-double     Site::m_totalEnergy = 0;
 
 
 field<Boundary*> Site::m_boundaries;

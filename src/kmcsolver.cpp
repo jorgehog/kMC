@@ -191,11 +191,11 @@ void KMCSolver::reset()
 
     //    KMCDebugger_Assert(Site::totalDeactiveParticles(ParticleStates::solution), ==, m_NX*m_NY*m_NZ);
 
-    KMCDebugger_AssertClose(Site::totalEnergy(), 0, 1E-5);
+    KMCDebugger_AssertClose(SoluteParticle::totalEnergy(), 0, 1E-5);
 
     KMCDebugger_Assert(SoluteParticle::nParticles(), ==, 0);
 
-    Site::setZeroTotalEnergy();
+    SoluteParticle::setZeroTotalEnergy();
 
     Site::finalizeBoundaries();
 

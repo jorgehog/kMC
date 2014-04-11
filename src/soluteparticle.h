@@ -81,6 +81,9 @@ public:
     static void resetNNeighborsToCrystallizeTo(const uint & nNeighborsToCrystallize);
 
 
+    static void setZeroTotalEnergy();
+
+
     /*
      * Misc. trivial functions
      */
@@ -106,12 +109,10 @@ public:
         return refCounter;
     }
 
-
-    static const uint &nNeighborsToCrystallize()
+    static const double & totalEnergy()
     {
-        return m_nNeighborsToCrystallize;
+        return m_totalEnergy;
     }
-
 
     static const uvec4 & totalParticlesVector()
     {
@@ -138,18 +139,16 @@ public:
 
     uint nNeighbors(uint level = 0) const
     {
-        return m_site->nNeighbors(level);
+        return m_nNeighbors(level);
     }
 
 
-    uint nNeighborsSum() const
-    {
-        return m_site->nNeighborsSum();
-    }
+    uint nNeighborsSum() const;
+
 
     double energy() const
     {
-        return m_site->energy();
+        return m_energy;
     }
 
 
@@ -205,10 +204,6 @@ public:
         return m_site->x();
     }
 
-    const uint &r(const uint i) const
-    {
-        return m_site->r(i);
-    }
 
     const vector<Reaction*> & reactions() const
     {
@@ -272,6 +267,11 @@ public:
     void updateReactions();
 
 
+    void setupAllNeighbors();
+
+    void removeNeighbor(SoluteParticle *neighbor, uint level);
+
+    void addNeighbor(SoluteParticle *neighbor, uint level);
 
 
     double potentialBetween(const SoluteParticle *other);
@@ -287,11 +287,14 @@ public:
     const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const;
 
 
+    void setZeroEnergy();
+
+
 private:
 
-    static uint m_nNeighborsToCrystallize;
-
     static uvec4 m_totalParticles;
+
+    static double m_totalEnergy;
 
 
     static set<SoluteParticle*, function<bool(SoluteParticle*, SoluteParticle*)> > m_affectedParticles;
@@ -308,15 +311,26 @@ private:
     Site *m_site;
 
 
-    vector<SoluteParticle*> m_neighboringParticles;
+    uvec m_nNeighbors;
+
+    uint m_nNeighborsSum;
+
+    double m_energy;
+
+
+    vector<vector<SoluteParticle*> > m_neighboringParticles;
 
 
     void initializeDiffusionReactions();
 
     void setNewParticleState(int newState);
 
-    void deactivateFixedCrystal();
+    void changeParticleState(int newState);
 
+
+    void informNeighborhoodOnAddition();
+
+    void informNeighborhoodOnRemoval();
 
 
 

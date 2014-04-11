@@ -83,9 +83,6 @@ public:
     static void finalizeBoundaries();
 
 
-    static void setZeroTotalEnergy();
-
-
     /*
      * Non-trivial functions
      */
@@ -100,9 +97,6 @@ public:
 
 
     SoluteParticle* getAssociatedParticle() const;
-
-
-    void informNeighborhoodOnChange(int change);
 
 
     void distanceTo(const Site * other, int &dx, int &dy, int &dz, bool absolutes = false) const;
@@ -122,8 +116,6 @@ public:
 
     void forEachNeighborDo_sendIndices(function<void (Site *, uint, uint, uint)> applyFunction) const;
 
-
-    void setZeroEnergy();
 
 
     /*
@@ -171,11 +163,6 @@ public:
         return m_boundaries;
     }
 
-    static const double & totalEnergy()
-    {
-        return m_totalEnergy;
-    }
-
     void activate()
     {
         m_active = true;
@@ -184,21 +171,6 @@ public:
     void deactivate()
     {
         m_active = false;
-    }
-
-
-    uint nNeighbors(uint level = 0) const
-    {
-        return m_nNeighbors(level);
-    }
-
-
-    uint nNeighborsSum() const;
-
-
-    double energy() const
-    {
-        return m_energy;
     }
 
     const bool & isActive() const
@@ -223,8 +195,22 @@ public:
 
     const uint & r(const uint i) const
     {
-        return m_r(i);
+        switch (i) {
+        case 0:
+            return m_x;
+            break;
+        case 1:
+            return m_y;
+            break;
+        case 2:
+            return m_z;
+            break;
+        default:
+            return 0;
+            break;
+        }
     }
+
 
 
     Site* neighborhood(const uint x, const uint y, const uint z) const
@@ -268,20 +254,10 @@ private:
 
     static ivec m_originTransformVector;
 
-
-    static double m_totalEnergy;
-
-
     static KMCSolver* m_solver;
 
 
     Site**** m_neighborhood;
-
-    uvec m_nNeighbors;
-
-    uint m_nNeighborsSum;
-
-    double m_energy;
 
 
     bool m_active;
@@ -292,9 +268,6 @@ private:
     const uint m_y;
 
     const uint m_z;
-
-    const uvec3 m_r;
-
 
     static uint refCounter;
 

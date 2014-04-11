@@ -77,6 +77,11 @@ public:
         {
             site->introduceNeighborhood();
         });
+
+        for (SoluteParticle *particle : m_particles)
+        {
+            particle->setupAllNeighbors();
+        }
     }
 
 //    void initializeDiffusionReactions()

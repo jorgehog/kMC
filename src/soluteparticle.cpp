@@ -12,22 +12,25 @@ using namespace kMC;
 
 SoluteParticle::SoluteParticle() :
     m_particleState(ParticleStates::solvant),
+    m_nNeighborsSum(0),
+    m_energy(0),
     m_ID(refCounter)
 {
 
     initializeDiffusionReactions();
 
+    m_neighboringParticles.resize(Site::nNeighborsLimit());
+
     refCounter++;
+
 }
 
 SoluteParticle::~SoluteParticle()
 {
-    m_totalParticles(particleState())--;
-    //    m_totalDeactiveParticles(particleState())++;
+
+    removeCurrentSite();
 
     clearAllReactions();
-
-    m_site->deactivate();
 
     KMCDebugger_Assert(refCounter, !=, 0);
 
@@ -44,7 +47,7 @@ void SoluteParticle::setSite(kMC::Site *site)
 
     markAsAffected();
 
-    site->informNeighborhoodOnChange(+1);
+    informNeighborhoodOnAddition();
 
     cout << "Derp: have to update neighbor list here" << endl;
     m_site->activate();
@@ -84,9 +87,14 @@ void SoluteParticle::trySite(Site *site)
 
 void SoluteParticle::removeCurrentSite()
 {
+
     setNeighboringDirectUpdateFlags();
 
-    m_site->informNeighborhoodOnChange(-1);
+    informNeighborhoodOnRemoval();
+
+    m_totalParticles(particleState())--;
+
+    m_totalEnergy -= m_energy;
 
     m_site->deactivate();
 
@@ -229,6 +237,12 @@ const string SoluteParticle::info(int xr, int yr, int zr, string desc) const
 
 }
 
+void SoluteParticle::setZeroEnergy()
+{
+    KMCDebugger_Assert(m_nNeighborsSum, ==, 0, "Energy is not zero.", info());
+    m_energy = 0;
+}
+
 uint SoluteParticle::nActiveReactions() const
 {
 
@@ -260,6 +274,43 @@ void SoluteParticle::updateReactions()
             reaction->disable();
         }
     }
+}
+
+void SoluteParticle::setupAllNeighbors()
+{
+
+    m_neighboringParticles.resize(Site::nNeighborsLimit());
+
+    uint level;
+    site()->forEachNeighborDo_sendIndices([&level, this] (Site * neighbor, uint i, uint j, uint k)
+    {
+
+        if (!neighbor->isActive())
+        {
+            return;
+        }
+
+        level = Site::levelMatrix(i, j, k);
+
+        m_neighboringParticles.at(level).push_back(neighbor->getAssociatedParticle());
+
+    });
+
+
+
+}
+
+void SoluteParticle::removeNeighbor(SoluteParticle *neighbor, uint level)
+{
+    m_neighboringParticles.at(level).erase(std::find(m_neighboringParticles.at(level).begin(),
+                                                     m_neighboringParticles.at(level).end(),
+                                                     neighbor),
+                                           m_neighboringParticles.at(level).end());
+}
+
+void SoluteParticle::addNeighbor(SoluteParticle *neighbor, uint level)
+{
+    m_neighboringParticles.at(level).push_back(neighbor);
 }
 
 
@@ -330,89 +381,15 @@ void SoluteParticle::setNeighboringDirectUpdateFlags()
 
 }
 
+void SoluteParticle::setZeroTotalEnergy()
+{
+    m_totalEnergy = 0;
 
-//void SoluteParticle::activate()
-//{
-
-//    flipActive();
-
-
-//    if (isSurface())
-//    {
-//        setParticleState(ParticleStates::crystal);
-//    }
-//    else
-//    {
-//        KMCDebugger_PushImplication(this, "activation");
-//    }
-
-
-//    setNeighboringDirectUpdateFlags();
-
-//    for (Reaction * reaction : m_reactions)
-//    {
-//        reaction->setDirectUpdateFlags(this);
-//    }
-
-
-//    KMCDebugger_MarkPartialStep("ACTIVATION COMPLETE");
-
-//    m_totalActiveSites++;
-
-//    KMCDebugger_AssertBool(!(isSurface() && isActive()), "surface should not be active.", info());
-
-//}
-
-
-//void SoluteParticle::deactivate()
-//{
-
-//    if (isFixedCrystalSeed())
-//    {
-//        deactivateFixedCrystal();
-//        return;
-//    }
-
-//    flipDeactive();
-
-//    //if we deactivate a crystal site, we have to potentially
-//    //reduce the surface by adding more sites as solution sites.
-//    //Site will change only if it is not surrounded by any crystals.
-//    if (isCrystal())
-//    {
-//        KMCDebugger_Assert(particleState(), !=, ParticleStates::surface);
-//        KMCDebugger_Assert(particleState(), !=, ParticleStates::solvant);
-
-//        setParticleState(ParticleStates::surface);
-//    }
-
-
-//    else if (qualifiesAsSurface())
-//    {
-
-//        KMCDebugger_Assert(particleState(), ==, ParticleStates::solvant);
-
-//        setNewParticleState(ParticleStates::surface);
-
-//    }
-
-//    else
-//    {
-//        KMCDebugger_PushImplication(this, "deactivation");
-//    }
-
-
-//    setNeighboringDirectUpdateFlags();
-
-//    KMCDebugger_MarkPartialStep("DEACTIVATION COMPLETE");
-
-//    m_totalActiveSites--;
-
-//}
+    KMCDebugger_Assert(solver()->particles().size(), ==, 0);
+}
 
 void SoluteParticle::clearAll()
 {
-    m_nNeighborsToCrystallize = KMCSolver::UNSET_UINT;
 
     clearAffectedParticles();
 
@@ -458,6 +435,24 @@ void SoluteParticle::setNewParticleState(int newState)
 
     KMCDebugger_Assert(m_totalParticles(particleState()), !=, 0, "trying to reduce particle type count below zero", info());
 
+    m_totalParticles(newState)++;
+
+
+    m_particleState = newState;
+
+    KMCDebugger_PushImplication(this, particleStateName().c_str());
+
+}
+
+
+void SoluteParticle::changeParticleState(int newState)
+{
+
+    KMCDebugger_MarkPre(particleStateName());
+
+
+    KMCDebugger_Assert(m_totalParticles(particleState()), !=, 0, "trying to reduce particle type count below zero", info());
+
     m_totalParticles(particleState())--;
 
     m_totalParticles(newState)++;
@@ -468,7 +463,6 @@ void SoluteParticle::setNewParticleState(int newState)
     KMCDebugger_PushImplication(this, particleStateName().c_str());
 
 }
-
 
 
 void SoluteParticle::reset()
@@ -491,6 +485,14 @@ void SoluteParticle::reset()
 
     //    m_totalDeactiveParticles(ParticleStates::solution)++;
 
+
+    m_totalEnergy -= m_energy;
+
+    setZeroEnergy();
+
+    m_nNeighbors.zeros();
+
+    m_nNeighborsSum = 0;
 
     for (Reaction * reaction : reactions())
     {
@@ -517,6 +519,78 @@ void SoluteParticle::queueAffectedParticles()
 }
 
 
+
+void SoluteParticle::informNeighborhoodOnAddition()
+{
+
+    uint level;
+    double dE;
+
+    forEachNeighborDo_sendIndices([&dE, &level, this] (Site *neighbor, uint i, uint j, uint k)
+    {
+
+        level = m_levelMatrix(i, j, k);
+
+
+        KMCDebugger_AssertBool(!((change < 0) && (neighbor->nNeighborsSum() == 0)), "Call initiated to set negative nNeighbors.", neighbor->info());
+        KMCDebugger_AssertBool(!((change < 0) && (neighbor->nNeighbors(level) == 0)), "Call initiated to set negative neighbor.", neighbor->info());
+
+
+        neighbor->m_nNeighbors(level)+= change;
+        neighbor->m_nNeighborsSum += change;
+
+        dE = change*DiffusionReaction::potential(i,  j,  k);
+
+        neighbor->m_energy += dE;
+
+        m_totalEnergy += dE;
+
+    });
+
+    for (uint level = 0; level < Site::nNeighborsLimit(); ++level)
+    {
+        for (SoluteParticle *neighbor : m_neighbors.at(level))
+        {
+            neighbor->removeNeighbor(this);
+        }
+    }
+
+
+}
+
+
+void SoluteParticle::informNeighborhoodOnRemoval()
+{
+
+    uint level;
+    double dE;
+
+    forEachNeighborDo_sendIndices([&change, &dE, &level, this] (Site *neighbor, uint i, uint j, uint k)
+    {
+
+        level = m_levelMatrix(i, j, k);
+
+
+        KMCDebugger_AssertBool(!((change < 0) && (neighbor->nNeighborsSum() == 0)), "Call initiated to set negative nNeighbors.", neighbor->info());
+        KMCDebugger_AssertBool(!((change < 0) && (neighbor->nNeighbors(level) == 0)), "Call initiated to set negative neighbor.", neighbor->info());
+
+
+        neighbor->m_nNeighbors(level)+= change;
+        neighbor->m_nNeighborsSum += change;
+
+
+        dE = change*DiffusionReaction::potential(i,  j,  k);
+
+        neighbor->m_energy += dE;
+
+        m_totalEnergy += dE;
+
+    });
+
+
+}
+
+
 const uint &SoluteParticle::NX()
 {
     return Site::NX();
@@ -532,10 +606,11 @@ const uint &SoluteParticle::NZ()
     return Site::NZ();
 }
 
-uint       SoluteParticle::m_nNeighborsToCrystallize = KMCSolver::UNSET_UINT;
 
 
 uvec4      SoluteParticle::m_totalParticles;
+
+double     SoluteParticle::m_totalEnergy = 0;
 
 
 //Don't panic: Just states that the sets pointers should be sorted by the site objects and not their random valued pointers.
