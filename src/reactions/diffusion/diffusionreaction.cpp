@@ -199,18 +199,18 @@ void DiffusionReaction::setupPotential()
 Site *DiffusionReaction::destinationSite() const
 {
     return site()->neighborhood(Site::nNeighborsLimit() + path[0],
-                                Site::nNeighborsLimit() + path[1],
-                                Site::nNeighborsLimit() + path[2]);
+            Site::nNeighborsLimit() + path[1],
+            Site::nNeighborsLimit() + path[2]);
 }
 
 
-void DiffusionReaction::setDirectUpdateFlags(const SoluteParticle *changedReactant)
+void DiffusionReaction::setDirectUpdateFlags(const SoluteParticle *changedReactant, const uint level)
 {
 
-    uint d_maxDistance, r_maxDistance;
+    KMCDebugger_Assert(changedReactant, !=, reactant());
 
 
-    if (rate() == UNSET_RATE || changedReactant == reactant())
+    if (rate() == UNSET_RATE)
     {
         registerUpdateFlag(defaultUpdateFlag);
     }
@@ -218,16 +218,16 @@ void DiffusionReaction::setDirectUpdateFlags(const SoluteParticle *changedReacta
     else
     {
 
-        r_maxDistance = site()->maxDistanceTo(changedReactant->site());
+//        r_maxDistance = site()->maxDistanceTo(changedReactant->site());
 
-        if (r_maxDistance == 1)
+        if (level == 0)
         {
             registerUpdateFlag(defaultUpdateFlag);
         }
 
         else
         {
-            d_maxDistance = destinationSite()->maxDistanceTo(changedReactant->site());
+            uint d_maxDistance = destinationSite()->maxDistanceTo(changedReactant->site());
 
             //if the destination is outsite the interaction cutoff, we can keep the old saddle energy.
             if (d_maxDistance > Site::nNeighborsLimit())
@@ -250,7 +250,7 @@ void DiffusionReaction::setDirectUpdateFlags(const SoluteParticle *changedReacta
 double DiffusionReaction::getSaddleEnergy()
 {
 
-    if (reactant()->nNeighborsSum() == 0 || destinationSite()->nNeighborsSum() == 1)
+    if (reactant()->nNeighborsSum() == 0)
     {
         return 0;
     }

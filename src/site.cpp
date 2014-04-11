@@ -88,6 +88,16 @@ void Site::updateBoundaries()
     }
 }
 
+uint Site::shellSize(const uint level)
+{
+    return std::pow(2*(level + 1) + 1, 3) - std::pow(2*level + 1, 3);
+}
+
+uint Site::maxNeighbors()
+{
+    return std::pow(m_neighborhoodLength, 3) - 1;
+}
+
 
 
 void Site::forEachNeighborDo(function<void (Site *)> applyFunction) const
@@ -461,13 +471,7 @@ void Site::resetBoundariesTo(const umat &boundaryMatrix)
 
     m_solver->initializeSiteNeighborhoods();
 
-
-    m_solver->clearAllReactions();
-
     Site::initializeBoundaries();
-
-    //    m_solver->initializeDiffusionReactions();
-
 
 }
 
@@ -665,11 +669,6 @@ const string Site::info(int xr, int yr, int zr, string desc) const
 
 }
 
-uint Site::nNeighborsSum() const
-{
-    KMCDebugger_Assert(sum(m_nNeighbors), ==, m_nNeighborsSum, "Should be identical.", info());
-    return m_nNeighborsSum;
-}
 
 void Site::setInitialNNeighborsLimit(const uint &nNeighborsLimit, bool check)
 {

@@ -27,7 +27,7 @@ public:
 
     void trySite(Site * site);
 
-    void removeCurrentSite();
+    void disableSite();
 
     void changeSite(Site *newSite);
 
@@ -48,8 +48,6 @@ public:
 
     static void popAffectedParticle(SoluteParticle *particle);
 
-    void queueAffectedParticles();
-
     static void updateAffectedParticles();
 
 
@@ -65,9 +63,6 @@ public:
     static double getCurrentRelativeCrystalOccupancy();
 
 
-    static void setNNeighborsToCrystallize(const uint & nNeighborsToCrystallize);
-
-
     /*
      * Init / Reset / clear static implementations
      */
@@ -75,11 +70,6 @@ public:
     static void clearAll();
 
     static void clearAffectedParticles();
-
-    static void setInitialNNeighborsToCrystallize(const uint &nNeighborsToCrystallize);
-
-    static void resetNNeighborsToCrystallizeTo(const uint & nNeighborsToCrystallize);
-
 
     static void setZeroTotalEnergy();
 
@@ -281,8 +271,8 @@ public:
 
     double potentialBetween(const SoluteParticle *other);
 
-    void setNeighboringDirectUpdateFlags();
 
+    inline void forEachNeighborDo(function<void (SoluteParticle*, const uint)> applyFunction) const;
 
     void forEachActiveReactionDo(function<void (Reaction*)> applyFunction) const;
 
@@ -335,12 +325,6 @@ private:
     void changeParticleState(int newState);
 
 
-    void informNeighborhoodOnAddition();
-
-    void informNeighborhoodOnRemoval();
-
-
-
     const uint m_ID;
 
     static uint refCounter;
@@ -348,8 +332,22 @@ private:
 
 };
 
+
+void SoluteParticle::forEachNeighborDo(function<void (SoluteParticle *, const uint)> applyFunction) const
+{
+
+    for (uint level = 0; level < Site::nNeighborsLimit(); ++level)
+    {
+        for (SoluteParticle *neighbor : m_neighboringParticles.at(level))
+        {
+            applyFunction(neighbor, level);
+        }
+    }
+
 }
 
 
+
+}
 ostream& operator<<(ostream& os, const kMC::SoluteParticle& ss);
 

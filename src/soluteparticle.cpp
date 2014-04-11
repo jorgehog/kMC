@@ -31,7 +31,7 @@ SoluteParticle::~SoluteParticle()
 
     KMCDebugger_Assert(refCounter, !=, 0);
 
-    removeCurrentSite();
+    disableSite();
 
     clearAllReactions();
 
@@ -44,15 +44,32 @@ SoluteParticle::~SoluteParticle()
 void SoluteParticle::setSite(kMC::Site *site)
 {
 
+    KMCDebugger_AssertBool(!m_site->isActive(), "particle already present at site.", m_site->info());
+
     m_site = site;
+
+    m_site->activate();
 
 
     markAsAffected();
 
-    informNeighborhoodOnAddition();
 
-    cout << "Derp: have to update neighbor list here" << endl;
-    m_site->activate();
+    setupAllNeighbors();
+
+    forEachNeighborDo([this] (SoluteParticle *neighbor, const uint level)
+    {
+        neighbor->addNeighbor(neighbor, level);
+
+        for (Reaction * reaction : neighbor->reactions())
+        {
+            reaction->setDirectUpdateFlags(this, level);
+        }
+
+        neighbor->markAsAffected();
+
+    });
+
+
 
     //DERP: do this checks at once?
     if (qualifiesAsCrystal())
@@ -70,11 +87,10 @@ void SoluteParticle::setSite(kMC::Site *site)
         setNewParticleState(ParticleStates::solvant);
     }
 
-    setNeighboringDirectUpdateFlags();
 
     for (Reaction * reaction : m_reactions)
     {
-        reaction->setDirectUpdateFlags(this);
+        reaction->forceUpdateFlag(Reaction::defaultUpdateFlag);
     }
 
 
@@ -87,12 +103,22 @@ void SoluteParticle::trySite(Site *site)
     m_site = site;
 }
 
-void SoluteParticle::removeCurrentSite()
+void SoluteParticle::disableSite()
 {
+    KMCDebugger_AssertBool(m_site->isActive(), "particle not present at site.", m_site->info());
 
-    setNeighboringDirectUpdateFlags();
 
-    informNeighborhoodOnRemoval();
+    forEachNeighborDo([this] (SoluteParticle *neighbor, const uint level)
+    {
+        neighbor->removeNeighbor(neighbor, level);
+
+        for (Reaction * reaction : neighbor->reactions())
+        {
+            reaction->setDirectUpdateFlags(this, level);
+        }
+
+        neighbor->markAsAffected();
+    });
 
     m_totalParticles(particleState())--;
 
@@ -104,15 +130,10 @@ void SoluteParticle::removeCurrentSite()
 
 void SoluteParticle::changeSite(Site *newSite)
 {
-    removeCurrentSite();
+    disableSite();
 
     setSite(newSite);
 
-}
-
-void SoluteParticle::loadConfig(const Setting &setting)
-{
-    setInitialNNeighborsToCrystallize(getSurfaceSetting<uint>(setting, "nNeighboursToCrystallize"));
 }
 
 void SoluteParticle::popAffectedParticle(SoluteParticle *particle)
@@ -200,33 +221,7 @@ void SoluteParticle::clearAllReactions()
 
 }
 
-void SoluteParticle::forEachActiveReactionDo(function<void (Reaction *)> applyFunction) const
-{
 
-    for (Reaction * reaction : m_reactions)
-    {
-        if (reaction->isAllowed())
-        {
-            applyFunction(reaction);
-        }
-    }
-}
-
-void SoluteParticle::forEachActiveReactionDo_sendIndex(function<void (Reaction *, uint)> applyFunction) const
-{
-
-    uint i = 0;
-
-    for (Reaction * reaction : m_reactions)
-    {
-        if (reaction->isAllowed())
-        {
-            applyFunction(reaction, i);
-        }
-
-        i++;
-    }
-}
 
 const string SoluteParticle::info(int xr, int yr, int zr, string desc) const
 {
@@ -312,7 +307,7 @@ void SoluteParticle::setupAllNeighbors()
 
     uint level;
 
-    site()->forEachNeighborDo_sendIndices([&level, this] (Site * neighbor, uint i, uint j, uint k)
+    site()->forEachNeighborDo_sendIndices([&level, &dE, this] (Site * neighbor, uint i, uint j, uint k)
     {
 
         if (!neighbor->isActive())
@@ -342,17 +337,85 @@ void SoluteParticle::setupAllNeighbors()
 
 void SoluteParticle::removeNeighbor(SoluteParticle *neighbor, uint level)
 {
+
+    KMCDebugger_Assert(nNeighbors(level), !=, 0, "Call initiated to set negative nNeighbors.", info());
+    KMCDebugger_Assert(nNeighborsSum(), !=, 0,   "Call initiated to set negative nNeighbors.", info());
+
+    KMCDebugger_Assert(std::find(m_neighboringParticles.at(level).begin(),
+                                 m_neighboringParticles.at(level).end(),
+                                 neighbor), !=, m_neighboringParticles.at(level).end(),
+                       "removing neighbor that is not present in neighborlist.", info());
+
     m_neighboringParticles.at(level).erase(std::find(m_neighboringParticles.at(level).begin(),
                                                      m_neighboringParticles.at(level).end(),
                                                      neighbor),
                                            m_neighboringParticles.at(level).end());
+
+    m_nNeighbors(level)--;
+
+    m_nNeighborsSum--;
+
+    double dE = -potentialBetween(neighbor);
+
+    m_energy += dE;
+
+    m_totalEnergy += dE;
+
 }
 
 void SoluteParticle::addNeighbor(SoluteParticle *neighbor, uint level)
 {
+
+    KMCDebugger_Assert(nNeighbors(level), <=, Site::shellSize(level), "Overflow in nNeighbors.", info());
+    KMCDebugger_Assert(nNeighborsSum(), <=, Site::maxNeighbors(),   "Call initiated to set negative nNeighbors.", info());
+
+    KMCDebugger_Assert(std::find(m_neighboringParticles.at(level).begin(),
+                                 m_neighboringParticles.at(level).end(),
+                                 neighbor), !=, m_neighboringParticles.at(level).end(),
+                       "removing neighbor that is not present in neighborlist.", info());
+
     m_neighboringParticles.at(level).push_back(neighbor);
+
+    m_nNeighbors(level)++;
+
+    m_nNeighborsSum++;
+
+    double dE = potentialBetween(neighbor);
+
+    m_energy += dE;
+
+    m_totalEnergy += dE;
+
 }
 
+
+void SoluteParticle::forEachActiveReactionDo(function<void (Reaction *)> applyFunction) const
+{
+
+    for (Reaction * reaction : m_reactions)
+    {
+        if (reaction->isAllowed())
+        {
+            applyFunction(reaction);
+        }
+    }
+}
+
+void SoluteParticle::forEachActiveReactionDo_sendIndex(function<void (Reaction *, uint)> applyFunction) const
+{
+
+    uint i = 0;
+
+    for (Reaction * reaction : m_reactions)
+    {
+        if (reaction->isAllowed())
+        {
+            applyFunction(reaction, i);
+        }
+
+        i++;
+    }
+}
 
 
 void SoluteParticle::initializeDiffusionReactions()
@@ -400,26 +463,7 @@ double SoluteParticle::potentialBetween(const SoluteParticle *other)
     return DiffusionReaction::potential(X, Y, Z);
 }
 
-void SoluteParticle::setNeighboringDirectUpdateFlags()
-{
 
-    for (SoluteParticle *neighbor : m_neighboringParticles)
-    {
-        {
-            //This approach assumes that recursive updating of non-neighboring sites
-            //WILL NOT ACTIVATE OR DEACTIVATE any sites, simply change their state,
-            //and thus not interfere with any flags set here, not require flags of their own.
-            for (Reaction * reaction : neighbor->reactions())
-            {
-                reaction->setDirectUpdateFlags(this);
-            }
-
-            neighbor->markAsAffected();
-
-        }
-    }
-
-}
 
 void SoluteParticle::setZeroTotalEnergy()
 {
@@ -428,11 +472,15 @@ void SoluteParticle::setZeroTotalEnergy()
     KMCDebugger_Assert(solver()->particles().size(), ==, 0);
 }
 
+uint SoluteParticle::nNeighborsSum() const
+{
+    KMCDebugger_Assert(sum(m_nNeighbors), ==, m_nNeighborsSum, "Should be identical.", info());
+    return m_nNeighborsSum;
+}
+
 void SoluteParticle::clearAll()
 {
-
     clearAffectedParticles();
-
 }
 
 void SoluteParticle::clearAffectedParticles()
@@ -454,17 +502,6 @@ double SoluteParticle::getCurrentConcentration()
 double SoluteParticle::getCurrentRelativeCrystalOccupancy()
 {
     return static_cast<double>(nCrystals())/(NX()*NY()*NZ());
-}
-
-void SoluteParticle::setInitialNNeighborsToCrystallize(const uint &nNeighborsToCrystallize)
-{
-    m_nNeighborsToCrystallize = nNeighborsToCrystallize;
-}
-
-
-void SoluteParticle::resetNNeighborsToCrystallizeTo(const uint &nNeighborsToCrystallize)
-{
-    setInitialNNeighborsToCrystallize(nNeighborsToCrystallize);
 }
 
 void SoluteParticle::setNewParticleState(int newState)
@@ -507,24 +544,6 @@ void SoluteParticle::changeParticleState(int newState)
 
 void SoluteParticle::reset()
 {
-    //    m_totalParticles(particleState())--;
-    //        m_totalDeactiveParticles(particleState())++;
-
-    //    if (isFixedCrystalSeed())
-    //    {
-    //        m_isFixedCrystalSeed = false;
-
-    ////        initializeDiffusionReactions();
-    //    }
-
-    //    m_cannotCrystallize = false;
-
-    //    m_totalDeactiveParticles(particleState())--;
-
-    //    m_particleState = ParticleStates::solvant;
-
-    //    m_totalDeactiveParticles(ParticleStates::solution)++;
-
 
     m_totalEnergy -= m_energy;
 
@@ -541,95 +560,6 @@ void SoluteParticle::reset()
 
 
 }
-
-void SoluteParticle::queueAffectedParticles()
-{
-
-    for (SoluteParticle *neighbor : m_neighboringParticles)
-    {
-
-        for (Reaction * reaction : neighbor->reactions())
-        {
-            reaction->registerUpdateFlag(Reaction::defaultUpdateFlag);
-        }
-
-        neighbor->markAsAffected();
-    }
-
-}
-
-
-
-void SoluteParticle::informNeighborhoodOnAddition()
-{
-
-    uint level;
-    double dE;
-
-    forEachNeighborDo_sendIndices([&dE, &level, this] (Site *neighbor, uint i, uint j, uint k)
-    {
-
-        level = m_levelMatrix(i, j, k);
-
-
-        KMCDebugger_AssertBool(!((change < 0) && (neighbor->nNeighborsSum() == 0)), "Call initiated to set negative nNeighbors.", neighbor->info());
-        KMCDebugger_AssertBool(!((change < 0) && (neighbor->nNeighbors(level) == 0)), "Call initiated to set negative neighbor.", neighbor->info());
-
-
-        neighbor->m_nNeighbors(level)+= change;
-        neighbor->m_nNeighborsSum += change;
-
-        dE = change*DiffusionReaction::potential(i,  j,  k);
-
-        neighbor->m_energy += dE;
-
-        m_totalEnergy += dE;
-
-    });
-
-    for (uint level = 0; level < Site::nNeighborsLimit(); ++level)
-    {
-        for (SoluteParticle *neighbor : m_neighbors.at(level))
-        {
-            neighbor->removeNeighbor(this);
-        }
-    }
-
-
-}
-
-
-void SoluteParticle::informNeighborhoodOnRemoval()
-{
-
-    uint level;
-    double dE;
-
-    forEachNeighborDo_sendIndices([&change, &dE, &level, this] (Site *neighbor, uint i, uint j, uint k)
-    {
-
-        level = m_levelMatrix(i, j, k);
-
-
-        KMCDebugger_AssertBool(!((change < 0) && (neighbor->nNeighborsSum() == 0)), "Call initiated to set negative nNeighbors.", neighbor->info());
-        KMCDebugger_AssertBool(!((change < 0) && (neighbor->nNeighbors(level) == 0)), "Call initiated to set negative neighbor.", neighbor->info());
-
-
-        neighbor->m_nNeighbors(level)+= change;
-        neighbor->m_nNeighborsSum += change;
-
-
-        dE = change*DiffusionReaction::potential(i,  j,  k);
-
-        neighbor->m_energy += dE;
-
-        m_totalEnergy += dE;
-
-    });
-
-
-}
-
 
 const uint &SoluteParticle::NX()
 {

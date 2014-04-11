@@ -46,6 +46,11 @@ public:
     static void updateBoundaries();
 
 
+    static uint shellSize(const uint level);
+
+    static uint maxNeighbors();
+
+
     /*
      *  Misc static property functions
      */

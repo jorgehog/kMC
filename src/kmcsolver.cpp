@@ -39,8 +39,6 @@ KMCSolver::KMCSolver(const Setting & root)
 
     Site::loadConfig(SystemSettings);
 
-    SoluteParticle::loadConfig(SystemSettings);
-
 
     setNumberOfCycles(
                 getSurfaceSetting<uint>(SolverSettings, "nCycles"));
@@ -659,7 +657,7 @@ void KMCSolver::setBoxSize_KeepSites(const uvec3 &boxSizes)
 
 bool KMCSolver::spawnParticle(SoluteParticle *particle, uint x, uint y, uint z, bool checkIfLegal)
 {
-    spawnParticle(particle, getSite(x, y, z), checkIfLegal);
+    return spawnParticle(particle, getSite(x, y, z), checkIfLegal);
 }
 
 

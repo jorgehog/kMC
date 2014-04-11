@@ -209,14 +209,6 @@ public:
         });
     }
 
-    void clearAllReactions()
-    {
-        forEachSiteDo([] (Site *site)
-        {
-            cout << "derp" << endl;
-//            site->clearAllReactions();
-        });
-    }
 
     void onAllRatesChanged();
 

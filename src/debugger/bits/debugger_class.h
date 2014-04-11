@@ -20,7 +20,7 @@ namespace kMC
 
 class Reaction;
 class Site;
-
+class SoluteParticle;
 
 class Debugger
 {
