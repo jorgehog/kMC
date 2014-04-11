@@ -492,9 +492,6 @@ void SoluteParticle::setNewParticleState(int newState)
 
     KMCDebugger_MarkPre(particleStateName());
 
-
-    KMCDebugger_Assert(m_totalParticles(particleState()), !=, 0, "trying to reduce particle type count below zero", info());
-
     m_totalParticles(newState)++;
 
 

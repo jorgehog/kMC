@@ -526,11 +526,10 @@ const string Site::info(int xr, int yr, int zr, string desc) const
 
     s_full << "\n";
 
-    uint _min = ParticleStates::surface + 1;
+    uint _min = ParticleStates::nStates;
 
     ucube nN;
     nN.copy_size(m_levelMatrix);
-    nN.fill(_min);
 
     Site * currentSite;
     for (uint i = 0; i < m_neighborhoodLength; ++i)
@@ -566,6 +565,11 @@ const string Site::info(int xr, int yr, int zr, string desc) const
                     KMCDebugger_Assert(currentSite->associatedParticle(), !=, NULL);
 
                     nN(i, j, k) = currentSite->associatedParticle()->particleState();
+                }
+
+                else
+                {
+                    nN(i, j, k) = _min;
                 }
 
             }
