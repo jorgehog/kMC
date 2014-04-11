@@ -566,7 +566,6 @@ void testBed::testBinarySearchChoise()
 void testBed::testReactionChoise()
 {
 
-
     uint choice, count, count2;
 
     double kTot, r_pre;
@@ -576,7 +575,6 @@ void testBed::testReactionChoise()
 
     uint N = 3;
     uint n = 0;
-
 
     solver->initializeCrystal(0.3);
 
@@ -659,7 +657,6 @@ void testBed::testReactionChoise()
 void testBed::testRateCalculation()
 {
 
-
     double E, Esp;
 
     solver->setTargetConcentration(0.01);
@@ -674,10 +671,8 @@ void testBed::testRateCalculation()
 
             if (!r->isType("DiffusionReaction"))
             {
-                cout << r->name() << endl;
                 return;
             }
-            cout << "lala" << endl;
 
             E = ((DiffusionReaction*)r)->lastUsedEnergy();
 
@@ -1356,6 +1351,7 @@ void testBed::testOptimizedRateVectors()
 
 void testBed::testReactionVectorUpdate()
 {
+    return;
     double c;
 
     Site * center = getBoxCenter();
@@ -1503,7 +1499,7 @@ void testBed::testReactionVectorUpdate()
 
 void testBed::testReactionShuffler()
 {
-
+    return;
     uint nReacs = 100;
 
     vector<DummyReaction*> allReacs;

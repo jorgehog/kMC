@@ -10,7 +10,7 @@
 
 
 #define focusSuite "Reactions"
-#define focusTest  "RateCalculation"
+//#define focusTest  "ReactionChoise"
 
 
 #include "defines.h"

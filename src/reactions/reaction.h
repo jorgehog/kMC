@@ -191,6 +191,11 @@ public:
 
     const static uint & NZ();
 
+    const static uint & _refCount()
+    {
+        return refCount;
+    }
+
 private:
 
     static KMCSolver* m_solver;

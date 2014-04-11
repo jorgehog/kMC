@@ -81,6 +81,8 @@ KMCSolver::~KMCSolver()
     DiffusionReaction::clearAll();
     Boundary::clearAll();
 
+    checkAllRefCounters();
+
     refCounter--;
 
 }
@@ -94,6 +96,23 @@ void KMCSolver::checkRefCounter()
 
         exit();
     }
+}
+
+void KMCSolver::checkAllRefCounters()
+{
+    if (SoluteParticle::nParticles() != 0)
+    {
+        cout << SoluteParticle::nParticles() << " particles active." << endl;
+        exit();
+    }
+
+
+    if (Reaction::_refCount() != 0)
+    {
+        cout << Reaction::_refCount() << " reactions active." << endl;
+        exit();
+    }
+
 }
 
 void KMCSolver::onConstruct()
@@ -155,8 +174,6 @@ void KMCSolver::reset()
     m_availableReactionSlots.clear();
 
 
-    SoluteParticle::clearAffectedParticles();
-
     KMCDebugger_Assert(accu(SoluteParticle::totalParticlesVector()), ==, 0);
 
     KMCDebugger_AssertClose(SoluteParticle::totalEnergy(), 0, 1E-5);
@@ -166,6 +183,8 @@ void KMCSolver::reset()
     SoluteParticle::setZeroTotalEnergy();
 
     Site::finalizeBoundaries();
+
+    checkAllRefCounters();
 
     setRNGSeed(Seed::specific, Seed::initialSeed);
 
@@ -950,6 +969,9 @@ void KMCSolver::setRNGSeed(uint seedState, int defaultSeed)
 
 void KMCSolver::clearParticles()
 {
+
+    SoluteParticle::clearAll();
+
     for (SoluteParticle *particle : m_particles)
     {
         delete particle;

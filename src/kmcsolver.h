@@ -280,6 +280,8 @@ private:
 
     void checkRefCounter();
 
+    void checkAllRefCounters();
+
     void onConstruct();
 
     void finalizeObject();
