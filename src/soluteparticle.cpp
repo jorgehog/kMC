@@ -320,7 +320,7 @@ void SoluteParticle::addNeighbor(SoluteParticle *neighbor, uint level)
 
     KMCDebugger_AssertBool(std::find(m_neighboringParticles.at(level).begin(),
                                  m_neighboringParticles.at(level).end(),
-                                 neighbor) != m_neighboringParticles.at(level).end(),
+                                 neighbor) == m_neighboringParticles.at(level).end(),
                        "removing neighbor that is not present in neighborlist.", info());
 
     m_neighboringParticles.at(level).push_back(neighbor);
@@ -348,7 +348,7 @@ void SoluteParticle::_updateNeighborProps(const int sign, const SoluteParticle *
 
     for (Reaction * reaction : m_reactions)
     {
-        reaction->setDirectUpdateFlags(this, level);
+        reaction->setDirectUpdateFlags(neighbor, level);
     }
 
     markAsAffected();
