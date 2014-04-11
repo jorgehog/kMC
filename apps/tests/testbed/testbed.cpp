@@ -325,7 +325,7 @@ void testBed::testPropertyCalculations()
 
     solver->setTargetConcentration(0);
 
-    double relativeSeedSize = 0.2;
+    double relativeSeedSize = 0.4;
     solver->initializeCrystal(relativeSeedSize);
     solver->dumpXYZ(1337);
 
@@ -347,17 +347,17 @@ void testBed::testPropertyCalculations()
     uint crystalEndZ = crystalStartZ + crystalSizeZ;
 
 
-    CHECK_EQUAL(crystalStartX-1, boxTop(0, 0));
-    CHECK_EQUAL(crystalStartY-1, boxTop(1, 0));
-    CHECK_EQUAL(crystalStartZ-1, boxTop(2, 0));
+    CHECK_EQUAL(crystalStartX+1, boxTop(0, 0));
+    CHECK_EQUAL(crystalStartY+1, boxTop(1, 0));
+    CHECK_EQUAL(crystalStartZ+1, boxTop(2, 0));
 
     CHECK_EQUAL(crystalEndX-2, boxTop(0, 1));
     CHECK_EQUAL(crystalEndY-2, boxTop(1, 1));
     CHECK_EQUAL(crystalEndZ-2, boxTop(2, 1));
 
     solver->forceSpawnParticle(solver->getSite(0, 0, 0));
-    solver->forceSpawnParticle(solver->getSite(1, 0, 0));
-    solver->forceSpawnParticle(solver->getSite(0, 1, 0));
+    solver->forceSpawnParticle(solver->getSite(2, 0, 0));
+    solver->forceSpawnParticle(solver->getSite(0, 2, 0));
 
 
     CHECK_EQUAL(3, SoluteParticle::nSolutionParticles());

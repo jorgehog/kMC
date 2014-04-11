@@ -489,7 +489,7 @@ double SoluteParticle::getCurrentConcentration()
         return 0;
     }
 
-    return static_cast<double>(nSolutionParticles())/(NX()*NY()*NZ() - nCrystals());
+    return static_cast<double>(nSolutionParticles())/(NX()*NY()*NZ() - nCrystals() - nSurfaces());
 }
 
 double SoluteParticle::getCurrentRelativeCrystalOccupancy()

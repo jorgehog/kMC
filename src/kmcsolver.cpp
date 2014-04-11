@@ -649,6 +649,9 @@ bool KMCSolver::spawnParticle(SoluteParticle *particle, Site *site, bool checkIf
 
 void KMCSolver::forceSpawnParticle(Site *site)
 {
+
+    KMCDebugger_AssertBool(!site->isActive());
+
     SoluteParticle *particle = new SoluteParticle();
 
     spawnParticle(particle, site, false);
