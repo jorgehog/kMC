@@ -238,6 +238,7 @@ public:
 
     string getReactionVectorDebugMessage();
 
+    void dumpXYZ(const uint n);
 
 private:
 

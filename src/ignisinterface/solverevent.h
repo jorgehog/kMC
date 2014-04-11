@@ -85,51 +85,7 @@ protected:
 
         cout << "Storing XYZ: " << outputCounter << endl;
 
-        stringstream s;
-        s << "kMC" << outputCounter++ << ".xyz";
-
-        ofstream o;
-        o.open("outfiles/" + s.str());
-
-
-
-        stringstream surface;
-        stringstream crystal;
-        stringstream solution;
-
-        s.str(string());
-
-        for (SoluteParticle *particle : solver()->particles())
-        {
-
-            s << "\n"
-              << particle->particleStateShortName() << " "
-              << particle->x() << " " << particle->y() << " " << particle->z() << " "
-              << particle->nNeighborsSum() << " "
-              << particle->energy();
-
-            if (particle->isSurface())
-            {
-                surface << s.str();
-            }
-
-            else if (particle->isCrystal())
-            {
-                crystal << s.str();
-            }
-
-            else
-            {
-                solution << s.str();
-            }
-
-            s.str(string());
-
-        }
-
-        o << solver()->particles().size() << "\n - " << surface.str() << crystal.str() << solution.str();
-        o.close();
-
+        solver()->dumpXYZ(outputCounter++);
     }
 
 private:

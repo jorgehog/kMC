@@ -27,8 +27,6 @@ public:
 
     static void testNeighbors();
 
-    static void testStateChanges();
-
     static void testPropertyCalculations();
 
     static void testRNG();
@@ -59,7 +57,7 @@ public:
 
     static void testReactionShuffler();
 
-
+    static void testStateChanges();
 
 
     static void initBoundarySuite(const umat &boundaries);

@@ -46,7 +46,6 @@ void SoluteParticle::setSite(kMC::Site *site)
 
     KMCDebugger_AssertBool(!m_site->isActive(), "particle already present at site.", m_site->info());
 
-
     m_site = site;
 
     m_site->associateWith(this);

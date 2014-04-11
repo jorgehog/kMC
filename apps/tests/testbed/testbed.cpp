@@ -69,7 +69,6 @@ void testBed::testTotalParticleStateCounters()
     solver->forEachSiteDo([&C1] (Site * currentSite)
     {
         CHECK_EQUAL(C1, accu(SoluteParticle::totalParticlesVector()));
-        CHECK_EQUAL(C1, SoluteParticle::totalParticles(ParticleStates::solvant));
 
         solver->forceSpawnParticle(currentSite);
         C1++;
@@ -313,10 +312,6 @@ void testBed::testNeighbors()
     });
 }
 
-void testBed::testStateChanges()
-{
-    CHECK_EQUAL(0, 1337);
-}
 
 void testBed::testPropertyCalculations()
 {
@@ -332,6 +327,7 @@ void testBed::testPropertyCalculations()
 
     double relativeSeedSize = 0.2;
     solver->initializeCrystal(relativeSeedSize);
+    solver->dumpXYZ(1337);
 
     CHECK_EQUAL(0, SoluteParticle::getCurrentConcentration());
     CHECK_EQUAL(relativeSeedSize, SoluteParticle::getCurrentRelativeCrystalOccupancy());
@@ -351,13 +347,13 @@ void testBed::testPropertyCalculations()
     uint crystalEndZ = crystalStartZ + crystalSizeZ;
 
 
-    CHECK_EQUAL(crystalStartX, boxTop(0, 0));
-    CHECK_EQUAL(crystalStartY, boxTop(1, 0));
-    CHECK_EQUAL(crystalStartZ, boxTop(2, 0));
+    CHECK_EQUAL(crystalStartX-1, boxTop(0, 0));
+    CHECK_EQUAL(crystalStartY-1, boxTop(1, 0));
+    CHECK_EQUAL(crystalStartZ-1, boxTop(2, 0));
 
-    CHECK_EQUAL(crystalEndX, boxTop(0, 1));
-    CHECK_EQUAL(crystalEndY, boxTop(1, 1));
-    CHECK_EQUAL(crystalEndZ, boxTop(2, 1));
+    CHECK_EQUAL(crystalEndX-2, boxTop(0, 1));
+    CHECK_EQUAL(crystalEndY-2, boxTop(1, 1));
+    CHECK_EQUAL(crystalEndZ-2, boxTop(2, 1));
 
     solver->forceSpawnParticle(solver->getSite(0, 0, 0));
     solver->forceSpawnParticle(solver->getSite(1, 0, 0));
@@ -961,7 +957,7 @@ void testBed::initBoundaryTestParameters()
 void testBed::initSimpleSystemParameters()
 {
 
-    solver->setBoxSize({6, 6, 6}, false);
+    solver->setBoxSize({15, 15, 15}, false);
 
     Site::resetNNeighborsLimitTo(2);
 
@@ -1689,6 +1685,12 @@ void testBed::fill_rate_stuff(vector<double> & accuAllRates, vector<Reaction*> &
 
         });
     }
+}
+
+
+void testBed::testStateChanges()
+{
+    CHECK_EQUAL(0, 1337);
 }
 
 

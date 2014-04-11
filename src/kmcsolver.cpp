@@ -420,6 +420,56 @@ string KMCSolver::getReactionVectorDebugMessage()
 
 }
 
+void KMCSolver::dumpXYZ(const uint n)
+{
+
+    stringstream s;
+    s << "kMC" << n << ".xyz";
+
+    ofstream o;
+    o.open("outfiles/" + s.str());
+
+
+
+    stringstream surface;
+    stringstream crystal;
+    stringstream solution;
+
+    s.str(string());
+
+    for (SoluteParticle *particle : particles())
+    {
+
+        s << "\n"
+          << particle->particleStateShortName() << " "
+          << particle->x() << " " << particle->y() << " " << particle->z() << " "
+          << particle->nNeighborsSum() << " "
+          << particle->energy();
+
+        if (particle->isSurface())
+        {
+            surface << s.str();
+        }
+
+        else if (particle->isCrystal())
+        {
+            crystal << s.str();
+        }
+
+        else
+        {
+            solution << s.str();
+        }
+
+        s.str(string());
+
+    }
+
+    o << particles().size() << "\n - " << surface.str() << crystal.str() << solution.str();
+    o.close();
+
+}
+
 
 void KMCSolver::forEachSiteDo(function<void (Site *)> applyFunction) const
 {
@@ -672,11 +722,10 @@ void KMCSolver::initializeCrystal(const double relativeSeedSize)
                     {
                         if (k >= crystalStartZ && k < crystalEndZ)
                         {
-                            if (!((i == m_NX/2 && j == m_NY/2 && k == m_NZ/2)))
-                            {
-                                SoluteParticle * particle = new SoluteParticle();
-                                (void)spawnParticle(particle, i, j, k, false);
-                            }
+
+                            SoluteParticle * particle = new SoluteParticle();
+                            (void)spawnParticle(particle, i, j, k, false);
+
 
                         }
                     }
