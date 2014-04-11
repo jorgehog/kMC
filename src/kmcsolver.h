@@ -41,11 +41,10 @@ public:
     const static uint UNSET_UINT = std::numeric_limits<uint>::max();
 
 
-    void mainloop();
-
-    inline void initialize();
-
-    inline void singleLoop();
+    void mainloop()
+    {
+        m_mainLattice->eventLoop();
+    }
 
 
     void addEvent(KMCEvent &event)
@@ -129,11 +128,6 @@ public:
         return m_N;
     }
 
-    const uint & nCycles() const
-    {
-        return m_nCycles;
-    }
-
     const vector<double> & accuAllRates() const
     {
         return m_accuAllRates;
@@ -166,13 +160,11 @@ public:
 
     void setNumberOfCycles(const uint nCycles)
     {
-        m_nCycles = nCycles;
+        MainLattice::nCycles = nCycles;
     }
 
     void setCyclesPerOutput(const uint cyclesPerOutput)
     {
-        m_cyclesPerOutput = cyclesPerOutput;
-        //tmp
         MainLattice::nCyclesPerOutput = cyclesPerOutput;
     }
 
@@ -184,9 +176,6 @@ public:
 
     void setRNGSeed(uint seedState = Seed::fromTime, int defaultSeed = 0);
 
-
-
-    void dumpXYZ();
 
     static void exit()
     {
@@ -264,32 +253,11 @@ private:
     vector<uint>   m_availableReactionSlots;
 
 
-    Reaction * selectedReaction;
-
-
-    uint choice;
-
-    double R;
-
-    double totalTime;
-
-
-    uint m_nCycles;
-    uint cycle;
-
-    uint m_cyclesPerOutput;
-    uint outputCounter;
-
-
-
     void initializeSites();
 
     void clearSites();
 
     void setBoxSize_KeepSites(const uvec3 &boxSizes);
-
-
-    void dumpOutput();
 
 
     void checkRefCounter();
@@ -312,42 +280,6 @@ private:
 
 
 };
-
-
-void KMCSolver::initialize()
-{
-    dumpXYZ();
-
-    KMCDebugger_Init();
-
-    getRateVariables();
-}
-
-void KMCSolver::singleLoop()
-{
-
-    R = m_kTot*KMC_RNG_UNIFORM();
-
-    choice = getReactionChoice(R);
-
-    selectedReaction = m_allPossibleReactions.at(choice);
-    KMCDebugger_SetActiveReaction(selectedReaction);
-
-    selectedReaction->execute();
-
-    if (cycle%m_cyclesPerOutput == 0)
-    {
-        dumpXYZ();
-    }
-
-    Site::updateBoundaries();
-
-    getRateVariables();
-
-    totalTime += Reaction::linearRateScale()/m_kTot;
-    cycle++;
-
-}
 
 
 }

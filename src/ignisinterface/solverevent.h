@@ -13,30 +13,126 @@ class SolverEvent : public KMCEvent
 {
 public:
 
-    SolverEvent(KMCSolver *solver) :
-        KMCEvent("kmC::SolverEvent"),
-        m_solver(solver)
+    SolverEvent() :
+        KMCEvent("kmC::SolverEvent")
     {
 
     }
 
     void initialize()
     {
-        m_solver->initialize();
+        KMCDebugger_Init();
+
+        solver()->getRateVariables();
+
+        totalTime = 0;
+
     }
 
 protected:
 
     void execute()
     {
-        m_solver->singleLoop();
+        R = solver()->kTot()*KMC_RNG_UNIFORM();
+
+        choice = solver()->getReactionChoice(R);
+
+        selectedReaction = solver()->allPossibleReactions().at(choice);
+        KMCDebugger_SetActiveReaction(selectedReaction);
+
+        selectedReaction->execute();
+
+        Site::updateBoundaries();
+
+        solver()->getRateVariables();
+
+        totalTime += Reaction::linearRateScale()/solver()->kTot();
+
     }
 
 private:
 
-    KMCSolver *m_solver;
+    double R;
+
+    double totalTime;
+
+    uint choice;
+
+    Reaction * selectedReaction;
 
 };
 
+
+class DumpXYZ : public KMCEvent
+{
+public:
+
+    DumpXYZ() : KMCEvent("DumpXYZ") {}
+
+protected:
+
+    void execute()
+    {
+        if (nTimesExecuted%MainLattice::nCyclesPerOutput != 0)
+        {
+            return;
+        }
+
+        cout << "Storing XYZ: " << outputCounter << endl;
+
+        stringstream s;
+        s << "kMC" << outputCounter++ << ".xyz";
+
+        ofstream o;
+        o.open("outfiles/" + s.str());
+
+
+
+        stringstream surface;
+        stringstream crystal;
+        stringstream solution;
+
+        uint nLines = 0;
+        s.str(string());
+
+        for (SoluteParticle *particle : solver()->particles())
+        {
+
+            s << "\n"
+              << particle->particleStateShortName() << " "
+              << particle->x() << " " << particle->y() << " " << particle->z() << " "
+              << particle->nNeighborsSum() << " "
+              << particle->energy();
+
+            if (particle->isSurface())
+            {
+                surface << s.str();
+            }
+
+            else if (particle->isCrystal())
+            {
+                crystal << s.str();
+            }
+
+            else
+            {
+                solution << s.str();
+            }
+
+            s.str(string());
+            nLines++;
+
+        }
+
+        o << nLines << "\n - " << surface.str() << crystal.str() << solution.str();
+        o.close();
+
+    }
+
+private:
+
+    uint outputCounter;
+
+};
 
 }

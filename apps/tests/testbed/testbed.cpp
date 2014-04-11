@@ -91,8 +91,6 @@ void testBed::testTotalParticleStateCounters()
 
     });
 
-    solver->dumpXYZ();
-
     CHECK_EQUAL(NX()*NY()*NZ()/8, SoluteParticle::totalParticles(ParticleStates::solvant));
 
 

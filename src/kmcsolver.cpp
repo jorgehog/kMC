@@ -105,14 +105,6 @@ void KMCSolver::onConstruct()
 
     m_targetConcentration = 0;
 
-    totalTime = 0;
-
-    cycle = 1;
-
-    m_nCycles = 0;
-
-    outputCounter = 0;
-
     m_kTot = 0;
 
 
@@ -122,13 +114,14 @@ void KMCSolver::onConstruct()
 
     Site::setMainSolver(this);
 
-    KMCParticles *particles = new KMCParticles(this);
-    MainLattice::setCurrentParticles(*particles);
+
+    MainLattice::setCurrentParticles(new KMCParticles(this));
 
     m_mainLattice = new MainLattice();
 
-    SolverEvent *solverEvent = new SolverEvent(this);
-    m_mainLattice->addEvent(*solverEvent);
+    m_mainLattice->addEvent(new SolverEvent());
+
+    m_mainLattice->addEvent(new DumpXYZ());
 
     refCounter++;
 
@@ -151,25 +144,11 @@ void KMCSolver::finalizeObject()
 
 }
 
-void KMCSolver::mainloop()
-{
-    m_mainLattice->eventLoop(m_nCycles);
-}
-
 
 void KMCSolver::reset()
 {
 
     finalizeObject();
-
-
-    totalTime = 0;
-
-    cycle = 1;
-
-    outputCounter = 0;
-
-    m_kTot = 0;
 
 
     m_allPossibleReactions.clear();
@@ -211,65 +190,11 @@ void KMCSolver::reset()
 
     m_mainLattice = new MainLattice();
 
-    SolverEvent *solverEvent = new SolverEvent(this);
+    SolverEvent *solverEvent = new SolverEvent();
     m_mainLattice->addEvent(*solverEvent);
 
 }
 
-
-
-void KMCSolver::dumpXYZ()
-{
-    cout << "Storing XYZ: " << outputCounter << endl;
-
-    stringstream s;
-    s << "kMC" << outputCounter++ << ".xyz";
-
-    ofstream o;
-    o.open("outfiles/" + s.str());
-
-
-
-    stringstream surface;
-    stringstream crystal;
-    stringstream solution;
-
-    uint nLines = 0;
-    s.str(string());
-
-    for (SoluteParticle *particle : m_particles)
-    {
-
-        s << "\n"
-          << particle->particleStateShortName() << " "
-          << particle->x() << " " << particle->y() << " " << particle->z() << " "
-          << particle->nNeighborsSum() << " "
-          << particle->energy();
-
-        if (particle->isSurface())
-        {
-            surface << s.str();
-        }
-
-        else if (particle->isCrystal())
-        {
-            crystal << s.str();
-        }
-
-        else
-        {
-            solution << s.str();
-        }
-
-        s.str(string());
-        nLines++;
-
-    }
-
-    o << nLines << "\n - " << surface.str() << crystal.str() << solution.str();
-    o.close();
-
-}
 
 void KMCSolver::onAllRatesChanged()
 {
@@ -503,16 +428,6 @@ string KMCSolver::getReactionVectorDebugMessage()
 
     return s.str();
 
-}
-
-void KMCSolver::dumpOutput()
-{
-
-    cout << setw(5) << right << setprecision(1) << fixed
-         << (double)cycle/m_nCycles*100 << "%   "
-         << outputCounter
-         << "\n";
-    cout << setprecision(6);
 }
 
 
@@ -958,8 +873,6 @@ void KMCSolver::setBoxSize(const uvec3 boxSize, bool check, bool keepSystem)
 void KMCSolver::setRNGSeed(uint seedState, int defaultSeed)
 {
 
-    //    seed_type prevSeed = Seed::initialSeed;
-
     seed_type seed = -1;
 
     switch (seedState)
@@ -977,10 +890,6 @@ void KMCSolver::setRNGSeed(uint seedState, int defaultSeed)
 
     KMC_INIT_RNG(seed);
 
-    //    if (prevSeed != Seed::initialSeed)
-    //    {
-    //        cout << " -- new seed set: " << seed << endl;
-    //    }
 }
 
 
