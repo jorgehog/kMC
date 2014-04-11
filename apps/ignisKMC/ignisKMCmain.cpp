@@ -109,6 +109,21 @@ protected:
 };
 
 
+class Debug : public KMCEvent
+{
+public:
+
+    Debug() : KMCEvent("debug", "", true) {}
+
+protected:
+
+    void execute()
+    {
+        setValue(particles(0, 0));
+    }
+};
+
+
 
 void initialize_ignisKMC(KMCSolver * solver, const Setting & root)
 {
@@ -119,12 +134,10 @@ void initialize_ignisKMC(KMCSolver * solver, const Setting & root)
     const uint & NY = solver->NY();
     const uint & NZ = solver->NZ();
 
+    solver->addEvent(new tempChange(1.5));
+    solver->addEvent(new AverageNeighbors());
+    solver->addEvent(new Debug());
 
-    KMCEvent *tChange       = new tempChange(1.5);
-    KMCEvent *avgNeighbors  = new AverageNeighbors();
-
-    solver->addEvent(*tChange);
-    solver->addEvent(*avgNeighbors);
     solver->initializeSolutionBath();
 
 

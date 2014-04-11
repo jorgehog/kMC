@@ -204,12 +204,12 @@ public:
 
     const uint & y() const
     {
-        return m_site->x();
+        return m_site->y();
     }
 
     const uint & z() const
     {
-        return m_site->x();
+        return m_site->z();
     }
 
     const uint & r(const uint i) const
@@ -311,7 +311,6 @@ public:
 
 
     const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const;
-
 
     void setZeroEnergy();
 

@@ -57,6 +57,16 @@ public:
         m_mainLattice->addSubField(subLattice);
     }
 
+    void addEvent(KMCEvent *event)
+    {
+        m_mainLattice->addEvent(event);
+    }
+
+    void addSubLattice(lattice *subLattice)
+    {
+        m_mainLattice->addSubField(subLattice);
+    }
+
     bool spawnParticle(SoluteParticle *particle, uint x, uint y, uint z, bool checkIfLegal);
 
     bool spawnParticle(SoluteParticle *particle, Site *site, bool checkIfLegal);

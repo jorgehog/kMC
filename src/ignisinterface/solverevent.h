@@ -71,6 +71,11 @@ public:
 
 protected:
 
+    void initialize()
+    {
+        outputCounter = 0;
+    }
+
     void execute()
     {
         if (nTimesExecuted%MainLattice::nCyclesPerOutput != 0)
@@ -92,7 +97,6 @@ protected:
         stringstream crystal;
         stringstream solution;
 
-        uint nLines = 0;
         s.str(string());
 
         for (SoluteParticle *particle : solver()->particles())
@@ -120,11 +124,10 @@ protected:
             }
 
             s.str(string());
-            nLines++;
 
         }
 
-        o << nLines << "\n - " << surface.str() << crystal.str() << solution.str();
+        o << solver()->particles().size() << "\n - " << surface.str() << crystal.str() << solution.str();
         o.close();
 
     }
