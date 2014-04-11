@@ -308,6 +308,12 @@ void SoluteParticle::removeNeighbor(SoluteParticle *neighbor, uint level)
                                                      neighbor),
                                            m_neighboringParticles.at(level).end());
 
+    KMCDebugger_AssertBool(std::find(m_neighboringParticles.at(level).begin(),
+                                 m_neighboringParticles.at(level).end(),
+                                 neighbor) == m_neighboringParticles.at(level).end(),
+                       "neighbor was not properly removed.", info());
+
+
     _updateNeighborProps(-1, neighbor, level);
 
 }
@@ -324,6 +330,11 @@ void SoluteParticle::addNeighbor(SoluteParticle *neighbor, uint level)
                        "adding neighbor that is present in neighborlist.", info());
 
     m_neighboringParticles.at(level).push_back(neighbor);
+
+    KMCDebugger_AssertBool(std::find(m_neighboringParticles.at(level).begin(),
+                                 m_neighboringParticles.at(level).end(),
+                                 neighbor) != m_neighboringParticles.at(level).end(),
+                       "neighbor was not properly added.", info());
 
     _updateNeighborProps(+1, neighbor, level);
 
@@ -352,6 +363,8 @@ void SoluteParticle::_updateNeighborProps(const int sign, const SoluteParticle *
     }
 
     markAsAffected();
+
+    KMCDebugger_Assert(nNeighbors(level), ==, m_neighboringParticles.at(level).size(), "mismatch", info());
 }
 
 

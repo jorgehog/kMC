@@ -171,7 +171,9 @@ public:
 
         dumpFullTrace(line, file, additionalInfo);
 
-        throw std::runtime_error(assertMessage.str());
+        cerr << assertMessage.str() << endl;
+
+        throw std::runtime_error("Assertion failed.");
 
     }
 
