@@ -1768,6 +1768,65 @@ void testBed::testStateChanges()
 
 }
 
+void testBed::testNeighborlist()
+{
+    solver->setBoxSize({15, 15, 15});
+
+    Site::resetNNeighborsLimitTo(5);
+
+    solver->forceSpawnParticle(getBoxCenter());
+
+    auto NNSUMBF = [&] (Site * site) -> uint
+    {
+        uint nn = 0;
+        for (uint i = 0; i < Site::nNeighborsLimit(); ++i)
+        {
+            nn += site->associatedParticle()->neighbouringParticles().at(i).size();
+        }
+
+        return nn;
+    };
+
+    CHECK_EQUAL(0, NNSUMBF(getBoxCenter()));
+
+    uint c = 0;
+    uvec nn(Site::nNeighborsLimit(), fill::zeros);
+
+    getBoxCenter()->forEachNeighborDo_sendIndices([&] (Site *site, uint i, uint j, uint k)
+    {
+        uint level = Site::levelMatrix(i, j, k);
+
+        solver->forceSpawnParticle(site);
+
+        c++;
+        nn(level)++;
+
+        CHECK_EQUAL(getBoxCenter()->associatedParticle()->isNeighbor(site->associatedParticle(), level), true);
+        CHECK_EQUAL(site->associatedParticle()->isNeighbor(getBoxCenter()->associatedParticle(), level), true);
+
+        CHECK_EQUAL(c, NNSUMBF(getBoxCenter()));
+        CHECK_EQUAL(nn(level), getBoxCenter()->associatedParticle()->neighbouringParticles(level).size());
+
+    });
+
+    getBoxCenter()->forEachNeighborDo_sendIndices([&] (Site *site, uint i, uint j, uint k)
+    {
+        uint level = Site::levelMatrix(i, j, k);
+
+        solver->despawnParticle(site);
+
+        c--;
+        nn(level)--;
+
+        CHECK_EQUAL(getBoxCenter()->associatedParticle()->isNeighbor(site->associatedParticle(), level), false);
+
+        CHECK_EQUAL(c, NNSUMBF(getBoxCenter()));
+        CHECK_EQUAL(nn(level), getBoxCenter()->associatedParticle()->neighbouringParticles(level).size());
+
+    });
+
+}
+
 
 KMCSolver * testBed::solver;
 

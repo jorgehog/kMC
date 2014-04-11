@@ -59,6 +59,8 @@ public:
 
     static void testStateChanges();
 
+    static void testNeighborlist();
+
 
     static void initBoundarySuite(const umat &boundaries);
 

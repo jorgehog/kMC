@@ -279,6 +279,7 @@ public:
         return nNeighbors() == 0;
     }
 
+    bool isNeighbor(SoluteParticle *particle, uint level);
 
     void reset();
 

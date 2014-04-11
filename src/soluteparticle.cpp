@@ -166,6 +166,13 @@ bool SoluteParticle::isLegalToSpawn()
 
 }
 
+bool SoluteParticle::isNeighbor(SoluteParticle *particle, uint level)
+{
+  return std::find(m_neighboringParticles.at(level).begin(),
+                   m_neighboringParticles.at(level).end(),
+                   particle) != m_neighboringParticles.at(level).end();
+}
+
 void SoluteParticle::clearAllReactions()
 {
 
@@ -296,19 +303,13 @@ void SoluteParticle::removeNeighbor(SoluteParticle *neighbor, uint level)
     KMCDebugger_Assert(nNeighbors(level), !=, 0, "Call initiated to set negative nNeighbors.", info());
     KMCDebugger_Assert(nNeighborsSum(), !=, 0,   "Call initiated to set negative nNeighbors.", info());
 
-    KMCDebugger_AssertBool(std::find(m_neighboringParticles.at(level).begin(),
-                                 m_neighboringParticles.at(level).end(),
-                                 neighbor) != m_neighboringParticles.at(level).end(),
-                       "removing neighbor that is not present in neighborlist.", info());
+    KMCDebugger_AssertBool(isNeighbor(neighbor, level), "removing neighbor that is not present in neighborlist.", info());
 
     m_neighboringParticles.at(level).erase(std::find(m_neighboringParticles.at(level).begin(),
                                                      m_neighboringParticles.at(level).end(),
                                                      neighbor));
 
-    KMCDebugger_AssertBool(std::find(m_neighboringParticles.at(level).begin(),
-                                 m_neighboringParticles.at(level).end(),
-                                 neighbor) == m_neighboringParticles.at(level).end(),
-                       "neighbor was not properly removed.", info());
+    KMCDebugger_AssertBool(!isNeighbor(neighbor, level), "neighbor was not properly removed.", info());
 
 
     _updateNeighborProps(-1, neighbor, level);
@@ -321,17 +322,11 @@ void SoluteParticle::addNeighbor(SoluteParticle *neighbor, uint level)
     KMCDebugger_Assert(nNeighbors(level), <=, Site::shellSize(level), "Overflow in nNeighbors.", info());
     KMCDebugger_Assert(nNeighborsSum(), <=, Site::maxNeighbors(),   "Call initiated to set negative nNeighbors.", info());
 
-    KMCDebugger_AssertBool(std::find(m_neighboringParticles.at(level).begin(),
-                                 m_neighboringParticles.at(level).end(),
-                                 neighbor) == m_neighboringParticles.at(level).end(),
-                       "adding neighbor that is present in neighborlist.", info());
+    KMCDebugger_AssertBool(!isNeighbor(neighbor, level), "adding neighbor that is present in neighborlist.", info());
 
     m_neighboringParticles.at(level).push_back(neighbor);
 
-    KMCDebugger_AssertBool(std::find(m_neighboringParticles.at(level).begin(),
-                                 m_neighboringParticles.at(level).end(),
-                                 neighbor) != m_neighboringParticles.at(level).end(),
-                       "neighbor was not properly added.", info());
+    KMCDebugger_AssertBool(isNeighbor(neighbor, level), "neighbor was not properly added.", info());
 
     _updateNeighborProps(+1, neighbor, level);
 

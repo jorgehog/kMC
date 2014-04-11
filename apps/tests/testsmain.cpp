@@ -10,7 +10,7 @@
 
 
 #define focusSuite "Misc"
-//#define focusTest  "TotalParticleStateCounters"
+#define focusTest  "Neighborlist"
 
 
 #include "defines.h"
@@ -28,6 +28,8 @@ SUITE(Misc)
     TESTWRAPPER(nNeiborsLimit)
 
     TESTWRAPPER(StateChanges)
+
+    TESTWRAPPER(Neighborlist)
 
 }
 
