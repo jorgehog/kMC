@@ -54,11 +54,20 @@ public:
         m_mainLattice->addEvent(event);
     }
 
+    void addEvent(KMCEvent *event)
+    {
+        m_mainLattice->addEvent(event);
+    }
+
     void addSubLattice(lattice &subLattice)
     {
         m_mainLattice->addSubField(subLattice);
     }
 
+    void addSubLattice(lattice *subLattice)
+    {
+        m_mainLattice->addSubField(subLattice);
+    }
 
     void initializeCrystal(const double relativeSeedSize);
 

@@ -1,5 +1,6 @@
 #include <kMC>
 #include <libconfig_utils/libconfig_utils.h>
+#include <DCViz.h>
 
 using namespace libconfig;
 using namespace kMC;
@@ -30,6 +31,9 @@ int main()
     initialize_ignisKMC(solver, root);
 
 
+    DCViz viz("/tmp/ignisEventsOut.arma");
+    viz.launch(true, 0.2, 30, 16);
+
     t.tic();
 
     solver->mainloop();
@@ -50,8 +54,9 @@ class tempChange : public KMCEvent
 {
 public:
 
-    tempChange(const double T1) :
-        KMCEvent("tempChange", "T0", true, true),
+    tempChange(const double T1, uint therm = 1) :
+        KMCEvent("tempChange"),
+        therm(therm),
         T1(T1)
     {
 
@@ -60,27 +65,44 @@ public:
     void initialize()
     {
         T0 = DiffusionReaction::beta();
-
-        dT = (T1 - T0)/eventLength;
+        dT = (T1 - T0)/((eventLength/(double)therm - 1));
 
     }
 
     void execute()
     {
-
-        DiffusionReaction::setBeta(T0 + dT*(nTimesExecuted+1));
-        setValue(DiffusionReaction::beta()/T0);
+        if (nTimesExecuted%therm == 0)
+        {
+            DiffusionReaction::setBeta(T0 + dT*(nTimesExecuted/therm));
+        }
     }
 
 
 
 private:
 
+    uint therm;
+
     double T0;
     const double T1;
 
     double dT;
 
+
+};
+
+class MeasureTemp : public KMCEvent
+{
+public:
+
+    MeasureTemp() : KMCEvent("Temperature", "T*", true, true) {}
+
+protected:
+
+    void execute()
+    {
+        setValue(DiffusionReaction::beta());
+    }
 
 };
 
@@ -107,6 +129,28 @@ protected:
 
 };
 
+class TotalEnergy : public KMCEvent
+{
+public:
+
+    TotalEnergy() : KMCEvent("TotalEnergy", "E*", true, true) {}
+
+protected:
+
+    void execute()
+    {
+        double v = 0;
+
+        solver()->forEachActiveSiteDo([&v] (Site * site)
+        {
+            v += site->energy();
+        });
+
+        setValue(v);
+    }
+
+};
+
 
 
 void initialize_ignisKMC(KMCSolver * solver, const Setting & root)
@@ -118,12 +162,29 @@ void initialize_ignisKMC(KMCSolver * solver, const Setting & root)
     const uint & NY = solver->NY();
     const uint & NZ = solver->NZ();
 
+    (void) NX;
+    (void) NY;
+    (void) NZ;
 
-    KMCEvent *tChange       = new tempChange(1.5);
-    KMCEvent *avgNeighbors  = new AverageNeighbors();
+    const uint therm     = getSurfaceSetting<uint>(initCFG, "therm");
+    const double endBeta = getSurfaceSetting<double>(initCFG, "endBeta");
 
-    solver->addEvent(*tChange);
-    solver->addEvent(*avgNeighbors);
+
+    KMCEvent *heating = new tempChange(endBeta, therm);
+    heating->setOffsetTime(solver->nCycles()/2 - 1);
+
+    KMCEvent *cooling = new tempChange(DiffusionReaction::beta(), therm);
+    cooling->setOnsetTime(solver->nCycles()/2);
+
+
+    solver->addEvent(*heating);
+    solver->addEvent(*cooling);
+
+    solver->addEvent(new MeasureTemp());
+    solver->addEvent(new AverageNeighbors());
+    solver->addEvent(new TotalEnergy());
+
+
     solver->initializeSolutionBath();
 
 
