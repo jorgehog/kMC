@@ -494,7 +494,7 @@ double SoluteParticle::getCurrentConcentration()
 
 double SoluteParticle::getCurrentRelativeCrystalOccupancy()
 {
-    return static_cast<double>(nCrystals())/(NX()*NY()*NZ());
+    return static_cast<double>(nCrystals() + nSurfaces())/(NX()*NY()*NZ());
 }
 
 void SoluteParticle::setNewParticleState(int newState)

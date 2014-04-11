@@ -71,9 +71,14 @@ public:
 
     bool spawnParticle(SoluteParticle *particle, Site *site, bool checkIfLegal);
 
+    void forceSpawnParticle(uint i, uint j, uint k);
+
     void forceSpawnParticle(Site *site);
 
+    void despawnParticle(uint i, uint j, uint k);
+
     void despawnParticle(Site *site);
+
 
     void initializeCrystal(const double relativeSeedSize);
 

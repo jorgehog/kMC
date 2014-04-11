@@ -631,8 +631,12 @@ bool KMCSolver::spawnParticle(SoluteParticle *particle, Site *site, bool checkIf
 
     if (checkIfLegal)
     {
+
         if (!particle->isLegalToSpawn())
         {
+
+            particle->trySite(NULL);
+
             return false;
         }
     }
@@ -647,6 +651,11 @@ bool KMCSolver::spawnParticle(SoluteParticle *particle, Site *site, bool checkIf
 
 }
 
+void KMCSolver::forceSpawnParticle(uint i, uint j, uint k)
+{
+    forceSpawnParticle(getSite(i, j, k));
+}
+
 void KMCSolver::forceSpawnParticle(Site *site)
 {
 
@@ -655,6 +664,11 @@ void KMCSolver::forceSpawnParticle(Site *site)
     SoluteParticle *particle = new SoluteParticle();
 
     spawnParticle(particle, site, false);
+}
+
+void KMCSolver::despawnParticle(uint i, uint j, uint k)
+{
+    despawnParticle(getSite(i, j, k));
 }
 
 void KMCSolver::despawnParticle(Site *site)

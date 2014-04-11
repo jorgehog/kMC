@@ -327,10 +327,10 @@ void testBed::testPropertyCalculations()
 
     double relativeSeedSize = 0.4;
     solver->initializeCrystal(relativeSeedSize);
-    solver->dumpXYZ(1337);
 
     CHECK_EQUAL(0, SoluteParticle::getCurrentConcentration());
-    CHECK_EQUAL(relativeSeedSize, SoluteParticle::getCurrentRelativeCrystalOccupancy());
+    CHECK_CLOSE(pow(relativeSeedSize, 3), SoluteParticle::getCurrentRelativeCrystalOccupancy(), 1E-5);
+    solver->dumpXYZ(1337);
 
     umat boxTop = Site::getCurrentCrystalBoxTopology();
 
@@ -390,28 +390,62 @@ void testBed::testPropertyCalculations()
 
     CHECK_EQUAL(0, SoluteParticle::getCurrentConcentration());
 
+    CHECK_EQUAL(0, SoluteParticle::nParticles());
+
+
     uint sx = NX()/2;
     uint sy = NY()/2;
     uint sz = NZ()/2;
 
-    solver->forceSpawnParticle(solver->getSite(sx, sy    , sz    ));
+    vector<Site*> crystalSites = {solver->getSite(sx, sy    , sz    ),
+                                  solver->getSite(sx, sy    , sz    ),
 
-    solver->forceSpawnParticle(solver->getSite(sx, sy    , sz + 1));
-    solver->forceSpawnParticle(solver->getSite(sx, sy    , sz + 2));
+                                  solver->getSite(sx, sy    , sz + 1),
+                                  solver->getSite(sx, sy    , sz + 2),
 
-    solver->forceSpawnParticle(solver->getSite(sx, sy - 1, sz - 1));
-    solver->forceSpawnParticle(solver->getSite(sx, sy - 1, sz    ));
-    solver->forceSpawnParticle(solver->getSite(sx, sy - 1, sz + 1));
+                                  solver->getSite(sx, sy - 1, sz - 1),
+                                  solver->getSite(sx, sy - 1, sz    ),
+                                  solver->getSite(sx, sy - 1, sz + 1),
 
-    solver->forceSpawnParticle(solver->getSite(sx, sy + 1, sz + 1));
+                                  solver->getSite(sx, sy + 1, sz + 1)
+                                 };
+
+    uint x, y, z;
+
+    Site *currentSite;
+
+    for (Site * site : crystalSites)
+    {
+        x = site->x();
+        y = site->y();
+        z = site->z();
+
+        for (int i = -1; i <= 1; ++i)
+        {
+            for (int j = -1; j <= 1; ++j)
+            {
+                for (int k = -1; k <= 1; ++k)
+                {
+
+                    currentSite = solver->getSite(i + x, j + y, k + z);
+
+                    if (!currentSite->isActive())
+                    {
+                        solver->forceSpawnParticle(currentSite);
+                    }
+                }
+            }
+        }
+    }
 
     /*            x
      *          x x x
-     *          x F
+     *          x x
      *          x
      *
      */
 
+    solver->dumpXYZ(1338);
 
     boxTop = Site::getCurrentCrystalBoxTopology();
 
@@ -1690,7 +1724,48 @@ void testBed::fill_rate_stuff(vector<double> & accuAllRates, vector<Reaction*> &
 
 void testBed::testStateChanges()
 {
-    CHECK_EQUAL(0, 1337);
+    Site * center = getBoxCenter();
+
+    solver->forceSpawnParticle(center);
+
+    CHECK_EQUAL(ParticleStates::solvant, center->associatedParticle()->particleState());
+
+    solver->despawnParticle(center);
+
+    for (int i = -1; i <= 1; ++i)
+    {
+        for (int j = -1; j <= 1; ++j)
+        {
+            for (int k = -1; k <= 1; ++k)
+            {
+                solver->forceSpawnParticle(getBoxCenter(i, j, k));
+            }
+        }
+    }
+
+    solver->forceSpawnParticle(getBoxCenter(3, 0, 0));
+
+    for (int i = -1; i <= 1; ++i)
+    {
+        for (int j = -1; j <= 1; ++j)
+        {
+            for (int k = -1; k <= 1; ++k)
+            {
+                if (i == j && j == k && k == 0)
+                {
+                    CHECK_EQUAL(ParticleStates::crystal, getBoxCenter(i, j, k)->associatedParticle()->particleState());
+                }
+
+                else
+                {
+                    CHECK_EQUAL(ParticleStates::surface, getBoxCenter(i, j, k)->associatedParticle()->particleState());
+                }
+            }
+        }
+    }
+
+    CHECK_EQUAL(ParticleStates::solvant, getBoxCenter(3, 0, 0)->associatedParticle()->particleState());
+
 }
 
 
