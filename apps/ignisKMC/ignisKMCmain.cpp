@@ -136,7 +136,7 @@ void initialize_ignisKMC(KMCSolver * solver, const Setting & root)
 
     solver->addEvent(new tempChange(1.5));
     solver->addEvent(new AverageNeighbors());
-    solver->addEvent(new Debug());
+//    solver->addEvent(new Debug());
 
     solver->initializeSolutionBath();
 

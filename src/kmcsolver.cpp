@@ -131,10 +131,7 @@ void KMCSolver::finalizeObject()
 {
     checkRefCounter();
 
-    for (SoluteParticle *particle : m_particles)
-    {
-        delete particle;
-    }
+    clearParticles();
 
     KMCDebugger_Finalize();
 
@@ -160,14 +157,7 @@ void KMCSolver::reset()
 
     SoluteParticle::clearAffectedParticles();
 
-    forEachSiteDo([] (Site * site)
-    {
-        site->reset();
-    });
-
     KMCDebugger_Assert(accu(SoluteParticle::totalParticlesVector()), ==, 0);
-
-    //    KMCDebugger_Assert(Site::totalDeactiveParticles(ParticleStates::solution), ==, m_NX*m_NY*m_NZ);
 
     KMCDebugger_AssertClose(SoluteParticle::totalEnergy(), 0, 1E-5);
 
@@ -890,6 +880,16 @@ void KMCSolver::setRNGSeed(uint seedState, int defaultSeed)
 
     KMC_INIT_RNG(seed);
 
+}
+
+void KMCSolver::clearParticles()
+{
+    for (SoluteParticle *particle : m_particles)
+    {
+        delete particle;
+    }
+
+    m_particles.clear();
 }
 
 

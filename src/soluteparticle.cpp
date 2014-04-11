@@ -98,6 +98,7 @@ void SoluteParticle::disableSite()
 
     m_totalEnergy -= m_energy;
 
+    m_energy = 0;
 
     KMCDebugger_MarkPartialStep("PARTICLE DISABLED");
 
@@ -243,15 +244,13 @@ void SoluteParticle::updateReactions()
 void SoluteParticle::setupAllNeighbors()
 {
 
+    KMCDebugger_Assert(m_energy, ==, 0, "Particle energy should be cleared prior to this call.", info());
+
     m_neighboringParticles.resize(Site::nNeighborsLimit());
 
     m_nNeighbors.zeros();
 
     m_nNeighborsSum = 0;
-
-    m_totalEnergy -= m_energy;
-
-    m_energy = 0;
 
 
     for (vector<SoluteParticle*> & neighborShell : m_neighboringParticles)

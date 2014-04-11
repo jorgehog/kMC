@@ -9,8 +9,8 @@
 #include <sys/types.h>
 
 
-//#define focusSuite "PeriodicBoundaries"
-//#define focusTest  "KnownCase"
+#define focusSuite "Misc"
+#define focusTest  "TotalParticleStateCounters"
 
 
 #include "defines.h"

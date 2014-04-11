@@ -201,6 +201,8 @@ public:
         });
     }
 
+    void clearParticles();
+
 
     void onAllRatesChanged();
 
