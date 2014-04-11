@@ -23,7 +23,7 @@ SnapShot::SnapShot(KMCSolver *solver)
 
                 if (currentSite->isActive())
                 {
-                    for (Reaction * r : currentSite->getAssociatedParticle()->reactions())
+                    for (Reaction * r : currentSite->associatedParticle()->reactions())
                     {
                         allRates.push_back(r->rate());
                         allreactions.push_back({r->x(), r->y(), r->z(),

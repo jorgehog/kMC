@@ -46,47 +46,24 @@ void SoluteParticle::setSite(kMC::Site *site)
 
     KMCDebugger_AssertBool(!m_site->isActive(), "particle already present at site.", m_site->info());
 
+
     m_site = site;
 
-    m_site->activate();
-
-
-    markAsAffected();
+    m_site->associateWith(this);
 
 
     setupAllNeighbors();
 
+    setNewParticleState(detectParticleState());
+
     forEachNeighborDo([this] (SoluteParticle *neighbor, const uint level)
     {
-        neighbor->addNeighbor(neighbor, level);
-
-        for (Reaction * reaction : neighbor->reactions())
-        {
-            reaction->setDirectUpdateFlags(this, level);
-        }
-
-        neighbor->markAsAffected();
-
+        neighbor->addNeighbor(this, level);
     });
 
 
 
-    //DERP: do this checks at once?
-    if (qualifiesAsCrystal())
-    {
-        setNewParticleState(ParticleStates::crystal);
-    }
-
-    else if (qualifiesAsSurface())
-    {
-        setNewParticleState(ParticleStates::surface);
-    }
-
-    else
-    {
-        setNewParticleState(ParticleStates::solvant);
-    }
-
+    markAsAffected();
 
     for (Reaction * reaction : m_reactions)
     {
@@ -94,7 +71,8 @@ void SoluteParticle::setSite(kMC::Site *site)
     }
 
 
-    KMCDebugger_MarkPartialStep("PARTICLE SITE CHANGE END");
+
+    KMCDebugger_MarkPartialStep("PARTICLE ACTIVATED");
 
 }
 
@@ -107,24 +85,22 @@ void SoluteParticle::disableSite()
 {
     KMCDebugger_AssertBool(m_site->isActive(), "particle not present at site.", m_site->info());
 
+    m_site->desociate();
+
 
     forEachNeighborDo([this] (SoluteParticle *neighbor, const uint level)
     {
-        neighbor->removeNeighbor(neighbor, level);
-
-        for (Reaction * reaction : neighbor->reactions())
-        {
-            reaction->setDirectUpdateFlags(this, level);
-        }
-
-        neighbor->markAsAffected();
+        neighbor->removeNeighbor(this, level);
     });
+
 
     m_totalParticles(particleState())--;
 
     m_totalEnergy -= m_energy;
 
-    m_site->deactivate();
+
+    KMCDebugger_MarkPartialStep("PARTICLE DISABLED");
+
 
 }
 
@@ -172,25 +148,6 @@ void SoluteParticle::setParticleState(int newState)
 
 }
 
-
-
-
-bool SoluteParticle::qualifiesAsCrystal()
-{
-
-    if (nNeighbors() == 26)
-    {
-        return true;
-    }
-
-    return false;
-
-}
-
-bool SoluteParticle::qualifiesAsSurface()
-{
-    return m_site->hasNeighboring(ParticleStates::crystal) && !qualifiesAsCrystal();
-}
 
 //All reactions must be legal if site is allowed to spawn.
 bool SoluteParticle::isLegalToSpawn()
@@ -317,7 +274,7 @@ void SoluteParticle::setupAllNeighbors()
 
         level = Site::levelMatrix(i, j, k);
 
-        m_neighboringParticles.at(level).push_back(neighbor->getAssociatedParticle());
+        m_neighboringParticles.at(level).push_back(neighbor->associatedParticle());
 
         m_nNeighbors(level)++;
 
@@ -341,9 +298,9 @@ void SoluteParticle::removeNeighbor(SoluteParticle *neighbor, uint level)
     KMCDebugger_Assert(nNeighbors(level), !=, 0, "Call initiated to set negative nNeighbors.", info());
     KMCDebugger_Assert(nNeighborsSum(), !=, 0,   "Call initiated to set negative nNeighbors.", info());
 
-    KMCDebugger_Assert(std::find(m_neighboringParticles.at(level).begin(),
+    KMCDebugger_AssertBool(std::find(m_neighboringParticles.at(level).begin(),
                                  m_neighboringParticles.at(level).end(),
-                                 neighbor), !=, m_neighboringParticles.at(level).end(),
+                                 neighbor) != m_neighboringParticles.at(level).end(),
                        "removing neighbor that is not present in neighborlist.", info());
 
     m_neighboringParticles.at(level).erase(std::find(m_neighboringParticles.at(level).begin(),
@@ -351,15 +308,7 @@ void SoluteParticle::removeNeighbor(SoluteParticle *neighbor, uint level)
                                                      neighbor),
                                            m_neighboringParticles.at(level).end());
 
-    m_nNeighbors(level)--;
-
-    m_nNeighborsSum--;
-
-    double dE = -potentialBetween(neighbor);
-
-    m_energy += dE;
-
-    m_totalEnergy += dE;
+    _updateNeighborProps(-1, neighbor, level);
 
 }
 
@@ -369,23 +318,40 @@ void SoluteParticle::addNeighbor(SoluteParticle *neighbor, uint level)
     KMCDebugger_Assert(nNeighbors(level), <=, Site::shellSize(level), "Overflow in nNeighbors.", info());
     KMCDebugger_Assert(nNeighborsSum(), <=, Site::maxNeighbors(),   "Call initiated to set negative nNeighbors.", info());
 
-    KMCDebugger_Assert(std::find(m_neighboringParticles.at(level).begin(),
+    KMCDebugger_AssertBool(std::find(m_neighboringParticles.at(level).begin(),
                                  m_neighboringParticles.at(level).end(),
-                                 neighbor), !=, m_neighboringParticles.at(level).end(),
+                                 neighbor) != m_neighboringParticles.at(level).end(),
                        "removing neighbor that is not present in neighborlist.", info());
 
     m_neighboringParticles.at(level).push_back(neighbor);
 
-    m_nNeighbors(level)++;
+    _updateNeighborProps(+1, neighbor, level);
 
-    m_nNeighborsSum++;
+}
 
-    double dE = potentialBetween(neighbor);
+void SoluteParticle::_updateNeighborProps(const int sign, const SoluteParticle * neighbor, const uint level)
+{
+    m_nNeighbors(level) += sign;
+
+    m_nNeighborsSum += sign;
+
+    double dE = sign*potentialBetween(neighbor);
 
     m_energy += dE;
 
     m_totalEnergy += dE;
 
+    if (level == 0)
+    {
+        changeParticleState(detectParticleState());
+    }
+
+    for (Reaction * reaction : m_reactions)
+    {
+        reaction->setDirectUpdateFlags(this, level);
+    }
+
+    markAsAffected();
 }
 
 
@@ -442,11 +408,28 @@ void SoluteParticle::initializeDiffusionReactions()
 
                 m_diffusionReactions[dx + 1][dy + 1][dz + 1] = diffusionReaction;
 
-
-
             }
         }
     }
+}
+
+int SoluteParticle::detectParticleState()
+{
+
+    if (qualifiesAsCrystal())
+    {
+        return ParticleStates::crystal;
+    }
+
+    else if (isSolvant())
+    {
+        return ParticleStates::solvant;
+    }
+
+    KMCDebugger_AssertBool(qualifiesAsSurface());
+
+    return ParticleStates::surface;
+
 }
 
 
@@ -469,7 +452,7 @@ void SoluteParticle::setZeroTotalEnergy()
 {
     m_totalEnergy = 0;
 
-    KMCDebugger_Assert(solver()->particles().size(), ==, 0);
+    KMCDebugger_Assert(Site::solver()->particles().size(), ==, 0);
 }
 
 uint SoluteParticle::nNeighborsSum() const

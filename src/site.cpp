@@ -15,13 +15,12 @@ using namespace kMC;
 
 
 Site::Site(uint _x, uint _y, uint _z) :
-    m_active(false),
+    m_associatedParticle(NULL),
     m_x(_x),
     m_y(_y),
     m_z(_z)
 {
     refCounter++;
-    //    m_totalDeactiveParticles(ParticleStates::solution)++;
 }
 
 
@@ -29,16 +28,6 @@ Site::~Site()
 {
 
     clearNeighborhood();
-
-    //    if (isActive())
-    //    {
-    ////        m_totalActiveSites--;
-    //        //        m_totalActiveParticles(particleState())--;
-    //        //        m_totalDeactiveParticles(particleState())++;
-    //    }
-
-
-    //    m_totalDeactiveParticles(particleState())--;
 
     refCounter--;
 
@@ -88,10 +77,7 @@ void Site::updateBoundaries()
     }
 }
 
-uint Site::shellSize(const uint level)
-{
-    return std::pow(2*(level + 1) + 1, 3) - std::pow(2*level + 1, 3);
-}
+
 
 uint Site::maxNeighbors()
 {
@@ -201,7 +187,7 @@ uint Site::maxDistanceTo(const Site *other) const
 
 
 
-bool Site::hasNeighboring(int state) const
+bool Site::hasNeighboring(const int state) const
 {
 
     Site * nextNeighbor;
@@ -227,11 +213,12 @@ bool Site::hasNeighboring(int state) const
                     continue;
                 }
 
-                //                else if (nextNeighbor->particleState() == state)
-                else if (true)
+                else if (nextNeighbor->isActive())
                 {
-                    cout << "DERP: count particle types neighbors in site too." << endl;
-                    return true;
+                    if (m_associatedParticle->particleState() == state)
+                    {
+                        return true;
+                    }
                 }
 
             }
@@ -247,6 +234,7 @@ uint Site::countNeighboring(int state) const
 {
 
     Site * nextNeighbor;
+
     uint count = 0;
 
     for (int i = -1; i <= 1; ++i)
@@ -270,11 +258,12 @@ uint Site::countNeighboring(int state) const
                     continue;
                 }
 
-                //                else if (nextNeighbor->particleState() == state)
-                else if (true)
+                else if (nextNeighbor->isActive())
                 {
-                    cout << "DERP: count particle types neighbors in site too." << endl;
-                    count++;
+                    if (m_associatedParticle->particleState() == state)
+                    {
+                        count++;
+                    }
                 }
 
             }
@@ -284,22 +273,6 @@ uint Site::countNeighboring(int state) const
     return count;
 
 }
-
-SoluteParticle *Site::getAssociatedParticle() const
-{
-    for (SoluteParticle *particle : solver()->particles())
-    {
-        if (particle->site() == this)
-        {
-            return particle;
-        }
-    }
-
-    return NULL;
-}
-
-
-
 
 
 void Site::introduceNeighborhood()
@@ -526,11 +499,11 @@ const string Site::info(int xr, int yr, int zr, string desc) const
     s_full << str();
     s_full << "[" << NX() << " x " << NY() << " x " << NZ() << "] * ";
 
-    if (m_active)
+    if (isActive())
     {
         s_full << "Active";
 
-        SoluteParticle *particle = getAssociatedParticle();
+        const SoluteParticle *particle = associatedParticle();
 
         s_full << " " << particle->particleStateName();
 
@@ -590,9 +563,9 @@ const string Site::info(int xr, int yr, int zr, string desc) const
                 //ACTIVE PARTICLE
                 else if (currentSite->isActive())
                 {
-                    KMCDebugger_Assert(currentSite->getAssociatedParticle(), !=, NULL);
+                    KMCDebugger_Assert(currentSite->associatedParticle(), !=, NULL);
 
-                    nN(i, j, k) = currentSite->getAssociatedParticle()->particleState();
+                    nN(i, j, k) = currentSite->associatedParticle()->particleState();
                 }
 
             }
@@ -658,7 +631,7 @@ const string Site::info(int xr, int yr, int zr, string desc) const
 
     numberSearchRepl(_min+0, ".");
     numberSearchRepl(_min+1, "#");
-    numberSearchRepl(_min+2, getAssociatedParticle()->particleStateShortName() + "^");
+    numberSearchRepl(_min+2, associatedParticle()->particleStateShortName() + "^");
     numberSearchRepl(_min+3, desc);
 
     s_full << s;

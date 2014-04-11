@@ -46,7 +46,12 @@ public:
     static void updateBoundaries();
 
 
-    static uint shellSize(const uint level);
+    static uint shellSize(const uint level)
+    {
+        return std::pow(2*(level + 1) + 1, 3) - std::pow(2*level + 1, 3);
+    }
+
+    static constexpr uint closestShellSize = 26;
 
     static uint maxNeighbors();
 
@@ -96,12 +101,15 @@ public:
     void introduceNeighborhood();
 
 
-    bool hasNeighboring(int state) const;
+    bool hasNeighboring(const int state) const;
 
     uint countNeighboring(int state) const;
 
 
-    SoluteParticle* getAssociatedParticle() const;
+    SoluteParticle* associatedParticle() const
+    {
+        return m_associatedParticle;
+    }
 
 
     void distanceTo(const Site * other, int &dx, int &dy, int &dz, bool absolutes = false) const;
@@ -168,19 +176,19 @@ public:
         return m_boundaries;
     }
 
-    void activate()
+    void associateWith(SoluteParticle *particle)
     {
-        m_active = true;
+        m_associatedParticle = particle;
     }
 
-    void deactivate()
+    void desociate()
     {
-        m_active = false;
+        m_associatedParticle = NULL;
     }
 
-    const bool & isActive() const
+    bool isActive() const
     {
-        return m_active;
+        return m_associatedParticle != NULL;
     }
 
     const uint & x() const
@@ -267,7 +275,7 @@ private:
     Site**** m_neighborhood;
 
 
-    bool m_active;
+    SoluteParticle *m_associatedParticle;
 
 
     const uint m_x;

@@ -174,6 +174,24 @@ public:
         m_affectedParticles.insert(this);
     }
 
+    const vector<vector<SoluteParticle*> > & neighbouringParticles() const
+    {
+        return m_neighboringParticles;
+    }
+
+
+    const vector<SoluteParticle*> & neighbouringParticles(const uint level) const
+    {
+        return m_neighboringParticles.at(level);
+    }
+
+    const vector<SoluteParticle*> & closestNeighbors() const
+    {
+        return m_neighboringParticles.at(0);
+    }
+
+
+
     const static set<SoluteParticle*, function<bool(SoluteParticle*, SoluteParticle*)> > & affectedParticles()
     {
         return m_affectedParticles;
@@ -246,9 +264,20 @@ public:
     bool isLegalToSpawn();
 
 
-    bool qualifiesAsCrystal();
+    bool qualifiesAsCrystal() const
+    {
+        return nNeighbors() == Site::closestShellSize;
+    }
 
-    bool qualifiesAsSurface();
+    bool qualifiesAsSurface() const
+    {
+        return (nNeighbors() > 0) && !qualifiesAsCrystal();
+    }
+
+    bool isSolvant() const
+    {
+        return nNeighbors() == 0;
+    }
 
 
     void reset();
@@ -267,6 +296,8 @@ public:
     void removeNeighbor(SoluteParticle *neighbor, uint level);
 
     void addNeighbor(SoluteParticle *neighbor, uint level);
+
+    void _updateNeighborProps(const int sign, const SoluteParticle *neighbor, const uint level);
 
 
     double potentialBetween(const SoluteParticle *other);
@@ -319,6 +350,9 @@ private:
 
 
     void initializeDiffusionReactions();
+
+
+    int detectParticleState();
 
     void setNewParticleState(int newState);
 
