@@ -305,8 +305,7 @@ void SoluteParticle::removeNeighbor(SoluteParticle *neighbor, uint level)
 
     m_neighboringParticles.at(level).erase(std::find(m_neighboringParticles.at(level).begin(),
                                                      m_neighboringParticles.at(level).end(),
-                                                     neighbor),
-                                           m_neighboringParticles.at(level).end());
+                                                     neighbor));
 
     KMCDebugger_AssertBool(std::find(m_neighboringParticles.at(level).begin(),
                                  m_neighboringParticles.at(level).end(),
