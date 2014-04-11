@@ -321,7 +321,7 @@ void SoluteParticle::addNeighbor(SoluteParticle *neighbor, uint level)
     KMCDebugger_AssertBool(std::find(m_neighboringParticles.at(level).begin(),
                                  m_neighboringParticles.at(level).end(),
                                  neighbor) == m_neighboringParticles.at(level).end(),
-                       "removing neighbor that is not present in neighborlist.", info());
+                       "adding neighbor that is present in neighborlist.", info());
 
     m_neighboringParticles.at(level).push_back(neighbor);
 

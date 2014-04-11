@@ -256,7 +256,7 @@ std::string Debugger::setupAffectedUnion()
 
     KMCDebugger_Assert(affectedUnion.size(), ==, SoluteParticle::affectedParticles().size());
 
-    return "New affected site(s):\n" + s.str();
+    return "New affected particle(s):\n" + s.str();
 
 }
 

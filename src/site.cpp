@@ -635,7 +635,7 @@ const string Site::info(int xr, int yr, int zr, string desc) const
 
     numberSearchRepl(_min+0, ".");
     numberSearchRepl(_min+1, "#");
-    numberSearchRepl(_min+2, isActive() ? associatedParticle()->particleStateShortName() + "^" : ".");
+    numberSearchRepl(_min+2, isActive() ? associatedParticle()->particleStateShortName() + "^" : "D");
     numberSearchRepl(_min+3, desc);
 
     s_full << s;
