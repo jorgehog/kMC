@@ -576,6 +576,8 @@ void testBed::testReactionChoise()
     uint N = 3;
     uint n = 0;
 
+    KMCDebugger_Assert(0, ==, SoluteParticle::affectedParticles().size());
+
     solver->initializeCrystal(0.3);
 
     solver->getRateVariables();

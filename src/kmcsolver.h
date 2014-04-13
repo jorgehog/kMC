@@ -67,6 +67,9 @@ public:
         m_mainLattice->addSubField(subLattice);
     }
 
+    void setupMainLattice();
+
+
     bool spawnParticle(SoluteParticle *particle, uint x, uint y, uint z, bool checkIfLegal);
 
     bool spawnParticle(SoluteParticle *particle, Site *site, bool checkIfLegal);
@@ -253,7 +256,6 @@ private:
 
     Site**** sites;
 
-    vector<SoluteParticle*> m_particles;
 
     uint m_NX;
     uint m_NY;
@@ -261,6 +263,8 @@ private:
 
     uvec3 m_N;
 
+
+    vector<SoluteParticle*> m_particles;
 
     double m_kTot;
 

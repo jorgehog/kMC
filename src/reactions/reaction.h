@@ -39,11 +39,6 @@ public:
         m_linearRateScale = linearRateScale;
     }
 
-    static void clearAll()
-    {
-        refCount = 0;
-    }
-
     virtual void setDirectUpdateFlags(const SoluteParticle *changedReactant, const uint level) = 0;
 
     virtual bool isAllowed() const = 0;

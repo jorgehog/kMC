@@ -64,7 +64,9 @@ public:
     static void clearAll()
     {
         m_currentBoundaries.clear();
+
         m_solver = NULL;
+
     }
 
 

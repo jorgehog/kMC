@@ -77,15 +77,95 @@ KMCSolver::~KMCSolver()
 
     clearSites();
 
+
     Site::clearAll();
+
     DiffusionReaction::clearAll();
+
     Boundary::clearAll();
+
 
     checkAllRefCounters();
 
     refCounter--;
 
 }
+
+void KMCSolver::reset()
+{
+
+    finalizeObject();
+
+
+    KMCDebugger_Init();
+
+    setRNGSeed(Seed::specific, Seed::initialSeed);
+
+    Site::initializeBoundaries();
+
+    setupMainLattice();
+
+}
+
+void KMCSolver::onConstruct()
+{
+
+    m_NX = UNSET_UINT;
+    m_NY = UNSET_UINT;
+    m_NZ = UNSET_UINT;
+
+    m_targetConcentration = 0;
+
+    m_kTot = 0;
+
+
+    Boundary::setMainSolver(this);
+
+    Reaction::setMainSolver(this);
+
+    Site::setMainSolver(this);
+
+
+    setupMainLattice();
+
+
+    refCounter++;
+
+}
+
+void KMCSolver::setupMainLattice()
+{
+
+    MainLattice::setCurrentParticles(new KMCParticles(this));
+
+    m_mainLattice = new MainLattice();
+
+    m_mainLattice->addEvent(new SolverEvent());
+
+    m_mainLattice->addEvent(new DumpXYZ());
+
+}
+
+void KMCSolver::finalizeObject()
+{
+    checkRefCounter();
+
+    clearParticles();
+
+
+    Site::finalizeBoundaries();
+
+    checkAllRefCounters();
+
+
+    delete m_mainLattice;
+
+    Event<uint>::resetEventParameters();
+
+
+    KMCDebugger_Finalize();
+}
+
 
 void KMCSolver::checkRefCounter()
 {
@@ -112,95 +192,6 @@ void KMCSolver::checkAllRefCounters()
         cout << Reaction::_refCount() << " reactions active." << endl;
         exit();
     }
-
-}
-
-void KMCSolver::onConstruct()
-{
-
-    m_NX = UNSET_UINT;
-    m_NY = UNSET_UINT;
-    m_NZ = UNSET_UINT;
-
-    m_targetConcentration = 0;
-
-    m_kTot = 0;
-
-
-    Boundary::setMainSolver(this);
-
-    Reaction::setMainSolver(this);
-
-    Site::setMainSolver(this);
-
-
-    MainLattice::setCurrentParticles(new KMCParticles(this));
-
-    m_mainLattice = new MainLattice();
-
-    m_mainLattice->addEvent(new SolverEvent());
-
-    m_mainLattice->addEvent(new DumpXYZ());
-
-    refCounter++;
-
-}
-
-void KMCSolver::finalizeObject()
-{
-    checkRefCounter();
-
-    clearParticles();
-
-    KMCDebugger_Finalize();
-
-    //tmp
-    delete m_mainLattice;
-    Event<uint>::resetEventParameters();
-
-}
-
-
-void KMCSolver::reset()
-{
-
-    finalizeObject();
-
-
-    m_allPossibleReactions.clear();
-
-    m_accuAllRates.clear();
-
-    m_availableReactionSlots.clear();
-
-
-    KMCDebugger_Assert(accu(SoluteParticle::totalParticlesVector()), ==, 0);
-
-    KMCDebugger_AssertClose(SoluteParticle::totalEnergy(), 0, 1E-5);
-
-    KMCDebugger_Assert(SoluteParticle::nParticles(), ==, 0);
-
-    SoluteParticle::setZeroTotalEnergy();
-
-    Site::finalizeBoundaries();
-
-    checkAllRefCounters();
-
-    setRNGSeed(Seed::specific, Seed::initialSeed);
-
-    Site::initializeBoundaries();
-
-    KMCDebugger_Init();
-
-
-    //TMP
-    KMCParticles *particles = new KMCParticles(this);
-    MainLattice::setCurrentParticles(*particles);
-
-    m_mainLattice = new MainLattice();
-
-    SolverEvent *solverEvent = new SolverEvent();
-    m_mainLattice->addEvent(*solverEvent);
 
 }
 
@@ -582,6 +573,8 @@ void KMCSolver::initializeSites()
 void KMCSolver::clearSites()
 {
 
+    KMCDebugger_Assert(SoluteParticle::nParticles(), ==, 0, "Cannot clear sites with particles active.");
+
     KMCDebugger_SetEnabledTo(false);
 
     for (uint i = 0; i < m_NX; ++i)
@@ -600,22 +593,6 @@ void KMCSolver::clearSites()
     }
 
     delete [] sites;
-
-
-    KMCDebugger_Assert(accu(SoluteParticle::totalParticlesVector()), ==, 0);
-
-    KMCDebugger_AssertClose(SoluteParticle::totalEnergy(), 0, 1E-5);
-
-    SoluteParticle::clearAffectedParticles();
-    SoluteParticle::setZeroTotalEnergy();
-
-    Reaction::clearAll();
-
-    m_allPossibleReactions.clear();
-
-    m_accuAllRates.clear();
-
-    m_availableReactionSlots.clear();
 
 
     KMCDebugger_ResetEnabled();
@@ -970,14 +947,28 @@ void KMCSolver::setRNGSeed(uint seedState, int defaultSeed)
 void KMCSolver::clearParticles()
 {
 
-    SoluteParticle::clearAll();
-
     for (SoluteParticle *particle : m_particles)
     {
         delete particle;
     }
 
+    SoluteParticle::clearAll();
+
     m_particles.clear();
+
+    KMCDebugger_Assert(accu(SoluteParticle::totalParticlesVector()), ==, 0);
+    KMCDebugger_Assert(SoluteParticle::nParticles(), ==, 0);
+    KMCDebugger_Assert(SoluteParticle::affectedParticles().size(), ==, 0);
+    KMCDebugger_AssertClose(SoluteParticle::totalEnergy(), 0, 1E-5);
+
+    SoluteParticle::setZeroTotalEnergy();
+
+    m_allPossibleReactions.clear();
+
+    m_accuAllRates.clear();
+
+    m_availableReactionSlots.clear();
+
 }
 
 
