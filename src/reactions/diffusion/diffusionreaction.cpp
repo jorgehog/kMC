@@ -2,6 +2,8 @@
 
 #include "../../kmcsolver.h"
 
+#include "../../boundary/boundary.h"
+
 #include "../../soluteparticle.h"
 
 #include "../../debugger/debugger.h"
@@ -454,6 +456,12 @@ const string DiffusionReaction::info(int xr, int yr, int zr, string desc) const
 
 bool DiffusionReaction::isAllowed() const
 {
+
+    if (destinationSite() == NULL)
+    {
+        return false;
+    }
+
     return !destinationSite()->isActive();
 }
 

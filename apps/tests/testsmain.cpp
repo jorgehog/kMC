@@ -9,7 +9,7 @@
 #include <sys/types.h>
 
 
-//#define focusSuite "PeriodicBoundaries"
+#define focusSuite "EdgeBoundaries"
 //#define focusTest  "DiffusionMatrixSetup"
 
 

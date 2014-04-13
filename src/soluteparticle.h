@@ -261,7 +261,7 @@ public:
 
     void setParticleState(int newState);
 
-    bool isLegalToSpawn();
+    bool isLegalToSpawn() const;
 
 
     bool qualifiesAsCrystal() const

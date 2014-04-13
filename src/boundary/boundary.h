@@ -90,6 +90,8 @@ public:
 
     static void setupCurrentBoundaries(const uint x, const uint y, const uint z);
 
+    static void setupCurrentBoundaries(Site * site);
+
     static const Boundary* currentBoundaries(const uint i)
     {
         return m_currentBoundaries.at(i);

@@ -168,6 +168,11 @@ void Boundary::setupCurrentBoundaries(const uint x, const uint y, const uint z)
 
 }
 
+void Boundary::setupCurrentBoundaries(Site *site)
+{
+    setupCurrentBoundaries(site->x(), site->y(), site->z());
+}
+
 
 uint Boundary::BLOCKED_COORDINATE = std::numeric_limits<uint>::max();
 

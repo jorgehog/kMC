@@ -150,7 +150,7 @@ void SoluteParticle::setParticleState(int newState)
 
 
 //All reactions must be legal if site is allowed to spawn.
-bool SoluteParticle::isLegalToSpawn()
+bool SoluteParticle::isLegalToSpawn() const
 {
 
     for (Reaction * r : m_reactions)
