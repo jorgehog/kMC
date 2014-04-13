@@ -153,7 +153,7 @@ public:
 
     string propertyString() const;
 
-    bool operator == (const Reaction & other)
+    bool operator == (const Reaction & other) const
     {
         return this == &other;
     }

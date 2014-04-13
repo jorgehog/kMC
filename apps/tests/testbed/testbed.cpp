@@ -610,7 +610,12 @@ void testBed::testReactionChoise()
                 particle->forEachActiveReactionDo([&] (Reaction *r)
                 {
 
-                    CHECK_EQUAL(r, solver->allPossibleReactions().at(count));
+                    if (!notSet)
+                    {
+                        return;
+                    }
+
+                    CHECK_EQUAL(*r, *solver->allPossibleReactions().at(count));
 
                     kTot += r->rate();
 
