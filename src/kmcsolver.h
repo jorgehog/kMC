@@ -236,8 +236,6 @@ public:
             KMCDebugger_Assert(m_accuAllRates.at(i), >=, 0);
         }
 
-        KMCDebugger_Assert(accuAllRates().at(0), ==, allPossibleReactions().at(0)->rate());
-        cout << "\n-------- 1? " << accuAllRates().at(0)/allPossibleReactions().at(0)->rate() << endl;
     }
 
     double prevAccuAllRatesValue(const uint address) const

@@ -9,8 +9,8 @@
 #include <sys/types.h>
 
 
-#define focusSuite "Reactions"
-//#define focusTest  "ReactionChoise"
+//#define focusSuite "PeriodicBoundaries"
+//#define focusTest  "DiffusionMatrixSetup"
 
 
 #include "defines.h"
@@ -67,7 +67,7 @@ TESTWRAPPER(OptimizedRateVectors)       \
                                         \
 TESTWRAPPER(Sequential)                 \
                                         \
-TESTWRAPPER(KnownCase)
+//TESTWRAPPER(KnownCase)
 
 
 SUITE(PeriodicBoundaries)

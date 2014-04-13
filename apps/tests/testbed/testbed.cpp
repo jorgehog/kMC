@@ -262,6 +262,11 @@ void testBed::testDiffusionSiteMatrixSetup()
                 for (uint k = 0; k < 3; ++k)
                 {
 
+                    if (i == j && j == k && k == 1)
+                    {
+                        continue;
+                    }
+
                     currentDiffReaction = particle->diffusionReactions(i, j, k);
 
                     const Site & site = *(currentDiffReaction->site());
