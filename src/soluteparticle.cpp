@@ -64,10 +64,10 @@ void SoluteParticle::setSite(kMC::Site *site)
 
     markAsAffected();
 
-    for (Reaction * reaction : m_reactions)
+    forEachActiveReactionDo([] (Reaction *reaction)
     {
         reaction->forceUpdateFlag(Reaction::defaultUpdateFlag);
-    }
+    });
 
 
 
@@ -349,10 +349,10 @@ void SoluteParticle::_updateNeighborProps(const int sign, const SoluteParticle *
         changeParticleState(detectParticleState());
     }
 
-    for (Reaction * reaction : m_reactions)
+    forEachActiveReactionDo([&level, &neighbor] (Reaction *reaction)
     {
         reaction->setDirectUpdateFlags(neighbor, level);
-    }
+    });
 
     markAsAffected();
 

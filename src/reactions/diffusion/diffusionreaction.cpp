@@ -42,16 +42,31 @@ void DiffusionReaction::loadConfig(const Setting &setting)
 
 const uint &DiffusionReaction::xD() const
 {
+    if (destinationSite() == NULL)
+    {
+        return x();
+    }
+
     return destinationSite()->x();
 }
 
 const uint &DiffusionReaction::yD() const
 {
+    if (destinationSite() == NULL)
+    {
+        return y();
+    }
+
     return destinationSite()->y();
 }
 
 const uint &DiffusionReaction::zD() const
 {
+    if (destinationSite() == NULL)
+    {
+        return z();
+    }
+
     return destinationSite()->z();
 }
 

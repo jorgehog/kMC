@@ -1316,6 +1316,7 @@ void testBed::testOptimizedRateVectors()
         CHECK_CLOSE(kTotBF, solver->kTot(), 1E-5);
         CHECK_CLOSE(kTotBF, *(solver->accuAllRates().end() - 1), 1E-5);
 
+
         for (Reaction * r : solver->allPossibleReactions())
         {
             containsReaction = std::find(allPossibleReactionsBF.begin(), allPossibleReactionsBF.end(), r) != allPossibleReactionsBF.end();
