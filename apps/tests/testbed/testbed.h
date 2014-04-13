@@ -61,6 +61,8 @@ public:
 
     static void testNeighborlist();
 
+    static void testAccuAllRates();
+
 
     static void initBoundarySuite(const umat &boundaries);
 

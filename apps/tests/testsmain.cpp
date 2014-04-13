@@ -10,7 +10,7 @@
 
 
 #define focusSuite "Reactions"
-//#define focusTest  "ReactionChoise"
+#define focusTest  "ReactionChoise"
 
 
 #include "defines.h"
@@ -37,6 +37,8 @@ SUITE(Reactions)
 {
 
     TESTWRAPPER(RateCalculation)
+
+    TESTWRAPPER(AccuAllRates)
 
     TESTWRAPPER(ReactionChoise)
 

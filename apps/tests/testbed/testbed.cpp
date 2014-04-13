@@ -577,6 +577,8 @@ void testBed::testReactionChoise()
     uint n = 0;
 
     KMCDebugger_Assert(0, ==, SoluteParticle::affectedParticles().size());
+    KMCDebugger_Assert(0, ==, solver->allPossibleReactions().size());
+    KMCDebugger_Assert(0, ==, solver->accuAllRates().size());
 
     solver->initializeCrystal(0.3);
 
@@ -607,10 +609,6 @@ void testBed::testReactionChoise()
 
                 particle->forEachActiveReactionDo([&] (Reaction *r)
                 {
-                    if (!notSet)
-                    {
-                        return;
-                    }
 
                     CHECK_EQUAL(r, solver->allPossibleReactions().at(count));
 
@@ -625,12 +623,12 @@ void testBed::testReactionChoise()
                         reaction = r;
 
                         notSet = false;
+
+                        return;
                     }
 
-                    if (notSet)
-                    {
-                        count++;
-                    }
+                    count++;
+
                 });
 
                 if (!notSet)
@@ -642,7 +640,7 @@ void testBed::testReactionChoise()
 
             CHECK_EQUAL(solver->allPossibleReactions().at(choice), reaction);
             CHECK_EQUAL(choice, count);
-            CHECK_EQUAL(count, count2);
+            CHECK_EQUAL(choice, count2);
 
             count2++;
 
@@ -1826,6 +1824,29 @@ void testBed::testNeighborlist()
         CHECK_EQUAL(nn(level), getBoxCenter()->associatedParticle()->neighbouringParticles(level).size());
 
     });
+
+}
+
+void testBed::testAccuAllRates()
+{
+
+    solver->initializeCrystal(0.3);
+
+    solver->getRateVariables();
+
+    uint i = 0;
+    double kTot = 0;
+
+    for (Reaction *r : solver->allPossibleReactions())
+    {
+        kTot += r->rate();
+
+        CHECK_CLOSE(kTot, solver->accuAllRates().at(i), solver->minRateThreshold());
+
+        i++;
+
+    }
+
 
 }
 

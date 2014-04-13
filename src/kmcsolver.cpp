@@ -105,6 +105,8 @@ void KMCSolver::reset()
 
     setupMainLattice();
 
+    m_kTot = 0;
+
 }
 
 void KMCSolver::onConstruct()
@@ -117,7 +119,6 @@ void KMCSolver::onConstruct()
     m_targetConcentration = 0;
 
     m_kTot = 0;
-
 
     Boundary::setMainSolver(this);
 
@@ -267,6 +268,7 @@ void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate
             m_accuAllRates.push_back(m_kTot);
 
             reaction->setAddress(m_allPossibleReactions.size()-1);
+
         }
 
     }
@@ -378,8 +380,6 @@ void KMCSolver::swapReactionAddresses(const uint dest, const uint orig)
     oldReaction->setAddress(Reaction::UNSET_ADDRESS);
 
     updateAccuAllRateElements(dest, orig, swappedReaction->rate());
-
-
 
 }
 
@@ -735,11 +735,7 @@ void KMCSolver::initializeCrystal(const double relativeSeedSize)
                     {
                         if (k >= crystalStartZ && k < crystalEndZ)
                         {
-
-                            SoluteParticle * particle = new SoluteParticle();
-                            (void)spawnParticle(particle, i, j, k, false);
-
-
+                            forceSpawnParticle(i, j, k);
                         }
                     }
                 }
@@ -813,6 +809,8 @@ void KMCSolver::getRateVariables()
     SoluteParticle::updateAffectedParticles();
 
     reshuffleReactions();
+
+    KMCDebugger_Assert(accuAllRates().at(0), ==, allPossibleReactions().at(0)->rate(), "zeroth accuallrate should be the first rate.");
 
 }
 

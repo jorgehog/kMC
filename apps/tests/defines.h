@@ -25,8 +25,15 @@
 #define isFocusTest(which) true
 #endif
 
-#define TESTWRAPPER(which, ...) TEST(which){ if (isFocusTest(which)) { TESTCORE(which, ##__VA_ARGS__); }}
-
+#define TESTWRAPPER(which, ...) \
+TEST(which) \
+{ \
+    if (isFocusTest(which)) \
+    { \
+        TESTCORE(which, ##__VA_ARGS__); \
+     } \
+} \
+\
 
 
 #define SUITE_IMPL(runner, which) runner.RunTestsIf(UnitTest::Test::GetTestList(), which, UnitTest::True(), 0)

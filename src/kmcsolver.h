@@ -228,13 +228,16 @@ public:
         {
             m_accuAllRates.at(i) += value;
 
-            if (fabs(m_accuAllRates.at(i)) < 1E-8)
+            if (m_accuAllRates.at(i) < 0 && m_accuAllRates.at(i) > -1E-8)
             {
                 m_accuAllRates.at(i) = 0;
             }
 
             KMCDebugger_Assert(m_accuAllRates.at(i), >=, 0);
         }
+
+        KMCDebugger_Assert(accuAllRates().at(0), ==, allPossibleReactions().at(0)->rate());
+        cout << "\n-------- 1? " << accuAllRates().at(0)/allPossibleReactions().at(0)->rate() << endl;
     }
 
     double prevAccuAllRatesValue(const uint address) const
@@ -247,6 +250,15 @@ public:
     string getReactionVectorDebugMessage();
 
     void dumpXYZ(const uint n);
+
+
+    double minRateThreshold()
+    {
+        return max((*std::min_element(m_allPossibleReactions.begin(),
+                                  m_allPossibleReactions.end(),
+                                  [] (const Reaction *r1, const Reaction *r2) {return r1->rate() < r2->rate();}))->rate()/2,
+                   1E-8);
+    }
 
 private:
 
@@ -291,15 +303,6 @@ private:
     void finalizeObject();
 
     static uint refCounter;
-
-
-    double minRateThreshold()
-    {
-        return max((*std::min_element(m_allPossibleReactions.begin(),
-                                  m_allPossibleReactions.end(),
-                                  [] (const Reaction *r1, const Reaction *r2) {return r1->rate() < r2->rate();}))->rate()/2,
-                   1E-8);
-    }
 
 
 
