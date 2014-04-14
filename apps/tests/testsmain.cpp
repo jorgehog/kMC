@@ -9,7 +9,7 @@
 #include <sys/types.h>
 
 
-#define focusSuite "ConcWallBoundaries"
+//#define focusSuite "ConcWallBoundaries"
 //#define focusTest  "OptimizedRateVectors"
 
 
@@ -100,6 +100,10 @@ int main()
     using namespace SuiteMixedBoundaries;
 
     KMCDebugger_SetEnabledTo(false);
+    MainLattice::enableOutput(false);
+    MainLattice::enableEventFile(false);
+    MainLattice::enableProgressReport(false);
+    KMCSolver::enableDumpXYZ(false);
 
     testBed::makeSolver();
 

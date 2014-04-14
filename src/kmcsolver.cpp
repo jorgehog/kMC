@@ -143,8 +143,10 @@ void KMCSolver::setupMainLattice()
 
     m_mainLattice->addEvent(new SolverEvent());
 
-    m_mainLattice->addEvent(new DumpXYZ());
-
+    if (m_dumpXYZ)
+    {
+        m_mainLattice->addEvent(new DumpXYZ());
+    }
 }
 
 void KMCSolver::finalizeObject()
@@ -959,5 +961,7 @@ void KMCSolver::clearParticles()
 
 }
 
+
+bool KMCSolver::m_dumpXYZ = true;
 
 uint KMCSolver::refCounter = 0;

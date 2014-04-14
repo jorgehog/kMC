@@ -260,6 +260,12 @@ public:
                    1E-8);
     }
 
+
+    static void enableDumpXYZ(bool state)
+    {
+        m_dumpXYZ = state;
+    }
+
 private:
 
     double m_targetConcentration;
@@ -301,6 +307,10 @@ private:
     void onConstruct();
 
     void finalizeObject();
+
+
+    static bool m_dumpXYZ;
+
 
     static uint refCounter;
 
