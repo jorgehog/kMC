@@ -483,11 +483,11 @@ void KMCSolver::dumpXYZ(const uint n)
 
 void KMCSolver::forEachSiteDo(function<void (Site *)> applyFunction) const
 {
-    for (uint x = Site::nNeighborsLimit(); x < m_NX; ++x)
+    for (uint x = Site::nNeighborsLimit(); x < m_NX + Site::nNeighborsLimit(); ++x)
     {
-        for (uint y = Site::nNeighborsLimit(); y < m_NY; ++y)
+        for (uint y = Site::nNeighborsLimit(); y < m_NY + Site::nNeighborsLimit(); ++y)
         {
-            for (uint z = Site::nNeighborsLimit(); z < m_NZ; ++z)
+            for (uint z = Site::nNeighborsLimit(); z < m_NZ + Site::nNeighborsLimit(); ++z)
             {
                 applyFunction(sites[x][y][z]);
             }
@@ -497,11 +497,11 @@ void KMCSolver::forEachSiteDo(function<void (Site *)> applyFunction) const
 
 void KMCSolver::forEachSiteDo_sendIndices(function<void (Site *, uint, uint, uint)> applyFunction) const
 {
-    for (uint x = Site::nNeighborsLimit(); x < m_NX; ++x)
+    for (uint x = Site::nNeighborsLimit(); x < m_NX + Site::nNeighborsLimit(); ++x)
     {
-        for (uint y = Site::nNeighborsLimit(); y < m_NY; ++y)
+        for (uint y = Site::nNeighborsLimit(); y < m_NY + Site::nNeighborsLimit(); ++y)
         {
-            for (uint z = Site::nNeighborsLimit(); z < m_NZ; ++z)
+            for (uint z = Site::nNeighborsLimit(); z < m_NZ + Site::nNeighborsLimit(); ++z)
             {
                 applyFunction(sites[x][y][z], x, y, z);
             }
@@ -511,11 +511,11 @@ void KMCSolver::forEachSiteDo_sendIndices(function<void (Site *, uint, uint, uin
 
 void KMCSolver::forEachActiveSiteDo(function<void (Site *)> applyFunction) const
 {
-    for (uint x = Site::nNeighborsLimit(); x < m_NX; ++x)
+    for (uint x = Site::nNeighborsLimit(); x < m_NX + Site::nNeighborsLimit(); ++x)
     {
-        for (uint y = Site::nNeighborsLimit(); y < m_NY; ++y)
+        for (uint y = Site::nNeighborsLimit(); y < m_NY + Site::nNeighborsLimit(); ++y)
         {
-            for (uint z = Site::nNeighborsLimit(); z < m_NZ; ++z)
+            for (uint z = Site::nNeighborsLimit(); z < m_NZ + Site::nNeighborsLimit(); ++z)
             {
                 if (sites[x][y][z]->isActive())
                 {
@@ -528,11 +528,11 @@ void KMCSolver::forEachActiveSiteDo(function<void (Site *)> applyFunction) const
 
 void KMCSolver::forEachActiveSiteDo_sendIndices(function<void (Site *, uint, uint, uint)> applyFunction) const
 {
-    for (uint x = Site::nNeighborsLimit(); x < m_NX; ++x)
+    for (uint x = Site::nNeighborsLimit(); x < m_NX + Site::nNeighborsLimit(); ++x)
     {
-        for (uint y = Site::nNeighborsLimit(); y < m_NY; ++y)
+        for (uint y = Site::nNeighborsLimit(); y < m_NY + Site::nNeighborsLimit(); ++y)
         {
-            for (uint z = Site::nNeighborsLimit(); z < m_NZ; ++z)
+            for (uint z = Site::nNeighborsLimit(); z < m_NZ + Site::nNeighborsLimit(); ++z)
             {
                 if (sites[x][y][z]->isActive())
                 {
@@ -546,6 +546,8 @@ void KMCSolver::forEachActiveSiteDo_sendIndices(function<void (Site *, uint, uin
 
 void KMCSolver::initializeSites()
 {
+
+    KMCDebugger_Assert(Site::_refCount(), ==, 0, "Sites was not cleared properly.");
 
     uint xTrans, yTrans, zTrans;
 
@@ -565,36 +567,35 @@ void KMCSolver::initializeSites()
             {
                 if (!Site::isBoundarySite(x, y, z))
                 {
-                    sites[x][y][z] = new Site(x, y, z);
+                    //renormalize so that Site::nNeighborsLimit() points to site 0 and so on.
+                    sites[x][y][z] = new Site(x - Site::nNeighborsLimit(),
+                                              y - Site::nNeighborsLimit(),
+                                              z - Site::nNeighborsLimit());
                 }
             }
         }
     }
 
+    KMCDebugger_Assert(Site::_refCount(), ==, NX()*NY()*NZ(), "Wrong number of sites initialized.");
 
-    for (uint x = 0; x < m_NX_full; ++x)
+
+    //Lower boundaries
+    for (uint x = 0; x < Site::nNeighborsLimit(); ++x)
     {
 
-        Boundary::setupCurrentBoundary(x, 0);
+        xTrans = Site::boundaries(0, 0)->transformCoordinate(x);
 
-        xTrans = Boundary::currentBoundaries(0)->transformCoordinate(x);
-
-        for (uint y = 0; y < m_NY_full; ++y)
+        for (uint y = 0; y < Site::nNeighborsLimit(); ++y)
         {
-            Boundary::setupCurrentBoundary(y, 1);
 
-            yTrans = Boundary::currentBoundaries(1)->transformCoordinate(y);
+            yTrans = Site::boundaries(1, 0)->transformCoordinate(y);
 
-            for (uint z = 0; z < m_NZ_full; ++z)
+            for (uint z = 0; z < Site::nNeighborsLimit(); ++z)
             {
-                Boundary::setupCurrentBoundary(z, 2);
 
-                zTrans = Boundary::currentBoundaries(2)->transformCoordinate(z);
+                zTrans = Site::boundaries(2, 0)->transformCoordinate(z);
 
-                if (!Site::isBoundarySite(x, y, z))
-                {
-                    continue;
-                }
+                KMCDebugger_AssertBool(Site::isBoundarySite(x, y, z));
 
                 if (Boundary::isBlocked(xTrans, yTrans, zTrans))
                 {
@@ -603,8 +604,44 @@ void KMCSolver::initializeSites()
 
                 else
                 {
-                    sites[x][y][z] = getSite(xTrans, yTrans, zTrans);
+                    cout << x << " " << y << " " << z << " points to " << *sites[xTrans][yTrans][zTrans] << endl;
+                    sites[x][y][z] = sites[xTrans][yTrans][zTrans];
                 }
+
+            }
+        }
+    }
+
+
+    //Upper boundaries
+    for (uint x = NX() + Site::nNeighborsLimit(); x < NX() + 2*Site::nNeighborsLimit(); ++x)
+    {
+
+        xTrans = Site::boundaries(0, 1)->transformCoordinate(x);
+
+        for (uint y = NY() + Site::nNeighborsLimit(); y < NY() + 2*Site::nNeighborsLimit(); ++y)
+        {
+
+            yTrans = Site::boundaries(1, 1)->transformCoordinate(y);
+
+            for (uint z = NZ() + Site::nNeighborsLimit(); z < NZ() + 2*Site::nNeighborsLimit(); ++z)
+            {
+
+                zTrans = Site::boundaries(2, 1)->transformCoordinate(z);
+
+                KMCDebugger_AssertBool(Site::isBoundarySite(x, y, z));
+
+                if (Boundary::isBlocked(xTrans, yTrans, zTrans))
+                {
+                    sites[x][y][z] = NULL;
+                }
+
+                else
+                {
+                    cout << x << " " << y << " " << z << " points to " << *sites[xTrans][yTrans][zTrans] << endl;
+                    sites[x][y][z] = sites[xTrans][yTrans][zTrans];
+                }
+
             }
         }
     }
@@ -623,19 +660,47 @@ void KMCSolver::clearSites()
 
     KMCDebugger_SetEnabledTo(false);
 
-    for (uint i = Site::nNeighborsLimit(); i < m_NX; ++i)
+    for (uint i = Site::nNeighborsLimit(); i < m_NX + Site::nNeighborsLimit(); ++i)
     {
-        for (uint j = Site::nNeighborsLimit(); j < m_NY; ++j)
+        for (uint j = Site::nNeighborsLimit(); j < m_NY + Site::nNeighborsLimit(); ++j)
         {
-            for (uint k = Site::nNeighborsLimit(); k < m_NZ; ++k)
+            for (uint k = Site::nNeighborsLimit(); k < m_NZ + Site::nNeighborsLimit(); ++k)
             {
+
+                KMCDebugger_AssertBool(!Site::isBoundarySite(i, j, k), "Should never delete a boundary site. (Either NULL or shared.)");
+
                 delete sites[i][j][k];
+
             }
 
             delete [] sites[i][j];
         }
 
         delete [] sites[i];
+    }
+
+
+    //Lower boundaries
+    for (uint i = 0; i < Site::nNeighborsLimit(); ++i)
+    {
+        for (uint j = 0; j < Site::nNeighborsLimit(); ++j)
+        {
+            delete [] sites[i][j];
+        }
+
+        delete [] sites[i];
+    }
+
+
+    //Upper boundaries
+    for (uint i = NX() + Site::nNeighborsLimit(); i < NX() + 2*Site::nNeighborsLimit(); ++i)
+    {
+        for (uint j = NY() + Site::nNeighborsLimit(); j < NY() + 2*Site::nNeighborsLimit(); ++j)
+        {
+            delete sites[i][j];
+        }
+
+        delete sites[i];
     }
 
     delete [] sites;
@@ -836,6 +901,9 @@ void KMCSolver::initializeSiteNeighborhoods()
 {
     forEachSiteDo([] (Site * site)
     {
+        KMCDebugger_AssertBool(!Site::isBoundarySite(site->x() + Site::nNeighborsLimit(),
+                                                     site->y() + Site::nNeighborsLimit(),
+                                                     site->z() + Site::nNeighborsLimit()));
         site->introduceNeighborhood();
     });
 
