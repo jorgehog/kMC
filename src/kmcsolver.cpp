@@ -276,7 +276,7 @@ void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate
     else if (newRate == Reaction::UNSET_RATE)
     {
 
-        KMCDebugger_AssertBool(!reaction->isAllowed(), "Allowed reaction set to unset rate.");
+//        KMCDebugger_AssertBool(!reaction->isAllowed(), "Allowed reaction set to unset rate.");
 
         m_kTot -= prevRate;
 
@@ -372,7 +372,7 @@ void KMCSolver::swapReactionAddresses(const uint dest, const uint orig)
     KMCDebugger_Assert(Reaction::UNSET_ADDRESS, ==, oldReaction->address(),     "mismatch in address.", oldReaction->getFinalizingDebugMessage());
 
     KMCDebugger_AssertBool(swappedReaction->isAllowed(), "swapped reaction should be allowed and active.", swappedReaction->getFinalizingDebugMessage());
-    KMCDebugger_AssertBool(!oldReaction->isAllowed()   , "old reaction should not be allowed.",            oldReaction->getFinalizingDebugMessage());
+//    KMCDebugger_AssertBool(!oldReaction->isAllowed()   , "old reaction should not be allowed.",            oldReaction->getFinalizingDebugMessage());
 
     m_allPossibleReactions.at(dest) = swappedReaction;
 
