@@ -18,10 +18,7 @@ public:
     // Boundary interface
 public:
 
-    uint transformCoordinate(const int xi) const
-    {
-        return (xi + span())%span();
-    }
+    uint transformCoordinate(const int xi) const;
 
     int getDistanceBetween(int x1, int x2)
     {

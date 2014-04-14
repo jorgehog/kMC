@@ -22,10 +22,7 @@ public:
 
     const uint type;
 
-    virtual uint transformCoordinate(const int xi) const
-    {
-        return (((xi >= (int)span()) || (xi < 0)) ? BLOCKED_COORDINATE : xi);
-    }
+    virtual uint transformCoordinate(const int xi) const;
 
     virtual int getDistanceBetween(int x1, int x2)
     {
@@ -88,9 +85,10 @@ public:
     static uint N(const uint i);
 
 
+    static void setupCurrentBoundary(const uint x, const uint dim);
+
     static void setupCurrentBoundaries(const uint x, const uint y, const uint z);
 
-    static void setupCurrentBoundaries(Site * site);
 
     static const Boundary* currentBoundaries(const uint i)
     {
@@ -122,7 +120,7 @@ protected:
         return m_solver;
     }
 
-    static void setupLocations(const uint x, const uint y, const uint z, uvec3 &loc);
+    static uint getLocation(const uint xi, const uint dim);
 
     static vector<const Boundary*> m_currentBoundaries;
 

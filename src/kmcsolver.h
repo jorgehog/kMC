@@ -46,7 +46,6 @@ public:
         m_mainLattice->eventLoop();
     }
 
-
     void addEvent(KMCEvent &event)
     {
         m_mainLattice->addEvent(event);
@@ -66,6 +65,7 @@ public:
     {
         m_mainLattice->addSubField(subLattice);
     }
+
 
     void setupMainLattice();
 
@@ -89,6 +89,8 @@ public:
 
     void initializeSiteNeighborhoods();
 
+    void initializeParticles();
+
 
     void forEachSiteDo(function<void(Site * site)> applyFunction) const;
 
@@ -107,7 +109,7 @@ public:
 
     Site* getSite(const uint i, const uint j, const uint k) const
     {
-        return sites[i][j][k];
+        return sites[i + Site::nNeighborsLimit()][j+ Site::nNeighborsLimit()][k + Site::nNeighborsLimit()];
     }
 
     const vector<SoluteParticle*> & particles() const
@@ -280,6 +282,12 @@ private:
     uint m_NZ;
 
     uvec3 m_N;
+
+    uint m_NX_full;
+    uint m_NY_full;
+    uint m_NZ_full;
+
+    uvec3 m_N_full;
 
 
     vector<SoluteParticle*> m_particles;

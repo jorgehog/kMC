@@ -30,6 +30,20 @@ Boundary::~Boundary()
     m_boundarySites.clear();
 }
 
+uint Boundary::transformCoordinate(const int xi) const
+{
+    if ((xi >= (int)span()) || (xi < Site::nNeighborsLimit()))
+    {
+        return BLOCKED_COORDINATE;
+    }
+
+    else
+    {
+        return xi;
+    }
+
+}
+
 void Boundary::setupBoundarySites()
 {
 
@@ -115,24 +129,14 @@ bool Boundary::isCompatible(const int type1, const int type2, bool reverse)
 
 }
 
-void Boundary::setupLocations(const uint x, const uint y, const uint z, uvec3 &loc)
+uint Boundary::getLocation(const uint xi, const uint dim)
 {
-    //make x, y, z boundary static site members?
-
-    uvec xyz = {x, y, z};
-
-    for (uint i = 0; i < 3; ++i)
+    if (xi >= N(dim)/2)
     {
-        if (xyz(i) >= N(i)/2)
-        {
-            loc(i) = 1;
-        }
-
-        else
-        {
-            loc(i) = 0;
-        }
+        return 1;
     }
+
+    return 0;
 
 }
 
@@ -157,20 +161,16 @@ uint Boundary::N(const uint i)
     return m_solver->N(i);
 }
 
-void Boundary::setupCurrentBoundaries(const uint x, const uint y, const uint z)
+void Boundary::setupCurrentBoundary(const uint x, const uint dim)
 {
-    uvec3 loc;
-    setupLocations(x, y, z, loc);
-
-    m_currentBoundaries.at(0) = Site::boundaries(0, loc(0));
-    m_currentBoundaries.at(1) = Site::boundaries(1, loc(1));
-    m_currentBoundaries.at(2) = Site::boundaries(2, loc(2));
-
+    m_currentBoundaries.at(dim) = Site::boundaries(dim, getLocation(x, dim));
 }
 
-void Boundary::setupCurrentBoundaries(Site *site)
+void Boundary::setupCurrentBoundaries(const uint x, const uint y, const uint z)
 {
-    setupCurrentBoundaries(site->x(), site->y(), site->z());
+    setupCurrentBoundary(x, 0);
+    setupCurrentBoundary(y, 1);
+    setupCurrentBoundary(z, 2);
 }
 
 

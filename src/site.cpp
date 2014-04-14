@@ -282,47 +282,27 @@ void Site::introduceNeighborhood()
     KMCDebugger_Assert(m_nNeighborsLimit, !=, KMCSolver::UNSET_UINT, "Neighborlimit is not set.", str());
 
 
-    uint xTrans, yTrans, zTrans;
-
-    Site * neighbor;
-
-
-    Boundary::setupCurrentBoundaries(x(), y(), z());
+    uint n_x, n_y, n_z;
 
     m_neighborhood = new Site***[m_neighborhoodLength];
 
     for (uint i = 0; i < m_neighborhoodLength; ++i)
     {
-
-        xTrans = Boundary::currentBoundaries(0)->transformCoordinate((int)m_x + m_originTransformVector(i));
+        n_x = (int)m_x + m_originTransformVector(i);
 
         m_neighborhood[i] = new Site**[m_neighborhoodLength];
 
         for (uint j = 0; j < m_neighborhoodLength; ++j)
         {
-
-            yTrans = Boundary::currentBoundaries(1)->transformCoordinate((int)m_y + m_originTransformVector(j));
+            n_y = (int)m_y + m_originTransformVector(j);
 
             m_neighborhood[i][j] = new Site*[m_neighborhoodLength];
 
             for (uint k = 0; k < m_neighborhoodLength; ++k)
             {
+                n_z = (int)m_z + m_originTransformVector(k);
 
-                zTrans = Boundary::currentBoundaries(2)->transformCoordinate((int)m_z + m_originTransformVector(k));
-
-                if (Boundary::isBlocked(xTrans, yTrans, zTrans))
-                {
-                    m_neighborhood[i][j][k] = NULL;
-                }
-
-                else
-                {
-
-                    neighbor = m_solver->getSite(xTrans, yTrans, zTrans);
-
-                    m_neighborhood[i][j][k] = neighbor;
-
-                }
+                m_neighborhood[i][j][k] = m_solver->getSite(n_x, n_y, n_z);
 
             }
         }
@@ -444,6 +424,9 @@ void Site::resetBoundariesTo(const umat &boundaryMatrix)
 
     m_solver->initializeSiteNeighborhoods();
 
+    m_solver->initializeParticles();
+
+
     Site::initializeBoundaries();
 
 }
@@ -461,6 +444,8 @@ void Site::resetNNeighborsLimitTo(const uint &nNeighborsLimit, bool check)
     setInitialNNeighborsLimit(nNeighborsLimit, check);
 
     m_solver->initializeSiteNeighborhoods();
+
+    m_solver->initializeParticles();
 
 }
 

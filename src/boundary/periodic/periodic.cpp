@@ -1,5 +1,6 @@
 #include "periodic.h"
 
+#include "../../site.h"
 
 using namespace kMC;
 
@@ -12,6 +13,11 @@ Periodic::Periodic(const uint dimension, const uint orientation) :
 Periodic::~Periodic()
 {
     delta.clear();
+}
+
+uint Periodic::transformCoordinate(const int xi) const
+{
+    return Site::nNeighborsLimit() + (xi - Site::nNeighborsLimit() + span())%span();
 }
 
 void Periodic::initialize()
