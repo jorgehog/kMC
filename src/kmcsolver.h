@@ -245,6 +245,8 @@ public:
 
     bool isEmptyAddress(const uint address) const;
 
+    bool isRegisteredParticle(SoluteParticle *particle) const;
+
     string getReactionVectorDebugMessage();
 
     void dumpXYZ(const uint n);

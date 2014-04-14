@@ -408,6 +408,11 @@ bool KMCSolver::isEmptyAddress(const uint address) const
             != m_availableReactionSlots.end();
 }
 
+bool KMCSolver::isRegisteredParticle(SoluteParticle *particle) const
+{
+    return std::find(m_particles.begin(), m_particles.end(), particle) != m_particles.end();
+}
+
 string KMCSolver::getReactionVectorDebugMessage()
 {
     stringstream s;
@@ -672,22 +677,14 @@ void KMCSolver::despawnParticle(Site *site)
 
     KMCDebugger_AssertBool(site->isActive());
 
-    uint i = 0;
+    KMCDebugger_AssertBool(isRegisteredParticle(site->associatedParticle()));
 
-    for (SoluteParticle *particle : m_particles)
-    {
-        if (particle->site() == site)
-        {
-            break;
-        }
-        i++;
-    }
+    m_particles.erase(std::find(m_particles.begin(), m_particles.end(), site->associatedParticle()));
 
-    KMCDebugger_Assert(i, !=, m_particles.size());
+    KMCDebugger_AssertBool(!isRegisteredParticle(site->associatedParticle()));
 
-    delete m_particles.at(i);
+    delete site->associatedParticle();
 
-    m_particles.erase(m_particles.begin() + i);
 
 }
 
