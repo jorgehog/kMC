@@ -1310,7 +1310,7 @@ void testBed::testOptimizedRateVectors()
 
     while (cycle <= nCycles)
     {
-        cout << "cycle" << cycle << endl;
+
         solver->getRateVariables();
 
         fill_rate_stuff(accuAllRatesBF, allPossibleReactionsBF, kTotBF);
