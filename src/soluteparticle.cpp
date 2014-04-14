@@ -31,7 +31,10 @@ SoluteParticle::~SoluteParticle()
 
     KMCDebugger_Assert(refCounter, !=, 0);
 
-    disableSite();
+    if (m_site != NULL)
+    {
+        disableSite();
+    }
 
     clearAllReactions();
 
@@ -165,6 +168,7 @@ bool SoluteParticle::isLegalToSpawn() const
     return true;
 
 }
+
 
 bool SoluteParticle::isNeighbor(SoluteParticle *particle, uint level)
 {

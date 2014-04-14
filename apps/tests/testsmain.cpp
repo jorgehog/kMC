@@ -10,7 +10,7 @@
 
 
 #define focusSuite "ConcWallBoundaries"
-//#define focusTest  "DiffusionMatrixSetup"
+#define focusTest  "OptimizedRateVectors"
 
 
 #include "defines.h"

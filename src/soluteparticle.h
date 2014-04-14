@@ -263,7 +263,6 @@ public:
 
     bool isLegalToSpawn() const;
 
-
     bool qualifiesAsCrystal() const
     {
         return nNeighbors() == Site::closestShellSize;

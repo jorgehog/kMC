@@ -96,7 +96,7 @@ void ConcentrationWall::update()
             {
                 currentSite = boundarySites().at(c);
 
-                spawned = solver()->spawnParticle(particle, currentSite, false);
+                spawned = solver()->spawnParticle(particle, currentSite, true);
 
                 if (spawned)
                 {
