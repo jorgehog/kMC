@@ -10,7 +10,7 @@
 
 
 //#define focusSuite "ConcWallBoundaries"
-#define focusTest  "KnownCase"
+//#define focusTest  "KnownCase"
 
 
 #include "defines.h"
