@@ -745,17 +745,25 @@ void KMCSolver::initializeCrystal(const double relativeSeedSize)
 void KMCSolver::initializeSolutionBath()
 {
 
-    uint x, y, z, N, n;
+    uint x, y, z;
     bool spawned;
 
+    uint effectiveVolume = 27;
 
-    N = (NX()*NY()*NZ() - SoluteParticle::nParticles())*targetConcentration();
+    uint NFree = NX()*NY()*NZ() - SoluteParticle::nParticles();
 
-    n = 0;
+    uint N = NFree*targetConcentration();
+
+    if (N > NFree/effectiveVolume)
+    {
+        cerr << "Not enough space to place " << N << " particles sufficiently apart from eachother. Maximum concentration: " << 1./effectiveVolume << endl;
+        exit();
+    }
+
+    uint n = 0;
 
     while (n != N)
     {
-
 
         SoluteParticle *particle = new SoluteParticle();
 

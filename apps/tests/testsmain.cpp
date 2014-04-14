@@ -10,7 +10,7 @@
 
 
 //#define focusSuite "ConcWallBoundaries"
-//#define focusTest  "OptimizedRateVectors"
+#define focusTest  "KnownCase"
 
 
 #include "defines.h"
@@ -67,7 +67,7 @@ TESTWRAPPER(OptimizedRateVectors)       \
                                         \
 TESTWRAPPER(Sequential)                 \
                                         \
-//TESTWRAPPER(KnownCase)
+TESTWRAPPER(KnownCase)
 
 
 SUITE(PeriodicBoundaries)
