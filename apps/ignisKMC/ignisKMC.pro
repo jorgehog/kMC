@@ -18,3 +18,9 @@ export(copydata.commands)
 export(createDirs.commands)
 
 QMAKE_EXTRA_TARGETS += first copydata createDirs
+
+INCLUDEPATH += $(HOME)/code/DCViz/include
+
+INCLUDEPATH += /usr/include/python2.7
+
+LIBS += -lpython2.7
