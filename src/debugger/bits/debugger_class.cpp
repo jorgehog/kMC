@@ -109,7 +109,7 @@ void Debugger::pushTraces()
 
 }
 
-void Debugger::pushImplication(SoluteParticle *particle, const char * _new)
+void Debugger::pushImplication(const SoluteParticle *particle, const char * _new)
 {
 
     using namespace std;
@@ -443,6 +443,11 @@ void Debugger::reset()
 
 void Debugger::popAffected(SoluteParticle *particle)
 {
+    if (!enabled)
+    {
+        return;
+    }
+
     affectedUnion.erase(affectedUnion.find(particle));
 }
 

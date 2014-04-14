@@ -59,7 +59,7 @@ public:
     static void setEnabledTo(bool state);
     static void resetEnabled();
     static void pushTraces();
-    static void pushImplication(SoluteParticle *particle, const char *_new);
+    static void pushImplication(const SoluteParticle *particle, const char *_new);
     static void markPartialStep(const char * msg);
     static void setActiveReaction(Reaction * reaction);
     static void initialize();

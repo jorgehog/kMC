@@ -169,10 +169,7 @@ public:
         return m_affectedParticles.find(this) != m_affectedParticles.end();
     }
 
-    void markAsAffected()
-    {
-        m_affectedParticles.insert(this);
-    }
+    void markAsAffected();
 
     const vector<vector<SoluteParticle*> > & neighbouringParticles() const
     {

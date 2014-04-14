@@ -38,6 +38,10 @@ SoluteParticle::~SoluteParticle()
 
     clearAllReactions();
 
+    m_neighboringParticles.clear();
+
+    m_nNeighbors.clear();
+
 
     refCounter--;
 
@@ -45,7 +49,8 @@ SoluteParticle::~SoluteParticle()
 
 
 void SoluteParticle::setSite(kMC::Site *site)
-{
+{    
+    KMCDebugger_MarkPre("void");
 
     KMCDebugger_AssertBool(!m_site->isActive(), "particle already present at site.", m_site->info());
 
@@ -73,7 +78,7 @@ void SoluteParticle::setSite(kMC::Site *site)
     });
 
 
-
+    KMCDebugger_PushImplication(this, "enabled");
     KMCDebugger_MarkPartialStep("PARTICLE ACTIVATED");
 
 }
@@ -85,10 +90,11 @@ void SoluteParticle::trySite(Site *site)
 
 void SoluteParticle::disableSite()
 {
+    KMCDebugger_MarkPre("void");
+
     KMCDebugger_AssertBool(m_site->isActive(), "particle not present at site.", m_site->info());
 
     m_site->desociate();
-
 
     forEachNeighborDo([this] (SoluteParticle *neighbor, const uint level)
     {
@@ -102,8 +108,9 @@ void SoluteParticle::disableSite()
 
     m_energy = 0;
 
-    KMCDebugger_MarkPartialStep("PARTICLE DISABLED");
 
+    KMCDebugger_PushImplication(this, "disabled");
+    KMCDebugger_MarkPartialStep("PARTICLE DISABLED");
 
 }
 
@@ -117,10 +124,17 @@ void SoluteParticle::changeSite(Site *newSite)
 
 void SoluteParticle::popAffectedParticle(SoluteParticle *particle)
 {
+    auto idx = m_affectedParticles.find(particle);
+
+    if (idx == m_affectedParticles.end())
+    {
+        return;
+    }
+
     KMCDebugger_AssertBool(particle->isAffected());
     KMCDebugger_PopAffected(particle);
 
-    m_affectedParticles.erase(m_affectedParticles.find(particle));
+    m_affectedParticles.erase(idx);
 }
 
 void SoluteParticle::updateAffectedParticles()
@@ -130,6 +144,11 @@ void SoluteParticle::updateAffectedParticles()
 
     for (SoluteParticle* particle : m_affectedParticles)
     {
+        if (particle == NULL)
+        {
+            continue;
+        }
+
         particle->updateReactions();
     }
 
@@ -230,6 +249,11 @@ uint SoluteParticle::nActiveReactions() const
     });
 
     return nActiveReactions;
+}
+
+void SoluteParticle::markAsAffected()
+{
+    m_affectedParticles.insert(this);
 }
 
 void SoluteParticle::updateReactions()
@@ -338,6 +362,8 @@ void SoluteParticle::addNeighbor(SoluteParticle *neighbor, uint level)
 
 void SoluteParticle::_updateNeighborProps(const int sign, const SoluteParticle * neighbor, const uint level)
 {
+    KMCDebugger_MarkPre(neighbor->particleStateName());
+
     m_nNeighbors(level) += sign;
 
     m_nNeighborsSum += sign;
@@ -361,6 +387,8 @@ void SoluteParticle::_updateNeighborProps(const int sign, const SoluteParticle *
     markAsAffected();
 
     KMCDebugger_Assert(nNeighbors(level), ==, m_neighboringParticles.at(level).size(), "mismatch", info());
+
+    KMCDebugger_PushImplication(neighbor, neighbor->particleStateName().c_str());
 }
 
 

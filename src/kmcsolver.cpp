@@ -646,8 +646,6 @@ bool KMCSolver::spawnParticle(SoluteParticle *particle, Site *site, bool checkIf
 
     m_particles.push_back(particle);
 
-    KMCDebugger_PushTraces();
-
     return true;
 
 }
@@ -676,6 +674,8 @@ void KMCSolver::despawnParticle(Site *site)
 {
 
     KMCDebugger_AssertBool(site->isActive());
+
+    SoluteParticle::popAffectedParticle(site->associatedParticle());
 
     KMCDebugger_AssertBool(isRegisteredParticle(site->associatedParticle()));
 
@@ -807,7 +807,7 @@ void KMCSolver::getRateVariables()
 
     reshuffleReactions();
 
-    KMCDebugger_Assert(accuAllRates().at(0), ==, allPossibleReactions().at(0)->rate(), "zeroth accuallrate should be the first rate.");
+    KMCDebugger_AssertClose(accuAllRates().at(0), allPossibleReactions().at(0)->rate(), minRateThreshold(), "zeroth accuallrate should be the first rate.");
 
 }
 

@@ -1293,6 +1293,8 @@ void testBed::testnNeiborsLimit()
 void testBed::testOptimizedRateVectors()
 {
 
+    solver->setRNGSeed(Seed::specific, 1000000);
+
     Reaction::setLinearRateScale(1000);
 
     solver->initializeCrystal(0.2);
@@ -1308,7 +1310,7 @@ void testBed::testOptimizedRateVectors()
 
     while (cycle <= nCycles)
     {
-
+        cout << "cycle" << cycle << endl;
         solver->getRateVariables();
 
         fill_rate_stuff(accuAllRatesBF, allPossibleReactionsBF, kTotBF);
