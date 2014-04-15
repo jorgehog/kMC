@@ -17,12 +17,12 @@ Periodic::~Periodic()
 
 uint Periodic::transformCoordinate(const int xi) const
 {
-    return Site::nNeighborsLimit() + (xi + span() - Site::nNeighborsLimit())%span();
+    return (xi + span())%span();
 }
 
 int Periodic::getDistanceBetween(int x1, int x2)
 {
-    return delta(transformCoordinate(Boundary::getDistanceBetween(x1, x2) + Site::nNeighborsLimit()) - Site::nNeighborsLimit());
+    return delta(transformCoordinate(Boundary::getDistanceBetween(x1, x2) + Site::nNeighborsLimit()) - (int)Site::nNeighborsLimit());
 }
 
 void Periodic::initialize()

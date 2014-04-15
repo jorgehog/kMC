@@ -1870,6 +1870,14 @@ void testBed::testAccuAllRates()
 void testBed::testInitialSiteSetup()
 {
 
+    int nx, ny, nz;
+
+    uint xt, yt, zt;
+
+    Site *site;
+
+
+
     CHECK_EQUAL(NX()*NY()*NZ(), Site::_refCount());
 
     solver->clearSites();
@@ -1880,17 +1888,64 @@ void testBed::testInitialSiteSetup()
 
     CHECK_EQUAL(NX()*NY()*NZ(), Site::_refCount());
 
-    int nx, ny, nz;
-
-    uint xt, yt, zt;
-
-    Site::resetBoundariesTo(Boundary::Edge);
-
-    CHECK_EQUAL(NX()*NY()*NZ(), Site::_refCount());
 
     solver->forEachSiteDo([&] (Site *_site)
     {
-        Site *site = _site; //hack to fix autocompletion.
+       site = _site;
+
+       CHECK_EQUAL(site, solver->getSite(site->x(), site->y(), site->z()));
+
+       CHECK_EQUAL(site->x(), solver->getSite(site->x(), site->y(), site->z())->x());
+       CHECK_EQUAL(site->y(), solver->getSite(site->x(), site->y(), site->z())->y());
+       CHECK_EQUAL(site->z(), solver->getSite(site->x(), site->y(), site->z())->z());
+    });
+
+    Site::resetBoundariesTo(Boundary::Periodic);
+
+
+    solver->forEachSiteDo([&] (Site *_site)
+    {
+        site = _site; //hack to fix autocompletion.
+
+        Boundary::setupCurrentBoundaries(site->x(), site->y(), site->z());
+
+        for (uint i = 0; i < Site::neighborhoodLength(); ++i)
+        {
+            nx = (int)site->x() + Site::originTransformVector(i);
+            xt = Boundary::currentBoundaries(0)->transformCoordinate(nx);
+
+            for (uint j = 0; j < Site::neighborhoodLength(); ++j)
+            {
+                ny = (int)site->y() + Site::originTransformVector(j);
+                yt = Boundary::currentBoundaries(1)->transformCoordinate(ny);
+
+                for (uint k = 0; k < Site::neighborhoodLength(); ++k)
+                {
+                    nz = (int)site->z() + Site::originTransformVector(k);
+                    zt = Boundary::currentBoundaries(2)->transformCoordinate(nz);
+
+                    CHECK_EQUAL(false, site->neighborhood(i, j, k) == NULL);
+                    CHECK_EQUAL(site->neighborhood(i, j, k), solver->getSite(nx, ny, nz));
+
+                    if ((nx < 0 || nx >= (int)NX()) ||
+                        (ny < 0 || ny >= (int)NY()) ||
+                        (nz < 0 || nz >= (int)NZ()))
+                    {
+                        CHECK_EQUAL(*solver->getSite(nx, ny, nz), *solver->getSite(xt, yt, zt));
+                        cout.flush();
+                    }
+
+                }
+            }
+        }
+
+    });
+
+    Site::resetBoundariesTo(Boundary::Edge);
+
+    solver->forEachSiteDo([&] (Site *_site)
+    {
+        site = _site; //hack to fix autocompletion.
 
         Boundary::setupCurrentBoundaries(site->x(), site->y(), site->z());
 
@@ -1921,6 +1976,8 @@ void testBed::testInitialSiteSetup()
         }
 
     });
+
+
 }
 
 

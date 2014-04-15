@@ -538,17 +538,17 @@ void KMCSolver::initializeSites()
     for (uint x = 0; x < Site::nNeighborsLimit(); ++x)
     {
 
-        xTrans = Site::boundaries(0, 0)->transformCoordinate(x + Site::nNeighborsLimit()) - Site::nNeighborsLimit();
+        xTrans = Site::boundaries(0, 0)->transformCoordinate((int)x - (int)Site::nNeighborsLimit());
 
         for (uint y = 0; y < Site::nNeighborsLimit(); ++y)
         {
 
-            yTrans = Site::boundaries(1, 0)->transformCoordinate(y + Site::nNeighborsLimit()) - Site::nNeighborsLimit();
+            yTrans = Site::boundaries(1, 0)->transformCoordinate((int)y - (int)Site::nNeighborsLimit());
 
             for (uint z = 0; z < Site::nNeighborsLimit(); ++z)
             {
 
-                zTrans = Site::boundaries(2, 0)->transformCoordinate(z + Site::nNeighborsLimit()) - Site::nNeighborsLimit();
+                zTrans = Site::boundaries(2, 0)->transformCoordinate((int)z - (int)Site::nNeighborsLimit());
 
                 if (Boundary::isBlocked(xTrans, yTrans, zTrans))
                 {
@@ -557,7 +557,9 @@ void KMCSolver::initializeSites()
 
                 else
                 {
-                    sites[x][y][z] = sites[xTrans][yTrans][zTrans];
+                    sites[x][y][z] = sites[xTrans + Site::nNeighborsLimit()]
+                                          [yTrans + Site::nNeighborsLimit()]
+                                          [zTrans + Site::nNeighborsLimit()];
                 }
 
             }
@@ -569,17 +571,17 @@ void KMCSolver::initializeSites()
     for (uint x = NX() + Site::nNeighborsLimit(); x < NX() + 2*Site::nNeighborsLimit(); ++x)
     {
 
-        xTrans = Site::boundaries(0, 1)->transformCoordinate(x + Site::nNeighborsLimit()) - Site::nNeighborsLimit();
+        xTrans = Site::boundaries(0, 1)->transformCoordinate((int)x - (int)Site::nNeighborsLimit());
 
         for (uint y = NY() + Site::nNeighborsLimit(); y < NY() + 2*Site::nNeighborsLimit(); ++y)
         {
 
-            yTrans = Site::boundaries(1, 1)->transformCoordinate(y + Site::nNeighborsLimit()) - Site::nNeighborsLimit();
+            yTrans = Site::boundaries(1, 1)->transformCoordinate((int)y - (int)Site::nNeighborsLimit());
 
             for (uint z = NZ() + Site::nNeighborsLimit(); z < NZ() + 2*Site::nNeighborsLimit(); ++z)
             {
 
-                zTrans = Site::boundaries(2, 1)->transformCoordinate(z + Site::nNeighborsLimit()) - Site::nNeighborsLimit();
+                zTrans = Site::boundaries(2, 1)->transformCoordinate((int)z - (int)Site::nNeighborsLimit());
 
                 if (Boundary::isBlocked(xTrans, yTrans, zTrans))
                 {
@@ -588,7 +590,9 @@ void KMCSolver::initializeSites()
 
                 else
                 {
-                    sites[x][y][z] = sites[xTrans][yTrans][zTrans];
+                    sites[x][y][z] = sites[xTrans + Site::nNeighborsLimit()]
+                                          [yTrans + Site::nNeighborsLimit()]
+                                          [zTrans + Site::nNeighborsLimit()];
                 }
 
             }

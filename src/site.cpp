@@ -774,7 +774,16 @@ uint Site::refCounter = 0;
 
 ostream & operator << (ostream& os, const Site& ss)
 {
-    os << ss.str();
+    if (&ss == NULL)
+    {
+        os << "NULL";
+    }
+
+    else
+    {
+        os << ss.str();
+    }
+
     return os;
 }
 
