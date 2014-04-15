@@ -140,13 +140,6 @@ public:
         return m_solver;
     }
 
-    static bool isBoundarySite(const uint x, const uint y, const uint z)
-    {
-        return (x < m_nNeighborsLimit || x >= NX() + m_nNeighborsLimit) ||
-               (y < m_nNeighborsLimit || y >= NY() + m_nNeighborsLimit) ||
-               (z < m_nNeighborsLimit || z >= NZ() + m_nNeighborsLimit);
-    }
-
     static const uint &boundaryTypes(const uint i, const uint j = 0)
     {
         return m_boundaryTypes(i, j);

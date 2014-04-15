@@ -80,10 +80,14 @@ void testBed::testTotalParticleStateCounters()
 
     solver->setBoxSize({10, 10, 10});
 
-    solver->forEachSiteDo_sendIndices([] (Site * site, uint x, uint y, uint z)
+    solver->forEachSiteDo([] (Site * site)
     {
+        if (!site->isActive())
+        {
+            return;
+        }
 
-        if ((x%2 == 0) && (y%2 == 0) && (z%2 == 0))
+        if ((site->x()%2 == 0) && (site->y()%2 == 0) && (site->z()%2 == 0))
         {
             solver->forceSpawnParticle(site);
         }
@@ -109,10 +113,10 @@ void testBed::testDistanceTo()
 
     solver->forEachSiteDo([&] (Site * startSite)
     {
-        solver->forEachSiteDo_sendIndices([&] (Site * endSite, uint endx, uint endy, uint endz)
+        solver->forEachSiteDo([&] (Site * endSite)
         {
 
-            Boundary::setupCurrentBoundaries(endx, endy, endz);
+            Boundary::setupCurrentBoundaries(endSite->x(), endSite->y(), endSite->z());
 
             endSite->distanceTo(startSite, dx, dy, dz, true);
 
@@ -1865,6 +1869,16 @@ void testBed::testAccuAllRates()
 
 void testBed::testInitialSiteSetup()
 {
+
+    CHECK_EQUAL(NX()*NY()*NZ(), Site::_refCount());
+
+    solver->clearSites();
+
+    CHECK_EQUAL(0, Site::_refCount());
+
+    solver->initializeSites();
+
+    CHECK_EQUAL(NX()*NY()*NZ(), Site::_refCount());
 
 }
 

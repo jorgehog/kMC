@@ -282,7 +282,7 @@ void Site::introduceNeighborhood()
     KMCDebugger_Assert(m_nNeighborsLimit, !=, KMCSolver::UNSET_UINT, "Neighborlimit is not set.", str());
 
 
-    uint n_x, n_y, n_z;
+    int n_x, n_y, n_z;
 
     m_neighborhood = new Site***[m_neighborhoodLength];
 

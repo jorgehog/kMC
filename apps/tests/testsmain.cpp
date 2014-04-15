@@ -9,8 +9,8 @@
 #include <sys/types.h>
 
 
-//#define focusSuite "ConcWallBoundaries"
-//#define focusTest  "KnownCase"
+#define focusSuite "Misc"
+#define focusTest  "InitialSiteSetup"
 
 
 #include "defines.h"
@@ -20,6 +20,8 @@ SUITE(Misc)
     TESTWRAPPER(RNG)
 
     TESTWRAPPER(BinarySearchChoise)
+
+    TESTWRAPPER(InitialSiteSetup)
 
     TESTWRAPPER(TotalParticleStateCounters)
 
@@ -49,6 +51,9 @@ SUITE(Reactions)
 }
 
 #define AllBoundaryTests                \
+                                        \
+TESTWRAPPER(InitialSiteSetup)           \
+                                        \
 TESTWRAPPER(InitialReactionSetup)       \
                                         \
 TESTWRAPPER(BoxSizes)                   \

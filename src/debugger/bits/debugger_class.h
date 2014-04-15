@@ -173,6 +173,7 @@ public:
 
         cerr << assertMessage.str() << endl;
 
+
         throw std::runtime_error("Assertion failed.");
 
     }

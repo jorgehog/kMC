@@ -94,20 +94,13 @@ public:
 
     void forEachSiteDo(function<void(Site * site)> applyFunction) const;
 
-    void forEachSiteDo_sendIndices(function<void(Site *, uint, uint, uint)> applyFunction) const;
-
-
-    void forEachActiveSiteDo(function<void(Site * site)> applyFunction) const;
-
-    void forEachActiveSiteDo_sendIndices(function<void(Site *, uint, uint, uint)> applyFunction) const;
-
 
     void getRateVariables();
 
     uint getReactionChoice(double R);
 
 
-    Site* getSite(const uint i, const uint j, const uint k) const
+    Site* getSite(const int i, const int j, const int k) const
     {
         return sites[i + Site::nNeighborsLimit()][j+ Site::nNeighborsLimit()][k + Site::nNeighborsLimit()];
     }
@@ -176,7 +169,7 @@ public:
 
     //Set functions
 
-    void setBoxSize(const uvec3 boxSize, bool check = true, bool keepSystem = false);
+    void setBoxSize(const uvec3 boxSize, bool check = true);
 
     void setNumberOfCycles(const uint nCycles)
     {
@@ -268,6 +261,12 @@ public:
         m_dumpXYZ = state;
     }
 
+
+    void initializeSites();
+
+    void clearSites();
+
+
 private:
 
     double m_targetConcentration;
@@ -300,12 +299,6 @@ private:
 
     vector<uint>   m_availableReactionSlots;
 
-
-    void initializeSites();
-
-    void clearSites();
-
-    void setBoxSize_KeepSites(const uvec3 &boxSizes);
 
 
     void checkRefCounter();

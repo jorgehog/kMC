@@ -32,7 +32,7 @@ Boundary::~Boundary()
 
 uint Boundary::transformCoordinate(const int xi) const
 {
-    if ((xi >= (int)span() + Site::nNeighborsLimit()) || (xi < Site::nNeighborsLimit()))
+    if ((xi >= (int)span()) || (xi < 0))
     {
         return BLOCKED_COORDINATE;
     }
