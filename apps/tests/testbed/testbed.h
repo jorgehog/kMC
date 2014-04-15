@@ -114,4 +114,13 @@ private:
 
     static void _reactionShufflerCheck(uint nReacs);
 
+    static void forceNewBoxSize(const uvec3 boxSize, bool check = true);
+
+    static void forceNewNNeighborLimit(const uint nNeighborlimit, bool check = true);
+
+    static void forceNewBoundaries(const umat & boundaryMatrix);
+
+    static void forceNewBoundaries(const int boundaryType);
+
+
 };

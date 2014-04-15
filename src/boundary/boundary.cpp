@@ -18,7 +18,8 @@ using namespace kMC;
 Boundary::Boundary(const uint dimension, const uint orientation, const uint type) :
     type(type),
     m_dimension(dimension),
-    m_orientation(orientation)
+    m_orientation(orientation),
+    m_initialized(false)
 {
 
 

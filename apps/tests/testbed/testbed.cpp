@@ -29,13 +29,14 @@ void testBed::makeSolver()
 
     solver->setBoxSize({10, 10, 10});
 
+    solver->initializeSites();
+
+    Site::initializeBoundaries();
 
 }
 
 void testBed::testTotalParticleStateCounters()
 {
-
-    Site::resetBoundariesTo(Boundary::Periodic);
 
     CHECK_EQUAL(0, SoluteParticle::nParticles());
     CHECK_EQUAL(0, accu(SoluteParticle::totalParticlesVector()));
@@ -78,8 +79,6 @@ void testBed::testTotalParticleStateCounters()
 
     CHECK_EQUAL(0, accu(SoluteParticle::totalParticlesVector()));
 
-    solver->setBoxSize({10, 10, 10});
-
     solver->forEachSiteDo([] (Site * site)
     {
         if (!site->isActive())
@@ -107,9 +106,10 @@ void testBed::testDistanceTo()
     uint adx, ady, adz;
 
 
+    solver->clearSites();
     solver->setBoxSize({6, 6, 6}, false);
     Site::resetNNeighborsLimitTo(2);
-
+    solver->initializeSites();
 
     solver->forEachSiteDo([&] (Site * startSite)
     {
@@ -992,16 +992,28 @@ void testBed::initBoundaryTestParameters()
 
     solver->setRNGSeed(Seed::specific, baseSeed);
 
-    solver->setBoxSize({10, 10, 10}, false);
+
+    solver->clearSites();
+
+
+    solver->setBoxSize({10, 10, 10});
 
     Site::resetBoundariesTo(lastBoundaries);
 
     Site::resetNNeighborsLimitTo(3);
 
+
+    solver->initializeSites();
+
+    Site::initializeBoundaries();
+
 }
 
 void testBed::initSimpleSystemParameters()
 {
+
+    solver->clearSites();
+
 
     solver->setBoxSize({15, 15, 15}, false);
 
@@ -1009,6 +1021,10 @@ void testBed::initSimpleSystemParameters()
 
     Site::resetBoundariesTo(Boundary::Periodic);
 
+
+    solver->initializeSites();
+
+    Site::initializeBoundaries();
 }
 
 void testBed::activateAllSites()
@@ -1057,6 +1073,38 @@ void testBed::_reactionShufflerCheck(uint nReacs)
 
 }
 
+void testBed::forceNewBoxSize(const uvec3 boxSize, bool check)
+{
+    Site::finalizeBoundaries();
+
+    solver->clearSites();
+    solver->setBoxSize(boxSize, check);
+    solver->initializeSites();
+
+    Site::initializeBoundaries();
+}
+
+void testBed::forceNewNNeighborLimit(const uint nNeighborlimit, bool check)
+{
+    solver->clearSites();
+    Site::resetNNeighborsLimitTo(nNeighborlimit, check);
+    solver->initializeSites();
+}
+
+void testBed::forceNewBoundaries(const umat &boundaryMatrix)
+{
+    solver->clearSites();
+    Site::resetBoundariesTo(boundaryMatrix);
+    solver->initializeSites();
+
+    Site::initializeBoundaries();
+}
+
+void testBed::forceNewBoundaries(const int boundaryType)
+{
+    forceNewBoundaries(umat::fixed<3, 2>(fill::zeros) + boundaryType);
+}
+
 void testBed::testKnownCase()
 {
 
@@ -1070,7 +1118,7 @@ void testBed::testKnownCase()
 
     solver = new KMCSolver(root);
 
-    Site::resetBoundariesTo(lastBoundaries);
+    forceNewBoundaries(lastBoundaries);
 
     ConcentrationWall::setMaxEventsPrCycle(5);
 
@@ -1158,7 +1206,7 @@ void testBed::testBoxSizes()
 
     uvec N = {6, 10, 15};
 
-    Site::resetNNeighborsLimitTo(2, false);
+    forceNewNNeighborLimit(2, false);
 
     uvec3 boxSize;
     set<Site*> allSites;
@@ -1183,7 +1231,7 @@ void testBed::testBoxSizes()
 
                 boxSize = {nx, ny, nz};
 
-                solver->setBoxSize(boxSize);
+                forceNewBoxSize(boxSize);
 
                 CHECK_EQUAL(nx, NX());
                 CHECK_EQUAL(ny, NY());
@@ -1257,15 +1305,21 @@ void testBed::testnNeiborsLimit()
     uvec3 boxSize = {10, 10, 10};
 
 
+    solver->clearSites();
+
     Site::resetBoundariesTo(Boundary::Periodic);
 
     solver->setBoxSize(boxSize, false);
+
+    solver->initializeSites();
+
+    Site::initializeBoundaries();
 
 
     for (uint nNlim : nNlims)
     {
         allSites.clear();
-        Site::resetNNeighborsLimitTo(nNlim, false);
+        forceNewNNeighborLimit(nNlim, false);
 
         solver->forEachSiteDo([&] (Site * currentSite)
         {
@@ -1786,9 +1840,14 @@ void testBed::testStateChanges()
 
 void testBed::testNeighborlist()
 {
+    solver->clearSites();
+
     solver->setBoxSize({15, 15, 15});
 
     Site::resetNNeighborsLimitTo(5);
+
+    solver->initializeSites();
+
 
     solver->forceSpawnParticle(getBoxCenter());
 
@@ -1914,7 +1973,7 @@ void testBed::testInitialSiteSetup()
         }
     }
 
-    Site::resetBoundariesTo(Boundary::Periodic);
+    forceNewBoundaries(Boundary::Periodic);
 
     solver->forEachSiteDo([&] (Site *_site)
     {
@@ -1955,7 +2014,7 @@ void testBed::testInitialSiteSetup()
 
     });
 
-    Site::resetBoundariesTo(Boundary::Edge);
+    forceNewBoundaries(Boundary::Edge);
 
     solver->forEachSiteDo([&] (Site *_site)
     {

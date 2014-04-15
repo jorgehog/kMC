@@ -926,17 +926,13 @@ uint KMCSolver::getReactionChoice(double R)
 void KMCSolver::setBoxSize(const uvec3 boxSize, bool check)
 {
 
-    if (m_NX != UNSET_UINT && m_NY != UNSET_UINT && m_NZ != UNSET_UINT)
-    {
-        clearSites();
-    }
+    KMCDebugger_Assert(Site::_refCount(), ==, 0, "Sites need to be cleared before a new boxsize is set.");
 
     m_NX = boxSize(0);
     m_NY = boxSize(1);
     m_NZ = boxSize(2);
 
     m_N = boxSize;
-
 
     if (Site::nNeighborsLimit() != UNSET_UINT && check)
     {
@@ -946,10 +942,6 @@ void KMCSolver::setBoxSize(const uvec3 boxSize, bool check)
             KMCSolver::exit();
         }
     }
-
-    initializeSites();
-
-    Site::initializeBoundaries();
 
     m_mainLattice->setTopology({0, m_NX,
                                 0, m_NY,

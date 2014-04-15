@@ -45,6 +45,8 @@ public:
 
     static void updateBoundaries();
 
+    static bool boundariesIsInitialized();
+
 
     static uint shellSize(const uint level)
     {
@@ -116,11 +118,7 @@ public:
 
     uint maxDistanceTo(const Site * other) const;
 
-
-    void reset();
-
     void clearNeighborhood();
-
 
     const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const;
 

@@ -12,6 +12,9 @@
     std::cout << std::left << std::setfill(' ') << std::setw(65); \
     std::cout << s.str(); \
     \
+    KMCDebugger_AssertBool(Site::boundariesIsInitialized(), "Boundaries are not initialized."); \
+    KMCDebugger_Assert(Site::_refCount(), !=, 0, "Sites need to be initialized."); \
+    \
     testBed::timer.tic(); \
     testBed::test##which(__VA_ARGS__); \
     std::cout << "Done (" << std::setprecision(1) << std::fixed << testBed::timer.toc() << " s)" << std::endl; \

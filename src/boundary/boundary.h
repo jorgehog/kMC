@@ -39,6 +39,21 @@ public:
 
     void distanceFromSite(const Site * site, int & dxi, bool abs = false);
 
+    const bool &initialized() const
+    {
+        return m_initialized;
+    }
+
+    void setAsInitialized()
+    {
+        m_initialized = true;
+    }
+
+    void setAsUninitialized()
+    {
+        m_initialized = true;
+    }
+
     static bool isBlocked(const uint xi)
     {
         return (xi == BLOCKED_COORDINATE);
@@ -109,6 +124,8 @@ private:
     const uint m_dimension;
 
     const uint m_orientation;
+
+    bool m_initialized;
 
     vector<Site*> m_boundarySites;
 

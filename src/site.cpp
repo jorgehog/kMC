@@ -57,11 +57,14 @@ void Site::loadConfig(const Setting &setting)
 
 void Site::initializeBoundaries()
 {
+    KMCDebugger_Assert(Site::_refCount(), !=, 0, "Sites needs to be enabled to initialize boundaries.");
+
     KMCDebugger_SetEnabledTo(false);
 
     for (uint i = 0; i < 3; ++i) {
         for (uint j = 0; j < 2; ++j) {
             m_boundaries(i, j)->initialize();
+            m_boundaries(i, j)->setAsInitialized();
         }
     }
 
@@ -75,6 +78,21 @@ void Site::updateBoundaries()
             m_boundaries(i, j)->update();
         }
     }
+}
+
+bool Site::boundariesIsInitialized()
+{
+
+    for (uint i = 0; i < 3; ++i) {
+        for (uint j = 0; j < 2; ++j) {
+            if (!m_boundaries(i, j)->initialized())
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
 
 
@@ -311,12 +329,6 @@ void Site::introduceNeighborhood()
 
 
 
-
-void Site::reset()
-{
-
-}
-
 void Site::clearNeighborhood()
 {
 
@@ -411,19 +423,13 @@ void Site::clearAll()
 void Site::resetBoundariesTo(const umat &boundaryMatrix)
 {
 
+    KMCDebugger_Assert(refCounter, ==, 0, "Sites must be cleared before the neighborhood length can change.");
+
     finalizeBoundaries();
 
     clearBoundaries();
 
-
-    m_solver->clearSites();
-
     setInitialBoundaries(boundaryMatrix);
-
-    m_solver->initializeSites();
-
-
-    Site::initializeBoundaries();
 
 }
 
@@ -435,11 +441,9 @@ void Site::resetBoundariesTo(const int boundaryType)
 void Site::resetNNeighborsLimitTo(const uint &nNeighborsLimit, bool check)
 {
 
-    m_solver->clearSites();
+    KMCDebugger_Assert(refCounter, ==, 0, "Sites must be cleared before the neighborhood length can change.");
 
     setInitialNNeighborsLimit(nNeighborsLimit, check);
-
-    m_solver->initializeSites();
 
 }
 
@@ -465,6 +469,7 @@ void Site::finalizeBoundaries()
         for (uint j = 0; j < 2; ++j)
         {
             m_boundaries(i, j)->finalize();
+            m_boundaries(i, j)->setAsUninitialized();
         }
     }
 }
@@ -673,6 +678,9 @@ void Site::setInitialNNeighborsLimit(const uint &nNeighborsLimit, bool check)
 
 void Site::setInitialBoundaries(const umat &boundaryMatrix)
 {
+
+    KMCDebugger_AssertBool(m_boundaries.empty(), "Boundaries need to be clearedd before they can be initialized.");
+
 
     m_boundaryTypes = boundaryMatrix;
 

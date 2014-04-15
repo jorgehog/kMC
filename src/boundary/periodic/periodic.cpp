@@ -22,7 +22,7 @@ uint Periodic::transformCoordinate(const int xi) const
 
 int Periodic::getDistanceBetween(int x1, int x2)
 {
-    return delta(transformCoordinate(Boundary::getDistanceBetween(x1, x2) + Site::nNeighborsLimit()) - (int)Site::nNeighborsLimit());
+    return delta(transformCoordinate(Boundary::getDistanceBetween(x1, x2)));
 }
 
 void Periodic::initialize()
