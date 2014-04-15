@@ -1895,10 +1895,24 @@ void testBed::testInitialSiteSetup()
 
        CHECK_EQUAL(site, solver->getSite(site->x(), site->y(), site->z()));
 
-       CHECK_EQUAL(site->x(), solver->getSite(site->x(), site->y(), site->z())->x());
-       CHECK_EQUAL(site->y(), solver->getSite(site->x(), site->y(), site->z())->y());
-       CHECK_EQUAL(site->z(), solver->getSite(site->x(), site->y(), site->z())->z());
     });
+
+    for (uint i = 0; i < NX(); ++i)
+    {
+
+        for (uint j = 0; j < NX(); ++j)
+        {
+
+            for (uint k = 0; k < NX(); ++k)
+            {
+                site = solver->getSite(i, j, k);
+
+                CHECK_EQUAL(i, site->x());
+                CHECK_EQUAL(j, site->y());
+                CHECK_EQUAL(k, site->z());
+            }
+        }
+    }
 
     Site::resetBoundariesTo(Boundary::Periodic);
 
@@ -1931,8 +1945,9 @@ void testBed::testInitialSiteSetup()
                         (ny < 0 || ny >= (int)NY()) ||
                         (nz < 0 || nz >= (int)NZ()))
                     {
-                        CHECK_EQUAL(*solver->getSite(nx, ny, nz), *solver->getSite(xt, yt, zt));
+                        CHECK_EQUAL(*solver->getSite(xt, yt, zt), *solver->getSite(nx, ny, nz));
                         cout.flush();
+                        CHECK_EQUAL(1, 1);
                     }
 
                 }
