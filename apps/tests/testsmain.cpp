@@ -10,7 +10,7 @@
 
 
 #define focusSuite "Reactions"
-//#define focusTest  "Neighborlist"
+#define focusTest  "ReactionVectorUpdate"
 
 
 #include "defines.h"

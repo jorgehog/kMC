@@ -201,7 +201,6 @@ void SoluteParticle::clearAllReactions()
 
     for (Reaction * reaction : m_reactions)
     {
-        reaction->disable();
         delete reaction;
     }
 

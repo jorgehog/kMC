@@ -1444,16 +1444,16 @@ void testBed::testReactionVectorUpdate()
     c = 0;
     for (uint i = 0; i < solver->allPossibleReactions().size(); ++i)
     {
+        CHECK_EQUAL(Reaction::linearRateScale(), solver->allPossibleReactions().at(i)->rate());
+
         c += solver->allPossibleReactions().at(i)->rate();
         CHECK_EQUAL(c, solver->accuAllRates().at(i));
     }
 
     CHECK_EQUAL(solver->kTot(), *(solver->accuAllRates().end()-1));
 
-    //Deactivating it should set all 26 reactions as available to overwrite.
+    //Deactivating it should set all 26 reactions as available to overwrite. Removes it from affected particles.
     solver->despawnParticle(center);
-
-    SoluteParticle::updateAffectedParticles();
 
     CHECK_EQUAL(26,  solver->availableReactionSlots().size());
     CHECK_EQUAL(26,  solver->allPossibleReactions().size());
@@ -1463,6 +1463,7 @@ void testBed::testReactionVectorUpdate()
 
     for (uint i = 0; i < solver->allPossibleReactions().size(); ++i)
     {
+        CHECK_EQUAL(true, solver->isEmptyAddress(i));
         CHECK_EQUAL(0, solver->accuAllRates().at(i));
     }
 
@@ -1481,45 +1482,89 @@ void testBed::testReactionVectorUpdate()
     c = 0;
     for (uint i = 0; i < solver->allPossibleReactions().size(); ++i)
     {
+        CHECK_EQUAL(false, solver->isEmptyAddress(i));
+        CHECK_EQUAL(Reaction::linearRateScale(), solver->allPossibleReactions().at(i)->rate());
+
         c += solver->allPossibleReactions().at(i)->rate();
         CHECK_EQUAL(c, solver->accuAllRates().at(i));
     }
 
-
-    //activating a fixed crystal next to center particle. Fixed crystal has no
-    //reactions so it should only induce 1 blocked reaction.
-    Site * neighbor = getBoxCenter(1);
+    //activating a particle next to center particle. Should give 2 blocked reactions total.
+    Site *neighbor = getBoxCenter(1);
     solver->forceSpawnParticle(neighbor);
+
+    //spawning the neighbor should affect them both
+    CHECK_EQUAL(2, SoluteParticle::affectedParticles().size());
 
     SoluteParticle::updateAffectedParticles();
 
-    CHECK_EQUAL(1,  solver->availableReactionSlots().size());
+    //However, the reaction blocked by center hasnt got a rate and is blocked, so it does not become available since it was never present.
+    //Total extra possible reaction slots due to neighbor: 25
+    //That is not the case for the reaction blocked by neighbor. So a total cavancy of one is expected had it not been for the fact that
+    //another of the neighbors reactions fits in this slot.
+    //Total extra possible reaction slots due to neighbor: 24
+    //We expect a total vacancy of 0 and 24 + 26 stored reactions.
+    CHECK_EQUAL(0, solver->availableReactionSlots().size());
+    CHECK_EQUAL(50, solver->allPossibleReactions().size());
+    CHECK_EQUAL(50, solver->accuAllRates().size());
+
 
     c = 0;
+
     for (uint i = 0; i < solver->allPossibleReactions().size(); ++i)
     {
-        if (i == solver->availableReactionSlots().at(0))
-        {
-            continue;
-        }
+        CHECK_EQUAL(false, solver->isEmptyAddress(i));
 
         c += solver->allPossibleReactions().at(i)->rate();
         CHECK_CLOSE(c, solver->accuAllRates().at(i), 0.00001);
     }
 
-    //activating a new particle independent of the others should now only induce 25 more spots,
-    //since one is already vacant.
 
-    Site * distantCousin = getBoxCenter(-2);
+    //creating a with 26 fresh reactions.
+    Site * distantCousin = getBoxCenter(0, 0, Site::nNeighborsLimit() + 1);
 
     SoluteParticle *p = new SoluteParticle();
     CHECK_EQUAL(true, solver->spawnParticle(p, distantCousin, true));
 
+    CHECK_EQUAL(1, SoluteParticle::affectedParticles().size());
+
+    SoluteParticle::updateAffectedParticles();
+
+    CHECK_EQUAL(0, solver->availableReactionSlots().size());
+    CHECK_EQUAL(76, solver->allPossibleReactions().size());
+    CHECK_EQUAL(76, solver->accuAllRates().size());
+
+    //Now we move it so it kisses the center. This should give 2 vacant reactions.
+    distantCousin->associatedParticle()->changeSite(getBoxCenter(-1));
+
+    //dependent on the reach, the original neighbor is affected
+    if (Site::nNeighborsLimit() > 1)
+    {
+        CHECK_EQUAL(3, SoluteParticle::affectedParticles().size());
+    }
+    else
+    {
+        CHECK_EQUAL(2, SoluteParticle::affectedParticles().size());
+    }
+
+    SoluteParticle::updateAffectedParticles();
+
+    CHECK_EQUAL(2, solver->availableReactionSlots().size());
+    CHECK_EQUAL(76, solver->allPossibleReactions().size());
+    CHECK_EQUAL(76, solver->accuAllRates().size());
+
+    //activating a new particle independent of the others should now only induce 24 more spots,
+    //since two are already vacant.
+    Site *distantCousin2 = getBoxCenter(0, 0, -(int)Site::nNeighborsLimit() - 1);
+
+    SoluteParticle *p2 = new SoluteParticle();
+    CHECK_EQUAL(true, solver->spawnParticle(p2, distantCousin2, true));
+
     SoluteParticle::updateAffectedParticles();
 
     CHECK_EQUAL(0,  solver->availableReactionSlots().size());
-    CHECK_EQUAL(26+25, solver->allPossibleReactions().size());
-    CHECK_EQUAL(26+25, solver->accuAllRates().size());
+    CHECK_EQUAL(100, solver->allPossibleReactions().size());
+    CHECK_EQUAL(100, solver->accuAllRates().size());
 
     c = 0;
     for (uint i = 0; i < solver->allPossibleReactions().size(); ++i)
@@ -1529,34 +1574,48 @@ void testBed::testReactionVectorUpdate()
     }
 
 
-    //deactivating the neighbor should create two decoupled systems
+    //deactivating the neighbor and the cousin should create two decoupled systems
     solver->despawnParticle(neighbor);
+    solver->despawnParticle(getBoxCenter(-1));
 
     SoluteParticle::updateAffectedParticles();
 
-    CHECK_EQUAL(0,    solver->availableReactionSlots().size());
-    CHECK_EQUAL(2*26, solver->allPossibleReactions().size());
-    CHECK_EQUAL(2*26, solver->accuAllRates().size());
+    //deactivating the two neighbors, which has 1 blocked reaction each, frees up 25 slots each. However, two of the original
+    //center reactions now becomes active, and filles two slots, totalling 48 free slots after deactivation.
+    CHECK_EQUAL(48,  solver->availableReactionSlots().size());
+    CHECK_EQUAL(100, solver->allPossibleReactions().size());
+    CHECK_EQUAL(100, solver->accuAllRates().size());
 
     CHECK_CLOSE(2*26*Reaction::linearRateScale(), solver->kTot(), 0.00001);
 
     c = 0;
-    for (uint i = 0; i < solver->allPossibleReactions().size(); ++i)
+    uint i = 0;
+    for (SoluteParticle *particle : solver->particles())
     {
-        c += solver->allPossibleReactions().at(i)->rate();
-        CHECK_CLOSE(c, solver->accuAllRates().at(i), 0.00001);
+        particle->forEachActiveReactionDo([&] (Reaction *r)
+        {
+            if (solver->isEmptyAddress(i))
+            {
+                i++;
+                return;
+            }
+            c += r->rate();
+            CHECK_CLOSE(c, solver->accuAllRates().at(i), 0.00001);
+            i++;
+
+        });
     }
 
-    //removing both the particles should bring us back to initial state
+    //removing both the particles should even out everything to the maximum amount of reactions ever existing at once.
 
     solver->despawnParticle(center);
-    solver->despawnParticle(distantCousin);
+    solver->despawnParticle(distantCousin2);
 
     SoluteParticle::updateAffectedParticles();
 
-    CHECK_EQUAL(2*26, solver->availableReactionSlots().size());
-    CHECK_EQUAL(2*26, solver->allPossibleReactions().size());
-    CHECK_EQUAL(2*26, solver->accuAllRates().size());
+    CHECK_EQUAL(100, solver->availableReactionSlots().size());
+    CHECK_EQUAL(100, solver->allPossibleReactions().size());
+    CHECK_EQUAL(100, solver->accuAllRates().size());
 
     CHECK_CLOSE(0, solver->kTot(), 0.00001);
 

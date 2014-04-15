@@ -21,6 +21,8 @@ Reaction::Reaction(SoluteParticle *reactant):
 
 Reaction::~Reaction()
 {
+    disable();
+
     m_reactant = NULL;
 
     KMCDebugger_Assert(refCount, !=, 0);
