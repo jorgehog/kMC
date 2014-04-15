@@ -9,7 +9,7 @@
 #include <sys/types.h>
 
 
-#define focusSuite "Misc"
+#define focusSuite "Reactions"
 //#define focusTest  "Neighborlist"
 
 

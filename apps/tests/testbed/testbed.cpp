@@ -677,27 +677,31 @@ void testBed::testRateCalculation()
 
     solver->getRateVariables();
 
+    DiffusionReaction *r;
+
     for (SoluteParticle *particle : solver->particles())
     {
-        particle->forEachActiveReactionDo([&] (Reaction * r)
+        particle->forEachActiveReactionDo([&] (Reaction * _r)
         {
 
-            if (!r->isType("DiffusionReaction"))
+            if (!_r->isType("DiffusionReaction"))
             {
                 return;
             }
 
-            E = ((DiffusionReaction*)r)->lastUsedEnergy();
+            r = (DiffusionReaction*)_r;
 
-            Esp = ((DiffusionReaction*)r)->lastUsedEsp();
+            E = r->lastUsedEnergy();
+
+            Esp = r->lastUsedEsp();
 
             r->forceUpdateFlag(Reaction::defaultUpdateFlag);
 
             r->calcRate();
 
-            CHECK_EQUAL(E, ((DiffusionReaction*)r)->lastUsedEnergy());
+            CHECK_EQUAL(E, r->lastUsedEnergy());
 
-            CHECK_EQUAL(Esp, ((DiffusionReaction*)r)->lastUsedEsp());
+            CHECK_EQUAL(Esp, r->lastUsedEsp());
 
         });
     }
@@ -1421,7 +1425,6 @@ void testBed::testOptimizedRateVectors()
 
 void testBed::testReactionVectorUpdate()
 {
-    return;
     double c;
 
     Site * center = getBoxCenter();
@@ -1569,7 +1572,6 @@ void testBed::testReactionVectorUpdate()
 
 void testBed::testReactionShuffler()
 {
-    return;
     uint nReacs = 100;
 
     vector<DummyReaction*> allReacs;
