@@ -78,7 +78,6 @@ void Site::updateBoundaries()
 }
 
 
-
 uint Site::maxNeighbors()
 {
     return std::pow(m_neighborhoodLength, 3) - 1;
@@ -416,15 +415,12 @@ void Site::resetBoundariesTo(const umat &boundaryMatrix)
 
     clearBoundaries();
 
-    m_solver->clearSiteNeighborhoods();
 
+    m_solver->clearSites();
 
     setInitialBoundaries(boundaryMatrix);
 
-
-    m_solver->initializeSiteNeighborhoods();
-
-    m_solver->initializeParticles();
+    m_solver->initializeSites();
 
 
     Site::initializeBoundaries();
@@ -439,13 +435,11 @@ void Site::resetBoundariesTo(const int boundaryType)
 void Site::resetNNeighborsLimitTo(const uint &nNeighborsLimit, bool check)
 {
 
-    m_solver->clearSiteNeighborhoods();
+    m_solver->clearSites();
 
     setInitialNNeighborsLimit(nNeighborsLimit, check);
 
-    m_solver->initializeSiteNeighborhoods();
-
-    m_solver->initializeParticles();
+    m_solver->initializeSites();
 
 }
 
@@ -646,9 +640,11 @@ void Site::setInitialNNeighborsLimit(const uint &nNeighborsLimit, bool check)
 
     m_neighborhoodLength = 2*m_nNeighborsLimit + 1;
 
-    m_levelMatrix.set_size(m_neighborhoodLength, m_neighborhoodLength, m_neighborhoodLength);
 
     m_originTransformVector = linspace<ivec>(-(int)m_nNeighborsLimit, m_nNeighborsLimit, m_neighborhoodLength);
+
+
+    m_levelMatrix.set_size(m_neighborhoodLength, m_neighborhoodLength, m_neighborhoodLength);
 
     for (uint i = 0; i < m_neighborhoodLength; ++i)
     {
@@ -743,6 +739,11 @@ const uint &Site::NY()
 const uint &Site::NZ()
 {
     return m_solver->NZ();
+}
+
+const uint &Site::N(const uint i)
+{
+    return m_solver->N(i);
 }
 
 

@@ -251,6 +251,8 @@ public:
 
     const static uint & NZ();
 
+    const static uint &N(const uint i);
+
     const static uint & _refCount()
     {
         return refCounter;
@@ -263,7 +265,6 @@ private:
     static field<const Setting*> m_boundaryConfigs;
 
     static umat m_boundaryTypes;
-
 
     static uint m_nNeighborsLimit;
 

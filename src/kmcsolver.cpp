@@ -502,7 +502,15 @@ void KMCSolver::initializeSites()
 
     KMCDebugger_Assert(Site::_refCount(), ==, 0, "Sites was not cleared properly.");
 
-    uint xTrans, yTrans, zTrans;
+    uint xTrans, yTrans, zTrans, x, y, z, c, nBoundaries;
+
+
+    nBoundaries = m_NX_full*m_NY_full*m_NZ_full - m_NX*m_NY*m_NZ;
+
+    uint boundarySiteLocations[nBoundaries][3];
+
+
+    c = 0;
 
     sites = new Site***[m_NX_full];
 
@@ -519,83 +527,57 @@ void KMCSolver::initializeSites()
             for (uint z = 0; z < m_NZ_full; ++z)
             {
                 if ((x >= Site::nNeighborsLimit() && x < m_NX + Site::nNeighborsLimit()) &&
-                    (y >= Site::nNeighborsLimit() && y < m_NY + Site::nNeighborsLimit()) &&
-                    (z >= Site::nNeighborsLimit() && z < m_NZ + Site::nNeighborsLimit()))
+                        (y >= Site::nNeighborsLimit() && y < m_NY + Site::nNeighborsLimit()) &&
+                        (z >= Site::nNeighborsLimit() && z < m_NZ + Site::nNeighborsLimit()))
                 {
                     //renormalize so that Site::nNeighborsLimit() points to site 0 and so on.
                     sites[x][y][z] = new Site(x - Site::nNeighborsLimit(),
                                               y - Site::nNeighborsLimit(),
                                               z - Site::nNeighborsLimit());
                 }
+
+                else
+                {
+
+                    boundarySiteLocations[c][0] = x;
+                    boundarySiteLocations[c][1] = y;
+                    boundarySiteLocations[c][2] = z;
+
+                    c++;
+                }
             }
         }
     }
 
     KMCDebugger_Assert(Site::_refCount(), ==, NX()*NY()*NZ(), "Wrong number of sites initialized.");
+    KMCDebugger_Assert(c, ==, nBoundaries, "Not all boundary sites setup for tracking.", nBoundaries - c);
 
-
-    //Lower boundaries
-    for (uint x = 0; x < Site::nNeighborsLimit(); ++x)
+    //Boundaries
+    for (uint i = 0; i < nBoundaries; ++i)
     {
+
+        x = boundarySiteLocations[i][0];
+        y = boundarySiteLocations[i][1];
+        z = boundarySiteLocations[i][2];
+
+        Boundary::setupCurrentBoundaries(x, y, z, Site::nNeighborsLimit());
 
         xTrans = Site::boundaries(0, 0)->transformCoordinate((int)x - (int)Site::nNeighborsLimit());
 
-        for (uint y = 0; y < Site::nNeighborsLimit(); ++y)
+        yTrans = Site::boundaries(1, 0)->transformCoordinate((int)y - (int)Site::nNeighborsLimit());
+
+        zTrans = Site::boundaries(2, 0)->transformCoordinate((int)z - (int)Site::nNeighborsLimit());
+
+        if (Boundary::isBlocked(xTrans, yTrans, zTrans))
         {
-
-            yTrans = Site::boundaries(1, 0)->transformCoordinate((int)y - (int)Site::nNeighborsLimit());
-
-            for (uint z = 0; z < Site::nNeighborsLimit(); ++z)
-            {
-
-                zTrans = Site::boundaries(2, 0)->transformCoordinate((int)z - (int)Site::nNeighborsLimit());
-
-                if (Boundary::isBlocked(xTrans, yTrans, zTrans))
-                {
-                    sites[x][y][z] = NULL;
-                }
-
-                else
-                {
-                    sites[x][y][z] = sites[xTrans + Site::nNeighborsLimit()]
-                                          [yTrans + Site::nNeighborsLimit()]
-                                          [zTrans + Site::nNeighborsLimit()];
-                }
-
-            }
+            sites[x][y][z] = NULL;
         }
-    }
 
-
-    //Upper boundaries
-    for (uint x = NX() + Site::nNeighborsLimit(); x < NX() + 2*Site::nNeighborsLimit(); ++x)
-    {
-
-        xTrans = Site::boundaries(0, 1)->transformCoordinate((int)x - (int)Site::nNeighborsLimit());
-
-        for (uint y = NY() + Site::nNeighborsLimit(); y < NY() + 2*Site::nNeighborsLimit(); ++y)
+        else
         {
-
-            yTrans = Site::boundaries(1, 1)->transformCoordinate((int)y - (int)Site::nNeighborsLimit());
-
-            for (uint z = NZ() + Site::nNeighborsLimit(); z < NZ() + 2*Site::nNeighborsLimit(); ++z)
-            {
-
-                zTrans = Site::boundaries(2, 1)->transformCoordinate((int)z - (int)Site::nNeighborsLimit());
-
-                if (Boundary::isBlocked(xTrans, yTrans, zTrans))
-                {
-                    sites[x][y][z] = NULL;
-                }
-
-                else
-                {
-                    sites[x][y][z] = sites[xTrans + Site::nNeighborsLimit()]
-                                          [yTrans + Site::nNeighborsLimit()]
-                                          [zTrans + Site::nNeighborsLimit()];
-                }
-
-            }
+            sites[x][y][z] = sites[xTrans + Site::nNeighborsLimit()]
+                    [yTrans + Site::nNeighborsLimit()]
+                    [zTrans + Site::nNeighborsLimit()];
         }
     }
 
@@ -613,44 +595,26 @@ void KMCSolver::clearSites()
 
     KMCDebugger_SetEnabledTo(false);
 
-    for (uint i = Site::nNeighborsLimit(); i < m_NX + Site::nNeighborsLimit(); ++i)
+    for (uint x = 0; x < m_NX_full; ++x)
     {
-        for (uint j = Site::nNeighborsLimit(); j < m_NY + Site::nNeighborsLimit(); ++j)
+        for (uint y = 0; y < m_NY_full; ++y)
         {
-            for (uint k = Site::nNeighborsLimit(); k < m_NZ + Site::nNeighborsLimit(); ++k)
+            for (uint z = 0; z < m_NZ_full; ++z)
             {
-                delete sites[i][j][k];
+                if ((x >= Site::nNeighborsLimit() && x < m_NX + Site::nNeighborsLimit()) &&
+                    (y >= Site::nNeighborsLimit() && y < m_NY + Site::nNeighborsLimit()) &&
+                    (z >= Site::nNeighborsLimit() && z < m_NZ + Site::nNeighborsLimit()))
+                {
+                    delete sites[x][y][z];
+                }
             }
 
-            delete [] sites[i][j];
+            delete [] sites[x][y];
         }
 
-        delete [] sites[i];
+        delete [] sites[x];
     }
 
-
-    //Lower boundaries
-    for (uint i = 0; i < Site::nNeighborsLimit(); ++i)
-    {
-        for (uint j = 0; j < Site::nNeighborsLimit(); ++j)
-        {
-            delete [] sites[i][j];
-        }
-
-        delete [] sites[i];
-    }
-
-
-    //Upper boundaries
-    for (uint i = NX() + Site::nNeighborsLimit(); i < NX() + 2*Site::nNeighborsLimit(); ++i)
-    {
-        for (uint j = NY() + Site::nNeighborsLimit(); j < NY() + 2*Site::nNeighborsLimit(); ++j)
-        {
-            delete sites[i][j];
-        }
-
-        delete sites[i];
-    }
 
     delete [] sites;
 
@@ -966,7 +930,6 @@ void KMCSolver::setBoxSize(const uvec3 boxSize, bool check)
             KMCSolver::exit();
         }
     }
-
 
     initializeSites();
 

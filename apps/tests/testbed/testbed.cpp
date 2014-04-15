@@ -1916,7 +1916,6 @@ void testBed::testInitialSiteSetup()
 
     Site::resetBoundariesTo(Boundary::Periodic);
 
-
     solver->forEachSiteDo([&] (Site *_site)
     {
         site = _site; //hack to fix autocompletion.

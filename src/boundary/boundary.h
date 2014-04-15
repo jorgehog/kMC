@@ -85,9 +85,9 @@ public:
     static uint N(const uint i);
 
 
-    static void setupCurrentBoundary(const uint x, const uint dim);
+    static void setupCurrentBoundary(const uint x, const uint dim, const uint shift = 0);
 
-    static void setupCurrentBoundaries(const uint x, const uint y, const uint z);
+    static void setupCurrentBoundaries(const uint x, const uint y, const uint z, const uint shift = 0);
 
 
     static const Boundary* currentBoundaries(const uint i)
@@ -120,7 +120,7 @@ protected:
         return m_solver;
     }
 
-    static uint getLocation(const uint xi, const uint dim);
+    static uint getLocation(const uint xi, const uint dim, const uint shift);
 
     static vector<const Boundary*> m_currentBoundaries;
 

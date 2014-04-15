@@ -129,9 +129,9 @@ bool Boundary::isCompatible(const int type1, const int type2, bool reverse)
 
 }
 
-uint Boundary::getLocation(const uint xi, const uint dim)
+uint Boundary::getLocation(const uint xi, const uint dim, const uint shift)
 {
-    if (xi >= N(dim)/2)
+    if (xi >= N(dim)/2 + shift)
     {
         return 1;
     }
@@ -161,16 +161,16 @@ uint Boundary::N(const uint i)
     return m_solver->N(i);
 }
 
-void Boundary::setupCurrentBoundary(const uint x, const uint dim)
+void Boundary::setupCurrentBoundary(const uint x, const uint dim, const uint shift)
 {
-    m_currentBoundaries.at(dim) = Site::boundaries(dim, getLocation(x, dim));
+    m_currentBoundaries.at(dim) = Site::boundaries(dim, getLocation(x, dim, shift));
 }
 
-void Boundary::setupCurrentBoundaries(const uint x, const uint y, const uint z)
+void Boundary::setupCurrentBoundaries(const uint x, const uint y, const uint z, const uint shift)
 {
-    setupCurrentBoundary(x, 0);
-    setupCurrentBoundary(y, 1);
-    setupCurrentBoundary(z, 2);
+    setupCurrentBoundary(x, 0, shift);
+    setupCurrentBoundary(y, 1, shift);
+    setupCurrentBoundary(z, 2, shift);
 }
 
 

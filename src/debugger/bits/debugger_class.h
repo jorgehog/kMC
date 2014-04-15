@@ -70,13 +70,18 @@ public:
     //
 
     template<typename T>
-    static void queuePre(const T & val)
+    static string stringify(const T & val)
     {
         stringstream s;
         s << val;
 
-        _pre = s.str();
+        return s.str();
+    }
 
+    template<typename T>
+    static void queuePre(const T & val)
+    {
+        _pre = stringify(val);
     }
 
     static string setupAffectedUnion();
@@ -98,21 +103,17 @@ public:
 
     }
 
-
-    template<typename TA, typename TB>
-    static void
-    _assert(TA Aval,
-            TB Bval,
-            const char * OP,
-            const char * A,
-            const char * B,
-            const char * file,
-            const char * func,
-            int line,
-            string what = "",
-            string additionalInfo = "")
+    template<typename aT, typename bT>
+    static string getAssertMessage(aT Aval,
+                                   bT Bval,
+                                   const char * OP,
+                                   const char * A,
+                                   const char * B,
+                                   const char * file,
+                                   const char * func,
+                                   int line,
+                                   string what)
     {
-
         stringstream OP_B, assertMessage, assertCore;
         string OP_B_repl, A_repl;
 
@@ -168,11 +169,52 @@ public:
             assertMessage << " : " << what;
         }
 
+        return assertMessage.str();
 
-        dumpFullTrace(line, file, additionalInfo);
+    }
 
-        cerr << assertMessage.str() << endl;
+    template<typename aT, typename bT>
+    static void
+    _assert(aT Aval,
+            bT Bval,
+            const char * OP,
+            const char * A,
+            const char * B,
+            const char * file,
+            const char * func,
+            int line,
+            string what = "")
+    {
 
+        dumpFullTrace(line, file);
+
+        cerr << getAssertMessage(Aval, Bval, OP, A, B, file, func, line, what) << endl;
+
+        throw std::runtime_error("Assertion failed.");
+
+    }
+
+    template<typename aT, typename bT, typename iT>
+    static void
+    _assert(aT Aval,
+            bT Bval,
+            const char * OP,
+            const char * A,
+            const char * B,
+            const char * file,
+            const char * func,
+            int line,
+            string what,
+            iT additionalInfo)
+    {
+
+        string additionalInfoString = stringify(additionalInfo);
+
+        dumpFullTrace(line, file, additionalInfoString);
+
+        cerr << getAssertMessage(Aval, Bval, OP, A, B, file, func, line, what) << endl;
+
+        cout << "\n" << additionalInfoString << endl;
 
         throw std::runtime_error("Assertion failed.");
 
