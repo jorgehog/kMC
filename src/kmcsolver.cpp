@@ -502,7 +502,12 @@ void KMCSolver::initializeSites()
 
     KMCDebugger_Assert(Site::_refCount(), ==, 0, "Sites was not cleared properly.");
 
-    uint xTrans, yTrans, zTrans, x, y, z, c, nBoundaries;
+    uint xTrans, yTrans, zTrans, x, y, z, c, nBoundaries, m_NX_full, m_NY_full, m_NZ_full;
+
+
+    m_NX_full = 2*Site::nNeighborsLimit() + m_NX;
+    m_NY_full = 2*Site::nNeighborsLimit() + m_NY;
+    m_NZ_full = 2*Site::nNeighborsLimit() + m_NZ;
 
 
     nBoundaries = m_NX_full*m_NY_full*m_NZ_full - m_NX*m_NY*m_NZ;
@@ -605,6 +610,12 @@ void KMCSolver::clearSites()
     KMCDebugger_Assert(SoluteParticle::nParticles(), ==, 0, "Cannot clear sites with particles active.");
 
     KMCDebugger_SetEnabledTo(false);
+
+
+    uint m_NX_full = 2*Site::nNeighborsLimit() + m_NX;
+    uint m_NY_full = 2*Site::nNeighborsLimit() + m_NY;
+    uint m_NZ_full = 2*Site::nNeighborsLimit() + m_NZ;
+
 
     for (uint x = 0; x < m_NX_full; ++x)
     {
@@ -925,12 +936,6 @@ void KMCSolver::setBoxSize(const uvec3 boxSize, bool check)
     m_NZ = boxSize(2);
 
     m_N = boxSize;
-
-    m_NX_full = 2*Site::nNeighborsLimit() + m_NX;
-    m_NY_full = 2*Site::nNeighborsLimit() + m_NY;
-    m_NZ_full = 2*Site::nNeighborsLimit() + m_NZ;
-
-    m_N_full = 2*Site::nNeighborsLimit() + m_N;
 
 
     if (Site::nNeighborsLimit() != UNSET_UINT && check)

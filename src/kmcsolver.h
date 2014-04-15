@@ -282,12 +282,6 @@ private:
 
     uvec3 m_N;
 
-    uint m_NX_full;
-    uint m_NY_full;
-    uint m_NZ_full;
-
-    uvec3 m_N_full;
-
 
     vector<SoluteParticle*> m_particles;
 
