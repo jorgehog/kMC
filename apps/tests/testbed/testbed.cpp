@@ -1880,6 +1880,47 @@ void testBed::testInitialSiteSetup()
 
     CHECK_EQUAL(NX()*NY()*NZ(), Site::_refCount());
 
+    int nx, ny, nz;
+
+    uint xt, yt, zt;
+
+    Site::resetBoundariesTo(Boundary::Edge);
+
+    CHECK_EQUAL(NX()*NY()*NZ(), Site::_refCount());
+
+    solver->forEachSiteDo([&] (Site *_site)
+    {
+        Site *site = _site; //hack to fix autocompletion.
+
+        Boundary::setupCurrentBoundaries(site->x(), site->y(), site->z());
+
+        for (uint i = 0; i < Site::neighborhoodLength(); ++i)
+        {
+            nx = (int)site->x() + Site::originTransformVector(i);
+            xt = Boundary::currentBoundaries(0)->transformCoordinate(nx);
+
+            for (uint j = 0; j < Site::neighborhoodLength(); ++j)
+            {
+                ny = (int)site->y() + Site::originTransformVector(j);
+                yt = Boundary::currentBoundaries(1)->transformCoordinate(ny);
+
+                for (uint k = 0; k < Site::neighborhoodLength(); ++k)
+                {
+                    nz = (int)site->z() + Site::originTransformVector(k);
+                    zt = Boundary::currentBoundaries(2)->transformCoordinate(nz);
+
+                    CHECK_EQUAL(site->neighborhood(i, j, k), solver->getSite(nx, ny, nz));
+
+                    if (solver->getSite(nx, ny, nz) == NULL)
+                    {
+                        CHECK_EQUAL(true, Boundary::isBlocked(xt, yt, zt));
+                    }
+
+                }
+            }
+        }
+
+    });
 }
 
 
