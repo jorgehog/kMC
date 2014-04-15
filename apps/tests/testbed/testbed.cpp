@@ -1863,6 +1863,11 @@ void testBed::testAccuAllRates()
 
 }
 
+void testBed::testInitialSiteSetup()
+{
+
+}
+
 
 KMCSolver * testBed::solver;
 

@@ -63,6 +63,8 @@ public:
 
     static void testAccuAllRates();
 
+    static void testInitialSiteSetup();
+
 
     static void initBoundarySuite(const umat &boundaries);
 

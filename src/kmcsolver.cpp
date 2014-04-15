@@ -604,7 +604,6 @@ void KMCSolver::initializeSites()
 
                 else
                 {
-                    cout << x << " " << y << " " << z << " points to " << *sites[xTrans][yTrans][zTrans] << endl;
                     sites[x][y][z] = sites[xTrans][yTrans][zTrans];
                 }
 
@@ -638,7 +637,6 @@ void KMCSolver::initializeSites()
 
                 else
                 {
-                    cout << x << " " << y << " " << z << " points to " << *sites[xTrans][yTrans][zTrans] << endl;
                     sites[x][y][z] = sites[xTrans][yTrans][zTrans];
                 }
 
@@ -707,13 +705,6 @@ void KMCSolver::clearSites()
 
 
     KMCDebugger_ResetEnabled();
-
-}
-
-void KMCSolver::setBoxSize_KeepSites(const uvec3 &boxSizes)
-{
-
-    // have to clear sites and all that jazz because of vector setup...
 
 }
 
@@ -995,14 +986,8 @@ uint KMCSolver::getReactionChoice(double R)
 
 }
 
-void KMCSolver::setBoxSize(const uvec3 boxSize, bool check, bool keepSystem)
+void KMCSolver::setBoxSize(const uvec3 boxSize, bool check)
 {
-
-    if (keepSystem)
-    {
-        setBoxSize_KeepSites(boxSize);
-        return;
-    }
 
     if (m_NX != UNSET_UINT && m_NY != UNSET_UINT && m_NZ != UNSET_UINT)
     {
@@ -1035,8 +1020,6 @@ void KMCSolver::setBoxSize(const uvec3 boxSize, bool check, bool keepSystem)
     initializeSites();
 
     Site::initializeBoundaries();
-
-    //    initializeDiffusionReactions();
 
     m_mainLattice->setTopology({0, m_NX,
                                 0, m_NY,
