@@ -507,7 +507,7 @@ void KMCSolver::initializeSites()
 
     nBoundaries = m_NX_full*m_NY_full*m_NZ_full - m_NX*m_NY*m_NZ;
 
-    uint boundarySiteLocations[nBoundaries][3];
+    uint*** boundarySiteLocations = new uint**[nBoundaries];
 
 
     c = 0;
@@ -539,9 +539,11 @@ void KMCSolver::initializeSites()
                 else
                 {
 
-                    boundarySiteLocations[c][0] = x;
-                    boundarySiteLocations[c][1] = y;
-                    boundarySiteLocations[c][2] = z;
+                    boundarySiteLocations[c] = new uint*[3];
+
+                    boundarySiteLocations[c][0] = new uint(x);
+                    boundarySiteLocations[c][1] = new uint(y);
+                    boundarySiteLocations[c][2] = new uint(z);
 
                     c++;
                 }
@@ -556,9 +558,9 @@ void KMCSolver::initializeSites()
     for (uint i = 0; i < nBoundaries; ++i)
     {
 
-        x = boundarySiteLocations[i][0];
-        y = boundarySiteLocations[i][1];
-        z = boundarySiteLocations[i][2];
+        x = *boundarySiteLocations[i][0];
+        y = *boundarySiteLocations[i][1];
+        z = *boundarySiteLocations[i][2];
 
         Boundary::setupCurrentBoundaries(x, y, z, Site::nNeighborsLimit());
 
@@ -579,7 +581,16 @@ void KMCSolver::initializeSites()
                     [yTrans + Site::nNeighborsLimit()]
                     [zTrans + Site::nNeighborsLimit()];
         }
+
+        delete boundarySiteLocations[i][0];
+        delete boundarySiteLocations[i][1];
+        delete boundarySiteLocations[i][2];
+
+        delete [] boundarySiteLocations[i];
+
     }
+
+    delete [] boundarySiteLocations;
 
     initializeSiteNeighborhoods();
 
@@ -602,8 +613,8 @@ void KMCSolver::clearSites()
             for (uint z = 0; z < m_NZ_full; ++z)
             {
                 if ((x >= Site::nNeighborsLimit() && x < m_NX + Site::nNeighborsLimit()) &&
-                    (y >= Site::nNeighborsLimit() && y < m_NY + Site::nNeighborsLimit()) &&
-                    (z >= Site::nNeighborsLimit() && z < m_NZ + Site::nNeighborsLimit()))
+                        (y >= Site::nNeighborsLimit() && y < m_NY + Site::nNeighborsLimit()) &&
+                        (z >= Site::nNeighborsLimit() && z < m_NZ + Site::nNeighborsLimit()))
                 {
                     delete sites[x][y][z];
                 }
