@@ -49,7 +49,7 @@ public:
 
     static void testBoxSizes();
 
-    static void testnNeiborsLimit();
+    static void testnNeighborsLimit();
 
     static void testOptimizedRateVectors();
 

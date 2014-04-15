@@ -51,7 +51,7 @@ public:
 
     void setAsUninitialized()
     {
-        m_initialized = true;
+        m_initialized = false;
     }
 
     static bool isBlocked(const uint xi)

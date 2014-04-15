@@ -79,12 +79,11 @@ void testBed::testTotalParticleStateCounters()
 
     CHECK_EQUAL(0, accu(SoluteParticle::totalParticlesVector()));
 
+    forceNewBoxSize({10, 10, 10});
+
     solver->forEachSiteDo([] (Site * site)
     {
-        if (!site->isActive())
-        {
-            return;
-        }
+        CHECK_EQUAL(false, site->isActive());
 
         if ((site->x()%2 == 0) && (site->y()%2 == 0) && (site->z()%2 == 0))
         {
@@ -996,7 +995,7 @@ void testBed::initBoundaryTestParameters()
     solver->clearSites();
 
 
-    solver->setBoxSize({10, 10, 10});
+    solver->setBoxSize({10, 10, 10}, false);
 
     Site::resetBoundariesTo(lastBoundaries);
 
@@ -1294,7 +1293,7 @@ void testBed::testBoxSizes()
 
 }
 
-void testBed::testnNeiborsLimit()
+void testBed::testnNeighborsLimit()
 {
 
 
@@ -1842,11 +1841,15 @@ void testBed::testNeighborlist()
 {
     solver->clearSites();
 
+    Site::finalizeBoundaries();
+
     solver->setBoxSize({15, 15, 15});
 
     Site::resetNNeighborsLimitTo(5);
 
     solver->initializeSites();
+
+    Site::initializeBoundaries();
 
 
     solver->forceSpawnParticle(getBoxCenter());

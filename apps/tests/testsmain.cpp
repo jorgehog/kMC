@@ -10,7 +10,7 @@
 
 
 #define focusSuite "Misc"
-//#define focusTest  "InitialSiteSetup"
+//#define focusTest  "Neighborlist"
 
 
 #include "defines.h"
@@ -27,7 +27,7 @@ SUITE(Misc)
 
     TESTWRAPPER(PropertyCalculations)
 
-    TESTWRAPPER(nNeiborsLimit)
+    TESTWRAPPER(nNeighborsLimit)
 
     TESTWRAPPER(StateChanges)
 
