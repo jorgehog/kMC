@@ -87,8 +87,6 @@ public:
 
     void initializeSolutionBath();
 
-    void initializeSiteNeighborhoods();
-
     void initializeParticles();
 
 
@@ -195,14 +193,6 @@ public:
         throw std::runtime_error("Exit failure.");
     }
 
-
-    void clearSiteNeighborhoods()
-    {
-        forEachSiteDo([] (Site *site)
-        {
-            site->clearNeighborhood();
-        });
-    }
 
     void clearParticles();
 

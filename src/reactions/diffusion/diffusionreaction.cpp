@@ -217,9 +217,7 @@ void DiffusionReaction::setupPotential()
 
 Site *DiffusionReaction::destinationSite() const
 {
-    return site()->neighborhood(Site::nNeighborsLimit() + path[0],
-            Site::nNeighborsLimit() + path[1],
-            Site::nNeighborsLimit() + path[2]);
+    return site()->neighborhood(path[0], path[1], path[2]);
 }
 
 
@@ -292,7 +290,7 @@ double DiffusionReaction::getSaddleEnergy()
         {
             for (uint zn = myIntersectionPoints(2, 0); zn < myIntersectionPoints(2, 1); ++zn)
             {
-                targetSite = site()->neighborhood(xn, yn, zn);
+                targetSite = site()->neighborhood_fromIndex(xn, yn, zn);
 
                 if (targetSite == NULL)
                 {

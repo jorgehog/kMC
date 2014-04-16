@@ -26,11 +26,7 @@ Site::Site(uint _x, uint _y, uint _z) :
 
 Site::~Site()
 {
-
-    clearNeighborhood();
-
     refCounter--;
-
 }
 
 
@@ -106,31 +102,39 @@ uint Site::maxNeighbors()
 
 void Site::forEachNeighborDo(function<void (Site *)> applyFunction) const
 {
-
-    Site * neighbor;
-
-    for (uint i = 0; i < m_neighborhoodLength; ++i)
+    forEachNeighborDo_sendPath([&applyFunction] (Site *site, int dx, int dy, int dz)
     {
-        for (uint j = 0; j < m_neighborhoodLength; ++j)
-        {
-            for (uint k = 0; k < m_neighborhoodLength; ++k)
-            {
+        (void)dx;
+        (void)dy;
+        (void)dz;
+        applyFunction(site);
+    });
+}
 
-                neighbor = neighborhood(i, j, k);
+void Site::forEachNeighborDo_sendPath(function<void (Site *, int, int, int)> applyFunction) const
+{
+    Site *neighbor;
+
+    for (const int &dx : m_originTransformVector)
+    {
+        for (const int &dy : m_originTransformVector)
+        {
+            for (const int &dz : m_originTransformVector)
+            {
+                neighbor = neighborhood(dx, dy, dz);
 
                 if (neighbor == NULL)
                 {
                     continue;
                 }
 
-                else if (neighbor == this) {
-                    assert(i == j && j == k && k == m_nNeighborsLimit);
+                else if (neighbor == this)
+                {
+                    KMCDebugger_AssertBool(dx == dy && dy == dz && dz == 0);
                     continue;
                 }
 
-
-                applyFunction(neighbor);
-
+                applyFunction(neighbor, dx, dy, dz);
 
             }
         }
@@ -142,14 +146,14 @@ void Site::forEachNeighborDo_sendIndices(function<void (Site *, uint, uint, uint
 
     Site * neighbor;
 
-    for (uint i = 0; i < m_neighborhoodLength; ++i)
+    for (const uint &i : m_neighborhoodIndices)
     {
-        for (uint j = 0; j < m_neighborhoodLength; ++j)
+        for (const uint &j : m_neighborhoodIndices)
         {
-            for (uint k = 0; k < m_neighborhoodLength; ++k)
+            for (const uint &k : m_neighborhoodIndices)
             {
 
-                neighbor = neighborhood(i, j, k);
+                neighbor = neighborhood_fromIndex(i, j, k);
 
                 if (neighbor == NULL)
                 {
@@ -157,7 +161,7 @@ void Site::forEachNeighborDo_sendIndices(function<void (Site *, uint, uint, uint
                 }
 
                 else if (neighbor == this) {
-                    assert(i == j && j == k && k == m_nNeighborsLimit);
+                    KMCDebugger_AssertBool(i == j && j == k && k == m_nNeighborsLimit);
                     continue;
                 }
 
@@ -168,6 +172,11 @@ void Site::forEachNeighborDo_sendIndices(function<void (Site *, uint, uint, uint
             }
         }
     }
+}
+
+Site *Site::neighborhood(const int x, const int y, const int z) const
+{
+    return m_solver->getSite(x + (int)m_x, y + (int)m_y, z + (int)m_z);
 }
 
 
@@ -217,9 +226,7 @@ bool Site::hasNeighboring(const int state) const
             for (int k = -1; k <= 1; ++k)
             {
 
-                nextNeighbor = neighborhood(i + Site::nNeighborsLimit(),
-                                            j + Site::nNeighborsLimit(),
-                                            k + Site::nNeighborsLimit());
+                nextNeighbor = neighborhood(i, j, k);
 
                 if (nextNeighbor == NULL)
                 {
@@ -262,9 +269,7 @@ uint Site::countNeighboring(int state) const
             for (int k = -1; k <= 1; ++k)
             {
 
-                nextNeighbor = neighborhood(i + Site::nNeighborsLimit(),
-                                            j + Site::nNeighborsLimit(),
-                                            k + Site::nNeighborsLimit());
+                nextNeighbor = neighborhood(i, j, k);
 
                 if (nextNeighbor == NULL)
                 {
@@ -292,65 +297,6 @@ uint Site::countNeighboring(int state) const
 
 }
 
-
-void Site::introduceNeighborhood()
-{
-
-    KMCDebugger_Assert(m_nNeighborsLimit, !=, 0, "Neighborlimit must be greater than zero.", info());
-    KMCDebugger_Assert(m_nNeighborsLimit, !=, KMCSolver::UNSET_UINT, "Neighborlimit is not set.", str());
-
-
-    int n_x, n_y, n_z;
-
-    m_neighborhood = new Site***[m_neighborhoodLength];
-
-    for (uint i = 0; i < m_neighborhoodLength; ++i)
-    {
-        n_x = (int)m_x + m_originTransformVector(i);
-
-        m_neighborhood[i] = new Site**[m_neighborhoodLength];
-
-        for (uint j = 0; j < m_neighborhoodLength; ++j)
-        {
-            n_y = (int)m_y + m_originTransformVector(j);
-
-            m_neighborhood[i][j] = new Site*[m_neighborhoodLength];
-
-            for (uint k = 0; k < m_neighborhoodLength; ++k)
-            {
-                n_z = (int)m_z + m_originTransformVector(k);
-
-                m_neighborhood[i][j][k] = m_solver->getSite(n_x, n_y, n_z);
-
-            }
-        }
-    }
-
-}
-
-
-
-void Site::clearNeighborhood()
-{
-
-    for (uint i = 0; i < m_neighborhoodLength; ++i)
-    {
-        for (uint j = 0; j < m_neighborhoodLength; ++j)
-        {
-            for (uint k = 0; k < m_neighborhoodLength; ++k)
-            {
-                m_neighborhood[i][j][k] = NULL;
-            }
-
-            delete [] m_neighborhood[i][j];
-        }
-
-        delete [] m_neighborhood[i];
-    }
-
-    delete [] m_neighborhood;
-
-}
 
 uint Site::getLevel(uint i, uint j, uint k)
 {
@@ -516,52 +462,41 @@ const string Site::info(int xr, int yr, int zr, string desc) const
     ucube nN;
     nN.copy_size(m_levelMatrix);
 
-    Site * currentSite;
-    for (uint i = 0; i < m_neighborhoodLength; ++i)
+    forEachNeighborDo_sendIndices([&] (Site *currentSite, uint i, uint j, uint k)
     {
-        for (uint j = 0; j < m_neighborhoodLength; ++j)
+        //BLOCKED
+        if (currentSite == NULL)
         {
-            for (uint k = 0; k < m_neighborhoodLength; ++k)
-            {
-
-                currentSite = neighborhood(i, j, k);
-
-                //BLOCKED
-                if (currentSite == NULL)
-                {
-                    nN(i, j, k) = _min + 1;
-                }
-
-                //THIS SITE
-                else if (currentSite == this)
-                {
-                    nN(i, j, k) = _min + 2;
-                }
-
-                //MARKED SITE
-                else if ((i == Site::nNeighborsLimit() + xr) && (j == Site::nNeighborsLimit() + yr) && (k == Site::nNeighborsLimit() + zr))
-                {
-                    nN(i, j, k) = _min + 3;
-                }
-
-                //ACTIVE PARTICLE
-                else if (currentSite->isActive())
-                {
-                    KMCDebugger_Assert(currentSite->associatedParticle(), !=, NULL);
-
-                    nN(i, j, k) = currentSite->associatedParticle()->particleState();
-                }
-
-                else
-                {
-                    nN(i, j, k) = _min;
-                }
-
-            }
-
+            nN(i, j, k) = _min + 1;
         }
 
-    }
+        //THIS SITE
+        else if (currentSite == this)
+        {
+            nN(i, j, k) = _min + 2;
+        }
+
+        //MARKED SITE
+        else if ((i == Site::nNeighborsLimit() + xr) && (j == Site::nNeighborsLimit() + yr) && (k == Site::nNeighborsLimit() + zr))
+        {
+            nN(i, j, k) = _min + 3;
+        }
+
+        //ACTIVE PARTICLE
+        else if (currentSite->isActive())
+        {
+            KMCDebugger_Assert(currentSite->associatedParticle(), !=, NULL);
+
+            nN(i, j, k) = currentSite->associatedParticle()->particleState();
+        }
+
+        else
+        {
+            nN(i, j, k) = _min;
+        }
+
+    });
+
 
     umat A;
     stringstream ss;
@@ -648,6 +583,8 @@ void Site::setInitialNNeighborsLimit(const uint &nNeighborsLimit, bool check)
 
 
     m_originTransformVector = linspace<ivec>(-(int)m_nNeighborsLimit, m_nNeighborsLimit, m_neighborhoodLength);
+
+    m_neighborhoodIndices   = linspace<uvec>(0, m_neighborhoodLength - 1, m_neighborhoodLength);
 
 
     m_levelMatrix.set_size(m_neighborhoodLength, m_neighborhoodLength, m_neighborhoodLength);
@@ -769,6 +706,7 @@ ucube      Site::m_levelMatrix;
 
 ivec       Site::m_originTransformVector;
 
+uvec       Site::m_neighborhoodIndices;
 
 
 field<Boundary*> Site::m_boundaries;

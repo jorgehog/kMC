@@ -6,7 +6,6 @@
 #include <set>
 #include <sys/types.h>
 #include <armadillo>
-#include <assert.h>
 
 #include <libconfig_utils/libconfig_utils.h>
 
@@ -100,9 +99,6 @@ public:
      */
 
 
-    void introduceNeighborhood();
-
-
     bool hasNeighboring(const int state) const;
 
     uint countNeighboring(int state) const;
@@ -118,12 +114,12 @@ public:
 
     uint maxDistanceTo(const Site * other) const;
 
-    void clearNeighborhood();
-
     const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const;
 
 
     void forEachNeighborDo(function<void (Site *)> applyFunction) const;
+
+    void forEachNeighborDo_sendPath(function<void (Site *, int, int, int)> applyFunction) const;
 
     void forEachNeighborDo_sendIndices(function<void (Site *, uint, uint, uint)> applyFunction) const;
 
@@ -163,6 +159,15 @@ public:
         return m_originTransformVector(i);
     }
 
+    static const ivec & originTransformVector()
+    {
+        return m_originTransformVector;
+    }
+
+    static const uvec & neighborhoodIndices()
+    {
+        return m_neighborhoodIndices;
+    }
 
     static const Boundary * boundaries(const uint xyz, const uint loc)
     {
@@ -225,11 +230,13 @@ public:
     }
 
 
+    Site *neighborhood(const int x, const int y, const int z) const;
 
-    Site* neighborhood(const uint x, const uint y, const uint z) const
+    Site *neighborhood_fromIndex(const uint x, const uint y, const uint z) const
     {
-        return m_neighborhood[x][y][z];
+        return neighborhood(m_originTransformVector(x), m_originTransformVector(y), m_originTransformVector(z));
     }
+
 
     bool operator == (const Site & other) const
     {
@@ -273,20 +280,20 @@ private:
 
     static ivec m_originTransformVector;
 
+    static uvec m_neighborhoodIndices;
+
+
     static KMCSolver* m_solver;
 
 
-    Site**** m_neighborhood;
-
-
     SoluteParticle *m_associatedParticle;
-
 
     const uint m_x;
 
     const uint m_y;
 
     const uint m_z;
+
 
     static uint refCounter;
 

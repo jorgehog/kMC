@@ -601,8 +601,6 @@ void KMCSolver::initializeSites()
 
     delete [] boundarySiteLocations;
 
-    initializeSiteNeighborhoods();
-
     initializeParticles();
 
 }
@@ -644,9 +642,7 @@ void KMCSolver::clearSites()
 
     delete [] sites;
 
-
     KMCDebugger_Assert(Site::_refCount(), ==, 0, "Sites was not cleared properly.");
-
 
     KMCDebugger_ResetEnabled();
 
@@ -832,14 +828,6 @@ void KMCSolver::initializeSolutionBath()
     }
 }
 
-void KMCSolver::initializeSiteNeighborhoods()
-{
-    forEachSiteDo([] (Site * site)
-    {
-        site->introduceNeighborhood();
-    });
-
-}
 
 void KMCSolver::initializeParticles()
 {

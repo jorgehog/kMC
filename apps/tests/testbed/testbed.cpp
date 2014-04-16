@@ -308,13 +308,13 @@ void testBed::testNeighbors()
 
     solver->forEachSiteDo([&] (Site * currentSite)
     {
-        currentSite->forEachNeighborDo_sendIndices([&] (Site * neighbor, uint i, uint j, uint k)
+        currentSite->forEachNeighborDo_sendPath([&] (Site * neighbor, int i, int j, int k)
         {
             currentSite->distanceTo(neighbor, dx, dy, dz);
 
-            CHECK_EQUAL(Site::originTransformVector(i), dx);
-            CHECK_EQUAL(Site::originTransformVector(j), dy);
-            CHECK_EQUAL(Site::originTransformVector(k), dz);
+            CHECK_EQUAL(i, dx);
+            CHECK_EQUAL(j, dy);
+            CHECK_EQUAL(k, dz);
 
         });
     });
@@ -765,13 +765,9 @@ void testBed::testEnergyAndNeighborSetup()
                             C++;
                         }
 
-                        CHECK_EQUAL(otherSite, currentSite->neighborhood(Site::nNeighborsLimit() + dx,
-                                                                         Site::nNeighborsLimit() + dy,
-                                                                         Site::nNeighborsLimit() + dz));
+                        CHECK_EQUAL(otherSite, currentSite->neighborhood(dx, dy, dz));
 
-                        CHECK_EQUAL(currentSite, otherSite->neighborhood(Site::nNeighborsLimit() - dx,
-                                                                         Site::nNeighborsLimit() - dy,
-                                                                         Site::nNeighborsLimit() - dz));
+                        CHECK_EQUAL(currentSite, otherSite->neighborhood(-dx, -dy, -dz));
                     }
                 }
             }
@@ -822,7 +818,7 @@ void testBed::testUpdateNeigbors()
             {
                 for (uint nk = 0; nk < Site::neighborhoodLength(); ++nk)
                 {
-                    if (currentSite->neighborhood(ni, nj, nk) == NULL)
+                    if (currentSite->neighborhood_fromIndex(ni, nj, nk) == NULL)
                     {
                         nBlocked(Site::levelMatrix(ni, nj, nk))++;
                         blockedE += DiffusionReaction::potential(ni, nj, nk);
@@ -1256,13 +1252,13 @@ void testBed::testBoxSizes()
                 {
                     nBlocked = 0;
 
-                    for (uint X = 0; X < Site::neighborhoodLength(); ++X)
+                    for (const int &dx : Site::originTransformVector())
                     {
-                        for (uint Y = 0; Y < Site::neighborhoodLength(); ++Y)
+                        for (const int &dy : Site::originTransformVector())
                         {
-                            for (uint Z = 0; Z < Site::neighborhoodLength(); ++Z)
+                            for (const int &dz : Site::originTransformVector())
                             {
-                                if (currentSite->neighborhood(X, Y, Z) == NULL)
+                                if (currentSite->neighborhood(dx, dy, dz) == NULL)
                                 {
                                     nBlocked++;
                                 }
@@ -1292,8 +1288,6 @@ void testBed::testBoxSizes()
             }
         }
     }
-
-
 
 }
 
@@ -2050,31 +2044,29 @@ void testBed::testInitialSiteSetup()
 
         Boundary::setupCurrentBoundaries(site->x(), site->y(), site->z());
 
-        for (uint i = 0; i < Site::neighborhoodLength(); ++i)
+        for (const int &dx : Site::originTransformVector())
         {
-            nx = (int)site->x() + Site::originTransformVector(i);
+            nx = (int)site->x() + dx;
             xt = Boundary::currentBoundaries(0)->transformCoordinate(nx);
 
-            for (uint j = 0; j < Site::neighborhoodLength(); ++j)
+            for (const int &dy : Site::originTransformVector())
             {
-                ny = (int)site->y() + Site::originTransformVector(j);
+                ny = (int)site->y() + dy;
                 yt = Boundary::currentBoundaries(1)->transformCoordinate(ny);
 
-                for (uint k = 0; k < Site::neighborhoodLength(); ++k)
+                for (const int &dz : Site::originTransformVector())
                 {
-                    nz = (int)site->z() + Site::originTransformVector(k);
+                    nz = (int)site->z() + dz;
                     zt = Boundary::currentBoundaries(2)->transformCoordinate(nz);
 
-                    CHECK_EQUAL(false, site->neighborhood(i, j, k) == NULL);
-                    CHECK_EQUAL(site->neighborhood(i, j, k), solver->getSite(nx, ny, nz));
+                    CHECK_EQUAL(false, site->neighborhood(dx, dy, dz) == NULL);
+                    CHECK_EQUAL(site->neighborhood(dx, dy, dz), solver->getSite(nx, ny, nz));
 
                     if ((nx < 0 || nx >= (int)NX()) ||
                         (ny < 0 || ny >= (int)NY()) ||
                         (nz < 0 || nz >= (int)NZ()))
                     {
                         CHECK_EQUAL(*solver->getSite(xt, yt, zt), *solver->getSite(nx, ny, nz));
-                        cout.flush();
-                        CHECK_EQUAL(1, 1);
                     }
 
                 }
@@ -2091,22 +2083,22 @@ void testBed::testInitialSiteSetup()
 
         Boundary::setupCurrentBoundaries(site->x(), site->y(), site->z());
 
-        for (uint i = 0; i < Site::neighborhoodLength(); ++i)
+        for (const int &dx : Site::originTransformVector())
         {
-            nx = (int)site->x() + Site::originTransformVector(i);
+            nx = (int)site->x() + dx;
             xt = Boundary::currentBoundaries(0)->transformCoordinate(nx);
 
-            for (uint j = 0; j < Site::neighborhoodLength(); ++j)
+            for (const int &dy : Site::originTransformVector())
             {
-                ny = (int)site->y() + Site::originTransformVector(j);
+                ny = (int)site->y() + dy;
                 yt = Boundary::currentBoundaries(1)->transformCoordinate(ny);
 
-                for (uint k = 0; k < Site::neighborhoodLength(); ++k)
+                for (const int &dz : Site::originTransformVector())
                 {
-                    nz = (int)site->z() + Site::originTransformVector(k);
+                    nz = (int)site->z() + dz;
                     zt = Boundary::currentBoundaries(2)->transformCoordinate(nz);
 
-                    CHECK_EQUAL(site->neighborhood(i, j, k), solver->getSite(nx, ny, nz));
+                    CHECK_EQUAL(site->neighborhood(dx, dy, dz), solver->getSite(nx, ny, nz));
 
                     if (solver->getSite(nx, ny, nz) == NULL)
                     {
