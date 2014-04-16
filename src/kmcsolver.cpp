@@ -63,6 +63,10 @@ KMCSolver::KMCSolver(const Setting & root)
 
     setBoxSize(boxSize);
 
+    initializeSites();
+
+    Site::initializeBoundaries();
+
 }
 
 KMCSolver::KMCSolver()

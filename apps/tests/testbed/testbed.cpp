@@ -1776,6 +1776,11 @@ void testBed::testReactionShuffler()
 
     _reactionShufflerCheck(nReacs - c);
 
+    for (DummyReaction *r : allReacs)
+    {
+        delete r;
+    }
+
 
 }
 
