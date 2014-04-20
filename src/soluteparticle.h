@@ -36,13 +36,15 @@ public:
 
     ~SoluteParticle();
 
-    void setSite(Site * site);
+    void setSite(const uint x, const uint y, const uint z);
 
-    void trySite(Site * site);
+    void trySite(const uint x, const uint y, const uint z);
+
+    void resetSite();
 
     void disableSite();
 
-    void changeSite(Site *newSite);
+    void changePosition(const uint x, const uint y, const uint z);
 
     const Site *site() const
     {
@@ -55,6 +57,8 @@ public:
     /*
      * Static non-trivial functions
      */
+
+    static void setMainSolver(KMCSolver* solver);
 
 
     static void selectUpdateFlags();
@@ -90,6 +94,46 @@ public:
     /*
      * Misc. trivial functions
      */
+
+    static KMCSolver * solver()
+    {
+        return m_solver;
+    }
+
+    const uint & x() const
+    {
+        return m_x;
+    }
+
+    const uint & y() const
+    {
+        return m_y;
+    }
+
+    const uint & z() const
+    {
+        return m_z;
+    }
+
+    const uint & r(const uint i) const
+    {
+        switch (i) {
+        case 0:
+            return m_x;
+            break;
+        case 1:
+            return m_y;
+            break;
+        case 2:
+            return m_z;
+            break;
+        default:
+            break;
+        }
+
+        return m_x;
+
+    }
 
 
     static const uint & nSurfaces()
@@ -207,26 +251,6 @@ public:
         return m_affectedParticles;
     }
 
-    const uint & x() const
-    {
-        return m_site->x();
-    }
-
-    const uint & y() const
-    {
-        return m_site->y();
-    }
-
-    const uint & z() const
-    {
-        return m_site->z();
-    }
-
-    const uint & r(const uint i) const
-    {
-        return m_site->r(i);
-    }
-
 
     const vector<Reaction*> & reactions() const
     {
@@ -278,7 +302,6 @@ public:
      * Non-trivial functions
      */
 
-
     void setParticleState(int newState);
 
     bool isLegalToSpawn() const;
@@ -320,7 +343,21 @@ public:
     void _updateNeighborProps(const int sign, const SoluteParticle *neighbor, const uint level);
 
 
+    void distanceTo(const SoluteParticle *other, int &dx, int &dy, int &dz, bool absolutes = false) const;
+
     double potentialBetween(const SoluteParticle *other);
+
+    uint maxDistanceTo(const SoluteParticle *other) const;
+
+    bool hasNeighboring(const int state) const
+    {
+        return Site::countNeighboring(m_x, m_y, m_z, state);
+    }
+
+    uint countNeighboring(const int state) const
+    {
+        return Site::countNeighboring(m_x, m_y, m_z, state);
+    }
 
 
     inline void forEachNeighborDo(function<void (SoluteParticle*, const uint)> applyFunction) const;
@@ -328,6 +365,22 @@ public:
     void forEachActiveReactionDo(function<void (Reaction*)> applyFunction) const;
 
     void forEachActiveReactionDo_sendIndex(function<void (Reaction*, uint)> applyFunction) const;
+
+
+    void forEachNeighborSiteDo(function<void (Site *)> applyFunction)
+    {
+        Site::forEachNeighborDo(m_x, m_y, m_z, applyFunction);
+    }
+
+    void forEachNeighborSiteDo_sendPath(function<void (Site *, int, int, int)> applyFunction)
+    {
+        Site::forEachNeighborDo_sendPath(m_x, m_y, m_z, applyFunction);
+    }
+
+    void forEachNeighborSiteDo_sendIndices(function<void (Site *, uint, uint, uint)> applyFunction)
+    {
+        Site::forEachNeighborDo_sendIndices(m_x, m_y, m_z, applyFunction);
+    }
 
 
     const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const;
@@ -358,6 +411,13 @@ private:
     Site *m_site;
 
 
+    uint m_x;
+
+    uint m_y;
+
+    uint m_z;
+
+
     uvec m_nNeighbors;
 
     uint m_nNeighborsSum;
@@ -381,6 +441,8 @@ private:
     const uint m_ID;
 
     static uint refCounter;
+
+    static KMCSolver* m_solver;
 
 
 };

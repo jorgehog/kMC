@@ -25,6 +25,8 @@ using namespace arma;
 namespace kMC
 {
 
+const uint UNSET_UINT = std::numeric_limits<uint>::max();
+
 class KMCSolver
 {
 public:
@@ -38,7 +40,6 @@ public:
 
     void reset();
 
-    const static uint UNSET_UINT = std::numeric_limits<uint>::max();
 
 
     void mainloop()
@@ -70,17 +71,11 @@ public:
     void setupMainLattice();
 
 
-    bool spawnParticle(SoluteParticle *particle, uint x, uint y, uint z, bool checkIfLegal);
+    bool spawnParticle(SoluteParticle *particle, const uint x, const uint y, const uint z, bool checkIfLegal);
 
-    bool spawnParticle(SoluteParticle *particle, Site *site, bool checkIfLegal);
+    void forceSpawnParticle(const uint x, const uint y, const uint z);
 
-    void forceSpawnParticle(uint i, uint j, uint k);
-
-    void forceSpawnParticle(Site *site);
-
-    void despawnParticle(uint i, uint j, uint k);
-
-    void despawnParticle(Site *site);
+    void despawnParticle(SoluteParticle *particle);
 
 
     void initializeCrystal(const double relativeSeedSize);
@@ -90,7 +85,7 @@ public:
     void initializeParticles();
 
 
-    void forEachSiteDo(function<void(Site * site)> applyFunction) const;
+    void forEachSiteDo(function<void(uint, uint, uint, Site *)> applyFunction) const;
 
 
     void getRateVariables();

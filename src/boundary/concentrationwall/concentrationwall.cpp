@@ -23,11 +23,12 @@ ConcentrationWall::~ConcentrationWall()
 void ConcentrationWall::update()
 {
 
-    KMCDebugger_Assert(m_maxEventsPrCycle, <=, boundarySites().size(), "Max events pr cycle cannot exceed the number of boundary sites.");
+    KMCDebugger_Assert(m_maxEventsPrCycle, <=, boundarySize(), "Max events pr cycle cannot exceed the number of boundary sites.");
 
 
     Site * currentSite;
 
+    uint x, y, z;
     uint c = 0;
     uint ce = 0;
 
@@ -60,18 +61,18 @@ void ConcentrationWall::update()
     //    }
 
 
-    std::random_shuffle(boundarySites().begin(), boundarySites().end(), [] (uint n) {return KMC_RNG_UNIFORM()*n;});
-
     if (SoluteParticle::getCurrentConcentration() > solver()->targetConcentration())
     {
 
-        while (SoluteParticle::getCurrentConcentration() > solver()->targetConcentration() && c != boundarySites().size() && ce != m_maxEventsPrCycle)
+        while (SoluteParticle::getCurrentConcentration() > solver()->targetConcentration() && c != boundarySize() && ce != m_maxEventsPrCycle)
         {
-            currentSite = boundarySites().at(c);
+            getBoundarySite(c, x, y, z);
+
+            currentSite = solver()->getSite(x, y, z);
 
             if (currentSite->isActive())
             {
-                solver()->despawnParticle(currentSite);
+                solver()->despawnParticle(currentSite->associatedParticle());
                 ce++;
             }
 
@@ -92,11 +93,11 @@ void ConcentrationWall::update()
 
             SoluteParticle *particle = new SoluteParticle();
 
-            while (c != boundarySites().size() && !spawned)
+            while (c != boundarySize() && !spawned)
             {
-                currentSite = boundarySites().at(c);
 
-                spawned = solver()->spawnParticle(particle, currentSite, true);
+                getBoundarySite(c, x, y, z);
+                spawned = solver()->spawnParticle(particle, x, y, z, true);
 
                 if (spawned)
                 {
@@ -117,10 +118,6 @@ void ConcentrationWall::update()
     }
 }
 
-void ConcentrationWall::initialize()
-{
-    setupBoundarySites();
-}
 
 
 

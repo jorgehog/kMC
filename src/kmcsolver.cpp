@@ -130,6 +130,8 @@ void KMCSolver::onConstruct()
 
     Site::setMainSolver(this);
 
+    SoluteParticle::setMainSolver(this);
+
 
     setupMainLattice();
 
@@ -490,7 +492,7 @@ void KMCSolver::dumpXYZ(const uint n)
 }
 
 
-void KMCSolver::forEachSiteDo(function<void (Site *)> applyFunction) const
+void KMCSolver::forEachSiteDo(function<void (uint x, uint y, uint z, Site *)> applyFunction) const
 {
     for (uint x = 0; x < m_NX; ++x)
     {
@@ -499,7 +501,7 @@ void KMCSolver::forEachSiteDo(function<void (Site *)> applyFunction) const
             for (uint z = 0; z < m_NZ; ++z)
             {
                 KMCDebugger_Assert(getSite(x, y, z), !=, NULL);
-                applyFunction(getSite(x, y, z));
+                applyFunction(x, y, z, getSite(x, y, z));
             }
         }
     }
@@ -545,9 +547,7 @@ void KMCSolver::initializeSites()
                         (z >= Site::nNeighborsLimit() && z < m_NZ + Site::nNeighborsLimit()))
                 {
                     //renormalize so that Site::nNeighborsLimit() points to site 0 and so on.
-                    sites[x][y][z] = new Site(x - Site::nNeighborsLimit(),
-                                              y - Site::nNeighborsLimit(),
-                                              z - Site::nNeighborsLimit());
+                    sites[x][y][z] = new Site();
                 }
 
                 else
@@ -654,23 +654,19 @@ void KMCSolver::clearSites()
 }
 
 
-bool KMCSolver::spawnParticle(SoluteParticle *particle, uint x, uint y, uint z, bool checkIfLegal)
-{
-    return spawnParticle(particle, getSite(x, y, z), checkIfLegal);
-}
 
-
-bool KMCSolver::spawnParticle(SoluteParticle *particle, Site *site, bool checkIfLegal)
+bool KMCSolver::spawnParticle(SoluteParticle *particle, const uint x, const uint y, const uint z, bool checkIfLegal)
 {
 
-    KMCDebugger_AssertBool(!(site->isActive() && !checkIfLegal), "spawning particle on top of another");
+    particle->trySite(x, y, z);
 
-    if (site->isActive())
+    if (particle->site()->isActive())
     {
+        KMCDebugger_AssertBool(checkIfLegal, "spawning particle on top of another");
+        particle->resetSite();
+
         return false;
     }
-
-    particle->trySite(site);
 
     if (checkIfLegal)
     {
@@ -678,13 +674,13 @@ bool KMCSolver::spawnParticle(SoluteParticle *particle, Site *site, bool checkIf
         if (!particle->isLegalToSpawn())
         {
 
-            particle->trySite(NULL);
+            particle->resetSite();
 
             return false;
         }
     }
 
-    particle->setSite(site);
+    particle->setSite(x, y, z);
 
     m_particles.push_back(particle);
 
@@ -692,41 +688,29 @@ bool KMCSolver::spawnParticle(SoluteParticle *particle, Site *site, bool checkIf
 
 }
 
-void KMCSolver::forceSpawnParticle(uint i, uint j, uint k)
+void KMCSolver::forceSpawnParticle(const uint x, const uint y, const uint z)
 {
-    forceSpawnParticle(getSite(i, j, k));
-}
-
-void KMCSolver::forceSpawnParticle(Site *site)
-{
-
-    KMCDebugger_AssertBool(!site->isActive());
+    KMCDebugger_AssertBool(!getSite(x, y, z)->isActive());
 
     SoluteParticle *particle = new SoluteParticle();
 
-    spawnParticle(particle, site, false);
+    spawnParticle(particle, x, y, z, false);
+
 }
 
-void KMCSolver::despawnParticle(uint i, uint j, uint k)
+void KMCSolver::despawnParticle(SoluteParticle *particle)
 {
-    despawnParticle(getSite(i, j, k));
-}
+    KMCDebugger_AssertBool(particle->site()->isActive());
 
-void KMCSolver::despawnParticle(Site *site)
-{
+    SoluteParticle::popAffectedParticle(particle);
 
-    KMCDebugger_AssertBool(site->isActive());
+    KMCDebugger_AssertBool(isRegisteredParticle(particle));
 
-    SoluteParticle::popAffectedParticle(site->associatedParticle());
+    m_particles.erase(std::find(m_particles.begin(), m_particles.end(), particle));
 
-    KMCDebugger_AssertBool(isRegisteredParticle(site->associatedParticle()));
+    KMCDebugger_AssertBool(!isRegisteredParticle(particle));
 
-    m_particles.erase(std::find(m_particles.begin(), m_particles.end(), site->associatedParticle()));
-
-    KMCDebugger_AssertBool(!isRegisteredParticle(site->associatedParticle()));
-
-    delete site->associatedParticle();
-
+    delete particle;
 
 }
 

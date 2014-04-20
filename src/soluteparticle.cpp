@@ -2,6 +2,8 @@
 
 #include "kmcsolver.h"
 
+#include "boundary/boundary.h"
+
 #include "debugger/debugger.h"
 
 #include "reactions/diffusion/diffusionreaction.h"
@@ -12,6 +14,9 @@ using namespace kMC;
 
 SoluteParticle::SoluteParticle() :
     m_particleState(ParticleStates::solvant),
+    m_x(UNSET_UINT),
+    m_y(UNSET_UINT),
+    m_z(UNSET_UINT),
     m_nNeighborsSum(0),
     m_energy(0),
     m_ID(refCounter)
@@ -48,13 +53,20 @@ SoluteParticle::~SoluteParticle()
 }
 
 
-void SoluteParticle::setSite(kMC::Site *site)
+void SoluteParticle::setSite(const uint x, const uint y, const uint z)
 {    
     KMCDebugger_MarkPre("void");
 
     KMCDebugger_AssertBool(!m_site->isActive(), "particle already present at site.", m_site->info());
 
-    m_site = site;
+    m_x = x;
+    m_y = y;
+    m_z = z;
+
+    KMCDebugger_AssertBool(!Boundary::isBlocked(m_x, m_y, m_z), "coordinates were not set properly.");
+
+
+    m_site = m_solver->getSite(x, y, z);
 
     m_site->associateWith(this);
 
@@ -83,9 +95,14 @@ void SoluteParticle::setSite(kMC::Site *site)
 
 }
 
-void SoluteParticle::trySite(Site *site)
+void SoluteParticle::trySite(const uint x, const uint y, const uint z)
 {
-    m_site = site;
+    m_site = m_solver->getSite(x, y, z);
+}
+
+void SoluteParticle::resetSite()
+{
+    m_site = NULL;
 }
 
 void SoluteParticle::disableSite()
@@ -114,12 +131,17 @@ void SoluteParticle::disableSite()
 
 }
 
-void SoluteParticle::changeSite(Site *newSite)
+void SoluteParticle::changePosition(const uint x, const uint y, const uint z)
 {
     disableSite();
 
-    setSite(newSite);
+    setSite(x, y, z);
 
+}
+
+void SoluteParticle::setMainSolver(KMCSolver *solver)
+{
+    m_solver = solver;
 }
 
 void SoluteParticle::popAffectedParticle(SoluteParticle *particle)
@@ -297,7 +319,7 @@ void SoluteParticle::setupAllNeighbors()
 
     uint level;
 
-    site()->forEachNeighborDo_sendIndices([&level, &dE, this] (Site * neighbor, uint i, uint j, uint k)
+    forEachNeighborSiteDo_sendIndices([&level, &dE, this] (Site * neighbor, uint i, uint j, uint k)
     {
 
         if (!neighbor->isActive())
@@ -391,6 +413,11 @@ void SoluteParticle::_updateNeighborProps(const int sign, const SoluteParticle *
     KMCDebugger_PushImplication(neighbor, neighbor->particleStateName().c_str());
 }
 
+void SoluteParticle::distanceTo(const SoluteParticle *other, int &dx, int &dy, int &dz, bool absolutes) const
+{
+    Site::distanceBetween(m_x, m_y, m_z, other->x(), other->y(), other->z(), dx, dy, dz, absolutes);
+}
+
 
 void SoluteParticle::forEachActiveReactionDo(function<void (Reaction *)> applyFunction) const
 {
@@ -474,7 +501,7 @@ double SoluteParticle::potentialBetween(const SoluteParticle *other)
 {
     int X, Y, Z;
 
-    m_site->distanceTo(other->site(), X, Y, Z, true);
+    distanceTo(other, X, Y, Z, true);
 
     X += Site::nNeighborsLimit();
     Y += Site::nNeighborsLimit();
@@ -482,6 +509,12 @@ double SoluteParticle::potentialBetween(const SoluteParticle *other)
 
     return DiffusionReaction::potential(X, Y, Z);
 }
+
+uint SoluteParticle::maxDistanceTo(const SoluteParticle *other) const
+{
+    return Site::maxDistanceBetween(m_x, m_y, m_z, other->x(), other->y(), other->z());
+}
+
 
 
 
@@ -594,6 +627,7 @@ const uint &SoluteParticle::NZ()
 }
 
 
+KMCSolver *SoluteParticle::m_solver;
 
 uvec4      SoluteParticle::m_totalParticles;
 

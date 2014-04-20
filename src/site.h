@@ -26,7 +26,7 @@ class Site
 {
 public:
 
-    Site(uint _x, uint _y, uint _z);
+    Site();
 
     ~Site();
 
@@ -98,9 +98,9 @@ public:
      */
 
 
-    bool hasNeighboring(const int state) const;
+    static bool hasNeighboring(const uint x, const uint y, const uint z, const int state);
 
-    uint countNeighboring(int state) const;
+    static uint countNeighboring(const uint x, const uint y, const uint z, const int state);
 
 
     SoluteParticle* associatedParticle() const
@@ -109,18 +109,18 @@ public:
     }
 
 
-    void distanceTo(const Site * other, int &dx, int &dy, int &dz, bool absolutes = false) const;
-
-    uint maxDistanceTo(const Site * other) const;
-
     const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const;
 
 
-    void forEachNeighborDo(function<void (Site *)> applyFunction) const;
+    static void distanceBetween(const uint x0, const uint y0, const uint z0, const uint x1, const uint y1, const uint z1, int &dx, int &dy, int &dz, bool absolutes = false);
 
-    void forEachNeighborDo_sendPath(function<void (Site *, int, int, int)> applyFunction) const;
+    static uint maxDistanceBetween(const uint x0, const uint y0, const uint z0, const uint x1, const uint y1, const uint z1);
 
-    void forEachNeighborDo_sendIndices(function<void (Site *, uint, uint, uint)> applyFunction) const;
+    static void forEachNeighborDo(uint x, uint y, uint z, function<void (Site *)> applyFunction);
+
+    static void forEachNeighborDo_sendPath(uint x, uint y, uint z, function<void (Site *, int, int, int)> applyFunction);
+
+    static void forEachNeighborDo_sendIndices(uint x, uint y, uint z, function<void (Site *, uint, uint, uint)> applyFunction);
 
 
 
@@ -193,47 +193,11 @@ public:
         return m_associatedParticle != NULL;
     }
 
-    const uint & x() const
+    static Site *neighborhood(const int x, const int y, const int z, const int xr, const int yr, const int zr);
+
+    static Site *neighborhood_fromIndex(const int x, const int y, const int z, const uint xr, const uint yr, const uint zr)
     {
-        return m_x;
-    }
-
-    const uint & y() const
-    {
-        return m_y;
-    }
-
-    const uint & z() const
-    {
-        return m_z;
-    }
-
-    const uint & r(const uint i) const
-    {
-        switch (i) {
-        case 0:
-            return m_x;
-            break;
-        case 1:
-            return m_y;
-            break;
-        case 2:
-            return m_z;
-            break;
-        default:
-            break;
-        }
-
-        return m_x;
-
-    }
-
-
-    Site *neighborhood(const int x, const int y, const int z) const;
-
-    Site *neighborhood_fromIndex(const uint x, const uint y, const uint z) const
-    {
-        return neighborhood(m_originTransformVector(x), m_originTransformVector(y), m_originTransformVector(z));
+        return neighborhood(x, y, z, m_originTransformVector(xr), m_originTransformVector(yr), m_originTransformVector(zr));
     }
 
 
@@ -242,12 +206,7 @@ public:
         return this == &other;
     }
 
-    const string str() const
-    {
-        stringstream s;
-        s << "Site@(" << x() << ", " << y() << ", " << z() << ")";
-        return s.str();
-    }
+    const string str() const;
 
     const static uint & NX();
 
@@ -286,12 +245,6 @@ private:
 
 
     SoluteParticle *m_associatedParticle;
-
-    const uint m_x;
-
-    const uint m_y;
-
-    const uint m_z;
 
 
     static uint refCounter;

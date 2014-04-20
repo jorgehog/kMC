@@ -143,8 +143,6 @@ public:
         return m_reactant;
     }
 
-    const Site *site() const;
-
     virtual string getFinalizingDebugMessage() const;
 
     virtual string getInfoSnippet() const

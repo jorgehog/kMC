@@ -35,9 +35,9 @@ public:
 
     virtual void finalize() {}
 
-    void setupBoundarySites();
+    void getBoundarySite(uint n, uint &x, uint &y, uint &z);
 
-    void distanceFromSite(const Site * site, int & dxi, bool abs = false);
+    void distanceFrom(const uint xi, int & dxi, bool abs = false);
 
     const bool &initialized() const
     {
@@ -115,6 +115,7 @@ public:
         return m_orientation;
     }
 
+
 private:
 
     static uint BLOCKED_COORDINATE;
@@ -125,9 +126,11 @@ private:
 
     const uint m_orientation;
 
-    bool m_initialized;
+    const uint m_bound;
 
-    vector<Site*> m_boundarySites;
+    const uint m_boundarySize;
+
+    bool m_initialized;
 
 
 protected:
@@ -141,11 +144,6 @@ protected:
 
     static vector<const Boundary*> m_currentBoundaries;
 
-    vector<Site*> & boundarySites()
-    {
-        return m_boundarySites;
-    }
-
     uint span() const
     {
         return N(m_dimension);
@@ -154,6 +152,16 @@ protected:
     const uint & dimension() const
     {
         return m_dimension;
+    }
+
+    const uint & bound() const
+    {
+        return m_bound;
+    }
+
+    const uint & boundarySize() const
+    {
+        return m_boundarySize;
     }
 
     enum Dimensions

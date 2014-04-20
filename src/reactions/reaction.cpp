@@ -69,11 +69,6 @@ bool Reaction::hasVacantStatus() const
     return solver()->isEmptyAddress(m_address);
 }
 
-const Site *Reaction::site() const
-{
-    return m_reactant->site();
-}
-
 string Reaction::getFinalizingDebugMessage() const
 {
 #ifndef KMC_NO_DEBUG
@@ -91,11 +86,11 @@ string Reaction::getFinalizingDebugMessage() const
 
     if (lastReaction != NULL)
     {
-        site()->distanceTo(lastReaction->site(), X, Y, Z);
+        reactant()->distanceTo(lastReaction->reactant(), X, Y, Z);
     }
     s << info();
     s << "\nLast active reaction site marked on current site:\n\n";
-    s << site()->info(X, Y, Z);
+    s << reactant()->info(X, Y, Z);
 
     return s.str();
 #else

@@ -225,8 +225,6 @@ void initialize_diamondSquareSurface(KMCSolver * solver, const Setting & root)
     solver->setBoxSize({NX, NY, newNZ});
 
 
-    Site * currentSite;
-
     for (uint x = 0; x < solver->NX(); ++x)
     {
         for (uint y = 0; y < solver->NY(); ++y)
@@ -241,12 +239,10 @@ void initialize_diamondSquareSurface(KMCSolver * solver, const Setting & root)
 
             for (uint z = 1; z < newNZ - 1; ++z)
             {
-                currentSite = solver->getSite(x, y, z);
-
                 //Fill in crystals below the bottom and above the top surface
                 if ((z < bottomSurface) || (z >= topSurface))
                 {
-                    solver->forceSpawnParticle(currentSite);
+                    solver->forceSpawnParticle(x, y, z);
                 }
 
             }

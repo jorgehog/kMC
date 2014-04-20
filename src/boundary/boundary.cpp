@@ -19,6 +19,8 @@ Boundary::Boundary(const uint dimension, const uint orientation, const uint type
     type(type),
     m_dimension(dimension),
     m_orientation(orientation),
+    m_bound((orientation == 0) ? 0 : (span() - 1)),
+    m_boundarySize(NX()*NY()*NZ()/span()),
     m_initialized(false)
 {
 
@@ -28,7 +30,7 @@ Boundary::Boundary(const uint dimension, const uint orientation, const uint type
 
 Boundary::~Boundary()
 {
-    m_boundarySites.clear();
+
 }
 
 uint Boundary::transformCoordinate(const int xi) const
@@ -45,63 +47,37 @@ uint Boundary::transformCoordinate(const int xi) const
 
 }
 
-void Boundary::setupBoundarySites()
+void Boundary::getBoundarySite(uint n, uint &x, uint&y, uint &z)
 {
-
-    uint xi = (orientation() == 0) ? 0 : (span() - 1);
-
-    m_boundarySites.clear();
-
-    if (dimension() == X)
+    if (dimension() == Z)
     {
-
-        for (uint y = 0; y < NY(); ++y)
-        {
-            for (uint z = 0; z < NZ(); ++z)
-            {
-                m_boundarySites.push_back(solver()->getSite(xi, y, z));
-            }
-        }
+        x = NX()%n;
+        y = n - x;
+        z = m_bound;
 
     }
-
     else if (dimension() == Y)
     {
-
-        for (uint x = 0; x < NX(); ++x)
-        {
-            for (uint z = 0; z < NZ(); ++z)
-            {
-                m_boundarySites.push_back(solver()->getSite(x, xi, z));
-            }
-        }
-
+        x = NX()%n;
+        y = m_bound;
+        z = n - x;
     }
-
     else
     {
+        KMCDebugger_Assert(dimension(), ==, X);
 
-        KMCDebugger_Assert(dimension(), ==, Z, "This else should always correspond to dim=2");
-
-        for (uint x = 0; x < NX(); ++x)
-        {
-            for (uint y = 0; y < NY(); ++y)
-            {
-                m_boundarySites.push_back(solver()->getSite(x, y, xi));
-            }
-        }
-
+        x = m_bound;
+        y = NY()%n;
+        z = n - x;
     }
-
-    KMCDebugger_Assert(m_boundarySites.size(), ==, NX()*NY()*NZ()/span(), "mismatch in boundary site setup.");
 
 }
 
-void Boundary::distanceFromSite(const Site *site, int &dxi, bool abs)
+void Boundary::distanceFrom(const uint xi, int &dxi, bool abs)
 {
-    uint xi = orientation() == 0 ? 0 : span() - 1;
+    uint loc = orientation() == 0 ? 0 : span() - 1;
 
-    dxi = getDistanceBetween(site->r(dimension()), xi);
+    dxi = getDistanceBetween(xi, loc);
 
     if (abs)
     {

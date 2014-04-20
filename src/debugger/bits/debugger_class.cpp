@@ -91,7 +91,7 @@ void Debugger::pushTraces()
 
     if (currentReaction != NULL)
     {
-        reactionTraceAfter.push_back(_KMCDebugger_PARTICLE_STR(currentReaction->site()));
+        reactionTraceAfter.push_back(_KMCDebugger_PARTICLE_STR(currentReaction->reactant()));
     }
 
     else
@@ -236,7 +236,7 @@ std::string Debugger::setupAffectedUnion()
 
         if (currentReaction != NULL)
         {
-            currentReaction->site()->distanceTo(particle->site(), X, Y, Z);
+            currentReaction->reactant()->distanceTo(particle, X, Y, Z);
             s << " [" << X << ", " << Y  << ", " << Z << "]";
         }
 

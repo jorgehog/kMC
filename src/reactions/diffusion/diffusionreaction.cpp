@@ -16,9 +16,9 @@ DiffusionReaction::DiffusionReaction(SoluteParticle *reactant, int dx, int dy, i
     m_lastUsedEsp(UNSET_ENERGY)
 {
 
-    path[0] = dx;
-    path[1] = dy;
-    path[2] = dz;
+    m_path[0] = dx;
+    m_path[1] = dy;
+    m_path[2] = dz;
 
     saddleFieldIndices[0] = dx + 1;
     saddleFieldIndices[1] = dy + 1;
@@ -40,34 +40,22 @@ void DiffusionReaction::loadConfig(const Setting &setting)
 
 }
 
-const uint &DiffusionReaction::xD() const
+uint DiffusionReaction::xD() const
 {
-    if (destinationSite() == NULL)
-    {
-        return x();
-    }
-
-    return destinationSite()->x();
+    Boundary::setupCurrentBoundary(x(), 0);
+    return Boundary::currentBoundaries(0)->transformCoordinate(x() + m_path[0]);
 }
 
-const uint &DiffusionReaction::yD() const
+uint DiffusionReaction::yD() const
 {
-    if (destinationSite() == NULL)
-    {
-        return y();
-    }
-
-    return destinationSite()->y();
+    Boundary::setupCurrentBoundary(y(), 1);
+    return Boundary::currentBoundaries(1)->transformCoordinate(y() + m_path[1]);
 }
 
-const uint &DiffusionReaction::zD() const
+uint DiffusionReaction::zD() const
 {
-    if (destinationSite() == NULL)
-    {
-        return z();
-    }
-
-    return destinationSite()->z();
+    Boundary::setupCurrentBoundary(z(), 2);
+    return Boundary::currentBoundaries(2)->transformCoordinate(z() + m_path[2]);
 }
 
 string DiffusionReaction::getFinalizingDebugMessage() const
@@ -85,16 +73,23 @@ string DiffusionReaction::getFinalizingDebugMessage() const
 
     s << Reaction::getFinalizingDebugMessage();
 
-    const Reaction * lastReaction = Debugger::lastCurrentReaction;
+
+    if (!Debugger::lastCurrentReaction->isType("DiffusionReaction"))
+    {
+        return s.str();
+    }
+
+    const DiffusionReaction *lastReaction = (DiffusionReaction*)Debugger::lastCurrentReaction;
 
     if (lastReaction != NULL)
     {
-        const Site* dest = static_cast<const DiffusionReaction*>(lastReaction)->destinationSite();
-        site()->distanceTo(dest, X, Y, Z);
+        X = lastReaction->path(0);
+        Y = lastReaction->path(1);
+        Z = lastReaction->path(2);
     }
 
     s << "\nDestination of last active reaction site marked on current site:\n\n";
-    s << site()->info(X, Y, Z);
+    s << reactant()->info(X, Y, Z);
 
     return s.str();
 #else
@@ -217,7 +212,7 @@ void DiffusionReaction::setupPotential()
 
 Site *DiffusionReaction::destinationSite() const
 {
-    return site()->neighborhood(path[0], path[1], path[2]);
+    return reactant()->site()->neighborhood(x(), y(), z(), m_path[0], m_path[1], m_path[2]);
 }
 
 
@@ -235,7 +230,7 @@ void DiffusionReaction::setDirectUpdateFlags(const SoluteParticle *changedReacta
     else
     {
 
-//        r_maxDistance = site()->maxDistanceTo(changedReactant->site());
+        //        r_maxDistance = site()->maxDistanceTo(changedReactant->site());
 
         if (level == 0)
         {
@@ -244,7 +239,10 @@ void DiffusionReaction::setDirectUpdateFlags(const SoluteParticle *changedReacta
 
         else
         {
-            uint d_maxDistance = destinationSite()->maxDistanceTo(changedReactant->site());
+
+            KMCDebugger_AssertBool(changedReactant->site()->isActive());
+
+            uint d_maxDistance = reactant()->maxDistanceTo(changedReactant);
 
             //if the destination is outsite the interaction cutoff, we can keep the old saddle energy.
             if (d_maxDistance > Site::nNeighborsLimit())
@@ -290,7 +288,13 @@ double DiffusionReaction::getSaddleEnergy()
         {
             for (uint zn = myIntersectionPoints(2, 0); zn < myIntersectionPoints(2, 1); ++zn)
             {
-                targetSite = site()->neighborhood_fromIndex(xn, yn, zn);
+
+                if (xn == yn && yn == zn && zn == 0)
+                {
+                    continue;
+                }
+
+                targetSite = Site::neighborhood_fromIndex(x(), y(), z(), xn, yn, zn);
 
                 if (targetSite == NULL)
                 {
@@ -298,11 +302,6 @@ double DiffusionReaction::getSaddleEnergy()
                 }
 
                 else if (!targetSite->isActive())
-                {
-                    continue;
-                }
-
-                else if (targetSite == site())
                 {
                     continue;
                 }
@@ -315,7 +314,7 @@ double DiffusionReaction::getSaddleEnergy()
                                              yn - myIntersectionPoints(1, 0),
                                              zn - myIntersectionPoints(2, 0)),
                                    ==,
-                                   getSaddleEnergyContributionFrom(targetSite),
+                                   getSaddleEnergyContributionFrom(targetSite->associatedParticle()),
                                    "Mismatch in saddle energy contribution.",
                                    getFinalizingDebugMessage());
             }
@@ -327,11 +326,11 @@ double DiffusionReaction::getSaddleEnergy()
 
 }
 
-double DiffusionReaction::getSaddleEnergyContributionFrom(const Site *site)
+double DiffusionReaction::getSaddleEnergyContributionFrom(const SoluteParticle *particle)
 {
     int X, Y, Z;
 
-    this->site()->distanceTo(site, X, Y, Z);
+    reactant()->distanceTo(particle, X, Y, Z);
 
     return getSaddleEnergyContributionFromNeighborAt(X + Site::nNeighborsLimit(),
                                                      Y + Site::nNeighborsLimit(),
@@ -341,28 +340,12 @@ double DiffusionReaction::getSaddleEnergyContributionFrom(const Site *site)
 
 double DiffusionReaction::getSaddleEnergyContributionFromNeighborAt(const uint &i, const uint &j, const uint &k)
 {
-    return m_saddlePotential(saddleFieldIndices[0],
-            saddleFieldIndices[1],
-            saddleFieldIndices[2])
-            (i - neighborSetIntersectionPoints(saddleFieldIndices[0],
-            saddleFieldIndices[1],
-            saddleFieldIndices[2])(0, 0),
-            j - neighborSetIntersectionPoints(saddleFieldIndices[0],
-            saddleFieldIndices[1],
-            saddleFieldIndices[2])(1, 0),
-            k - neighborSetIntersectionPoints(saddleFieldIndices[0],
-            saddleFieldIndices[1],
-            saddleFieldIndices[2])(2, 0));
+    return m_saddlePotential(saddleFieldIndices[0], saddleFieldIndices[1], saddleFieldIndices[2])
+            (i - neighborSetIntersectionPoints(saddleFieldIndices[0], saddleFieldIndices[1], saddleFieldIndices[2])(0, 0),
+            j - neighborSetIntersectionPoints(saddleFieldIndices[0], saddleFieldIndices[1], saddleFieldIndices[2])(1, 0),
+            k - neighborSetIntersectionPoints(saddleFieldIndices[0], saddleFieldIndices[1], saddleFieldIndices[2])(2, 0));
 }
 
-ivec3 DiffusionReaction::getPath() const
-{
-    ivec3 path;
-
-    site()->distanceTo(destinationSite(), path(0), path(1), path(2));
-
-    return path;
-}
 
 umat::fixed<3, 2> DiffusionReaction::makeSaddleOverlapMatrix(const ivec & relCoor)
 {
@@ -435,7 +418,9 @@ void DiffusionReaction::calcRate()
 
 void DiffusionReaction::execute()
 {
-    reactant()->changeSite(destinationSite());
+    reactant()->changePosition(Site::boundaries(0, 0)->transformCoordinate(x() + m_path[0]),
+                               Site::boundaries(1, 0)->transformCoordinate(x() + m_path[1]),
+                               Site::boundaries(2, 0)->transformCoordinate(x() + m_path[2]));
 }
 
 const string DiffusionReaction::info(int xr, int yr, int zr, string desc) const
@@ -446,20 +431,14 @@ const string DiffusionReaction::info(int xr, int yr, int zr, string desc) const
     (void) zr;
     (void) desc;
 
-    ivec3 path = getPath();
-
-    int X = path(0);
-    int Y = path(1);
-    int Z = path(2);
-
     stringstream s;
-    s << Reaction::info(X, Y, Z, "D");
+    s << Reaction::info(m_path[0], m_path[1], m_path[2], "D");
 
     s << "Reaction initiates diffusion to\n\n";
 
-    s << destinationSite()->info(-X, -Y, -Z, "O");
+    s << destinationSite()->info(-m_path[0], -m_path[1], -m_path[2], "O");
 
-    s << "\nPath: " << X << " " << Y << " " << Z << endl;
+    s << "\nPath: " << m_path[0] << " " << m_path[1] << " " << m_path[2] << endl;
 
     string full_string = s.str();
 
