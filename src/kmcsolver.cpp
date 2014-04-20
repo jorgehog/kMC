@@ -412,6 +412,11 @@ bool KMCSolver::isRegisteredParticle(SoluteParticle *particle) const
     return std::find(m_particles.begin(), m_particles.end(), particle) != m_particles.end();
 }
 
+bool KMCSolver::isPossibleReaction(Reaction *reaction) const
+{
+    return std::find(m_allPossibleReactions.begin(), m_allPossibleReactions.end(), reaction) != m_allPossibleReactions.end();
+}
+
 string KMCSolver::getReactionVectorDebugMessage()
 {
     stringstream s;

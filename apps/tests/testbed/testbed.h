@@ -35,6 +35,8 @@ public:
 
     static void testReactionChoise();
 
+    static void testAffectedParticles();
+
     static void testRateCalculation();
 
     static void testEnergyAndNeighborSetup();

@@ -574,6 +574,12 @@ void testBed::testBinarySearchChoise()
 void testBed::testReactionChoise()
 {
 
+#ifdef NDEBUG
+    cout << "test requires debug mode. ";
+    return;
+#endif
+
+
     uint choice, count, count2;
 
     double kTot, r_pre;
@@ -623,6 +629,7 @@ void testBed::testReactionChoise()
                         return;
                     }
 
+                    CHECK_EQUAL(true, solver->isPossibleReaction(r));
                     CHECK_EQUAL(*r, *solver->allPossibleReactions().at(count));
 
                     kTot += r->rate();
@@ -663,6 +670,54 @@ void testBed::testReactionChoise()
         n++;
 
     }
+}
+
+void testBed::testAffectedParticles()
+{
+    solver->initializeSolutionBath();
+
+    for (SoluteParticle *particle : solver->particles())
+    {
+        CHECK_EQUAL(true, particle->isAffected());
+    }
+
+    solver->getRateVariables();
+
+    for (SoluteParticle *particle : solver->particles())
+    {
+        CHECK_EQUAL(false, particle->isAffected());
+    }
+
+
+    deactivateAllSites();
+
+    solver->getRateVariables();
+
+    for (SoluteParticle *particle : solver->particles())
+    {
+        CHECK_EQUAL(false, particle->isAffected());
+    }
+
+    Site *center = getBoxCenter();
+    solver->forceSpawnParticle(center);
+
+    CHECK_EQUAL(true, center->associatedParticle()->isAffected());
+
+    solver->getRateVariables();
+
+    CHECK_EQUAL(false, center->associatedParticle()->isAffected());
+
+    Site *neighbor = getBoxCenter(1);
+    solver->forceSpawnParticle(neighbor);
+
+    CHECK_EQUAL(true, center->associatedParticle()->isAffected());
+    CHECK_EQUAL(true, neighbor->associatedParticle()->isAffected());
+
+    solver->getRateVariables();
+
+    CHECK_EQUAL(false, center->associatedParticle()->isAffected());
+    CHECK_EQUAL(false, neighbor->associatedParticle()->isAffected());
+
 }
 
 
@@ -912,6 +967,11 @@ void testBed::testInitialReactionSetup()
 void testBed::testSequential()
 {
 
+#ifdef NDEBUG
+    cout << "test requires debug mode. ";
+    return;
+#endif
+
     solver->reset();
 
     initBoundaryTestParameters();
@@ -1106,6 +1166,11 @@ void testBed::forceNewBoundaries(const int boundaryType)
 
 void testBed::testKnownCase()
 {
+
+#ifdef NDEBUG
+    cout << "test requires debug mode. ";
+    return;
+#endif
 
     delete solver;
 
@@ -1419,6 +1484,12 @@ void testBed::testOptimizedRateVectors()
 
 void testBed::testReactionVectorUpdate()
 {
+
+#ifdef NDEBUG
+    cout << "test requires debug mode. ";
+    return;
+#endif
+
     double c;
 
     Site * center = getBoxCenter();

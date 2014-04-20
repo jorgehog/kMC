@@ -232,6 +232,8 @@ public:
 
     bool isRegisteredParticle(SoluteParticle *particle) const;
 
+    bool isPossibleReaction(Reaction *reaction) const;
+
     string getReactionVectorDebugMessage();
 
     void dumpXYZ(const uint n);

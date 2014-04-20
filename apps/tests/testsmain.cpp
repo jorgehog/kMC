@@ -23,6 +23,8 @@ SUITE(Misc)
 
     TESTWRAPPER(InitialSiteSetup)
 
+    TESTWRAPPER(AffectedParticles)
+
     TESTWRAPPER(TotalParticleStateCounters)
 
     TESTWRAPPER(PropertyCalculations)

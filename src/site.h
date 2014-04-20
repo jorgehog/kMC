@@ -3,7 +3,6 @@
 #include "particlestates.h"
 
 #include <vector>
-#include <set>
 #include <sys/types.h>
 #include <armadillo>
 

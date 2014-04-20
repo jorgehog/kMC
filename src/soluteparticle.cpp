@@ -599,10 +599,11 @@ uvec4      SoluteParticle::m_totalParticles;
 
 double     SoluteParticle::m_totalEnergy = 0;
 
-
-//Don't panic: Just states that the sets pointers should be sorted by the site objects and not their random valued pointers.
-set<SoluteParticle*, function<bool(SoluteParticle*, SoluteParticle*)> > SoluteParticle::m_affectedParticles = set<SoluteParticle*, function<bool(SoluteParticle*, SoluteParticle*)> >([] (SoluteParticle * s1, SoluteParticle * s2) {return s1->ID() < s2->ID();});
-
+#ifndef NDEBUG
+particleSet SoluteParticle::m_affectedParticles = particleSet([] (SoluteParticle * s1, SoluteParticle * s2) {return s1->ID() < s2->ID();});
+#else
+particleSet SoluteParticle::m_affectedParticles;
+#endif
 
 uint SoluteParticle::refCounter = 0;
 

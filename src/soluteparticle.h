@@ -9,8 +9,21 @@
 #include <sstream>
 
 
+#ifndef NDEBUG
+#include <set>
+#else
+#include <unordered_set>
+#endif
+
 namespace kMC
 {
+
+
+#ifndef NDEBUG
+typedef set<SoluteParticle*, function<bool(SoluteParticle*, SoluteParticle*)> > particleSet;
+#else
+typedef unordered_set<SoluteParticle*> particleSet;
+#endif
 
 class Reaction;
 class DiffusionReaction;
@@ -189,7 +202,7 @@ public:
 
 
 
-    const static set<SoluteParticle*, function<bool(SoluteParticle*, SoluteParticle*)> > & affectedParticles()
+    static const particleSet & affectedParticles()
     {
         return m_affectedParticles;
     }
@@ -231,6 +244,16 @@ public:
     bool operator == (const SoluteParticle & other) const
     {
         return this == &other;
+    }
+
+    bool operator < (const SoluteParticle * other) const
+    {
+        return this->ID() < other->ID();
+    }
+
+    bool operator > (const SoluteParticle * other) const
+    {
+        return this->ID() > other->ID();
     }
 
     const string str() const
@@ -321,7 +344,7 @@ private:
     static double m_totalEnergy;
 
 
-    static set<SoluteParticle*, function<bool(SoluteParticle*, SoluteParticle*)> > m_affectedParticles;
+    static particleSet m_affectedParticles;
 
 
     int m_particleState;
