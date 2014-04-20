@@ -702,21 +702,45 @@ void testBed::testAffectedParticles()
     solver->forceSpawnParticle(center);
 
     CHECK_EQUAL(true, center->associatedParticle()->isAffected());
+    CHECK_EQUAL(1, SoluteParticle::affectedParticles().size());
 
     solver->getRateVariables();
 
     CHECK_EQUAL(false, center->associatedParticle()->isAffected());
+    CHECK_EQUAL(0, SoluteParticle::affectedParticles().size());
 
     Site *neighbor = getBoxCenter(1);
     solver->forceSpawnParticle(neighbor);
 
     CHECK_EQUAL(true, center->associatedParticle()->isAffected());
     CHECK_EQUAL(true, neighbor->associatedParticle()->isAffected());
+    CHECK_EQUAL(2, SoluteParticle::affectedParticles().size());
 
     solver->getRateVariables();
 
     CHECK_EQUAL(false, center->associatedParticle()->isAffected());
     CHECK_EQUAL(false, neighbor->associatedParticle()->isAffected());
+    CHECK_EQUAL(0, SoluteParticle::affectedParticles().size());
+
+    center->associatedParticle()->markAsAffected();
+
+    CHECK_EQUAL(true, center->associatedParticle()->isAffected());
+    CHECK_EQUAL(1, SoluteParticle::affectedParticles().size());
+
+    center->associatedParticle()->markAsAffected();
+    center->associatedParticle()->markAsAffected();
+    center->associatedParticle()->markAsAffected();
+    center->associatedParticle()->markAsAffected();
+    center->associatedParticle()->markAsAffected();
+
+    CHECK_EQUAL(true, center->associatedParticle()->isAffected());
+    CHECK_EQUAL(1, SoluteParticle::affectedParticles().size());
+
+    solver->getRateVariables();
+
+    CHECK_EQUAL(false, center->associatedParticle()->isAffected());
+    CHECK_EQUAL(0, SoluteParticle::affectedParticles().size());
+
 
 }
 
@@ -2084,9 +2108,9 @@ void testBed::testInitialSiteSetup()
 
     solver->forEachSiteDo([&] (Site *_site)
     {
-       site = _site;
+        site = _site;
 
-       CHECK_EQUAL(site, solver->getSite(site->x(), site->y(), site->z()));
+        CHECK_EQUAL(site, solver->getSite(site->x(), site->y(), site->z()));
 
     });
 
@@ -2134,8 +2158,8 @@ void testBed::testInitialSiteSetup()
                     CHECK_EQUAL(site->neighborhood(dx, dy, dz), solver->getSite(nx, ny, nz));
 
                     if ((nx < 0 || nx >= (int)NX()) ||
-                        (ny < 0 || ny >= (int)NY()) ||
-                        (nz < 0 || nz >= (int)NZ()))
+                            (ny < 0 || ny >= (int)NY()) ||
+                            (nz < 0 || nz >= (int)NZ()))
                     {
                         CHECK_EQUAL(*solver->getSite(xt, yt, zt), *solver->getSite(nx, ny, nz));
                     }
