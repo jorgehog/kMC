@@ -115,6 +115,11 @@ public:
         return m_orientation;
     }
 
+    uint span() const
+    {
+        return N(m_dimension);
+    }
+
 
 private:
 
@@ -127,8 +132,6 @@ private:
     const uint m_orientation;
 
     const uint m_bound;
-
-    const uint m_boundarySize;
 
     bool m_initialized;
 
@@ -144,11 +147,6 @@ protected:
 
     static vector<const Boundary*> m_currentBoundaries;
 
-    uint span() const
-    {
-        return N(m_dimension);
-    }
-
     const uint & dimension() const
     {
         return m_dimension;
@@ -161,7 +159,7 @@ protected:
 
     const uint & boundarySize() const
     {
-        return m_boundarySize;
+        return (NX()*NY()*NZ())/span();
     }
 
     enum Dimensions

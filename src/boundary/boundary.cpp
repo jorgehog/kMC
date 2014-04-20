@@ -20,7 +20,6 @@ Boundary::Boundary(const uint dimension, const uint orientation, const uint type
     m_dimension(dimension),
     m_orientation(orientation),
     m_bound((orientation == 0) ? 0 : (span() - 1)),
-    m_boundarySize(NX()*NY()*NZ()/span()),
     m_initialized(false)
 {
 
