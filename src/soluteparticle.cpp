@@ -83,6 +83,8 @@ void SoluteParticle::setSite(const uint x, const uint y, const uint z)
     });
 
 
+    KMCDebugger_Assert(m_site->associatedParticle(), ==, this, "mismatch in site and particle.");
+
     KMCDebugger_PushImplication(this, "enabled");
     KMCDebugger_MarkPartialStep("PARTICLE ACTIVATED");
 
@@ -114,6 +116,7 @@ void SoluteParticle::disableSite()
     KMCDebugger_MarkPre("void");
 
     KMCDebugger_AssertBool(m_site->isActive(), "particle not present at site.", m_site->info());
+    KMCDebugger_Assert(m_site->associatedParticle(), ==, this, "mismatch in site and particle.");
 
     m_site->desociate();
 
@@ -200,18 +203,17 @@ void SoluteParticle::setParticleState(int newState)
 //All reactions must be legal if site is allowed to spawn.
 bool SoluteParticle::isLegalToSpawn() const
 {
+    bool allowed = true;
 
-    for (Reaction * r : m_reactions)
+    forEachNeighborSiteDo([&allowed] (Site *site)
     {
-        if (!r->isAllowed())
+        if (site->isActive())
         {
-            return false;
+            allowed = false;
         }
-    }
+    });
 
-
-    return true;
-
+    return allowed;
 }
 
 

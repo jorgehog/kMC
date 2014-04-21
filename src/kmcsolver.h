@@ -177,15 +177,20 @@ public:
 
     void setTargetConcentration(const double concentration)
     {
+        if (concentration > 1 || concentration < 0)
+        {
+            exit("invalid concentration set,");
+        }
+
         m_targetConcentration = concentration;
     }
 
     void setRNGSeed(uint seedState = Seed::fromTime, int defaultSeed = 0);
 
 
-    static void exit()
+    static void exit(const string s = "Exit failure.")
     {
-        throw std::runtime_error("Exit failure.");
+        throw std::runtime_error(s);
     }
 
 

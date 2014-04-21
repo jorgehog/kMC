@@ -19,7 +19,6 @@ Boundary::Boundary(const uint dimension, const uint orientation, const uint type
     type(type),
     m_dimension(dimension),
     m_orientation(orientation),
-    m_bound((orientation == 0) ? 0 : (span() - 1)),
     m_initialized(false)
 {
 
@@ -46,28 +45,28 @@ uint Boundary::transformCoordinate(const int xi) const
 
 }
 
-void Boundary::getBoundarySite(uint n, uint &x, uint&y, uint &z)
+void Boundary::getBoundarySite(uint n, uint &x, uint&y, uint &z) const
 {
     if (dimension() == Z)
     {
-        x = NX()%n;
-        y = n - x;
-        z = m_bound;
+        x = n/NY();
+        y = n - x*NY();
+        z = bound();
 
     }
     else if (dimension() == Y)
     {
-        x = NX()%n;
-        y = m_bound;
-        z = n - x;
+        x = n/NZ();
+        y = bound();
+        z = n - x*NZ();
     }
     else
     {
         KMCDebugger_Assert(dimension(), ==, X);
 
-        x = m_bound;
-        y = NY()%n;
-        z = n - x;
+        x = bound();
+        y = n/NZ();
+        z = n - y*NZ();
     }
 
 }

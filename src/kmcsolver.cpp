@@ -191,15 +191,17 @@ void KMCSolver::checkAllRefCounters()
 {
     if (SoluteParticle::nParticles() != 0)
     {
-        cout << SoluteParticle::nParticles() << " particles active." << endl;
-        exit();
+        stringstream s;
+        s << "After deletion: " << SoluteParticle::nParticles() << " particles active.";
+        exit(s.str());
     }
 
 
     if (Reaction::_refCount() != 0)
     {
-        cout << Reaction::_refCount() << " reactions active." << endl;
-        exit();
+        stringstream s;
+        s << "After deletion: " << Reaction::_refCount() << " reactions active.";
+        exit(s.str());
     }
 
 }
@@ -662,7 +664,6 @@ bool KMCSolver::spawnParticle(SoluteParticle *particle, const uint x, const uint
 
     if (particle->site()->isActive())
     {
-        KMCDebugger_AssertBool(checkIfLegal, "spawning particle on top of another");
         particle->resetSite();
 
         return false;
@@ -700,7 +701,8 @@ void KMCSolver::forceSpawnParticle(const uint x, const uint y, const uint z)
 
 void KMCSolver::despawnParticle(SoluteParticle *particle)
 {
-    KMCDebugger_AssertBool(particle->site()->isActive());
+    KMCDebugger_Assert(particle, !=, NULL, "particle does not exist.");
+    KMCDebugger_AssertBool(particle->site()->isActive(), "this should never happen.");
 
     SoluteParticle::popAffectedParticle(particle);
 
@@ -720,14 +722,12 @@ void KMCSolver::initializeCrystal(const double relativeSeedSize)
 
     if (relativeSeedSize > 1.0)
     {
-        cerr << "The seed size cannot exceed the box size." << endl;
-        KMCSolver::exit();
+        KMCSolver::exit("The seed size cannot exceed the box size.");
     }
 
     else if (relativeSeedSize < 0)
     {
-        cerr << "The seed size cannot be negative." << endl;
-        KMCSolver::exit();
+        KMCSolver::exit("The seed size cannot be negative.");
     }
 
     KMCDebugger_SetEnabledTo(false);

@@ -54,13 +54,6 @@ void testBed::testTotalParticleStateCounters()
     CHECK_EQUAL(0, SoluteParticle::totalParticles(ParticleStates::surface));
     CHECK_EQUAL(0, accu(SoluteParticle::totalParticlesVector()));
 
-    //    boxCenter->spawnAsFixedCrystal();
-
-    //    CHECK_EQUAL(0, Site::totalActiveParticles(ParticleStates::surface));
-    //    CHECK_EQUAL(1, accu(Site::totalActiveParticlesVector()));
-    //    CHECK_EQUAL(1, Site::totalActiveParticles(ParticleStates::fixedCrystal));
-    //    CHECK_EQUAL(pow(DiffusionReaction::separation()*2 + 1, 3) - 1, Site::totalDeactiveParticles(ParticleStates::surface));
-
     solver->reset();
 
     CHECK_EQUAL(0, accu(SoluteParticle::totalParticlesVector()));
@@ -77,7 +70,19 @@ void testBed::testTotalParticleStateCounters()
         C1++;
     });
 
-    deactivateAllSites();
+    solver->forEachSiteDo([&C1] (uint x, uint y, uint z, Site * currentSite)
+    {
+        (void) x;
+        (void) y;
+        (void) z;
+
+        C1--;
+
+        solver->despawnParticle(currentSite->associatedParticle());
+
+        CHECK_EQUAL(C1, accu(SoluteParticle::totalParticlesVector()));
+
+    });
 
     CHECK_EQUAL(0, accu(SoluteParticle::totalParticlesVector()));
 
@@ -549,6 +554,120 @@ void testBed::testRNG()
 
 }
 
+void testBed::testBoundarySites()
+{
+    forceNewBoxSize({10, 15, 20});
+
+    uvec sizes = {NY()*NZ(), NX()*NZ(), NX()*NY()};
+
+    vector<vector<uint> > shapes = {{NY(), NZ()}, {NX(), NZ()}, {NX(), NY()}};
+
+    vector<vector<uint> > indices = {{1, 2}, {0, 2}, {0, 1}};
+
+    vector<uint> shape;
+
+    uvec xyz;
+
+    uint size;
+
+    uint x, y, z;
+
+    uint c1, c2;
+
+    for (uint dim = 0; dim < 3; ++dim)
+    {
+        size = sizes(dim);
+
+        shape = shapes.at(dim);
+
+
+        for (uint orientation = 0; orientation < 2; ++orientation)
+        {
+            CHECK_EQUAL(size, Site::boundaries(dim, orientation)->boundarySize());
+
+            c1 = 0;
+            c2 = 0;
+
+            for (uint n = 0; n < size; ++n)
+            {
+                Site::boundaries(dim, orientation)->getBoundarySite(n, x, y, z);
+
+                xyz = {x, y, z};
+
+                if (c1 == shape.at(1))
+                {
+                    c1 = 0;
+                    c2++;
+                }
+
+                CHECK_EQUAL(Site::boundaries(dim, orientation)->bound(), xyz(dim));
+
+                CHECK_EQUAL(c1, xyz(indices.at(dim).at(1)));
+                CHECK_EQUAL(c2, xyz(indices.at(dim).at(0)));
+
+                c1++;
+            }
+
+        }
+    }
+}
+
+void testBed::testConcentrationWall()
+{
+    forceNewBoxSize({10, 10, 10});
+
+    uint outerShellSize = 5*5*5 - 3*3*3;
+    uint size = 10*10/4;
+
+    forceNewBoundaries(Boundary::ConcentrationWall);
+
+    forceNewNNeighborLimit(1);
+
+    solver->setTargetConcentration(outerShellSize/((double)NX()*NY()*NZ()));
+
+    ConcentrationWall::setMaxEventsPrCycle(100);
+
+    CHECK_EQUAL(0, SoluteParticle::nParticles());
+
+
+    Site::updateBoundaries();
+
+    CHECK_EQUAL(outerShellSize, SoluteParticle::nParticles());
+
+
+    ConcentrationWall::setMaxEventsPrCycle(size/2);
+
+    solver->setTargetConcentration(solver->targetConcentration()/2);
+
+    Site::updateBoundaries();
+
+    CHECK_CLOSE(outerShellSize/2, SoluteParticle::nParticles(), 1);
+
+
+
+    ConcentrationWall::setMaxEventsPrCycle(1);
+
+    solver->setTargetConcentration(solver->targetConcentration()*2);
+
+    Site::updateBoundaries();
+
+    CHECK_EQUAL(outerShellSize/2 + 6, SoluteParticle::nParticles());
+
+
+    ConcentrationWall::setMaxEventsPrCycle(100);
+
+    solver->setTargetConcentration(0);
+
+    Site::updateBoundaries();
+
+    CHECK_EQUAL(0, SoluteParticle::nParticles());
+
+
+    ConcentrationWall::setMaxEventsPrCycle(3);
+    solver->setTargetConcentration(0.01);
+
+}
+
 void testBed::testBinarySearchChoise()
 {
 
@@ -603,14 +722,15 @@ void testBed::testReactionChoise()
     Reaction* reaction;
 
 
-    uint N = 3;
+    uint N = 2;
     uint n = 0;
 
     KMCDebugger_Assert(0, ==, SoluteParticle::affectedParticles().size());
     KMCDebugger_Assert(0, ==, solver->allPossibleReactions().size());
     KMCDebugger_Assert(0, ==, solver->accuAllRates().size());
 
-    solver->initializeCrystal(0.3);
+    solver->setTargetConcentration(10./(NX()*NY()*NZ()));
+    solver->initializeCrystal(0.2);
 
     solver->getRateVariables();
 
@@ -1026,14 +1146,14 @@ void testBed::testSequential()
 
     const SnapShot s00(solver);
 
-    const SnapShot & s1 = *testSequentialCore();
+    const SnapShot & s1 = *sequentialCore();
 
 
     solver->reset();
 
     const SnapShot s01(solver);
 
-    const SnapShot & s2 = *testSequentialCore();
+    const SnapShot & s2 = *sequentialCore();
 
 
 
@@ -1045,7 +1165,7 @@ void testBed::testSequential()
 
     const SnapShot s02(solver);
 
-    const SnapShot & s3 = *testSequentialCore();
+    const SnapShot & s3 = *sequentialCore();
 
 
     delete solver;
@@ -1056,7 +1176,7 @@ void testBed::testSequential()
 
     const SnapShot s03(solver);
 
-    const SnapShot & s4 = *testSequentialCore();
+    const SnapShot & s4 = *sequentialCore();
 
 
 
@@ -1068,7 +1188,7 @@ void testBed::testSequential()
     CHECK_EQUAL(s02, s03);
 
     CHECK_EQUAL(s1, s2);
-    CHECK_EQUAL(s3, s4); //!
+    CHECK_EQUAL(s3, s4);
 
     CHECK_EQUAL(s1, s3); //!
     CHECK_EQUAL(s2, s3); //!
@@ -1078,13 +1198,14 @@ void testBed::testSequential()
 
 }
 
-const SnapShot * testBed::testSequentialCore()
+const SnapShot * testBed::sequentialCore()
 {
 
     uint nc = 1000;
 
     solver->setNumberOfCycles(nc);
     solver->setCyclesPerOutput(nc + 1);
+    solver->setTargetConcentration(0.01);
     solver->initializeCrystal(0.2);
 
     solver->mainloop();
@@ -1706,7 +1827,7 @@ void testBed::testReactionVectorUpdate()
 
     //deactivating the neighbor and the cousin should create two decoupled systems
     solver->despawnParticle(neighbor->associatedParticle());
-    solver->despawnParticle(distantCousin->associatedParticle());
+    solver->despawnParticle(getBoxCenter(-1)->associatedParticle());
 
     SoluteParticle::updateAffectedParticles();
 

@@ -35,7 +35,7 @@ public:
 
     virtual void finalize() {}
 
-    void getBoundarySite(uint n, uint &x, uint &y, uint &z);
+    void getBoundarySite(uint n, uint &x, uint &y, uint &z) const;
 
     void distanceFrom(const uint xi, int & dxi, bool abs = false);
 
@@ -120,6 +120,20 @@ public:
         return N(m_dimension);
     }
 
+    const uint & dimension() const
+    {
+        return m_dimension;
+    }
+
+    uint bound() const
+    {
+        return orientation() == 0 ? 0 : span() - 1;
+    }
+
+    uint boundarySize() const
+    {
+        return (NX()*NY()*NZ())/span();
+    }
 
 private:
 
@@ -130,8 +144,6 @@ private:
     const uint m_dimension;
 
     const uint m_orientation;
-
-    const uint m_bound;
 
     bool m_initialized;
 
@@ -147,20 +159,6 @@ protected:
 
     static vector<const Boundary*> m_currentBoundaries;
 
-    const uint & dimension() const
-    {
-        return m_dimension;
-    }
-
-    const uint & bound() const
-    {
-        return m_bound;
-    }
-
-    uint boundarySize() const
-    {
-        return (NX()*NY()*NZ())/span();
-    }
 
     enum Dimensions
     {

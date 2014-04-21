@@ -33,39 +33,12 @@ void ConcentrationWall::update()
     uint ce = 0;
 
 
-    //    crystalBoxTopology = Site::getCurrentCrystalBoxTopology();
-
-    //    bool resize;
-
-    //    switch (orientation()) {
-    //    case Near:
-    //        resize = crystalBoxTopology(dimension(), Near) < minDistanceFromSurface;
-
-    //        break;
-    //    case Far:
-    //        resize = crystalBoxTopology(dimension(), Far) > span() - minDistanceFromSurface;
-
-    //        break;
-    //    }
-
-
-    //    if (resize)
-    //    {
-
-    //        uvec3 N = solver()->NVec();
-
-    //        N(dimension()) += systemSizeIncrementSize; //Size size size...
-
-    //        solver()->setBoxSize(N, true, true);
-
-    //    }
-
-
     if (SoluteParticle::getCurrentConcentration() > solver()->targetConcentration())
     {
 
         while (SoluteParticle::getCurrentConcentration() > solver()->targetConcentration() && c != boundarySize() && ce != m_maxEventsPrCycle)
         {
+
             getBoundarySite(c, x, y, z);
 
             currentSite = solver()->getSite(x, y, z);
@@ -101,7 +74,6 @@ void ConcentrationWall::update()
 
                 if (spawned)
                 {
-                    cout << "spawned " << *particle << endl;
                     ce++;
                 }
 
@@ -110,12 +82,14 @@ void ConcentrationWall::update()
 
             if (!spawned)
             {
+                particle->resetSite();
                 delete particle;
                 break;
             }
 
         }
     }
+
 }
 
 

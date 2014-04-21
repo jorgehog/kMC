@@ -287,7 +287,7 @@ double DiffusionReaction::getSaddleEnergy()
             for (uint zn = myIntersectionPoints(2, 0); zn < myIntersectionPoints(2, 1); ++zn)
             {
 
-                if (xn == yn && yn == zn && zn == 0)
+                if (xn == yn && yn == zn && zn == Site::nNeighborsLimit())
                 {
                     continue;
                 }
@@ -417,8 +417,8 @@ void DiffusionReaction::calcRate()
 void DiffusionReaction::execute()
 {
     reactant()->changePosition(Site::boundaries(0, 0)->transformCoordinate(x() + m_path[0]),
-                               Site::boundaries(1, 0)->transformCoordinate(x() + m_path[1]),
-                               Site::boundaries(2, 0)->transformCoordinate(x() + m_path[2]));
+                               Site::boundaries(1, 0)->transformCoordinate(y() + m_path[1]),
+                               Site::boundaries(2, 0)->transformCoordinate(z() + m_path[2]));
 }
 
 const string DiffusionReaction::info(int xr, int yr, int zr, string desc) const

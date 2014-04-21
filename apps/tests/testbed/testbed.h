@@ -31,6 +31,10 @@ public:
 
     static void testRNG();
 
+    static void testBoundarySites();
+
+    static void testConcentrationWall();
+
     static void testBinarySearchChoise();
 
     static void testReactionChoise();
@@ -98,7 +102,7 @@ private:
 
     static void fill_rate_stuff(vector<double> &accuAllRates, vector<Reaction *> &allPossibleReactions, double &kTot);
 
-    static const SnapShot *testSequentialCore();
+    static const SnapShot *sequentialCore();
 
     static void initBoundaryTestParameters();
 

@@ -377,6 +377,11 @@ public:
         Site::forEachNeighborDo(m_x, m_y, m_z, applyFunction);
     }
 
+    void forEachNeighborSiteDo(function<void (Site *)> applyFunction) const
+    {
+        Site::forEachNeighborDo(m_x, m_y, m_z, applyFunction);
+    }
+
     void forEachNeighborSiteDo_sendPath(function<void (Site *, int, int, int)> applyFunction)
     {
         Site::forEachNeighborDo_sendPath(m_x, m_y, m_z, applyFunction);
