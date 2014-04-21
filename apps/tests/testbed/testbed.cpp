@@ -422,7 +422,6 @@ void testBed::testPropertyCalculations()
     uint sz = NZ()/2;
 
     vector<vector<uint> >crystalSites = {{sx, sy    , sz    },
-                                         {sx, sy    , sz    },
 
                                          {sx, sy    , sz + 1},
                                          {sx, sy    , sz + 2},
@@ -456,7 +455,7 @@ void testBed::testPropertyCalculations()
 
                     if (!currentSite->isActive())
                     {
-                        solver->forceSpawnParticle(xyz[0], xyz[1], xyz[2]);
+                        solver->forceSpawnParticle(i + xyz[0], j + xyz[1], k + xyz[2]);
                     }
                 }
             }
@@ -706,14 +705,16 @@ void testBed::testAffectedParticles()
     }
 
 
+    SoluteParticle *particle = solver->particle(0);
+    particle->diffusionReactions(0, 0, 1)->execute();
+
+    CHECK_EQUAL(true, particle->isAffected());
+
+    solver->despawnParticle(particle);
+
+    CHECK_EQUAL(false, SoluteParticle::isAffected(particle));
+
     deactivateAllSites();
-
-    solver->getRateVariables();
-
-    for (SoluteParticle *particle : solver->particles())
-    {
-        CHECK_EQUAL(false, particle->isAffected());
-    }
 
     Site *center = getBoxCenter();
     forceSpawnCenter();
@@ -752,6 +753,11 @@ void testBed::testAffectedParticles()
 
     CHECK_EQUAL(true, center->associatedParticle()->isAffected());
     CHECK_EQUAL(1, SoluteParticle::affectedParticles().size());
+
+    for (Reaction *r : center->associatedParticle()->reactions())
+    {
+        r->forceUpdateFlag(Reaction::defaultUpdateFlag);
+    }
 
     solver->getRateVariables();
 
@@ -2149,11 +2155,11 @@ void testBed::testInitialSiteSetup()
     solver->forEachSiteDo([&] (uint x, uint y, uint z, Site *_site)
     {
 
+        site = _site;
+
         CHECK_EQUAL(x, site->associatedParticle()->x());
         CHECK_EQUAL(y, site->associatedParticle()->y());
         CHECK_EQUAL(z, site->associatedParticle()->z());
-
-        site = _site;
 
         CHECK_EQUAL(site, solver->getSite(site->associatedParticle()->x(),
                                           site->associatedParticle()->y(),

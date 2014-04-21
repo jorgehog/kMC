@@ -59,14 +59,7 @@ void SoluteParticle::setSite(const uint x, const uint y, const uint z)
 
     KMCDebugger_AssertBool(!m_site->isActive(), "particle already present at site.", m_site->info());
 
-    m_x = x;
-    m_y = y;
-    m_z = z;
-
-    KMCDebugger_AssertBool(!Boundary::isBlocked(m_x, m_y, m_z), "coordinates were not set properly.");
-
-
-    m_site = m_solver->getSite(x, y, z);
+    trySite(x, y, z);
 
     m_site->associateWith(this);
 
@@ -97,12 +90,23 @@ void SoluteParticle::setSite(const uint x, const uint y, const uint z)
 
 void SoluteParticle::trySite(const uint x, const uint y, const uint z)
 {
+    m_x = x;
+    m_y = y;
+    m_z = z;
+
+    KMCDebugger_AssertBool(!Boundary::isBlocked(m_x, m_y, m_z), "coordinates were not set properly.");
+
     m_site = m_solver->getSite(x, y, z);
 }
 
 void SoluteParticle::resetSite()
 {
     m_site = NULL;
+
+    m_x = UNSET_UINT;
+    m_y = UNSET_UINT;
+    m_z = UNSET_UINT;
+
 }
 
 void SoluteParticle::disableSite()

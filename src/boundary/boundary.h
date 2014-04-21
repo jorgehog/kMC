@@ -157,7 +157,7 @@ protected:
         return m_bound;
     }
 
-    const uint & boundarySize() const
+    uint boundarySize() const
     {
         return (NX()*NY()*NZ())/span();
     }

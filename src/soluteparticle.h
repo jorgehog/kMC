@@ -171,6 +171,11 @@ public:
         return m_totalParticles(i);
     }
 
+    static bool isAffected(SoluteParticle *particle)
+    {
+        return m_affectedParticles.find(particle) != m_affectedParticles.end();
+    }
+
 
 
     uint ID() const
@@ -223,7 +228,7 @@ public:
 
     bool isAffected()
     {
-        return m_affectedParticles.find(this) != m_affectedParticles.end();
+        return isAffected(this);
     }
 
     void markAsAffected();
