@@ -948,6 +948,7 @@ void KMCSolver::setRNGSeed(uint seedState, int defaultSeed)
         break;
     }
 
+    cout << "seed: " << seed << endl;
     KMC_INIT_RNG(seed);
 
 }

@@ -826,7 +826,15 @@ void testBed::testAffectedParticles()
 
 
     SoluteParticle *particle = solver->particle(0);
-    particle->diffusionReactions(0, 0, 1)->execute();
+
+    for (Reaction *r : particle->reactions())
+    {
+        if (r->isAllowed())
+        {
+            r->execute();
+            break;
+        }
+    }
 
     CHECK_EQUAL(true, particle->isAffected());
 
