@@ -72,6 +72,8 @@ public:
     static void testInitialSiteSetup();
 
 
+    static void initSimpleSystemParameters();
+
     static void initBoundarySuite(const umat &boundaries);
 
     static KMCSolver* solver;
@@ -106,7 +108,6 @@ private:
 
     static void initBoundaryTestParameters();
 
-    static void initSimpleSystemParameters();
 
     static void activateAllSites();
 

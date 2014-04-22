@@ -793,6 +793,7 @@ void KMCSolver::initializeSolutionBath()
 
     uint n = 0;
 
+    cout << "starting bathing " << endl;
     while (n != N)
     {
 
@@ -813,8 +814,11 @@ void KMCSolver::initializeSolutionBath()
 
         }
 
+
         n++;
+        cout << "spawned " << n << " / " << N << "  c = " << SoluteParticle::getCurrentConcentration() << endl;
     }
+    cout << "Done spawning " << N << "particles. " << endl;
 }
 
 
@@ -948,7 +952,6 @@ void KMCSolver::setRNGSeed(uint seedState, int defaultSeed)
         break;
     }
 
-    cout << "seed: " << seed << endl;
     KMC_INIT_RNG(seed);
 
 }

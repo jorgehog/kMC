@@ -111,11 +111,8 @@ void testBed::testDistanceTo()
     int dx, dy, dz, dx2, dy2, dz2;
     uint adx, ady, adz;
 
-
-    solver->clearSites();
-    solver->setBoxSize({6, 6, 6}, false);
-    Site::resetNNeighborsLimitTo(2);
-    solver->initializeSites();
+    cout << Site::nNeighborsLimit() << endl;
+    forceNewBoxSize({6, 6, 6});
 
     solver->forEachSiteDo([&] (uint startx, uint starty, uint startz, Site * startSite)
     {
@@ -902,6 +899,7 @@ void testBed::testRateCalculation()
 
     double E, Esp;
 
+    forceNewNNeighborLimit(2);
     solver->setTargetConcentration(0.01);
     solver->initializeSolutionBath();
 
@@ -945,6 +943,8 @@ void testBed::testEnergyAndNeighborSetup()
 
     double E;
     uint C;
+
+    initSimpleSystemParameters();
 
     solver->initializeCrystal(0.3);
 

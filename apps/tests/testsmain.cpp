@@ -9,8 +9,8 @@
 #include <sys/types.h>
 
 
-#define focusSuite "Misc"
-//#define focusTest  "AffectedParticles"
+//#define focusSuite "Reactions"
+#define focusTest  "DistanceTo"
 
 
 #include "defines.h"
