@@ -203,25 +203,40 @@ void SoluteParticle::setParticleState(int newState)
 //All reactions must be legal if site is allowed to spawn.
 bool SoluteParticle::isLegalToSpawn() const
 {
-    bool allowed = true;
-
-    forEachNeighborSiteDo([&allowed] (Site *site)
+    for (uint i = 0; i < 3; ++i)
     {
-        if (site->isActive())
+        for (uint j = 0; j < 3; ++j)
         {
-            allowed = false;
-        }
-    });
+            for (uint k = 0; k < 3; ++k)
+            {
+                if (i == j && j == k && k == 1)
+                {
+                    continue;
+                }
 
-    return allowed;
+                if (m_diffusionReactions[i][j][k]->destinationSite() == NULL)
+                {
+                    continue;
+                }
+
+                else if (m_diffusionReactions[i][j][k]->destinationSite()->isActive())
+                {
+                    return false;
+                }
+            }
+        }
+
+    }
+
+    return true;
 }
 
 
 bool SoluteParticle::isNeighbor(SoluteParticle *particle, uint level)
 {
-  return std::find(m_neighboringParticles.at(level).begin(),
-                   m_neighboringParticles.at(level).end(),
-                   particle) != m_neighboringParticles.at(level).end();
+    return std::find(m_neighboringParticles.at(level).begin(),
+                     m_neighboringParticles.at(level).end(),
+                     particle) != m_neighboringParticles.at(level).end();
 }
 
 void SoluteParticle::clearAllReactions()

@@ -13,25 +13,7 @@ void testBed::makeSolver()
 
     solver = new KMCSolver();
 
-    solver->setRNGSeed();
-
-    solver->setNumberOfCycles(1000);
-
-    solver->setTargetConcentration(0.01);
-
-    DiffusionReaction::setPotentialParameters(1.0, 0.5, false);
-
-    Site::setInitialBoundaries(Boundary::Periodic);
-
-    Site::setInitialNNeighborsLimit(2, false);
-
-    Reaction::setBeta(0.5);
-
-    solver->setBoxSize({10, 10, 10});
-
-    solver->initializeSites();
-
-    Site::initializeBoundaries();
+    initSimpleSystemParameters(false);
 
 }
 
@@ -111,8 +93,7 @@ void testBed::testDistanceTo()
     int dx, dy, dz, dx2, dy2, dz2;
     uint adx, ady, adz;
 
-    cout << Site::nNeighborsLimit() << endl;
-    forceNewBoxSize({6, 6, 6});
+    forceNewBoxSize({8, 8, 8});
 
     solver->forEachSiteDo([&] (uint startx, uint starty, uint startz, Site * startSite)
     {
@@ -1213,7 +1194,6 @@ const SnapShot * testBed::sequentialCore()
 
     solver->setNumberOfCycles(nc);
     solver->setCyclesPerOutput(nc + 1);
-    solver->setTargetConcentration(0.01);
     solver->initializeCrystal(0.2);
 
     solver->mainloop();
@@ -1244,22 +1224,47 @@ void testBed::initBoundaryTestParameters()
 
 }
 
-void testBed::initSimpleSystemParameters()
+void testBed::initSimpleSystemParameters(bool clean)
 {
 
-    solver->clearSites();
+    if (clean)
+    {
+        solver->clearSites();
+    }
+
+    solver->setRNGSeed();
+
+
+    solver->setNumberOfCycles(1000);
+
+    solver->setTargetConcentration(0.005);
+
+    Reaction::setBeta(0.5);
+
+    DiffusionReaction::setPotentialParameters(1.0, 0.5, false);
 
 
     solver->setBoxSize({15, 15, 15}, false);
 
-    Site::resetNNeighborsLimitTo(2);
+    if (clean)
+    {
+        Site::resetNNeighborsLimitTo(2);
 
-    Site::resetBoundariesTo(Boundary::Periodic);
+        Site::resetBoundariesTo(Boundary::Periodic);
+    }
+
+    else
+    {
+        Site::setInitialNNeighborsLimit(2);
+
+        Site::setInitialBoundaries(Boundary::Periodic);
+    }
 
 
     solver->initializeSites();
 
     Site::initializeBoundaries();
+
 }
 
 void testBed::activateAllSites()

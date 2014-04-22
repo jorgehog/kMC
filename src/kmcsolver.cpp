@@ -213,7 +213,6 @@ void KMCSolver::onAllRatesChanged()
 
     m_kTot = 0;
 
-
     uint i = 0;
     for (Reaction * r : m_allPossibleReactions)
     {
@@ -567,6 +566,7 @@ void KMCSolver::initializeSites()
         }
     }
 
+    KMCDebugger_Assert(Site::_refCount(), !=, 0, "Can't simulate an empty system.");
     KMCDebugger_Assert(Site::_refCount(), ==, NX()*NY()*NZ(), "Wrong number of sites initialized.");
     KMCDebugger_Assert(c, ==, nBoundaries, "Not all boundary sites setup for tracking.", nBoundaries - c);
 
@@ -615,6 +615,8 @@ void KMCSolver::initializeSites()
 
 void KMCSolver::clearSites()
 {
+
+    KMCDebugger_Assert(Site::_refCount(), !=, 0, "Sites already cleared.");
 
     KMCDebugger_Assert(SoluteParticle::nParticles(), ==, 0, "Cannot clear sites with particles active.");
 
@@ -779,7 +781,11 @@ void KMCSolver::initializeSolutionBath()
     uint x, y, z;
     bool spawned;
 
-    uint effectiveVolume = 27;
+    const double margin = 0.5;
+    uint effectiveVolume = 8; //eV = (difflength + 1)^3
+
+    effectiveVolume *= margin;
+
 
     uint NFree = NX()*NY()*NZ() - SoluteParticle::nParticles();
 
@@ -787,13 +793,12 @@ void KMCSolver::initializeSolutionBath()
 
     if (N > NFree/effectiveVolume)
     {
-        cerr << "Not enough space to place " << N << " particles sufficiently apart from eachother. Maximum concentration: " << 1./effectiveVolume << endl;
+        cerr << "Not enough space to place " << N << "particles sufficiently apart from eachother with concentration " << m_targetConcentration << " Maximum concentration: " << 1./effectiveVolume << endl;
         exit();
     }
 
     uint n = 0;
 
-    cout << "starting bathing " << endl;
     while (n != N)
     {
 
@@ -814,11 +819,9 @@ void KMCSolver::initializeSolutionBath()
 
         }
 
-
         n++;
-        cout << "spawned " << n << " / " << N << "  c = " << SoluteParticle::getCurrentConcentration() << endl;
     }
-    cout << "Done spawning " << N << "particles. " << endl;
+
 }
 
 
