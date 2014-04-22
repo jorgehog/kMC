@@ -448,20 +448,20 @@ const string Site::info(int xr, int yr, int zr, string desc) const
     stringstream s_full;
 
     s_full << str();
-    s_full << "[" << NX() << " x " << NY() << " x " << NZ() << "] * ";
+    s_full << "[" << NX() << " x " << NY() << " x " << NZ() << "]";
 
     if (isActive())
     {
 
         const SoluteParticle *particle = associatedParticle();
 
-        s_full << " " << particle->particleStateName();
+        s_full << " * " << particle->particleStateName();
 
         s_full << " * Neighbors: ";
 
         for (uint i = 0; i < Site::nNeighborsLimit(); ++i)
         {
-            s_full << particle->nNeighbors(i) << " ";
+            s_full << particle->nNeighbors(i) << "\n";
 
         }
 
@@ -473,8 +473,6 @@ const string Site::info(int xr, int yr, int zr, string desc) const
         return s_full.str();
     }
 
-
-    s_full << "\n";
 
     uint _min = ParticleStates::nStates;
 
