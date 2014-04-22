@@ -9,7 +9,7 @@
 #include <sys/types.h>
 
 
-#define focusSuite "ConcWallBoundaries"
+//#define focusSuite "ConcWallBoundaries"
 //#define focusTest  "Sequential"
 
 

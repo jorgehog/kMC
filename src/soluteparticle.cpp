@@ -59,10 +59,6 @@ void SoluteParticle::setSite(const uint x, const uint y, const uint z)
 
     KMCDebugger_AssertBool(!m_site->isActive(), "particle already present at site.", m_site->info());
 
-    KMCDebugger_Assert(x, >=, 0);
-    KMCDebugger_Assert(y, >=, 0);
-    KMCDebugger_Assert(z, >=, 0);
-
     KMCDebugger_Assert(x, <, (int)NX());
     KMCDebugger_Assert(y, <, (int)NY());
     KMCDebugger_Assert(z, <, (int)NZ());

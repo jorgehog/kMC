@@ -514,20 +514,13 @@ void KMCSolver::initializeSites()
 
     KMCDebugger_Assert(Site::_refCount(), ==, 0, "Sites was not cleared properly.");
 
-    uint xTrans, yTrans, zTrans, x, y, z, c, nBoundaries, m_NX_full, m_NY_full, m_NZ_full;
+    uint xTrans, yTrans, zTrans, m_NX_full, m_NY_full, m_NZ_full;
 
 
     m_NX_full = 2*Site::nNeighborsLimit() + m_NX;
     m_NY_full = 2*Site::nNeighborsLimit() + m_NY;
     m_NZ_full = 2*Site::nNeighborsLimit() + m_NZ;
 
-
-    nBoundaries = m_NX_full*m_NY_full*m_NZ_full - m_NX*m_NY*m_NZ;
-
-    uint*** boundarySiteLocations = new uint**[nBoundaries];
-
-
-    c = 0;
 
     sites = new Site***[m_NX_full];
 
@@ -550,63 +543,53 @@ void KMCSolver::initializeSites()
                     //renormalize so that Site::nNeighborsLimit() points to site 0 and so on.
                     sites[x][y][z] = new Site();
                 }
-
-                else
-                {
-
-                    boundarySiteLocations[c] = new uint*[3];
-
-                    boundarySiteLocations[c][0] = new uint(x);
-                    boundarySiteLocations[c][1] = new uint(y);
-                    boundarySiteLocations[c][2] = new uint(z);
-
-                    c++;
-                }
             }
         }
     }
 
+
     KMCDebugger_Assert(Site::_refCount(), !=, 0, "Can't simulate an empty system.");
     KMCDebugger_Assert(Site::_refCount(), ==, NX()*NY()*NZ(), "Wrong number of sites initialized.");
-    KMCDebugger_Assert(c, ==, nBoundaries, "Not all boundary sites setup for tracking.", nBoundaries - c);
 
     //Boundaries
-    for (uint i = 0; i < nBoundaries; ++i)
+    for (uint x = 0; x < m_NX_full; ++x)
     {
-
-        x = *boundarySiteLocations[i][0];
-        y = *boundarySiteLocations[i][1];
-        z = *boundarySiteLocations[i][2];
-
-        Boundary::setupCurrentBoundaries(x, y, z, Site::nNeighborsLimit());
-
-        xTrans = Site::boundaries(0, 0)->transformCoordinate((int)x - (int)Site::nNeighborsLimit());
-
-        yTrans = Site::boundaries(1, 0)->transformCoordinate((int)y - (int)Site::nNeighborsLimit());
-
-        zTrans = Site::boundaries(2, 0)->transformCoordinate((int)z - (int)Site::nNeighborsLimit());
-
-        if (Boundary::isBlocked(xTrans, yTrans, zTrans))
+        for (uint y = 0; y < m_NY_full; ++y)
         {
-            sites[x][y][z] = NULL;
+            for (uint z = 0; z < m_NZ_full; ++z)
+            {
+                if (!((x >= Site::nNeighborsLimit() && x < m_NX + Site::nNeighborsLimit()) &&
+                      (y >= Site::nNeighborsLimit() && y < m_NY + Site::nNeighborsLimit()) &&
+                      (z >= Site::nNeighborsLimit() && z < m_NZ + Site::nNeighborsLimit())))
+                {
+
+
+                    Boundary::setupCurrentBoundaries(x, y, z, Site::nNeighborsLimit());
+
+                    xTrans = Site::boundaries(0, 0)->transformCoordinate((int)x - (int)Site::nNeighborsLimit());
+
+                    yTrans = Site::boundaries(1, 0)->transformCoordinate((int)y - (int)Site::nNeighborsLimit());
+
+                    zTrans = Site::boundaries(2, 0)->transformCoordinate((int)z - (int)Site::nNeighborsLimit());
+
+                    if (Boundary::isBlocked(xTrans, yTrans, zTrans))
+                    {
+                        sites[x][y][z] = NULL;
+                    }
+
+                    else
+                    {
+                        sites[x][y][z] = sites[xTrans + Site::nNeighborsLimit()]
+                                [yTrans + Site::nNeighborsLimit()]
+                                [zTrans + Site::nNeighborsLimit()];
+                    }
+
+
+
+                }
+            }
         }
-
-        else
-        {
-            sites[x][y][z] = sites[xTrans + Site::nNeighborsLimit()]
-                    [yTrans + Site::nNeighborsLimit()]
-                    [zTrans + Site::nNeighborsLimit()];
-        }
-
-        delete boundarySiteLocations[i][0];
-        delete boundarySiteLocations[i][1];
-        delete boundarySiteLocations[i][2];
-
-        delete [] boundarySiteLocations[i];
-
     }
-
-    delete [] boundarySiteLocations;
 
     initializeParticles();
 
