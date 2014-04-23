@@ -291,6 +291,7 @@ void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate
         KMCDebugger_Assert(reaction->address(), !=, Reaction::UNSET_ADDRESS);
         KMCDebugger_AssertBool(!isEmptyAddress(reaction->address()), "address is already set as empty.");
 
+
         m_availableReactionSlots.push_back(reaction->address());
 
         //reset the accuallrates value to the previous value or zero, so that when we swap in a reaction to a vacant spot,
@@ -400,6 +401,22 @@ void KMCSolver::postReactionShuffleCleanup(const uint nVacancies)
             : KMCDebugger_AssertClose(m_accuAllRates.at(m_accuAllRates.size()- 1),
                                       m_kTot, minRateThreshold(),
                                       "kTot should be the last element of accuAllRates");
+
+}
+
+void KMCSolver::updateAccuAllRateElements(const uint from, const uint to, const double value)
+{
+    for (uint i = from; i < to; ++i)
+    {
+        m_accuAllRates.at(i) += value;
+
+        if (m_accuAllRates.at(i) < 0 && m_accuAllRates.at(i) > -1E-6)
+        {
+            m_accuAllRates.at(i) = 0;
+        }
+
+        KMCDebugger_Assert(m_accuAllRates.at(i), >=, 0);
+    }
 
 }
 
@@ -763,6 +780,7 @@ void KMCSolver::initializeSolutionBath()
 
     uint x, y, z;
     bool spawned;
+
 
     const double margin = 0.5;
     uint effectiveVolume = 8; //eV = (difflength + 1)^3

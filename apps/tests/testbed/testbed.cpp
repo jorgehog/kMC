@@ -619,7 +619,7 @@ void testBed::testConcentrationWall()
 
     Site::updateBoundaries();
 
-    CHECK_CLOSE(outerShellSize/2, SoluteParticle::nParticles(), 1);
+    CHECK_EQUAL(outerShellSize/2, SoluteParticle::nParticles());
 
 
 

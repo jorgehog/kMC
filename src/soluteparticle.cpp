@@ -59,9 +59,9 @@ void SoluteParticle::setSite(const uint x, const uint y, const uint z)
 
     KMCDebugger_AssertBool(!m_site->isActive(), "particle already present at site.", m_site->info());
 
-    KMCDebugger_Assert(x, <, (int)NX());
-    KMCDebugger_Assert(y, <, (int)NY());
-    KMCDebugger_Assert(z, <, (int)NZ());
+    KMCDebugger_Assert(x, <, NX());
+    KMCDebugger_Assert(y, <, NY());
+    KMCDebugger_Assert(z, <, NZ());
 
     trySite(x, y, z);
 
@@ -207,6 +207,7 @@ void SoluteParticle::setParticleState(int newState)
 //All reactions must be legal if site is allowed to spawn.
 bool SoluteParticle::isLegalToSpawn() const
 {
+
     for (uint i = 0; i < 3; ++i)
     {
         for (uint j = 0; j < 3; ++j)
@@ -218,12 +219,12 @@ bool SoluteParticle::isLegalToSpawn() const
                     continue;
                 }
 
-                if (m_diffusionReactions[i][j][k]->destinationSite() == NULL)
+                else if (diffusionReactions(i, j, k)->destinationSite() == NULL)
                 {
                     continue;
                 }
 
-                else if (m_diffusionReactions[i][j][k]->destinationSite()->isActive())
+                else if (diffusionReactions(i, j, k)->destinationSite()->isActive())
                 {
                     return false;
                 }

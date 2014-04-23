@@ -207,21 +207,7 @@ public:
 
     void postReactionShuffleCleanup(const uint nVacancies);
 
-    void updateAccuAllRateElements(const uint from, const uint to, const double value)
-    {
-        for (uint i = from; i < to; ++i)
-        {
-            m_accuAllRates.at(i) += value;
-
-            if (m_accuAllRates.at(i) < 0 && m_accuAllRates.at(i) > -1E-8)
-            {
-                m_accuAllRates.at(i) = 0;
-            }
-
-            KMCDebugger_Assert(m_accuAllRates.at(i), >=, 0);
-        }
-
-    }
+    void updateAccuAllRateElements(const uint from, const uint to, const double value);
 
     double prevAccuAllRatesValue(const uint address) const
     {

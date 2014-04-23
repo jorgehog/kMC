@@ -479,40 +479,52 @@ const string Site::info(int xr, int yr, int zr, string desc) const
     ucube nN;
     nN.copy_size(m_levelMatrix);
 
-    associatedParticle()->forEachNeighborSiteDo_sendIndices([&] (Site *currentSite, uint i, uint j, uint k)
+    Site * currentSite;
+
+    for (const uint &i : m_neighborhoodIndices)
     {
-        //BLOCKED
-        if (currentSite == NULL)
+        for (const uint &j : m_neighborhoodIndices)
         {
-            nN(i, j, k) = _min + 1;
+            for (const uint &k : m_neighborhoodIndices)
+            {
+
+                currentSite = neighborhood_fromIndex(m_associatedParticle->x(),
+                                                     m_associatedParticle->y(),
+                                                     m_associatedParticle->z(),
+                                                     i, j, k);
+
+                //BLOCKED
+                if (currentSite == NULL)
+                {
+                    nN(i, j, k) = _min + 1;
+                }
+
+                //THIS SITE
+                else if (currentSite == this)
+                {
+                    nN(i, j, k) = _min + 2;
+                }
+
+                //MARKED SITE
+                else if ((i == Site::nNeighborsLimit() + xr) && (j == Site::nNeighborsLimit() + yr) && (k == Site::nNeighborsLimit() + zr))
+                {
+                    nN(i, j, k) = _min + 3;
+                }
+
+                //ACTIVE PARTICLE
+                else if (currentSite->isActive())
+                {
+                    nN(i, j, k) = currentSite->associatedParticle()->particleState();
+                }
+
+                else
+                {
+                    nN(i, j, k) = _min;
+                }
+
+            }
         }
-
-        //THIS SITE
-        else if (currentSite == this)
-        {
-            nN(i, j, k) = _min + 2;
-        }
-
-        //MARKED SITE
-        else if ((i == Site::nNeighborsLimit() + xr) && (j == Site::nNeighborsLimit() + yr) && (k == Site::nNeighborsLimit() + zr))
-        {
-            nN(i, j, k) = _min + 3;
-        }
-
-        //ACTIVE PARTICLE
-        else if (currentSite->isActive())
-        {
-            KMCDebugger_Assert(currentSite->associatedParticle(), !=, NULL);
-
-            nN(i, j, k) = currentSite->associatedParticle()->particleState();
-        }
-
-        else
-        {
-            nN(i, j, k) = _min;
-        }
-
-    });
+    }
 
 
     umat A;
