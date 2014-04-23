@@ -146,7 +146,15 @@ public:
     {
         stringstream s;
 
-        s << setw(3) << xD() << "," << setw(3) << yD() << "," << setw(3) << zD();
+        if (destinationSite() == NULL)
+        {
+            s << setw(3*3 + 2) << "boundary";
+        }
+
+        else
+        {
+            s << setw(3) << xD() << "," << setw(3) << yD() << "," << setw(3) << zD();
+        }
 
         return s.str();
     }

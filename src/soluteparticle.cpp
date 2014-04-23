@@ -55,7 +55,6 @@ SoluteParticle::~SoluteParticle()
 
 void SoluteParticle::setSite(const uint x, const uint y, const uint z)
 {    
-    KMCDebugger_MarkPre("void");
 
     KMCDebugger_AssertBool(!m_site->isActive(), "particle already present at site.", m_site->info());
 
@@ -89,6 +88,7 @@ void SoluteParticle::setSite(const uint x, const uint y, const uint z)
 
     KMCDebugger_Assert(m_site->associatedParticle(), ==, this, "mismatch in site and particle.");
 
+    KMCDebugger_MarkPre("void");
     KMCDebugger_PushImplication(this, "enabled");
     KMCDebugger_MarkPartialStep("PARTICLE ACTIVATED");
 
@@ -117,10 +117,11 @@ void SoluteParticle::resetSite()
 
 void SoluteParticle::disableSite()
 {
-    KMCDebugger_MarkPre("void");
-
     KMCDebugger_AssertBool(m_site->isActive(), "particle not present at site.", m_site->info());
     KMCDebugger_Assert(m_site->associatedParticle(), ==, this, "mismatch in site and particle.");
+
+    KMCDebugger_MarkPre(particleStateName());
+    KMCDebugger_PushImplication(this, "disabled");
 
     m_site->desociate();
 
@@ -137,7 +138,6 @@ void SoluteParticle::disableSite()
     m_energy = 0;
 
 
-    KMCDebugger_PushImplication(this, "disabled");
     KMCDebugger_MarkPartialStep("PARTICLE DISABLED");
 
 }
