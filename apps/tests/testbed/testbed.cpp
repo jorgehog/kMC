@@ -111,8 +111,7 @@ void testBed::testDistanceTo()
     int dx, dy, dz, dx2, dy2, dz2;
     uint adx, ady, adz;
 
-    cout << Site::nNeighborsLimit() << endl;
-    forceNewBoxSize({6, 6, 6});
+    forceNewBoxSize({8, 8, 8});
 
     solver->forEachSiteDo([&] (uint startx, uint starty, uint startz, Site * startSite)
     {
@@ -638,7 +637,7 @@ void testBed::testConcentrationWall()
 
     Site::updateBoundaries();
 
-    CHECK_CLOSE(outerShellSize/2, SoluteParticle::nParticles(), 1);
+    CHECK_EQUAL(outerShellSize/2, SoluteParticle::nParticles());
 
 
 

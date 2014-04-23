@@ -91,6 +91,7 @@ void Debugger::pushTraces()
 
     if (currentReaction != NULL)
     {
+        KMCDebugger_Assert(currentReaction->reactant(), !=, NULL);
         reactionTraceAfter.push_back(_KMCDebugger_PARTICLE_STR(currentReaction->reactant()));
     }
 
@@ -229,18 +230,9 @@ std::string Debugger::setupAffectedUnion()
         }
     }
 
-    int X, Y, Z;
     for (SoluteParticle *particle : intersect)
     {
-        s << "   -" << particle->str();
-
-        if (currentReaction != NULL)
-        {
-            currentReaction->reactant()->distanceTo(particle, X, Y, Z);
-            s << " [" << X << ", " << Y  << ", " << Z << "]";
-        }
-
-        s << "\n";
+        s << "   -" << particle->str() << "\n";
 
         affectedUnion.insert(particle);
 

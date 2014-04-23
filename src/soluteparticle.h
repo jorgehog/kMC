@@ -263,7 +263,7 @@ public:
     }
 
 
-    DiffusionReaction* diffusionReactions(const uint i, const uint j, const uint k)
+    DiffusionReaction* diffusionReactions(const uint i, const uint j, const uint k) const
     {
         return m_diffusionReactions[i][j][k];
     }

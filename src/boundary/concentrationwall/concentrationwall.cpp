@@ -45,6 +45,7 @@ void ConcentrationWall::update()
 
             if (currentSite->isActive())
             {
+                cout << "despawned particle " << *(currentSite->associatedParticle()) << endl;
                 solver()->despawnParticle(currentSite->associatedParticle());
                 ce++;
             }
@@ -74,6 +75,7 @@ void ConcentrationWall::update()
 
                 if (spawned)
                 {
+                    cout << "spawned particle " << *particle << endl;
                     ce++;
                 }
 
