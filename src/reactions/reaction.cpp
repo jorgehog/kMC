@@ -106,7 +106,7 @@ string Reaction::propertyString() const
     s << "Address: "       << unsetIf(m_address,    UNSET_ADDRESS)     << "  ";
     s << "Selected flag: " << unsetIf(m_updateFlag, UNSET_UPDATE_FLAG) << "  ";
 
-    s << "Allowed? " << !isAllowed() << "  ";
+    s << "Allowed? " <<  isAllowed() << "  ";
     s << "Vacant? "  << hasVacantStatus();
 
     return s.str();

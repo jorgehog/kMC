@@ -75,6 +75,8 @@ public:
      */
 
 
+    static double getCurrentSolvantVolume();
+
     static double getCurrentConcentration();
 
     static double getCurrentRelativeCrystalOccupancy();
@@ -288,7 +290,7 @@ public:
     const string str() const
     {
         stringstream s;
-        s << "SoluteParticle@(" << x() << ", " << y() << ", " << z() << ")";
+        s << "SoluteParticle" << m_ID << "@(" << x() << ", " << y() << ", " << z() << ")";
         return s.str();
     }
 

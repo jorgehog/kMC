@@ -189,6 +189,11 @@ void SoluteParticle::updateAffectedParticles()
 
 }
 
+double SoluteParticle::getCurrentSolvantVolume()
+{
+    return NX()*NY()*NZ() - nCrystals() - nSurfaces();
+}
+
 
 
 
@@ -262,7 +267,7 @@ const string SoluteParticle::info(int xr, int yr, int zr, string desc) const
 {
     stringstream s;
 
-    s << "SoluteParticle@";
+    s << "SoluteParticle" << m_ID << "@";
     s << Site::info(m_x, m_y, m_z, xr, yr, zr, desc);
 
     return s.str();
@@ -575,7 +580,7 @@ double SoluteParticle::getCurrentConcentration()
         return 0;
     }
 
-    return static_cast<double>(nSolutionParticles())/(NX()*NY()*NZ() - nCrystals() - nSurfaces());
+    return static_cast<double>(nSolutionParticles())/getCurrentSolvantVolume();
 }
 
 double SoluteParticle::getCurrentRelativeCrystalOccupancy()

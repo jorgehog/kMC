@@ -146,14 +146,16 @@ public:
     {
         stringstream s;
 
+        s << setw(2) << m_path[0] << "," << setw(2) << m_path[1] << "," << setw(2) << m_path[2];
+
         if (destinationSite() == NULL)
         {
-            s << setw(3*3 + 2) << "boundary";
+            s << " (b)";
         }
 
         else
         {
-            s << setw(3) << xD() << "," << setw(3) << yD() << "," << setw(3) << zD();
+            s << "    ";
         }
 
         return s.str();
