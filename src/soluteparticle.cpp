@@ -673,9 +673,9 @@ particleSet SoluteParticle::m_affectedParticles = particleSet([] (SoluteParticle
 particleSet SoluteParticle::m_affectedParticles;
 #endif
 
+uint SoluteParticle::ID_count = 0;
 uint SoluteParticle::refCounter = 0;
 
-uint SoluteParticle::ID_count = 0;
 
 ostream & operator << (ostream& os, const SoluteParticle& ss)
 {

@@ -9,8 +9,8 @@
 #include <sys/types.h>
 
 
-#define focusSuite "Misc"
-#define focusTest  "ConcentrationWall"
+//#define focusSuite "Misc"
+//#define focusTest  "KnownCase"
 
 
 #include "defines.h"
