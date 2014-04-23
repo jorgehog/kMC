@@ -452,6 +452,8 @@ private:
 
     const uint m_ID;
 
+    static uint ID_count;
+
     static uint refCounter;
 
     static KMCSolver* m_solver;

@@ -19,7 +19,7 @@ SoluteParticle::SoluteParticle() :
     m_z(UNSET_UINT),
     m_nNeighborsSum(0),
     m_energy(0),
-    m_ID(refCounter)
+    m_ID(ID_count++)
 {
 
     initializeDiffusionReactions();
@@ -58,9 +58,9 @@ void SoluteParticle::setSite(const uint x, const uint y, const uint z)
 
     KMCDebugger_AssertBool(!m_site->isActive(), "particle already present at site.", info());
 
-    KMCDebugger_Assert(x, <, NX());
-    KMCDebugger_Assert(y, <, NY());
-    KMCDebugger_Assert(z, <, NZ());
+    KMCDebugger_Assert(x, <, NX(), "mismatch in coordiantes. ", info());
+    KMCDebugger_Assert(y, <, NY(), "mismatch in coordiantes. ", info());
+    KMCDebugger_Assert(z, <, NZ(), "mismatch in coordiantes. ", info());
 
     trySite(x, y, z);
 
@@ -564,7 +564,10 @@ uint SoluteParticle::nNeighborsSum() const
 
 void SoluteParticle::clearAll()
 {
+    KMCDebugger_Assert(refCounter, ==, 0, "cannot clear static members with object alive.");
+
     clearAffectedParticles();
+    ID_count = 0;
 }
 
 void SoluteParticle::clearAffectedParticles()
@@ -672,6 +675,7 @@ particleSet SoluteParticle::m_affectedParticles;
 
 uint SoluteParticle::refCounter = 0;
 
+uint SoluteParticle::ID_count = 0;
 
 ostream & operator << (ostream& os, const SoluteParticle& ss)
 {
