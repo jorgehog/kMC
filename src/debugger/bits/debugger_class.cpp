@@ -440,6 +440,11 @@ void Debugger::popAffected(SoluteParticle *particle)
         return;
     }
 
+    if (currentReaction->reactant() == particle)
+    {
+        currentReaction = NULL;
+    }
+
     affectedUnion.erase(affectedUnion.find(particle));
 }
 

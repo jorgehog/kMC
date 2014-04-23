@@ -33,11 +33,12 @@ void ConcentrationWall::update()
     uint ce = 0;
 
     uint targetN = solver()->targetConcentration()*SoluteParticle::getCurrentSolvantVolume();
+    cout << targetN << "  " << SoluteParticle::nSolutionParticles() << " " << solver()->targetConcentration() << "  " << SoluteParticle::getCurrentSolvantVolume() << endl;
 
-    if (SoluteParticle::nParticles() > targetN)
+    if (SoluteParticle::nSolutionParticles() > targetN)
     {
 
-        while (SoluteParticle::nParticles() != targetN && c != boundarySize() && ce != m_maxEventsPrCycle)
+        while (SoluteParticle::nSolutionParticles() != targetN && c != boundarySize() && ce != m_maxEventsPrCycle)
         {
 
             getBoundarySite(c, x, y, z);
@@ -61,7 +62,7 @@ void ConcentrationWall::update()
 
         bool spawned;
 
-        while (SoluteParticle::nParticles() != targetN && ce != m_maxEventsPrCycle)
+        while (SoluteParticle::nSolutionParticles() != targetN && ce != m_maxEventsPrCycle)
         {
 
             spawned = false;
