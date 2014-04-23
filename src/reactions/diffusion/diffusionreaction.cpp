@@ -441,7 +441,7 @@ const string DiffusionReaction::info(int xr, int yr, int zr, string desc) const
 
     else
     {
-        s << destinationSite()->info(-m_path[0], -m_path[1], -m_path[2], "O");
+        s << Site::info(xD(), yD(), zD(), -m_path[0], -m_path[1], -m_path[2], "O");
     }
 
     s << "\nPath: " << m_path[0] << " " << m_path[1] << " " << m_path[2] << endl;

@@ -109,7 +109,7 @@ public:
     }
 
 
-    const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const;
+    static const string info(const uint x, const uint y, const uint z, int xr = 0, int yr = 0, int zr = 0, string desc = "X");
 
 
     static void distanceBetween(const uint x0, const uint y0, const uint z0, const uint x1, const uint y1, const uint z1, int &dx, int &dy, int &dz, bool absolutes = false);
@@ -206,17 +206,17 @@ public:
         return this == &other;
     }
 
-    const string str() const;
+    static const string str(const uint x, const uint y, const uint z);
 
-    const static uint & NX();
+    static const uint & NX();
 
-    const static uint & NY();
+    static const uint & NY();
 
-    const static uint & NZ();
+    static const uint & NZ();
 
-    const static uint &N(const uint i);
+    static const uint &N(const uint i);
 
-    const static uint & _refCount()
+    static const uint & _refCount()
     {
         return refCounter;
     }

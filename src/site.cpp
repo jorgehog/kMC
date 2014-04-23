@@ -184,21 +184,13 @@ Site *Site::neighborhood(const int x, const int y, const int z, const int xr, co
     return m_solver->getSite(xr + x, yr + y, zr + z);
 }
 
-const string Site::str() const
+const string Site::str(const uint x, const uint y, const uint z)
 
 {
     stringstream s;
 
-    s << "Site";
+    s << "Site@(" << setw(3) << x << "," << setw(3) << y << "," << setw(3) << z << ")";
 
-    if (isActive())
-    {
-        s << "[active: " << associatedParticle()->str() << "]";
-    }
-    else
-    {
-        s << "[deactive]";
-    }
 
     return s.str();
 }
@@ -442,18 +434,20 @@ void Site::finalizeBoundaries()
 }
 
 
-const string Site::info(int xr, int yr, int zr, string desc) const
+const string Site::info(const uint x, const uint y, const uint z, int xr, int yr, int zr, string desc)
 {
 
     stringstream s_full;
 
-    s_full << str();
+    s_full << str(x, y, z);
     s_full << "[" << NX() << " x " << NY() << " x " << NZ() << "]";
 
-    if (isActive())
+    Site *site = solver()->getSite(x, y, z);
+
+    if (site->isActive())
     {
 
-        const SoluteParticle *particle = associatedParticle();
+        const SoluteParticle *particle = site->associatedParticle();
 
         s_full << " * " << particle->particleStateName();
 
@@ -461,18 +455,13 @@ const string Site::info(int xr, int yr, int zr, string desc) const
 
         for (uint i = 0; i < Site::nNeighborsLimit(); ++i)
         {
-            s_full << particle->nNeighbors(i) << "\n";
+            s_full << particle->nNeighbors(i) << " ";
 
         }
 
-
     }
 
-    else
-    {
-        return s_full.str();
-    }
-
+    s_full << "\n";
 
     uint _min = ParticleStates::nStates;
 
@@ -488,10 +477,7 @@ const string Site::info(int xr, int yr, int zr, string desc) const
             for (const uint &k : m_neighborhoodIndices)
             {
 
-                currentSite = neighborhood_fromIndex(m_associatedParticle->x(),
-                                                     m_associatedParticle->y(),
-                                                     m_associatedParticle->z(),
-                                                     i, j, k);
+                currentSite = neighborhood_fromIndex(x, y, z, i, j, k);
 
                 //BLOCKED
                 if (currentSite == NULL)
@@ -500,7 +486,7 @@ const string Site::info(int xr, int yr, int zr, string desc) const
                 }
 
                 //THIS SITE
-                else if (currentSite == this)
+                else if (currentSite == site)
                 {
                     nN(i, j, k) = _min + 2;
                 }
@@ -584,7 +570,7 @@ const string Site::info(int xr, int yr, int zr, string desc) const
 
     numberSearchRepl(_min+0, ".");
     numberSearchRepl(_min+1, "#");
-    numberSearchRepl(_min+2, isActive() ? associatedParticle()->particleStateShortName() + "^" : "D");
+    numberSearchRepl(_min+2, site->isActive() ? site->associatedParticle()->particleStateShortName() + "^" : "D");
     numberSearchRepl(_min+3, desc);
 
     s_full << s;
@@ -756,9 +742,16 @@ ostream & operator << (ostream& os, const Site& ss)
         os << "NULL";
     }
 
+    else if (ss.isActive())
+    {
+        os << Site::str(ss.associatedParticle()->x(),
+                        ss.associatedParticle()->y(),
+                        ss.associatedParticle()->z());
+    }
+
     else
     {
-        os << ss.str();
+        os << "Deactive site.";
     }
 
     return os;

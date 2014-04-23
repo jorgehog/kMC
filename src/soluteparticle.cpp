@@ -56,7 +56,7 @@ SoluteParticle::~SoluteParticle()
 void SoluteParticle::setSite(const uint x, const uint y, const uint z)
 {    
 
-    KMCDebugger_AssertBool(!m_site->isActive(), "particle already present at site.", m_site->info());
+    KMCDebugger_AssertBool(!m_site->isActive(), "particle already present at site.", info());
 
     KMCDebugger_Assert(x, <, NX());
     KMCDebugger_Assert(y, <, NY());
@@ -117,7 +117,7 @@ void SoluteParticle::resetSite()
 
 void SoluteParticle::disableSite()
 {
-    KMCDebugger_AssertBool(m_site->isActive(), "particle not present at site.", m_site->info());
+    KMCDebugger_AssertBool(m_site->isActive(), "particle not present at site.", info());
     KMCDebugger_Assert(m_site->associatedParticle(), ==, this, "mismatch in site and particle.");
 
     KMCDebugger_MarkPre(particleStateName());
@@ -263,7 +263,7 @@ const string SoluteParticle::info(int xr, int yr, int zr, string desc) const
     stringstream s;
 
     s << "SoluteParticle@";
-    s << m_site->info(xr, yr, zr, desc);
+    s << Site::info(m_x, m_y, m_z, xr, yr, zr, desc);
 
     return s.str();
 
