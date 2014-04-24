@@ -116,7 +116,7 @@ void DiffusionReaction::setupPotential()
 
                 if (i == Site::nNeighborsLimit() && j == Site::nNeighborsLimit() && k == Site::nNeighborsLimit())
                 {
-                    m_potential(i, j, k) = 0;
+                    m_potential(i, j, k) = numeric_limits<double>::max();
                     continue;
                 }
 

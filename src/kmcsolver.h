@@ -27,6 +27,8 @@ namespace kMC
 
 const uint UNSET_UINT = std::numeric_limits<uint>::max();
 
+class DumpXYZ;
+
 class KMCSolver
 {
 public:
@@ -81,6 +83,9 @@ public:
     void initializeCrystal(const double relativeSeedSize);
 
     void initializeSolutionBath();
+
+    void initializeFromXYZ(string path, uint frame);
+
 
     void initializeParticles();
 
@@ -162,7 +167,13 @@ public:
 
     //Set functions
 
-    void setBoxSize(const uvec3 boxSize, bool check = true);
+    void setBoxSize(const uvec3 boxSize, bool check = true)
+    {
+        setBoxSize(boxSize(0), boxSize(1), boxSize(2), check);
+    }
+
+    void setBoxSize(const uint NX, const uint NY, const uint NZ, bool check = true);
+
 
     void setNumberOfCycles(const uint nCycles)
     {
@@ -225,6 +236,7 @@ public:
     void dumpXYZ(const uint n);
 
 
+
     double minRateThreshold()
     {
         return max((*std::min_element(m_allPossibleReactions.begin(),
@@ -284,6 +296,7 @@ private:
 
     static bool m_dumpXYZ;
 
+    DumpXYZ *xyzEvent;
 
     static uint refCounter;
 

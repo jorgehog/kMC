@@ -67,6 +67,7 @@ void Site::initializeBoundaries()
 
 void Site::updateBoundaries()
 {
+
     for (uint i = 0; i < 3; ++i) {
         for (uint j = 0; j < 2; ++j) {
             m_boundaries(i, j)->update();
