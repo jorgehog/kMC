@@ -113,7 +113,7 @@ private:
 
     static void deactivateAllSites();
 
-    static Site * getBoxCenter(const int dx = 0, const int dy = 0, const int dz = 0);
+    static Site * spawnBoxCenter(const int dx = 0, const int dy = 0, const int dz = 0);
 
     static void forceSpawnCenter(const int dx = 0, const int dy = 0, const int dz = 0);
 

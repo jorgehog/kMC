@@ -8,41 +8,29 @@ SnapShot::SnapShot(KMCSolver *solver)
     timeWhenTaken = time(NULL);
     seed = Seed::initialSeed;
 
-    siteBox.set_size(solver->NX(), solver->NY(), solver->NZ());
+    siteBox.zeros(solver->NX(), solver->NY(), solver->NZ());
 
-    Site* currentSite;
     DiffusionReaction *d_reaction;
-
-    for (uint i = 0; i < siteBox.n_rows; ++i)
+    solver->forEachParticleDo([this, &d_reaction] (SoluteParticle *particle)
     {
-        for (uint j = 0; j < siteBox.n_cols; ++j)
+        siteBox(particle->x(), particle->y(), particle->z()) = 1;
+
+        for (Reaction * reaction : particle->reactions())
         {
-            for (uint k = 0; k < siteBox.n_slices; ++k)
+            allRates.push_back(reaction->rate());
+            if (reaction->isType("DiffusionReaction"))
             {
-                currentSite = solver->getSite(i, j, k);
-                siteBox(i, j, k) = currentSite->isActive();
-
-                if (currentSite->isActive())
-                {
-                    for (Reaction * reaction : currentSite->associatedParticle()->reactions())
-                    {
-                        allRates.push_back(reaction->rate());
-                        if (reaction->isType("DiffusionReaction"))
-                        {
-                            d_reaction = (DiffusionReaction*)reaction;
-                            allreactions.push_back({d_reaction->x(),
-                                                    d_reaction->y(),
-                                                    d_reaction->z(),
-                                                    d_reaction->xD(),
-                                                    d_reaction->yD(),
-                                                    d_reaction->zD()});
-                        }
-                    }
-                }
-
+                d_reaction = (DiffusionReaction*)reaction;
+                allreactions.push_back({d_reaction->x(),
+                                        d_reaction->y(),
+                                        d_reaction->z(),
+                                        d_reaction->xD(),
+                                        d_reaction->yD(),
+                                        d_reaction->zD()});
             }
         }
-    }
+
+    });
 
 }
 

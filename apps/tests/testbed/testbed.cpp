@@ -13,7 +13,7 @@ void testBed::makeSolver()
 
     solver = new KMCSolver();
 
-    initSimpleSystemParameters(false);
+    initSimpleSystemParameters();
 
 }
 
@@ -42,9 +42,8 @@ void testBed::testTotalParticleStateCounters()
 
     uint C1 = 0;
 
-    solver->forEachSiteDo([&C1] (uint x, uint y, uint z, Site * currentSite)
+    solver->forEachSiteDo([&C1] (uint x, uint y, uint z)
     {
-        (void) currentSite;
 
         CHECK_EQUAL(C1, accu(SoluteParticle::totalParticlesVector()));
 
@@ -52,7 +51,7 @@ void testBed::testTotalParticleStateCounters()
         C1++;
     });
 
-    solver->forEachSiteDo([&C1] (uint x, uint y, uint z, Site * currentSite)
+    solver->forEachSiteDo([&C1] (uint x, uint y, uint z)
     {
         (void) x;
         (void) y;
@@ -60,7 +59,7 @@ void testBed::testTotalParticleStateCounters()
 
         C1--;
 
-        solver->despawnParticle(currentSite->associatedParticle());
+        solver->despawnParticle(solver->particle(x, y, z));
 
         CHECK_EQUAL(C1, accu(SoluteParticle::totalParticlesVector()));
 
@@ -70,9 +69,9 @@ void testBed::testTotalParticleStateCounters()
 
     forceNewBoxSize({10, 10, 10});
 
-    solver->forEachSiteDo([] (uint x, uint y, uint z, Site * site)
+    solver->forEachSiteDo([] (uint x, uint y, uint z)
     {
-        CHECK_EQUAL(false, site->isActive());
+        CHECK_EQUAL(NULL, solver->particle(x, y, z));
 
         if ((x%2 == 0) && (y%2 == 0) && (z%2 == 0))
         {
@@ -261,31 +260,21 @@ void testBed::testDiffusionSiteMatrixSetup()
 
                     currentDiffReaction = particle->diffusionReactions(i, j, k);
 
-                    const Site & site = *(currentDiffReaction->reactant()->site());
-                    const Site & dest  = *(currentDiffReaction->destinationSite());
+                    const SoluteParticle & curr = *(currentDiffReaction->reactant());
 
-                    CHECK_EQUAL(particle->site(), &site);
+                    CHECK_EQUAL(*particle, curr);
 
-                    Site::distanceBetween(site.associatedParticle()->x(),
-                                          site.associatedParticle()->y(),
-                                          site.associatedParticle()->z(),
-                                          site.associatedParticle()->x() + currentDiffReaction->path(0),
-                                          site.associatedParticle()->y() + currentDiffReaction->path(1),
-                                          site.associatedParticle()->z() + currentDiffReaction->path(2),
+                    Site::distanceBetween(curr.x(),
+                                          curr.y(),
+                                          curr.z(),
+                                          curr.x() + currentDiffReaction->path(0),
+                                          curr.y() + currentDiffReaction->path(1),
+                                          curr.z() + currentDiffReaction->path(2),
                                           _i, _j, _k);
-
-                    uint xt = Boundary::currentBoundaries(0)->transformCoordinate(particle->x() + _i);
-                    uint yt = Boundary::currentBoundaries(1)->transformCoordinate(particle->y() + _j);
-                    uint zt = Boundary::currentBoundaries(2)->transformCoordinate(particle->z() + _k);
 
                     CHECK_EQUAL(i, _i+1);
                     CHECK_EQUAL(j, _j+1);
                     CHECK_EQUAL(k, _k+1);
-
-                    const Site & dest2 = *(solver->getSite(xt, yt, zt));
-
-                    CHECK_EQUAL(dest, dest2);
-
 
                 }
             }
@@ -416,8 +405,6 @@ void testBed::testPropertyCalculations()
                                          {sx, sy + 1, sz + 1}
                                         };
 
-    Site *currentSite;
-
 
     for (auto xyz: crystalSites)
     {
@@ -433,10 +420,7 @@ void testBed::testPropertyCalculations()
             {
                 for (int k = -1; k <= 1; ++k)
                 {
-
-                    currentSite = solver->getSite(i + xyz[0], j + xyz[1], k + xyz[2]);
-
-                    if (!currentSite->isActive())
+                    if (solver->particle(i + xyz[0], j + xyz[1], k + xyz[2]) == NULL)
                     {
                         solver->forceSpawnParticle(i + xyz[0], j + xyz[1], k + xyz[2]);
                     }
@@ -840,52 +824,50 @@ void testBed::testAffectedParticles()
 
     deactivateAllSites();
 
-    Site *center = getBoxCenter();
-    forceSpawnCenter();
+    SoluteParticle *center = spawnBoxCenter();
 
-    CHECK_EQUAL(true, center->associatedParticle()->isAffected());
+    CHECK_EQUAL(true, center->isAffected());
     CHECK_EQUAL(1, SoluteParticle::affectedParticles().size());
 
     solver->getRateVariables();
 
-    CHECK_EQUAL(false, center->associatedParticle()->isAffected());
+    CHECK_EQUAL(false, center->isAffected());
     CHECK_EQUAL(0, SoluteParticle::affectedParticles().size());
 
-    Site *neighbor = getBoxCenter(1);
-    forceSpawnCenter(1);
+    SoluteParticle *neighbor = spawnBoxCenter(1);
 
-    CHECK_EQUAL(true, center->associatedParticle()->isAffected());
-    CHECK_EQUAL(true, neighbor->associatedParticle()->isAffected());
+    CHECK_EQUAL(true, center->isAffected());
+    CHECK_EQUAL(true, neighbor->isAffected());
     CHECK_EQUAL(2, SoluteParticle::affectedParticles().size());
 
     solver->getRateVariables();
 
-    CHECK_EQUAL(false, center->associatedParticle()->isAffected());
-    CHECK_EQUAL(false, neighbor->associatedParticle()->isAffected());
+    CHECK_EQUAL(false, center->isAffected());
+    CHECK_EQUAL(false, neighbor->isAffected());
     CHECK_EQUAL(0, SoluteParticle::affectedParticles().size());
 
-    center->associatedParticle()->markAsAffected();
+    center->markAsAffected();
 
-    CHECK_EQUAL(true, center->associatedParticle()->isAffected());
+    CHECK_EQUAL(true, center->isAffected());
     CHECK_EQUAL(1, SoluteParticle::affectedParticles().size());
 
-    center->associatedParticle()->markAsAffected();
-    center->associatedParticle()->markAsAffected();
-    center->associatedParticle()->markAsAffected();
-    center->associatedParticle()->markAsAffected();
-    center->associatedParticle()->markAsAffected();
+    center->markAsAffected();
+    center->markAsAffected();
+    center->markAsAffected();
+    center->markAsAffected();
+    center->markAsAffected();
 
-    CHECK_EQUAL(true, center->associatedParticle()->isAffected());
+    CHECK_EQUAL(true, center->isAffected());
     CHECK_EQUAL(1, SoluteParticle::affectedParticles().size());
 
-    for (Reaction *r : center->associatedParticle()->reactions())
+    for (Reaction *r : center->reactions())
     {
         r->forceUpdateFlag(Reaction::defaultUpdateFlag);
     }
 
     solver->getRateVariables();
 
-    CHECK_EQUAL(false, center->associatedParticle()->isAffected());
+    CHECK_EQUAL(false, center->isAffected());
     CHECK_EQUAL(0, SoluteParticle::affectedParticles().size());
 
 
@@ -949,23 +931,19 @@ void testBed::testEnergyAndNeighborSetup()
 
     uvec nn(Site::nNeighborsLimit());
 
+    SoluteParticle *otherParticle;
 
-    solver->forEachSiteDo([&] (uint x0, uint y0, uint z0, Site * currentSite)
+    solver->forEachParticleDo([&] (SoluteParticle *particle)
     {
-
-        if (!currentSite->isActive())
-        {
-            return;
-        }
 
         E = 0;
         C = 0;
         nn.zeros();
 
-        solver->forEachSiteDo([&] (uint x1, uint y1, uint z1, Site * otherSite)
+        solver->forEachSiteDo([&] (uint x1, uint y1, uint z1)
         {
 
-            Site::distanceBetween(x0, y0, z0, x1, y1, z1, dx, dy, dz);
+            Site::distanceBetween(particle->x(), particle->y(), particle->z(), x1, y1, z1, dx, dy, dz);
 
             ldx = abs(dx);
 
@@ -980,30 +958,29 @@ void testBed::testEnergyAndNeighborSetup()
                     if (ldz <= Site::nNeighborsLimit())
                     {
 
-                        if (currentSite != otherSite)
-                        {
-                            if (otherSite->isActive())
-                            {
-                                nn(Site::getLevel(ldx, ldy, ldz))++;
+                        otherParticle = solver->particle(x1, y1, z1);
 
-                                E += DiffusionReaction::potential(Site::nNeighborsLimit() + ldx,
-                                                                  Site::nNeighborsLimit() + ldy,
-                                                                  Site::nNeighborsLimit() + ldz);
-                            }
+                        if (otherParticle != particle && otherParticle != NULL)
+                        {
+                            nn(Site::getLevel(ldx, ldy, ldz))++;
+
+                            E += DiffusionReaction::potential(Site::nNeighborsLimit() + ldx,
+                                                              Site::nNeighborsLimit() + ldy,
+                                                              Site::nNeighborsLimit() + ldz);
 
                             C++;
                         }
 
-                        CHECK_EQUAL(otherSite, Site::neighborhood(x0, y0, z0, dx, dy, dz));
+                        CHECK_EQUAL(otherParticle, particle->neighborhood(dx, dy, dz));
 
-                        CHECK_EQUAL(currentSite, Site::neighborhood(x1, y1, z1, -dx, -dy, -dz));
+                        CHECK_EQUAL(particle, Site::neighborhood(x1, y1, z1, -dx, -dy, -dz));
                     }
                 }
             }
         });
 
         uint nNeighbors = 0;
-        Site::forEachNeighborDo(x0, y0, z0, [&nNeighbors] (Site * neighbor)
+        particle->forEachNeighborSiteDo([&nNeighbors] (SoluteParticle *neighbor)
         {
             (void) neighbor;
             nNeighbors++;
@@ -1013,10 +990,10 @@ void testBed::testEnergyAndNeighborSetup()
 
         for (uint K = 0; K < Site::nNeighborsLimit(); ++K)
         {
-            CHECK_EQUAL(nn(K), currentSite->associatedParticle()->nNeighbors(K));
+            CHECK_EQUAL(nn(K), particle->nNeighbors(K));
         }
 
-        CHECK_CLOSE(E, currentSite->associatedParticle()->energy(), 0.00001);
+        CHECK_CLOSE(E, particle->energy(), 0.00001);
 
     });
 
@@ -1039,9 +1016,9 @@ void testBed::testUpdateNeigbors()
 
     double accuBlockedE = 0;
 
-    solver->forEachSiteDo([&] (uint x0, uint y0, uint z0, Site * currentSite)
+    solver->forEachSiteDo([&] (uint x0, uint y0, uint z0)
     {
-        CHECK_EQUAL(true, currentSite->isActive());
+        CHECK_EQUAL(true, solver->particle(x0, y0, z0) != NULL);
 
         blockedE = 0;
         nBlocked.zeros();
@@ -1052,6 +1029,7 @@ void testBed::testUpdateNeigbors()
             {
                 for (uint nk = 0; nk < Site::neighborhoodLength(); ++nk)
                 {
+                    cout << "derp: check boundaries." << endl;
                     if (Site::neighborhood_fromIndex(x0, y0, z0, ni, nj, nk) == NULL)
                     {
                         nBlocked(Site::levelMatrix(ni, nj, nk))++;
@@ -1312,14 +1290,9 @@ void testBed::deactivateAllSites()
     });
 }
 
-Site *testBed::getBoxCenter(const int dx, const int dy, const int dz)
+SoluteParticle *testBed::spawnBoxCenter(const int dx, const int dy, const int dz)
 {
-    return solver->getSite(NX()/2 + dx, NY()/2 + dy, NZ()/2 + dz);
-}
-
-void testBed::forceSpawnCenter(const int dx, const int dy, const int dz)
-{
-    solver->forceSpawnParticle(NX()/2 + dx, NY()/2 + dy, NZ()/2 + dz);
+    return solver->forceSpawnParticle(NX()/2 + dx, NY()/2 + dy, NZ()/2 + dz);
 }
 
 void testBed::_reactionShufflerCheck(uint nReacs)
@@ -1700,7 +1673,7 @@ void testBed::testReactionVectorUpdate()
 
     double c;
 
-    Site * center = getBoxCenter();
+    Site * center = spawnBoxCenter();
 
     Reaction::setLinearRateScale(1000);
 
@@ -1763,7 +1736,7 @@ void testBed::testReactionVectorUpdate()
     }
 
     //activating a particle next to center particle. Should give 2 blocked reactions total.
-    Site *neighbor = getBoxCenter(1);
+    Site *neighbor = spawnBoxCenter(1);
     forceSpawnCenter(1);
 
     //spawning the neighbor should affect them both
@@ -1794,7 +1767,7 @@ void testBed::testReactionVectorUpdate()
 
 
     //creating a with 26 fresh reactions.
-    Site * distantCousin = getBoxCenter(0, 0, Site::nNeighborsLimit() + 1);
+    Site * distantCousin = spawnBoxCenter(0, 0, Site::nNeighborsLimit() + 1);
 
     SoluteParticle *p = new SoluteParticle();
     CHECK_EQUAL(true, solver->spawnParticle(p, NX()/2, NY()/2, NZ()/2 + Site::nNeighborsLimit() + 1, true));
@@ -1828,7 +1801,7 @@ void testBed::testReactionVectorUpdate()
 
     //activating a new particle independent of the others should now only induce 24 more spots,
     //since two are already vacant.
-    Site *distantCousin2 = getBoxCenter(0, 0, -(int)Site::nNeighborsLimit() - 1);
+    Site *distantCousin2 = spawnBoxCenter(0, 0, -(int)Site::nNeighborsLimit() - 1);
 
     SoluteParticle *p2 = new SoluteParticle();
     CHECK_EQUAL(true, solver->spawnParticle(p2, NX()/2, NY()/2, NZ()/2 - (int)Site::nNeighborsLimit() - 1, true));
@@ -1849,7 +1822,7 @@ void testBed::testReactionVectorUpdate()
 
     //deactivating the neighbor and the cousin should create two decoupled systems
     solver->despawnParticle(neighbor->associatedParticle());
-    solver->despawnParticle(getBoxCenter(-1)->associatedParticle());
+    solver->despawnParticle(spawnBoxCenter(-1)->associatedParticle());
 
     SoluteParticle::updateAffectedParticles();
 
@@ -2132,7 +2105,7 @@ void testBed::fill_rate_stuff(vector<double> & accuAllRates, vector<Reaction*> &
 
 void testBed::testStateChanges()
 {
-    Site * center = getBoxCenter();
+    Site * center = spawnBoxCenter();
 
     forceSpawnCenter();
 
@@ -2161,18 +2134,18 @@ void testBed::testStateChanges()
             {
                 if (i == j && j == k && k == 0)
                 {
-                    CHECK_EQUAL(ParticleStates::crystal, getBoxCenter(i, j, k)->associatedParticle()->particleState());
+                    CHECK_EQUAL(ParticleStates::crystal, spawnBoxCenter(i, j, k)->associatedParticle()->particleState());
                 }
 
                 else
                 {
-                    CHECK_EQUAL(ParticleStates::surface, getBoxCenter(i, j, k)->associatedParticle()->particleState());
+                    CHECK_EQUAL(ParticleStates::surface, spawnBoxCenter(i, j, k)->associatedParticle()->particleState());
                 }
             }
         }
     }
 
-    CHECK_EQUAL(ParticleStates::solvant, getBoxCenter(3, 0, 0)->associatedParticle()->particleState());
+    CHECK_EQUAL(ParticleStates::solvant, spawnBoxCenter(3, 0, 0)->associatedParticle()->particleState());
 
 }
 
@@ -2206,7 +2179,7 @@ void testBed::testNeighborlist()
         return nn;
     };
 
-    CHECK_EQUAL(0, NNSUMBF(getBoxCenter()));
+    CHECK_EQUAL(0, NNSUMBF(spawnBoxCenter()));
 
     uint c = 0;
     uvec nn(Site::nNeighborsLimit(), fill::zeros);
@@ -2224,7 +2197,7 @@ void testBed::testNeighborlist()
         c++;
         nn(level)++;
 
-        CHECK_EQUAL(c, NNSUMBF(getBoxCenter()));
+        CHECK_EQUAL(c, NNSUMBF(spawnBoxCenter()));
 
     });
 
@@ -2238,7 +2211,7 @@ void testBed::testNeighborlist()
         nn(level)--;
 
 
-        CHECK_EQUAL(c, NNSUMBF(getBoxCenter()));
+        CHECK_EQUAL(c, NNSUMBF(spawnBoxCenter()));
 
     });
 

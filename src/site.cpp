@@ -131,8 +131,6 @@ void Site::forEachNeighborDo_sendPath(uint x, uint y, uint z, function<void (Sol
                     continue;
                 }
 
-
-
                 applyFunction(neighbor, dx, dy, dz);
 
             }
