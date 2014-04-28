@@ -72,7 +72,7 @@ public:
     static void testInitialSiteSetup();
 
 
-    static void initSimpleSystemParameters(bool clean = true);
+    static void initSimpleSystemParameters();
 
     static void initBoundarySuite(const umat &boundaries);
 

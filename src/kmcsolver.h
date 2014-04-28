@@ -104,7 +104,7 @@ public:
     void initializeParticles();
 
 
-    void forEachSiteDo(function<void(uint, uint, uint, Site *)> applyFunction) const;
+    void forEachSiteDo(function<void(uint, uint, uint)> applyFunction) const;
 
     void forEachParticleDo(function<void(SoluteParticle *particle)> applyFunction) const;
 
@@ -114,16 +114,26 @@ public:
     uint getReactionChoice(double R);
 
 
-    Site* getSite(const int i, const int j, const int k) const
-    {
-        return sites[i + Site::nNeighborsLimit()][j+ Site::nNeighborsLimit()][k + Site::nNeighborsLimit()];
-    }
-
     const particleMap & particles() const
     {
         return m_particles;
     }
 
+    SoluteParticle *particle(const uint x, const uint y, const uint z) const
+    {
+        particleMap::const_iterator it = m_particles.find(_xyzToKey(x, y, z));
+
+        if (it == m_particles.end())
+        {
+            return NULL;
+        }
+
+        else
+        {
+            return it->second;
+        }
+
+    }
 
     SoluteParticle *particle(const uint n) const
     {
@@ -251,7 +261,7 @@ public:
 
     bool isEmptyAddress(const uint address) const;
 
-    bool isRegisteredParticle(SoluteParticle *particle) const;
+    bool isRegisteredParticle(const SoluteParticle *particle) const;
 
     bool isPossibleReaction(Reaction *reaction) const;
 
@@ -279,18 +289,11 @@ public:
     }
 
 
-    void initializeSites();
-
-    void clearSites();
-
-
 private:
 
     double m_targetConcentration;
 
     MainLattice *m_mainLattice;
-
-    Site**** sites;
 
 
     uint m_NX;
@@ -300,9 +303,11 @@ private:
     uvec3 m_N;
 
 
-    inline uint xyzToKey(const uint & x, const uint & y, const uint & z) const;
+    uint _particleToKey(const SoluteParticle *particle) const;
 
-    uint particleToKey(const SoluteParticle *particle) const;
+    inline uint _xyzToKey(const uint & x, const uint & y, const uint & z) const;
+
+    inline bool _isRegisterdKey(const uint key) const;
 
     particleMap m_particles;
 
@@ -336,9 +341,14 @@ private:
 
 };
 
-uint KMCSolver::xyzToKey(const uint &x, const uint &y, const uint &z) const
+uint KMCSolver::_xyzToKey(const uint &x, const uint &y, const uint &z) const
 {
     return x + y*m_NX + z*m_NY*m_NX;
+}
+
+bool KMCSolver::_isRegisterdKey(const uint key) const
+{
+     return m_particles.find(key) != m_particles.end();
 }
 
 

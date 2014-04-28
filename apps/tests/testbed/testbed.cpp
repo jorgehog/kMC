@@ -1231,29 +1231,20 @@ void testBed::initBoundaryTestParameters()
     solver->setRNGSeed(Seed::specific, baseSeed);
 
 
-    solver->clearSites();
-
-
     solver->setBoxSize({10, 10, 10}, false);
 
     Site::resetBoundariesTo(lastBoundaries);
 
     Site::resetNNeighborsLimitTo(3);
 
-
-    solver->initializeSites();
+    solver->initializeParticles();
 
     Site::initializeBoundaries();
 
 }
 
-void testBed::initSimpleSystemParameters(bool clean)
+void testBed::initSimpleSystemParameters()
 {
-
-    if (clean)
-    {
-        solver->clearSites();
-    }
 
     solver->setRNGSeed();
 
@@ -1284,7 +1275,7 @@ void testBed::initSimpleSystemParameters(bool clean)
     }
 
 
-    solver->initializeSites();
+    solver->initializeParticles();
 
     Site::initializeBoundaries();
 
@@ -1350,25 +1341,22 @@ void testBed::forceNewBoxSize(const uvec3 boxSize, bool check)
 {
     Site::finalizeBoundaries();
 
-    solver->clearSites();
     solver->setBoxSize(boxSize, check);
-    solver->initializeSites();
+    solver->initializeParticles();
 
     Site::initializeBoundaries();
 }
 
 void testBed::forceNewNNeighborLimit(const uint nNeighborlimit, bool check)
 {
-    solver->clearSites();
     Site::resetNNeighborsLimitTo(nNeighborlimit, check);
-    solver->initializeSites();
+    solver->initializeParticles();
 }
 
 void testBed::forceNewBoundaries(const umat &boundaryMatrix)
 {
-    solver->clearSites();
     Site::resetBoundariesTo(boundaryMatrix);
-    solver->initializeSites();
+    solver->initializeParticles();
 
     Site::initializeBoundaries();
 }
@@ -1587,13 +1575,11 @@ void testBed::testnNeighborsLimit()
     uvec3 boxSize = {10, 10, 10};
 
 
-    solver->clearSites();
-
     Site::resetBoundariesTo(Boundary::Periodic);
 
     solver->setBoxSize(boxSize, false);
 
-    solver->initializeSites();
+    solver->initializeParticles();
 
     Site::initializeBoundaries();
 
@@ -2192,15 +2178,13 @@ void testBed::testStateChanges()
 
 void testBed::testNeighborlist()
 {
-    solver->clearSites();
-
     Site::finalizeBoundaries();
 
     solver->setBoxSize({15, 15, 15});
 
     Site::resetNNeighborsLimitTo(5);
 
-    solver->initializeSites();
+    solver->initializeParticles();
 
     Site::initializeBoundaries();
 
@@ -2291,18 +2275,6 @@ void testBed::testInitialSiteSetup()
     uint xt, yt, zt;
 
     Site *site;
-
-
-
-    CHECK_EQUAL(NX()*NY()*NZ(), Site::_refCount());
-
-    solver->clearSites();
-
-    CHECK_EQUAL(0, Site::_refCount());
-
-    solver->initializeSites();
-
-    CHECK_EQUAL(NX()*NY()*NZ(), Site::_refCount());
 
     activateAllSites();
 

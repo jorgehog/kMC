@@ -59,7 +59,7 @@ public:
         return m_potential;
     }
 
-    Site *destinationSite() const;
+    SoluteParticle *destinationSite() const;
 
     const int &path(const int i) const
     {

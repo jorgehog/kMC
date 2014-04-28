@@ -26,7 +26,7 @@ void ConcentrationWall::update()
     KMCDebugger_Assert(m_maxEventsPrCycle, <=, boundarySize(), "Max events pr cycle cannot exceed the number of boundary sites.");
 
 
-    Site * currentSite;
+    SoluteParticle *currentParticle;
 
     uint x, y, z;
     uint c = 0;
@@ -42,11 +42,11 @@ void ConcentrationWall::update()
 
             getBoundarySite(c, x, y, z);
 
-            currentSite = solver()->getSite(x, y, z);
+            currentParticle = solver()->particle(x, y, z);
 
-            if (currentSite->isActive())
+            if (currentParticle != NULL)
             {
-                solver()->despawnParticle(currentSite->associatedParticle());
+                solver()->despawnParticle(currentParticle);
                 ce++;
             }
 
@@ -65,13 +65,13 @@ void ConcentrationWall::update()
 
             spawned = false;
 
-            SoluteParticle *particle = new SoluteParticle();
+            currentParticle = new SoluteParticle();
 
             while (c != boundarySize() && !spawned)
             {
 
                 getBoundarySite(c, x, y, z);
-                spawned = solver()->spawnParticle(particle, x, y, z, true);
+                spawned = solver()->spawnParticle(currentParticle, x, y, z, true);
 
                 if (spawned)
                 {
@@ -83,8 +83,7 @@ void ConcentrationWall::update()
 
             if (!spawned)
             {
-                particle->resetSite();
-                delete particle;
+                delete currentParticle;
                 break;
             }
 

@@ -40,40 +40,29 @@ SoluteParticle::~SoluteParticle()
 
     m_nNeighbors.clear();
 
-    m_site->desociate();
-
     refCounter--;
 
 }
 
 
-void SoluteParticle::setSite(const uint x, const uint y, const uint z)
+void SoluteParticle::setNewPosition(const uint x, const uint y, const uint z)
 {    
 
-    KMCDebugger_AssertBool(!m_site->isActive(), "particle already present at site.", info());
+    KMCDebugger_Assert(solver()->particle(x, y, z), ==, NULL, "particle already present at site.", info());
 
     KMCDebugger_Assert(x, <, NX(), "mismatch in coordiantes. ", info());
     KMCDebugger_Assert(y, <, NY(), "mismatch in coordiantes. ", info());
     KMCDebugger_Assert(z, <, NZ(), "mismatch in coordiantes. ", info());
 
-    trySite(x, y, z);
-
-    m_site->associateWith(this);
-
     m_solver->registerParticle(this);
-
 
     setupAllNeighbors();
 
     setNewParticleState(detectParticleState());
 
-    forEachNeighborSiteDo_sendIndices([this] (Site *neighbor, uint i, uint j, uint k)
+    forEachNeighborSiteDo_sendIndices([this] (SoluteParticle *neighbor, uint i, uint j, uint k)
     {
-        if (neighbor->isActive())
-        {
-            neighbor->associatedParticle()->addNeighbor(this, Site::levelMatrix(i, j, k));
-        }
-
+        neighbor->addNeighbor(this, i, j, k);
     });
 
 
@@ -86,53 +75,24 @@ void SoluteParticle::setSite(const uint x, const uint y, const uint z)
     });
 
 
-    KMCDebugger_Assert(m_site->associatedParticle(), ==, this, "mismatch in site and particle.");
-
     KMCDebugger_MarkPre("void");
     KMCDebugger_PushImplication(this, "enabled");
     KMCDebugger_MarkPartialStep("PARTICLE ACTIVATED");
 
 }
 
-void SoluteParticle::trySite(const uint x, const uint y, const uint z)
+void SoluteParticle::removeOldPosition()
 {
-    m_x = x;
-    m_y = y;
-    m_z = z;
-
-    KMCDebugger_AssertBool(!Boundary::isBlocked(m_x, m_y, m_z), "coordinates were not set properly.");
-
-    m_site = m_solver->getSite(x, y, z);
-}
-
-void SoluteParticle::resetSite()
-{
-    m_site = NULL;
-
-    m_x = UNSET_UINT;
-    m_y = UNSET_UINT;
-    m_z = UNSET_UINT;
-
-}
-
-void SoluteParticle::disableSite()
-{
-    KMCDebugger_AssertBool(m_site->isActive(), "particle not present at site.", info());
-    KMCDebugger_Assert(m_site->associatedParticle(), ==, this, "mismatch in site and particle.");
+    KMCDebugger_AssertBool(isActive(), "particle not present at site.", info());
 
     KMCDebugger_MarkPre(particleStateName());
     KMCDebugger_PushImplication(this, "disabled");
 
-    m_site->desociate();
-
     m_solver->removeParticle(this);
 
-    forEachNeighborSiteDo_sendIndices([this] (Site *neighbor, uint i, uint j, uint k)
+    forEachNeighborSiteDo_sendIndices([this] (SoluteParticle *neighbor, uint i, uint j, uint k)
     {
-        if (neighbor->isActive())
-        {
-            neighbor->associatedParticle()->removeNeighbor(this, Site::levelMatrix(i, j, k));
-        }
+        neighbor->removeNeighbor(this, i, j, k);
     });
 
 
@@ -147,12 +107,9 @@ void SoluteParticle::disableSite()
 
 }
 
-void SoluteParticle::changePosition(const uint x, const uint y, const uint z)
+bool SoluteParticle::isActive() const
 {
-    disableSite();
-
-    setSite(x, y, z);
-
+    return solver()->isRegisteredParticle(this);
 }
 
 void SoluteParticle::setMainSolver(KMCSolver *solver)
@@ -215,26 +172,25 @@ void SoluteParticle::setParticleState(int newState)
 
 
 //All reactions must be legal if site is allowed to spawn.
-bool SoluteParticle::isLegalToSpawn() const
+bool SoluteParticle::isLegalToSpawn(const uint x, const uint y, const uint z) const
 {
-
-    for (uint i = 0; i < 3; ++i)
+    for (int i = -1; i <= 1; ++i)
     {
-        for (uint j = 0; j < 3; ++j)
+        for (int j = -1; j <= 1; ++j)
         {
-            for (uint k = 0; k < 3; ++k)
+            for (int k = -1; k <= 1; ++k)
             {
-                if (i == j && j == k && k == 1)
+                if (i == j && j == k && k == 0)
                 {
                     continue;
                 }
 
-                else if (diffusionReactions(i, j, k)->destinationSite() == NULL)
+                else if (Site::neighborhood(x, y, z, i, j, k) == NULL)
                 {
                     continue;
                 }
 
-                else if (diffusionReactions(i, j, k)->destinationSite()->isActive())
+                else if (Site::neighborhood(x, y, z, i, j, k)->isActive())
                 {
                     return false;
                 }
@@ -333,51 +289,36 @@ void SoluteParticle::setupAllNeighbors()
 
     m_nNeighborsSum = 0;
 
-
-    double dE;
-
-    forEachNeighborSiteDo_sendIndices([&dE, this] (Site * neighbor, uint i, uint j, uint k)
+    forEachNeighborSiteDo_sendIndices([this] (SoluteParticle *neighbor, uint i, uint j, uint k)
     {
-        if (!neighbor->isActive())
-        {
-            return;
-        }
-
-        m_nNeighbors(Site::levelMatrix(i, j, k))++;
-
-        m_nNeighborsSum++;
-
-        dE = DiffusionReaction::potential(i,  j,  k);
-
-        m_energy += dE;
-
-        m_totalEnergy += dE;
-
+        this->addNeighbor(neighbor, i, j, k);
     });
 
 
 
 }
 
-void SoluteParticle::removeNeighbor(SoluteParticle *neighbor, uint level)
+void SoluteParticle::removeNeighbor(SoluteParticle *neighbor, uint i, uint j, uint k)
 {
-    _updateNeighborProps(-1, neighbor, level);
+    _updateNeighborProps(-1, neighbor, i, j, k);
 }
 
-void SoluteParticle::addNeighbor(SoluteParticle *neighbor, uint level)
+void SoluteParticle::addNeighbor(SoluteParticle *neighbor, uint i, uint j, uint k)
 {
-    _updateNeighborProps(+1, neighbor, level);
+    _updateNeighborProps(+1, neighbor, i, j, k);
 }
 
-void SoluteParticle::_updateNeighborProps(const int sign, const SoluteParticle * neighbor, const uint level)
+void SoluteParticle::_updateNeighborProps(const int sign, const SoluteParticle * neighbor, uint i, uint j, uint k)
 {
     KMCDebugger_MarkPre(neighbor->particleStateName());
+
+    const uint &level = Site::levelMatrix(i, j, k);
 
     m_nNeighbors(level) += sign;
 
     m_nNeighborsSum += sign;
 
-    double dE = sign*potentialBetween(neighbor);
+    double dE = sign*DiffusionReaction::potential(i, j, k);
 
     m_energy += dE;
 

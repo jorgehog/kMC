@@ -14,8 +14,7 @@
 using namespace kMC;
 
 
-Site::Site() :
-    m_associatedParticle(NULL)
+Site::Site()
 {
     refCounter++;
 }
@@ -98,9 +97,9 @@ uint Site::maxNeighbors()
 
 
 
-void Site::forEachNeighborDo(uint x, uint y, uint z, function<void (Site *)> applyFunction)
+void Site::forEachNeighborDo(uint x, uint y, uint z, function<void (SoluteParticle *)> applyFunction)
 {
-    forEachNeighborDo_sendPath(x, y, z, [&applyFunction] (Site *site, int dx, int dy, int dz)
+    forEachNeighborDo_sendPath(x, y, z, [&applyFunction] (SoluteParticle *site, int dx, int dy, int dz)
     {
         (void)dx;
         (void)dy;
@@ -109,10 +108,10 @@ void Site::forEachNeighborDo(uint x, uint y, uint z, function<void (Site *)> app
     });
 }
 
-void Site::forEachNeighborDo_sendPath(uint x, uint y, uint z, function<void (Site *, int, int, int)> applyFunction)
+void Site::forEachNeighborDo_sendPath(uint x, uint y, uint z, function<void (SoluteParticle *, int, int, int)> applyFunction)
 {
 
-    Site *neighbor;
+    SoluteParticle *neighbor;
 
     for (const int &dx : m_originTransformVector)
     {
@@ -120,6 +119,11 @@ void Site::forEachNeighborDo_sendPath(uint x, uint y, uint z, function<void (Sit
         {
             for (const int &dz : m_originTransformVector)
             {
+                if (dx == dy && dy == dz && dz == 0)
+                {
+                    continue;
+                }
+
                 neighbor = neighborhood(x, y, z, dx, dy, dz);
 
                 if (neighbor == NULL)
@@ -127,10 +131,7 @@ void Site::forEachNeighborDo_sendPath(uint x, uint y, uint z, function<void (Sit
                     continue;
                 }
 
-                else if (dx == dy && dy == dz && dz == 0)
-                {
-                    continue;
-                }
+
 
                 applyFunction(neighbor, dx, dy, dz);
 
@@ -139,10 +140,10 @@ void Site::forEachNeighborDo_sendPath(uint x, uint y, uint z, function<void (Sit
     }
 }
 
-void Site::forEachNeighborDo_sendIndices(uint x, uint y, uint z, function<void (Site *, uint, uint, uint)> applyFunction)
+void Site::forEachNeighborDo_sendIndices(uint x, uint y, uint z, function<void (SoluteParticle *, uint, uint, uint)> applyFunction)
 {
 
-    Site * neighbor;
+    SoluteParticle* neighbor;
 
     for (const uint &i : m_neighborhoodIndices)
     {
@@ -151,14 +152,14 @@ void Site::forEachNeighborDo_sendIndices(uint x, uint y, uint z, function<void (
             for (const uint &k : m_neighborhoodIndices)
             {
 
-                neighbor = neighborhood_fromIndex(x, y, z, i, j, k);
-
-                if (neighbor == NULL)
+                if (i == j && j == k && k == m_nNeighborsLimit)
                 {
                     continue;
                 }
 
-                else if (i == j && j == k && k == m_nNeighborsLimit)
+                neighbor = neighborhood_fromIndex(x, y, z, i, j, k);
+
+                if (neighbor == NULL)
                 {
                     continue;
                 }
@@ -172,7 +173,7 @@ void Site::forEachNeighborDo_sendIndices(uint x, uint y, uint z, function<void (
     }
 }
 
-Site *Site::neighborhood(const int x, const int y, const int z, const int xr, const int yr, const int zr)
+SoluteParticle *Site::neighborhood(const int x, const int y, const int z, const int xr, const int yr, const int zr)
 {
     KMCDebugger_Assert(x, >=, 0);
     KMCDebugger_Assert(y, >=, 0);
@@ -182,7 +183,9 @@ Site *Site::neighborhood(const int x, const int y, const int z, const int xr, co
     KMCDebugger_Assert(y, <, (int)NY());
     KMCDebugger_Assert(z, <, (int)NZ());
 
-    return m_solver->getSite(xr + x, yr + y, zr + z);
+    cout << "derp: fix blocked boundaries and put this in soluteparticle" << endl;
+
+    return m_solver->particle(xr + x, yr + y, zr + z);
 }
 
 const string Site::str(const uint x, const uint y, const uint z)
@@ -232,7 +235,7 @@ uint Site::maxDistanceBetween(const uint x0, const uint y0, const uint z0, const
 bool Site::hasNeighboring(const uint x, const uint y, const uint z, const int state)
 {
 
-    Site * nextNeighbor;
+    SoluteParticle *nextNeighbor;
 
     for (int i = -1; i <= 1; ++i)
     {
@@ -240,6 +243,10 @@ bool Site::hasNeighboring(const uint x, const uint y, const uint z, const int st
         {
             for (int k = -1; k <= 1; ++k)
             {
+                if (i == j && j == k && k == 0)
+                {
+                    continue;
+                }
 
                 nextNeighbor = neighborhood(x, y, z, i, j, k);
 
@@ -248,17 +255,9 @@ bool Site::hasNeighboring(const uint x, const uint y, const uint z, const int st
                     continue;
                 }
 
-                else if (i == j && j == k && k == 0)
+                if (nextNeighbor->particleState() == state)
                 {
-                    continue;
-                }
-
-                else if (nextNeighbor->isActive())
-                {
-                    if (nextNeighbor->associatedParticle()->particleState() == state)
-                    {
-                        return true;
-                    }
+                    return true;
                 }
 
             }
@@ -272,7 +271,7 @@ bool Site::hasNeighboring(const uint x, const uint y, const uint z, const int st
 uint Site::countNeighboring(const uint x, const uint y, const uint z, const int state)
 {
 
-    Site * nextNeighbor;
+    SoluteParticle *nextNeighbor;
 
     uint count = 0;
 
@@ -294,13 +293,12 @@ uint Site::countNeighboring(const uint x, const uint y, const uint z, const int 
                     continue;
                 }
 
-                else if (nextNeighbor->isActive())
+
+                if (nextNeighbor->particleState() == state)
                 {
-                    if (nextNeighbor->associatedParticle()->particleState() == state)
-                    {
-                        count++;
-                    }
+                    count++;
                 }
+
 
             }
         }
@@ -443,12 +441,10 @@ const string Site::info(const uint x, const uint y, const uint z, int xr, int yr
     s_full << str(x, y, z);
     s_full << "[" << NX() << " x " << NY() << " x " << NZ() << "]";
 
-    Site *site = solver()->getSite(x, y, z);
+    SoluteParticle *particle = solver()->particle(x, y, z);
 
-    if (site->isActive())
+    if (particle != NULL)
     {
-
-        const SoluteParticle *particle = site->associatedParticle();
 
         s_full << " * " << particle->particleStateName();
 
@@ -469,7 +465,7 @@ const string Site::info(const uint x, const uint y, const uint z, int xr, int yr
     ucube nN;
     nN.copy_size(m_levelMatrix);
 
-    Site * currentSite;
+    SoluteParticle *currentParticle;
 
     for (const uint &i : m_neighborhoodIndices)
     {
@@ -477,36 +473,36 @@ const string Site::info(const uint x, const uint y, const uint z, int xr, int yr
         {
             for (const uint &k : m_neighborhoodIndices)
             {
-
-                currentSite = neighborhood_fromIndex(x, y, z, i, j, k);
-
-                //BLOCKED
-                if (currentSite == NULL)
-                {
-                    nN(i, j, k) = _min + 1;
-                }
-
-                //THIS SITE
-                else if (currentSite == site)
-                {
-                    nN(i, j, k) = _min + 2;
-                }
-
                 //MARKED SITE
-                else if ((i == Site::nNeighborsLimit() + xr) && (j == Site::nNeighborsLimit() + yr) && (k == Site::nNeighborsLimit() + zr))
+                if ((i == Site::nNeighborsLimit() + xr) && (j == Site::nNeighborsLimit() + yr) && (k == Site::nNeighborsLimit() + zr))
                 {
                     nN(i, j, k) = _min + 3;
                 }
 
-                //ACTIVE PARTICLE
-                else if (currentSite->isActive())
-                {
-                    nN(i, j, k) = currentSite->associatedParticle()->particleState();
-                }
-
                 else
                 {
-                    nN(i, j, k) = _min;
+
+                    currentParticle = neighborhood_fromIndex(x, y, z, i, j, k);
+
+                    //BLOCKED
+                    if (currentParticle == NULL)
+                    {
+                        cout << "need explicit check for blocked." << endl;
+                        nN(i, j, k) = _min;
+                        nN(i, j, k) = _min + 1;
+                    }
+
+                    //THIS SITE
+                    else if (currentParticle == particle)
+                    {
+                        nN(i, j, k) = _min + 2;
+                    }
+
+                    //ACTIVE PARTICLE
+                    else
+                    {
+                        nN(i, j, k) = currentParticle->particleState();
+                    }
                 }
 
             }
@@ -571,7 +567,7 @@ const string Site::info(const uint x, const uint y, const uint z, int xr, int yr
 
     numberSearchRepl(_min+0, ".");
     numberSearchRepl(_min+1, "#");
-    numberSearchRepl(_min+2, site->isActive() ? site->associatedParticle()->particleStateShortName() + "^" : "D");
+    numberSearchRepl(_min+2, particle->isActive() ? particle->particleStateShortName() + "^" : "D");
     numberSearchRepl(_min+3, desc);
 
     s_full << s;
@@ -733,28 +729,4 @@ umat Site::m_boundaryTypes;
 
 uint Site::refCounter = 0;
 
-
-
-
-ostream & operator << (ostream& os, const Site& ss)
-{
-    if (&ss == NULL)
-    {
-        os << "NULL";
-    }
-
-    else if (ss.isActive())
-    {
-        os << Site::str(ss.associatedParticle()->x(),
-                        ss.associatedParticle()->y(),
-                        ss.associatedParticle()->z());
-    }
-
-    else
-    {
-        os << "Deactive site.";
-    }
-
-    return os;
-}
 

@@ -210,7 +210,7 @@ void DiffusionReaction::setupPotential()
 
 }
 
-Site *DiffusionReaction::destinationSite() const
+SoluteParticle *DiffusionReaction::destinationSite() const
 {
     return Site::neighborhood(x(), y(), z(), m_path[0], m_path[1], m_path[2]);
 }
@@ -229,8 +229,6 @@ void DiffusionReaction::setDirectUpdateFlags(const SoluteParticle *changedReacta
 
     else
     {
-
-        //        r_maxDistance = site()->maxDistanceTo(changedReactant->site());
 
         if (level == 0)
         {
@@ -268,7 +266,7 @@ double DiffusionReaction::getSaddleEnergy()
         return 0;
     }
 
-    Site * targetSite;
+    SoluteParticle *targetSite;
 
     double Esp = 0;
 
@@ -299,11 +297,6 @@ double DiffusionReaction::getSaddleEnergy()
                     continue;
                 }
 
-                else if (!targetSite->isActive())
-                {
-                    continue;
-                }
-
                 Esp += saddlePot(xn - myIntersectionPoints(0, 0),
                                  yn - myIntersectionPoints(1, 0),
                                  zn - myIntersectionPoints(2, 0));
@@ -312,7 +305,7 @@ double DiffusionReaction::getSaddleEnergy()
                                              yn - myIntersectionPoints(1, 0),
                                              zn - myIntersectionPoints(2, 0)),
                                    ==,
-                                   getSaddleEnergyContributionFrom(targetSite->associatedParticle()),
+                                   getSaddleEnergyContributionFrom(targetSite),
                                    "Mismatch in saddle energy contribution.",
                                    getFinalizingDebugMessage());
             }

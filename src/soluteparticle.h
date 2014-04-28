@@ -36,20 +36,19 @@ public:
 
     ~SoluteParticle();
 
-    void setSite(const uint x, const uint y, const uint z);
 
-    void trySite(const uint x, const uint y, const uint z);
 
-    void resetSite();
+    void setNewPosition(const uint x, const uint y, const uint z);
 
-    void disableSite();
+    void removeOldPosition();
 
-    void changePosition(const uint x, const uint y, const uint z);
-
-    const Site *site() const
+    void changePosition(const uint x, const uint y, const uint z)
     {
-        return m_site;
+        removeOldPosition();
+        setNewPosition(x, y, z);
     }
+
+    bool isActive() const;
 
     static void loadConfig(const Setting & setting);
 
@@ -294,7 +293,7 @@ public:
 
     void setParticleState(int newState);
 
-    bool isLegalToSpawn() const;
+    bool isLegalToSpawn(const uint x, const uint y, const uint z) const;
 
     bool qualifiesAsCrystal() const
     {
@@ -324,11 +323,11 @@ public:
 
     void setupAllNeighbors();
 
-    void removeNeighbor(SoluteParticle *neighbor, uint level);
+    void removeNeighbor(SoluteParticle *neighbor, uint i, uint j, uint k);
 
-    void addNeighbor(SoluteParticle *neighbor, uint level);
+    void addNeighbor(SoluteParticle *neighbor, uint i, uint j, uint k);
 
-    void _updateNeighborProps(const int sign, const SoluteParticle *neighbor, const uint level);
+    void _updateNeighborProps(const int sign, const SoluteParticle *neighbor, uint i, uint j, uint k);
 
 
     void distanceTo(const SoluteParticle *other, int &dx, int &dy, int &dz, bool absolutes = false) const;
@@ -353,22 +352,22 @@ public:
     void forEachActiveReactionDo_sendIndex(function<void (Reaction*, uint)> applyFunction) const;
 
 
-    void forEachNeighborSiteDo(function<void (Site *)> applyFunction)
+    void forEachNeighborSiteDo(function<void (SoluteParticle *)> applyFunction)
     {
         Site::forEachNeighborDo(m_x, m_y, m_z, applyFunction);
     }
 
-    void forEachNeighborSiteDo(function<void (Site *)> applyFunction) const
+    void forEachNeighborSiteDo(function<void (SoluteParticle *)> applyFunction) const
     {
         Site::forEachNeighborDo(m_x, m_y, m_z, applyFunction);
     }
 
-    void forEachNeighborSiteDo_sendPath(function<void (Site *, int, int, int)> applyFunction)
+    void forEachNeighborSiteDo_sendPath(function<void (SoluteParticle *, int, int, int)> applyFunction)
     {
         Site::forEachNeighborDo_sendPath(m_x, m_y, m_z, applyFunction);
     }
 
-    void forEachNeighborSiteDo_sendIndices(function<void (Site *, uint, uint, uint)> applyFunction)
+    void forEachNeighborSiteDo_sendIndices(function<void (SoluteParticle *, uint, uint, uint)> applyFunction)
     {
         Site::forEachNeighborDo_sendIndices(m_x, m_y, m_z, applyFunction);
     }
@@ -397,9 +396,6 @@ private:
     vector<Reaction*> m_reactions;
 
     DiffusionReaction* m_diffusionReactions[3][3][3];
-
-
-    Site *m_site;
 
 
     uint m_x;

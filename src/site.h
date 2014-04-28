@@ -103,12 +103,6 @@ public:
     static uint countNeighboring(const uint x, const uint y, const uint z, const int state);
 
 
-    SoluteParticle* associatedParticle() const
-    {
-        return m_associatedParticle;
-    }
-
-
     static const string info(const uint x, const uint y, const uint z, int xr = 0, int yr = 0, int zr = 0, string desc = "X");
 
 
@@ -116,11 +110,11 @@ public:
 
     static uint maxDistanceBetween(const uint x0, const uint y0, const uint z0, const uint x1, const uint y1, const uint z1);
 
-    static void forEachNeighborDo(uint x, uint y, uint z, function<void (Site *)> applyFunction);
+    static void forEachNeighborDo(uint x, uint y, uint z, function<void (SoluteParticle *)> applyFunction);
 
-    static void forEachNeighborDo_sendPath(uint x, uint y, uint z, function<void (Site *, int, int, int)> applyFunction);
+    static void forEachNeighborDo_sendPath(uint x, uint y, uint z, function<void (SoluteParticle *, int, int, int)> applyFunction);
 
-    static void forEachNeighborDo_sendIndices(uint x, uint y, uint z, function<void (Site *, uint, uint, uint)> applyFunction);
+    static void forEachNeighborDo_sendIndices(uint x, uint y, uint z, function<void (SoluteParticle *, uint, uint, uint)> applyFunction);
 
 
 
@@ -178,25 +172,11 @@ public:
         return m_boundaries;
     }
 
-    void associateWith(SoluteParticle *particle)
-    {
-        m_associatedParticle = particle;
-    }
+    static SoluteParticle *neighborhood(const int x, const int y, const int z, const int xr, const int yr, const int zr);
 
-    void desociate()
+    static SoluteParticle *neighborhood_fromIndex(const int x, const int y, const int z, const uint xr, const uint yr, const uint zr)
     {
-        m_associatedParticle = NULL;
-    }
-
-    bool isActive() const
-    {
-        return m_associatedParticle != NULL;
-    }
-
-    static Site *neighborhood(const int x, const int y, const int z, const int xr, const int yr, const int zr);
-
-    static Site *neighborhood_fromIndex(const int x, const int y, const int z, const uint xr, const uint yr, const uint zr)
-    {
+        cout << "derp inherited from neighborhood" << endl;
         return neighborhood(x, y, z, m_originTransformVector(xr), m_originTransformVector(yr), m_originTransformVector(zr));
     }
 
@@ -244,13 +224,8 @@ private:
     static KMCSolver* m_solver;
 
 
-    SoluteParticle *m_associatedParticle;
-
-
     static uint refCounter;
 
 };
 
 }
-
-ostream& operator<<(ostream& os, const kMC::Site& ss);
