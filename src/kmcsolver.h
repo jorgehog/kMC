@@ -127,7 +127,11 @@ public:
 
     SoluteParticle *particle(const uint n) const
     {
-        return m_particles.at(n);
+        particleMap::const_iterator it = m_particles.begin();
+
+        std::advance(it, n);
+
+        return it->second;
     }
 
     const uint &NX () const
@@ -220,6 +224,10 @@ public:
         throw std::runtime_error(s);
     }
 
+
+    void registerParticle(SoluteParticle *particle);
+
+    void removeParticle(SoluteParticle *particle);
 
     void clearParticles();
 
@@ -330,7 +338,7 @@ private:
 
 uint KMCSolver::xyzToKey(const uint &x, const uint &y, const uint &z) const
 {
-    return x*m_NX + y*m_NY + z*m_NZ;
+    return x + y*m_NX + z*m_NY*m_NX;
 }
 
 

@@ -117,6 +117,7 @@ public:
         stringstream OP_B, assertMessage, assertCore;
         string OP_B_repl, A_repl;
 
+        cout.flush();
 
         OP_B  << " " << OP << " " << B;
 

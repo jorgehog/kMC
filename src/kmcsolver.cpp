@@ -711,8 +711,6 @@ bool KMCSolver::spawnParticle(SoluteParticle *particle, const uint x, const uint
 
     KMCDebugger_AssertBool(!checkIfLegal || particle->nNeighbors() == 0);
 
-    m_particles[xyzToKey(x, y, z)] = particle;
-
     return true;
 
 }
@@ -736,12 +734,11 @@ void KMCSolver::despawnParticle(SoluteParticle *particle)
 
     KMCDebugger_AssertBool(isRegisteredParticle(particle));
 
-    m_particles.erase(particleToKey(particle));
-
-    KMCDebugger_AssertBool(!isRegisteredParticle(particle));
+    particle->disableSite();
 
     delete particle;
 
+    KMCDebugger_AssertBool(!isRegisteredParticle(particle));
 }
 
 
@@ -939,13 +936,13 @@ void KMCSolver::initializeFromXYZ(string path, uint frame)
 
 #ifndef KMC_NO_DEBUG
     uint i = 0;
-    for (SoluteParticle *p : m_particles)
+    forEachParticleDo([&] (SoluteParticle *p)
     {
         KMCDebugger_AssertEqual(t.at(i), p->particleStateShortName());
         KMCDebugger_AssertEqual(p->nNeighborsSum(), nn.at(i));
         KMCDebugger_AssertClose(p->energy(), e.at(i), DiffusionReaction::potentialBox().min());
         ++i;
-    }
+    });
 #endif
 
     if (m_dumpXYZ)
@@ -1090,6 +1087,16 @@ void KMCSolver::setRNGSeed(uint seedState, int defaultSeed)
 
 }
 
+void KMCSolver::registerParticle(SoluteParticle *particle)
+{
+    m_particles[particleToKey(particle)] = particle;
+}
+
+void KMCSolver::removeParticle(SoluteParticle *particle)
+{
+    m_particles.erase(particleToKey(particle));
+}
+
 void KMCSolver::clearParticles()
 {
 
@@ -1098,16 +1105,11 @@ void KMCSolver::clearParticles()
         delete particle;
     });
 
-    SoluteParticle::clearAll();
-
     m_particles.clear();
 
-    KMCDebugger_Assert(accu(SoluteParticle::totalParticlesVector()), ==, 0);
-    KMCDebugger_Assert(SoluteParticle::nParticles(), ==, 0);
-    KMCDebugger_Assert(SoluteParticle::affectedParticles().size(), ==, 0);
-    KMCDebugger_AssertClose(SoluteParticle::totalEnergy(), 0, 1E-5);
+    KMCDebugger_Assert(m_particles.size(), ==, 0);
 
-    SoluteParticle::setZeroTotalEnergy();
+    SoluteParticle::clearAll();
 
     m_allPossibleReactions.clear();
 

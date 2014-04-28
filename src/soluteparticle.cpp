@@ -36,15 +36,11 @@ SoluteParticle::~SoluteParticle()
 
     KMCDebugger_Assert(refCounter, !=, 0);
 
-    if (m_site != NULL)
-    {
-        disableSite();
-    }
-
     clearAllReactions();
 
     m_nNeighbors.clear();
 
+    m_site->desociate();
 
     refCounter--;
 
@@ -63,6 +59,8 @@ void SoluteParticle::setSite(const uint x, const uint y, const uint z)
     trySite(x, y, z);
 
     m_site->associateWith(this);
+
+    m_solver->registerParticle(this);
 
 
     setupAllNeighbors();
@@ -126,6 +124,8 @@ void SoluteParticle::disableSite()
     KMCDebugger_PushImplication(this, "disabled");
 
     m_site->desociate();
+
+    m_solver->removeParticle(this);
 
     forEachNeighborSiteDo_sendIndices([this] (Site *neighbor, uint i, uint j, uint k)
     {
@@ -505,9 +505,8 @@ uint SoluteParticle::maxDistanceTo(const SoluteParticle *other) const
 
 void SoluteParticle::setZeroTotalEnergy()
 {
+    KMCDebugger_Assert(SoluteParticle::nParticles(), ==, 0);
     m_totalEnergy = 0;
-
-    KMCDebugger_Assert(Site::solver()->particles().size(), ==, 0);
 }
 
 uint SoluteParticle::nNeighborsSum() const
@@ -520,7 +519,12 @@ void SoluteParticle::clearAll()
 {
     KMCDebugger_Assert(refCounter, ==, 0, "cannot clear static members with object alive.");
 
+    m_totalParticles.zeros();
+
+    setZeroTotalEnergy();
+
     clearAffectedParticles();
+
     ID_count = 0;
 }
 

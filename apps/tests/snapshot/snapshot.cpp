@@ -11,6 +11,7 @@ SnapShot::SnapShot(KMCSolver *solver)
     siteBox.set_size(solver->NX(), solver->NY(), solver->NZ());
 
     Site* currentSite;
+    DiffusionReaction *d_reaction;
 
     for (uint i = 0; i < siteBox.n_rows; ++i)
     {
@@ -23,13 +24,19 @@ SnapShot::SnapShot(KMCSolver *solver)
 
                 if (currentSite->isActive())
                 {
-                    for (Reaction * r : currentSite->associatedParticle()->reactions())
+                    for (Reaction * reaction : currentSite->associatedParticle()->reactions())
                     {
-                        allRates.push_back(r->rate());
-                        allreactions.push_back({r->x(), r->y(), r->z(),
-                                                ((DiffusionReaction*)r)->xD(),
-                                                ((DiffusionReaction*)r)->yD(),
-                                                ((DiffusionReaction*)r)->zD()});
+                        allRates.push_back(reaction->rate());
+                        if (reaction->isType("DiffusionReaction"))
+                        {
+                            d_reaction = (DiffusionReaction*)reaction;
+                            allreactions.push_back({d_reaction->x(),
+                                                    d_reaction->y(),
+                                                    d_reaction->z(),
+                                                    d_reaction->xD(),
+                                                    d_reaction->yD(),
+                                                    d_reaction->zD()});
+                        }
                     }
                 }
 

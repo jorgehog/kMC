@@ -711,6 +711,8 @@ void testBed::testReactionChoise()
 
     solver->getRateVariables();
 
+    SoluteParticle *particle;
+
     while(n != N)
     {
 
@@ -731,12 +733,28 @@ void testBed::testReactionChoise()
 
             bool notSet = true;
 
-            solver->forEachParticleDo([&] (SoluteParticle *particle)
+            for (uint ID = 0; ID < SoluteParticle::nParticles(); ++ID)
             {
                 if (!notSet)
                 {
-                    return;
+                    break;
                 }
+
+
+
+                particle = NULL;
+
+                solver->forEachParticleDo([&] (SoluteParticle *unordered_particle)
+                {
+                    if (unordered_particle->ID() == ID)
+                    {
+                        particle = unordered_particle;
+                    }
+                });
+
+                CHECK_EQUAL(false, particle == NULL);
+
+
 
                 notSet = true;
 
@@ -770,8 +788,7 @@ void testBed::testReactionChoise()
 
                 });
 
-            });
-
+            }
 
             CHECK_EQUAL(solver->allPossibleReactions().at(choice), reaction);
             CHECK_EQUAL(choice, count);
