@@ -43,8 +43,6 @@ SoluteParticle::~SoluteParticle()
 
     clearAllReactions();
 
-    m_neighboringParticles.clear();
-
     m_nNeighbors.clear();
 
 
@@ -71,9 +69,13 @@ void SoluteParticle::setSite(const uint x, const uint y, const uint z)
 
     setNewParticleState(detectParticleState());
 
-    forEachNeighborDo([this] (SoluteParticle *neighbor, const uint level)
+    forEachNeighborSiteDo_sendIndices([this] (Site *neighbor, uint i, uint j, uint k)
     {
-        neighbor->addNeighbor(this, level);
+        if (neighbor->isActive())
+        {
+            neighbor->associatedParticle()->addNeighbor(this, Site::levelMatrix(i, j, k));
+        }
+
     });
 
 
@@ -125,9 +127,12 @@ void SoluteParticle::disableSite()
 
     m_site->desociate();
 
-    forEachNeighborDo([this] (SoluteParticle *neighbor, const uint level)
+    forEachNeighborSiteDo_sendIndices([this] (Site *neighbor, uint i, uint j, uint k)
     {
-        neighbor->removeNeighbor(this, level);
+        if (neighbor->isActive())
+        {
+            neighbor->associatedParticle()->removeNeighbor(this, Site::levelMatrix(i, j, k));
+        }
     });
 
 
@@ -242,13 +247,6 @@ bool SoluteParticle::isLegalToSpawn() const
 }
 
 
-bool SoluteParticle::isNeighbor(SoluteParticle *particle, uint level)
-{
-    return std::find(m_neighboringParticles.at(level).begin(),
-                     m_neighboringParticles.at(level).end(),
-                     particle) != m_neighboringParticles.at(level).end();
-}
-
 void SoluteParticle::clearAllReactions()
 {
 
@@ -283,8 +281,6 @@ void SoluteParticle::setZeroEnergy()
 
 void SoluteParticle::setVectorSizes()
 {
-
-    m_neighboringParticles.resize(Site::nNeighborsLimit());
 
     m_nNeighbors.resize(Site::nNeighborsLimit());
 
@@ -333,36 +329,21 @@ void SoluteParticle::setupAllNeighbors()
 
     KMCDebugger_Assert(m_energy, ==, 0, "Particle energy should be cleared prior to this call.", info());
 
-    m_neighboringParticles.resize(Site::nNeighborsLimit());
-
     m_nNeighbors.zeros();
 
     m_nNeighborsSum = 0;
 
 
-    for (vector<SoluteParticle*> & neighborShell : m_neighboringParticles)
-    {
-        neighborShell.clear();
-    }
-
-
     double dE;
 
-    uint level;
-
-    forEachNeighborSiteDo_sendIndices([&level, &dE, this] (Site * neighbor, uint i, uint j, uint k)
+    forEachNeighborSiteDo_sendIndices([&dE, this] (Site * neighbor, uint i, uint j, uint k)
     {
-
         if (!neighbor->isActive())
         {
             return;
         }
 
-        level = Site::levelMatrix(i, j, k);
-
-        m_neighboringParticles.at(level).push_back(neighbor->associatedParticle());
-
-        m_nNeighbors(level)++;
+        m_nNeighbors(Site::levelMatrix(i, j, k))++;
 
         m_nNeighborsSum++;
 
@@ -380,37 +361,12 @@ void SoluteParticle::setupAllNeighbors()
 
 void SoluteParticle::removeNeighbor(SoluteParticle *neighbor, uint level)
 {
-
-    KMCDebugger_Assert(nNeighbors(level), !=, 0, "Call initiated to set negative nNeighbors.", info());
-    KMCDebugger_Assert(nNeighborsSum(), !=, 0,   "Call initiated to set negative nNeighbors.", info());
-
-    KMCDebugger_AssertBool(isNeighbor(neighbor, level), "removing neighbor that is not present in neighborlist.", info());
-
-    m_neighboringParticles.at(level).erase(std::find(m_neighboringParticles.at(level).begin(),
-                                                     m_neighboringParticles.at(level).end(),
-                                                     neighbor));
-
-    KMCDebugger_AssertBool(!isNeighbor(neighbor, level), "neighbor was not properly removed.", info());
-
-
     _updateNeighborProps(-1, neighbor, level);
-
 }
 
 void SoluteParticle::addNeighbor(SoluteParticle *neighbor, uint level)
 {
-
-    KMCDebugger_Assert(nNeighbors(level), <=, Site::shellSize(level), "Overflow in nNeighbors.", info());
-    KMCDebugger_Assert(nNeighborsSum(), <=, Site::maxNeighbors(),   "Call initiated to set negative nNeighbors.", info());
-
-    KMCDebugger_AssertBool(!isNeighbor(neighbor, level), "adding neighbor that is present in neighborlist.", info());
-
-    m_neighboringParticles.at(level).push_back(neighbor);
-
-    KMCDebugger_AssertBool(isNeighbor(neighbor, level), "neighbor was not properly added.", info());
-
     _updateNeighborProps(+1, neighbor, level);
-
 }
 
 void SoluteParticle::_updateNeighborProps(const int sign, const SoluteParticle * neighbor, const uint level)
@@ -438,8 +394,6 @@ void SoluteParticle::_updateNeighborProps(const int sign, const SoluteParticle *
     });
 
     markAsAffected();
-
-    KMCDebugger_Assert(nNeighbors(level), ==, m_neighboringParticles.at(level).size(), "mismatch", info());
 
     KMCDebugger_PushImplication(neighbor, neighbor->particleStateName().c_str());
 }

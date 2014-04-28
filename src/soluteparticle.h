@@ -235,23 +235,6 @@ public:
 
     void markAsAffected();
 
-    const vector<vector<SoluteParticle*> > & neighbouringParticles() const
-    {
-        return m_neighboringParticles;
-    }
-
-
-    const vector<SoluteParticle*> & neighbouringParticles(const uint level) const
-    {
-        return m_neighboringParticles.at(level);
-    }
-
-    const vector<SoluteParticle*> & closestNeighbors() const
-    {
-        return m_neighboringParticles.at(0);
-    }
-
-
 
     static const particleSet & affectedParticles()
     {
@@ -328,8 +311,6 @@ public:
         return nNeighbors() == 0;
     }
 
-    bool isNeighbor(SoluteParticle *particle, uint level);
-
     void reset();
 
 
@@ -366,8 +347,6 @@ public:
         return Site::countNeighboring(m_x, m_y, m_z, state);
     }
 
-
-    inline void forEachNeighborDo(function<void (SoluteParticle*, const uint)> applyFunction) const;
 
     void forEachActiveReactionDo(function<void (Reaction*)> applyFunction) const;
 
@@ -437,9 +416,6 @@ private:
     double m_energy;
 
 
-    vector<vector<SoluteParticle*> > m_neighboringParticles;
-
-
     void initializeDiffusionReactions();
 
 
@@ -460,21 +436,6 @@ private:
 
 
 };
-
-
-void SoluteParticle::forEachNeighborDo(function<void (SoluteParticle *, const uint)> applyFunction) const
-{
-
-    for (uint level = 0; level < Site::nNeighborsLimit(); ++level)
-    {
-        for (SoluteParticle *neighbor : m_neighboringParticles.at(level))
-        {
-            applyFunction(neighbor, level);
-        }
-    }
-
-}
-
 
 
 }

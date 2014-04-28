@@ -490,7 +490,7 @@ void KMCSolver::dumpXYZ(const uint n)
         s << "\n"
           << particle->particleStateShortName() << " "
           << particle->x() << " " << particle->y() << " " << particle->z() << " "
-          << particle->nNeighborsSum() << " "
+          << particle->nNeighbors() << " "
           << particle->energy();
 
         if (particle->isSurface())
@@ -691,9 +691,12 @@ bool KMCSolver::spawnParticle(SoluteParticle *particle, const uint x, const uint
 
             return false;
         }
+
     }
 
     particle->setSite(x, y, z);
+
+    KMCDebugger_AssertBool(!checkIfLegal || particle->nNeighbors() == 0);
 
     m_particles.push_back(particle);
 
@@ -1029,11 +1032,11 @@ uint KMCSolver::getReactionChoice(double R)
 void KMCSolver::setBoxSize(const uint NX, const uint NY, const uint NZ, bool check)
 {
 
-    KMCDebugger_Assert(Site::_refCount(), ==, 0, "Sites need to be cleared before a new boxsize is set.");
+    KMCDebugger_Assert(Site::_refCount(), ==, 0, "Sites need to be c.leared before a new boxsize is set.");
 
     m_NX = NX;
-    m_NY = NX;
-    m_NZ = NX;
+    m_NY = NY;
+    m_NZ = NZ;
 
     m_N = {NX, NY, NZ};
 

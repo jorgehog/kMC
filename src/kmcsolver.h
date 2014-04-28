@@ -237,12 +237,15 @@ public:
 
 
 
-    double minRateThreshold()
+    const static double minRateThreshold()
     {
-        return max((*std::min_element(m_allPossibleReactions.begin(),
-                                  m_allPossibleReactions.end(),
-                                  [] (const Reaction *r1, const Reaction *r2) {return r1->rate() < r2->rate();}))->rate()/2,
-                   1E-8);
+//        return max((*std::min_element(m_allPossibleReactions.begin(),
+//                                  m_allPossibleReactions.end(),
+//                                  [] (const Reaction *r1, const Reaction *r2) {return r1->rate() < r2->rate();}))->rate()/2,
+//                   1E-8);
+
+        return Reaction::linearRateScale()*1E-8;
+
     }
 
 
