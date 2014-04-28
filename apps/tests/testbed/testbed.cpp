@@ -612,7 +612,6 @@ void testBed::testConcentrationWall()
 
     CHECK_EQUAL(outerShellSize, SoluteParticle::nParticles());
 
-
     ConcentrationWall::setMaxEventsPrCycle(size/2);
 
     solver->setTargetConcentration(solver->targetConcentration()/2);
@@ -1009,7 +1008,11 @@ void testBed::testUpdateNeigbors()
 
     activateAllSites();
 
-    double eMax = accu(DiffusionReaction::potentialBox());
+    double eMax = 0;
+    Site::forEachNeighborDo_sendIndices(0, 0, 0, [&eMax] (Site * site, uint i, uint j, uint k)
+    {
+        eMax += DiffusionReaction::potential(i, j, k);
+    });
 
     double blockedE;
     uvec nBlocked(Site::nNeighborsLimit());
@@ -2187,10 +2190,14 @@ void testBed::testNeighborlist()
     auto NNSUMBF = [&] (Site * site) -> uint
     {
         uint nn = 0;
-        for (uint i = 0; i < Site::nNeighborsLimit(); ++i)
+
+        site->associatedParticle()->forEachNeighborSiteDo([&nn] (Site *neighbor)
         {
-            nn += site->associatedParticle()->neighbouringParticles().at(i).size();
-        }
+            if (neighbor->isActive())
+            {
+                nn++;
+            }
+        });
 
         return nn;
     };
@@ -2202,6 +2209,8 @@ void testBed::testNeighborlist()
 
     Site::forEachNeighborDo_sendPath(NX()/2, NY()/2, NZ()/2, [&] (Site *site, int dx, int dy, int dz)
     {
+        (void) site;
+
         uint level = Site::levelMatrix(dx + Site::nNeighborsLimit(), dy + Site::nNeighborsLimit(), dz + Site::nNeighborsLimit());
 
         solver->forceSpawnParticle(Site::boundaries(0, 0)->transformCoordinate((int)NX()/2 + dx),
@@ -2211,11 +2220,7 @@ void testBed::testNeighborlist()
         c++;
         nn(level)++;
 
-        CHECK_EQUAL(getBoxCenter()->associatedParticle()->isNeighbor(site->associatedParticle(), level), true);
-        CHECK_EQUAL(site->associatedParticle()->isNeighbor(getBoxCenter()->associatedParticle(), level), true);
-
         CHECK_EQUAL(c, NNSUMBF(getBoxCenter()));
-        CHECK_EQUAL(nn(level), getBoxCenter()->associatedParticle()->neighbouringParticles(level).size());
 
     });
 
@@ -2228,11 +2233,8 @@ void testBed::testNeighborlist()
         c--;
         nn(level)--;
 
-        CHECK_EQUAL(getBoxCenter()->associatedParticle()->isNeighbor(site->associatedParticle(), level), false);
-
 
         CHECK_EQUAL(c, NNSUMBF(getBoxCenter()));
-        CHECK_EQUAL(nn(level), getBoxCenter()->associatedParticle()->neighbouringParticles(level).size());
 
     });
 

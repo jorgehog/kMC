@@ -91,6 +91,7 @@ void ConcentrationWall::update()
         }
     }
 
+
 }
 
 
@@ -98,4 +99,4 @@ void ConcentrationWall::update()
 
 uint ConcentrationWall::m_minDistanceFromSurface;
 
-uint ConcentrationWall::m_maxEventsPrCycle = 3;
+uint ConcentrationWall::m_maxEventsPrCycle = 1;

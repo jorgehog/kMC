@@ -19,6 +19,8 @@
 #include <iomanip>
 #include <fstream>
 
+#include <boost/algorithm/string.hpp>
+#include <regex>
 
 using namespace arma;
 using namespace std;
@@ -151,7 +153,8 @@ void KMCSolver::setupMainLattice()
 
     if (m_dumpXYZ)
     {
-        m_mainLattice->addEvent(new DumpXYZ());
+        xyzEvent = new DumpXYZ();
+        m_mainLattice->addEvent(xyzEvent);
     }
 }
 
@@ -406,16 +409,21 @@ void KMCSolver::postReactionShuffleCleanup(const uint nVacancies)
 
 void KMCSolver::updateAccuAllRateElements(const uint from, const uint to, const double value)
 {
-    for (uint i = from; i < to; ++i)
+    KMCDebugger_Assert(from, <=, to);
+
+    std::vector<double>::iterator itStart = m_accuAllRates.begin() + from;
+    std::vector<double>::iterator itEnd = m_accuAllRates.begin() + to;
+
+    for (std::vector<double>::iterator it = itStart; it != itEnd; ++it)
     {
-        m_accuAllRates.at(i) += value;
+        *it += value;
 
-        if (m_accuAllRates.at(i) < 0 && m_accuAllRates.at(i) > -1E-6)
-        {
-            m_accuAllRates.at(i) = 0;
-        }
+        //        if (*it < 0 && *it > -1E-6)
+        //        {
+        //            *it = 0;
+        //        }
 
-        KMCDebugger_Assert(m_accuAllRates.at(i), >=, 0);
+        KMCDebugger_Assert(*it, >=, -minRateThreshold());
     }
 
 }
@@ -482,7 +490,7 @@ void KMCSolver::dumpXYZ(const uint n)
         s << "\n"
           << particle->particleStateShortName() << " "
           << particle->x() << " " << particle->y() << " " << particle->z() << " "
-          << particle->nNeighborsSum() << " "
+          << particle->nNeighbors() << " "
           << particle->energy();
 
         if (particle->isSurface())
@@ -504,7 +512,9 @@ void KMCSolver::dumpXYZ(const uint n)
 
     }
 
-    o << particles().size() << "\n - " << surface.str() << crystal.str() << solution.str();
+    o << particles().size() << "\n";
+    o << m_NX << " " << m_NY << " " << m_NZ;
+    o << surface.str() << crystal.str() << solution.str();
     o.close();
 
 }
@@ -681,9 +691,12 @@ bool KMCSolver::spawnParticle(SoluteParticle *particle, const uint x, const uint
 
             return false;
         }
+
     }
 
     particle->setSite(x, y, z);
+
+    KMCDebugger_AssertBool(!checkIfLegal || particle->nNeighbors() == 0);
 
     m_particles.push_back(particle);
 
@@ -722,9 +735,9 @@ void KMCSolver::despawnParticle(SoluteParticle *particle)
 void KMCSolver::initializeCrystal(const double relativeSeedSize)
 {
 
-    if (relativeSeedSize > 1.0)
+    if (relativeSeedSize >= 1.0)
     {
-        KMCSolver::exit("The seed size cannot exceed the box size.");
+        KMCSolver::exit("The seed size cannot be or exceed the box size.");
     }
 
     else if (relativeSeedSize < 0)
@@ -825,6 +838,110 @@ void KMCSolver::initializeSolutionBath()
 
 }
 
+void KMCSolver::initializeFromXYZ(string path, uint frame)
+{
+
+    cout << "initializing from XYZ is highly experimental." << endl;
+
+    string line;
+    vector<string> tokens;
+
+    ifstream file;
+
+    stringstream filename;
+    filename << "kMC" << frame << ".xyz";
+
+    string fullpath = path + "/" + filename.str();
+
+    file.open(fullpath);
+
+    if (!file.good())
+    {
+        exit("file doest exist: " + fullpath);
+    }
+
+    getline(file, line);
+
+    uint N = atoi(line.c_str());
+
+    getline(file, line);
+
+    boost::split(tokens, line, boost::is_any_of(" "));
+
+    uvec3 boxSize;
+
+    bool initBox = true;
+    for (uint i = 0; i < 3; ++i)
+    {
+        boxSize(i) = atoi(tokens.at(i).c_str());
+
+        if (boxSize(i) == 0)
+        {
+            cout << "Warning: Unable to deduce system size from file.";
+
+            initBox = false;
+            break;
+        }
+    }
+
+    if (initBox)
+    {
+        cout << boxSize << endl;
+
+        Site::finalizeBoundaries();
+
+        clearSites();
+        setBoxSize(boxSize);
+        initializeSites();
+
+        Site::initializeBoundaries();
+
+    }
+
+    uint x, y, z;
+
+    vector<uint> nn;
+    vector<double> e;
+    vector<string> t;
+
+    for (uint i = 0; i < N; ++i)
+    {
+        getline(file, line);
+
+        boost::split(tokens, line, boost::is_any_of(" "));
+
+        t.push_back(tokens.at(0));
+
+        x = atoi(tokens.at(1).c_str());
+        y = atoi(tokens.at(2).c_str());
+        z = atoi(tokens.at(3).c_str());
+
+        nn.push_back(atoi(tokens.at(4).c_str()));
+        e.push_back(atof(tokens.at(5).c_str()));
+
+        forceSpawnParticle(x, y, z);
+
+    }
+
+
+#ifndef KMC_NO_DEBUG
+    uint i = 0;
+    for (SoluteParticle *p : m_particles)
+    {
+        KMCDebugger_AssertEqual(t.at(i), p->particleStateShortName());
+        KMCDebugger_AssertEqual(p->nNeighborsSum(), nn.at(i));
+        KMCDebugger_AssertClose(p->energy(), e.at(i), DiffusionReaction::potentialBox().min());
+        ++i;
+    }
+#endif
+
+    if (m_dumpXYZ)
+    {
+        xyzEvent->setOffset(frame + 1);
+    }
+
+}
+
 
 void KMCSolver::initializeParticles()
 {
@@ -912,16 +1029,16 @@ uint KMCSolver::getReactionChoice(double R)
 
 }
 
-void KMCSolver::setBoxSize(const uvec3 boxSize, bool check)
+void KMCSolver::setBoxSize(const uint NX, const uint NY, const uint NZ, bool check)
 {
 
-    KMCDebugger_Assert(Site::_refCount(), ==, 0, "Sites need to be cleared before a new boxsize is set.");
+    KMCDebugger_Assert(Site::_refCount(), ==, 0, "Sites need to be c.leared before a new boxsize is set.");
 
-    m_NX = boxSize(0);
-    m_NY = boxSize(1);
-    m_NZ = boxSize(2);
+    m_NX = NX;
+    m_NY = NY;
+    m_NZ = NZ;
 
-    m_N = boxSize;
+    m_N = {NX, NY, NZ};
 
     if (Site::nNeighborsLimit() != UNSET_UINT && check)
     {

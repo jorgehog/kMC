@@ -38,15 +38,90 @@ int main()
 
     KMCDebugger_DumpFullTrace();
 
-    delete solver;
-
-
     return 0;
 
 }
 
+class Sphericity : public KMCEvent
+{
+public:
+    Sphericity() : KMCEvent("Sphericity", "", true, true) {}
+
+protected:
+
+    void execute()
+    {
+        uint A = 0;
+        solver()->forEachSiteDo([&A] (uint x, uint y, uint z, Site* _site)
+        {
+            Site *site = _site;
+
+            if (!site->isActive())
+            {
+                return;
+            }
+
+            if (site->associatedParticle()->isCrystal())
+            {
+                return;
+            }
+
+            if (!site->hasNeighboring(x, y, z, ParticleStates::crystal))
+            {
+               return;
+            }
+
+            uint nC = site->countNeighboring(x, y, z, ParticleStates::crystal);
+
+            if (nC == 1)
+            {
+                A += 3;
+            }
+
+            else if (nC == 2 || nC == 3)
+            {
+                A += 2;
+            }
+
+            else
+            {
+                A += 1;
+            }
+
+        });
+
+        setValue(pi3root*pow(6.0*(SoluteParticle::nCrystals() + A), 2./3)/A);
+    }
+
+private:
+
+    static const double pi3root;
+
+};
+
+const double Sphericity::pi3root = pow(datum::pi, 1./3);
+
+
+class TotalEnergy : public KMCEvent
+{
+public:
+
+    TotalEnergy() : KMCEvent("TotalEnergy", "E*", true, true) {}
+
+protected:
+
+    void execute()
+    {
+        setValue(SoluteParticle::totalEnergy());
+    }
+
+};
 
 void initialize_centerCrystal(KMCSolver * solver, const Setting & root)
 {
     solver->initializeCrystal(getSetting<double>(root, {"Initialization", "RelativeSeedSize"}));
+//    solver->initializeFromXYZ("/home/jorgen/code/build-kMC-Desktop_Qt_5_2_1_GCC_64bit-Release/apps/centerCrystal/outfiles", 15390);
+
+    solver->addEvent(new Sphericity());
+    solver->addEvent(new TotalEnergy());
 }
