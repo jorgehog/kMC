@@ -31,8 +31,8 @@ int main()
     initialize_ignisKMC(solver, root);
 
 
-    DCViz viz("/tmp/ignisEventsOut.arma");
-    viz.launch(true, 0.2, 30, 16);
+//    DCViz viz("/tmp/ignisEventsOut.arma");
+//    viz.launch(true, 0.2, 30, 16);
 
     t.tic();
 
@@ -119,11 +119,11 @@ protected:
         uint cN = 0;
         uint c  = 0;
 
-        for (SoluteParticle *particle : solver()->particles())
+        solver()->forEachParticleDo([&cN, &c] (SoluteParticle *particle)
         {
             cN += particle->nNeighbors();
             c++;
-        }
+        });
 
         setValue(cN/(double(c)));
     }

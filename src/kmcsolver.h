@@ -18,14 +18,28 @@
 
 #include <libconfig_utils/libconfig_utils.h>
 
+#ifndef NDEBUG
+#include <map>
+#else
+#include <unordered_map>
+#endif
 
 using namespace arma;
-
 
 namespace kMC
 {
 
+#ifndef NDEBUG
+typedef map<uint, SoluteParticle*> particleMap;
+#else
+typedef unordered_map<uint, SoluteParticle*> particleMap;
+#endif
+
+typedef std::pair<uint, SoluteParticle*> particlePair;
+
+
 const uint UNSET_UINT = std::numeric_limits<uint>::max();
+
 
 class DumpXYZ;
 
@@ -92,6 +106,8 @@ public:
 
     void forEachSiteDo(function<void(uint, uint, uint, Site *)> applyFunction) const;
 
+    void forEachParticleDo(function<void(SoluteParticle *particle)> applyFunction) const;
+
 
     void getRateVariables();
 
@@ -103,7 +119,7 @@ public:
         return sites[i + Site::nNeighborsLimit()][j+ Site::nNeighborsLimit()][k + Site::nNeighborsLimit()];
     }
 
-    const vector<SoluteParticle*> & particles() const
+    const particleMap & particles() const
     {
         return m_particles;
     }
@@ -237,7 +253,7 @@ public:
 
 
 
-    const static double minRateThreshold()
+    static double minRateThreshold()
     {
 //        return max((*std::min_element(m_allPossibleReactions.begin(),
 //                                  m_allPossibleReactions.end(),
@@ -276,7 +292,12 @@ private:
     uvec3 m_N;
 
 
-    vector<SoluteParticle*> m_particles;
+    inline uint xyzToKey(const uint & x, const uint & y, const uint & z) const;
+
+    uint particleToKey(const SoluteParticle *particle) const;
+
+    particleMap m_particles;
+
 
     double m_kTot;
 
@@ -306,6 +327,11 @@ private:
 
 
 };
+
+uint KMCSolver::xyzToKey(const uint &x, const uint &y, const uint &z) const
+{
+    return x*m_NX + y*m_NY + z*m_NZ;
+}
 
 
 }

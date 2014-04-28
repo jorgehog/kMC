@@ -242,7 +242,7 @@ void testBed::testDiffusionSiteMatrixSetup()
 
     solver->initializeCrystal(0.2);
 
-    for (SoluteParticle *particle : solver->particles())
+    solver->forEachParticleDo([&] (SoluteParticle *particle)
     {
 
         Boundary::setupCurrentBoundaries(particle->x(), particle->y(), particle->z());
@@ -292,7 +292,7 @@ void testBed::testDiffusionSiteMatrixSetup()
         }
 
 
-    }
+    });
 
 }
 
@@ -729,10 +729,16 @@ void testBed::testReactionChoise()
 
             count = 0;
 
-            for (SoluteParticle *particle : solver->particles())
-            {
+            bool notSet = true;
 
-                bool notSet = true;
+            solver->forEachParticleDo([&] (SoluteParticle *particle)
+            {
+                if (!notSet)
+                {
+                    return;
+                }
+
+                notSet = true;
 
                 particle->forEachActiveReactionDo([&] (Reaction *r)
                 {
@@ -764,11 +770,7 @@ void testBed::testReactionChoise()
 
                 });
 
-                if (!notSet)
-                {
-                    break;
-                }
-            }
+            });
 
 
             CHECK_EQUAL(solver->allPossibleReactions().at(choice), reaction);
@@ -789,17 +791,17 @@ void testBed::testAffectedParticles()
 {
     solver->initializeSolutionBath();
 
-    for (SoluteParticle *particle : solver->particles())
+    solver->forEachParticleDo([] (SoluteParticle *particle)
     {
         CHECK_EQUAL(true, particle->isAffected());
-    }
+    });
 
     solver->getRateVariables();
 
-    for (SoluteParticle *particle : solver->particles())
+    solver->forEachParticleDo([] (SoluteParticle *particle)
     {
         CHECK_EQUAL(false, particle->isAffected());
-    }
+    });
 
 
     SoluteParticle *particle = solver->particle(0);
@@ -887,7 +889,7 @@ void testBed::testRateCalculation()
 
     DiffusionReaction *r;
 
-    for (SoluteParticle *particle : solver->particles())
+    solver->forEachParticleDo([&] (SoluteParticle *particle)
     {
         particle->forEachActiveReactionDo([&] (Reaction * _r)
         {
@@ -912,7 +914,7 @@ void testBed::testRateCalculation()
             CHECK_EQUAL(Esp, r->lastUsedEsp());
 
         });
-    }
+    });
 }
 
 void testBed::testEnergyAndNeighborSetup()
@@ -1011,6 +1013,7 @@ void testBed::testUpdateNeigbors()
     double eMax = 0;
     Site::forEachNeighborDo_sendIndices(0, 0, 0, [&eMax] (Site * site, uint i, uint j, uint k)
     {
+        (void) site;
         eMax += DiffusionReaction::potential(i, j, k);
     });
 
@@ -1076,7 +1079,7 @@ void testBed::testInitialReactionSetup()
     std::vector<Reaction*> oldReactions;
     double totRate1 = 0;
 
-    for (SoluteParticle *particle : solver->particles())
+    solver->forEachParticleDo([&] (SoluteParticle *particle)
     {
         particle->forEachActiveReactionDo([&] (Reaction * r)
         {
@@ -1084,9 +1087,9 @@ void testBed::testInitialReactionSetup()
             totRate1 += r->rate();
 
         });
-    }
+    });
 
-    for (SoluteParticle *particle : solver->particles())
+    solver->forEachParticleDo([] (SoluteParticle *particle)
     {
         particle->forEachActiveReactionDo([] (Reaction * r)
         {
@@ -1095,20 +1098,20 @@ void testBed::testInitialReactionSetup()
 
         particle->updateReactions();
 
-    }
+    });
 
 
     std::vector<Reaction*> reactions;
     double totRate2 = 0;
 
-    for (SoluteParticle *particle : solver->particles())
+    solver->forEachParticleDo([&] (SoluteParticle *particle)
     {
         particle->forEachActiveReactionDo([&] (Reaction * r)
         {
             reactions.push_back(r);
             totRate2 += r->rate();
         });
-    }
+    });
 
     CHECK_CLOSE(totRate1, totRate2, 0.000000001);
     CHECK_EQUAL(oldReactions.size(), reactions.size());
@@ -1857,7 +1860,7 @@ void testBed::testReactionVectorUpdate()
 
     c = 0;
     uint i = 0;
-    for (SoluteParticle *particle : solver->particles())
+    solver->forEachParticleDo([&] (SoluteParticle *particle)
     {
         particle->forEachActiveReactionDo([&] (Reaction *r)
         {
@@ -1871,7 +1874,7 @@ void testBed::testReactionVectorUpdate()
             i++;
 
         });
-    }
+    });
 
     //removing both the particles should even out everything to the maximum amount of reactions ever existing at once.
 
@@ -2106,7 +2109,7 @@ void testBed::fill_rate_stuff(vector<double> & accuAllRates, vector<Reaction*> &
     accuAllRates.clear();
     allPossibleReactions.clear();
 
-    for (SoluteParticle *particle : solver->particles())
+    solver->forEachParticleDo([&] (SoluteParticle *particle)
     {
         particle->forEachActiveReactionDo([&] (Reaction * reaction)
         {
@@ -2120,7 +2123,7 @@ void testBed::fill_rate_stuff(vector<double> & accuAllRates, vector<Reaction*> &
             allPossibleReactions.push_back(reaction);
 
         });
-    }
+    });
 }
 
 

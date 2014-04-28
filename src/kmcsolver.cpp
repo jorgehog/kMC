@@ -437,7 +437,7 @@ bool KMCSolver::isEmptyAddress(const uint address) const
 
 bool KMCSolver::isRegisteredParticle(SoluteParticle *particle) const
 {
-    return std::find(m_particles.begin(), m_particles.end(), particle) != m_particles.end();
+    return m_particles.find(particleToKey(particle)) != m_particles.end();
 }
 
 bool KMCSolver::isPossibleReaction(Reaction *reaction) const
@@ -484,9 +484,9 @@ void KMCSolver::dumpXYZ(const uint n)
 
     s.str(string());
 
-    for (SoluteParticle *particle : particles())
-    {
 
+    forEachParticleDo([&s, &surface, &crystal, &solution] (SoluteParticle *particle)
+    {
         s << "\n"
           << particle->particleStateShortName() << " "
           << particle->x() << " " << particle->y() << " " << particle->z() << " "
@@ -510,7 +510,7 @@ void KMCSolver::dumpXYZ(const uint n)
 
         s.str(string());
 
-    }
+    });
 
     o << particles().size() << "\n";
     o << m_NX << " " << m_NY << " " << m_NZ;
@@ -532,6 +532,14 @@ void KMCSolver::forEachSiteDo(function<void (uint x, uint y, uint z, Site *)> ap
                 applyFunction(x, y, z, getSite(x, y, z));
             }
         }
+    }
+}
+
+void KMCSolver::forEachParticleDo(function<void (SoluteParticle *)> applyFunction) const
+{
+    for (const particlePair &particlepair : m_particles)
+    {
+        applyFunction(particlepair.second);
     }
 }
 
@@ -667,6 +675,11 @@ void KMCSolver::clearSites()
 
 }
 
+uint KMCSolver::particleToKey(const SoluteParticle *particle) const
+{
+    return xyzToKey(particle->x(), particle->y(), particle->z());
+}
+
 
 
 bool KMCSolver::spawnParticle(SoluteParticle *particle, const uint x, const uint y, const uint z, bool checkIfLegal)
@@ -698,7 +711,7 @@ bool KMCSolver::spawnParticle(SoluteParticle *particle, const uint x, const uint
 
     KMCDebugger_AssertBool(!checkIfLegal || particle->nNeighbors() == 0);
 
-    m_particles.push_back(particle);
+    m_particles[xyzToKey(x, y, z)] = particle;
 
     return true;
 
@@ -723,7 +736,7 @@ void KMCSolver::despawnParticle(SoluteParticle *particle)
 
     KMCDebugger_AssertBool(isRegisteredParticle(particle));
 
-    m_particles.erase(std::find(m_particles.begin(), m_particles.end(), particle));
+    m_particles.erase(particleToKey(particle));
 
     KMCDebugger_AssertBool(!isRegisteredParticle(particle));
 
@@ -945,11 +958,11 @@ void KMCSolver::initializeFromXYZ(string path, uint frame)
 
 void KMCSolver::initializeParticles()
 {
-    for (SoluteParticle *particle : m_particles)
+    forEachParticleDo([] (SoluteParticle *particle)
     {
         particle->setVectorSizes();
         particle->setupAllNeighbors();
-    }
+    });
 }
 
 
@@ -1080,10 +1093,10 @@ void KMCSolver::setRNGSeed(uint seedState, int defaultSeed)
 void KMCSolver::clearParticles()
 {
 
-    for (SoluteParticle *particle : m_particles)
+    forEachParticleDo([] (SoluteParticle *particle)
     {
         delete particle;
-    }
+    });
 
     SoluteParticle::clearAll();
 
@@ -1103,7 +1116,6 @@ void KMCSolver::clearParticles()
     m_availableReactionSlots.clear();
 
 }
-
 
 bool KMCSolver::m_dumpXYZ = true;
 

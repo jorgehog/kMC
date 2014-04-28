@@ -338,7 +338,7 @@ umat Site::getCurrentCrystalBoxTopology()
     boxTop.col(0) = ucolvec({NX(), NY(), NZ()});
     boxTop.col(1).zeros();
 
-    for (SoluteParticle *particle : m_solver->particles())
+    solver()->forEachParticleDo([&boxTop] (SoluteParticle *particle)
     {
         if (particle->isCrystal())
         {
@@ -359,7 +359,7 @@ umat Site::getCurrentCrystalBoxTopology()
             }
 
         }
-    }
+    });
 
     return boxTop;
 }
