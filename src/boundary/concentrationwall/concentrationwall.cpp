@@ -23,55 +23,30 @@ ConcentrationWall::~ConcentrationWall()
 void ConcentrationWall::update()
 {
 
-    KMCDebugger_Assert(m_maxEventsPrCycle, <=, boundarySites().size(), "Max events pr cycle cannot exceed the number of boundary sites.");
+    KMCDebugger_Assert(m_maxEventsPrCycle, <=, boundarySize(), "Max events pr cycle cannot exceed the number of boundary sites.");
 
 
     Site * currentSite;
 
+    uint x, y, z;
     uint c = 0;
     uint ce = 0;
 
+    uint targetN = solver()->targetConcentration()*SoluteParticle::getCurrentSolvantVolume();
 
-    //    crystalBoxTopology = Site::getCurrentCrystalBoxTopology();
-
-    //    bool resize;
-
-    //    switch (orientation()) {
-    //    case Near:
-    //        resize = crystalBoxTopology(dimension(), Near) < minDistanceFromSurface;
-
-    //        break;
-    //    case Far:
-    //        resize = crystalBoxTopology(dimension(), Far) > span() - minDistanceFromSurface;
-
-    //        break;
-    //    }
-
-
-    //    if (resize)
-    //    {
-
-    //        uvec3 N = solver()->NVec();
-
-    //        N(dimension()) += systemSizeIncrementSize; //Size size size...
-
-    //        solver()->setBoxSize(N, true, true);
-
-    //    }
-
-
-    std::random_shuffle(boundarySites().begin(), boundarySites().end(), [] (uint n) {return KMC_RNG_UNIFORM()*n;});
-
-    if (SoluteParticle::getCurrentConcentration() > solver()->targetConcentration())
+    if (SoluteParticle::nSolutionParticles() > targetN)
     {
 
-        while (SoluteParticle::getCurrentConcentration() > solver()->targetConcentration() && c != boundarySites().size() && ce != m_maxEventsPrCycle)
+        while (SoluteParticle::nSolutionParticles() != targetN && c != boundarySize() && ce != m_maxEventsPrCycle)
         {
-            currentSite = boundarySites().at(c);
+
+            getBoundarySite(c, x, y, z);
+
+            currentSite = solver()->getSite(x, y, z);
 
             if (currentSite->isActive())
             {
-                solver()->despawnParticle(currentSite);
+                solver()->despawnParticle(currentSite->associatedParticle());
                 ce++;
             }
 
@@ -85,22 +60,21 @@ void ConcentrationWall::update()
 
         bool spawned;
 
-        while (ce != m_maxEventsPrCycle && SoluteParticle::getCurrentConcentration() < solver()->targetConcentration())
+        while (SoluteParticle::nSolutionParticles() != targetN && ce != m_maxEventsPrCycle)
         {
 
             spawned = false;
 
             SoluteParticle *particle = new SoluteParticle();
 
-            while (c != boundarySites().size() && !spawned)
+            while (c != boundarySize() && !spawned)
             {
-                currentSite = boundarySites().at(c);
 
-                spawned = solver()->spawnParticle(particle, currentSite, true);
+                getBoundarySite(c, x, y, z);
+                spawned = solver()->spawnParticle(particle, x, y, z, true);
 
                 if (spawned)
                 {
-                    cout << "spawned " << *particle << endl;
                     ce++;
                 }
 
@@ -109,21 +83,20 @@ void ConcentrationWall::update()
 
             if (!spawned)
             {
+                particle->resetSite();
                 delete particle;
                 break;
             }
 
         }
     }
+
+
 }
 
-void ConcentrationWall::initialize()
-{
-    setupBoundarySites();
-}
 
 
 
 uint ConcentrationWall::m_minDistanceFromSurface;
 
-uint ConcentrationWall::m_maxEventsPrCycle = 3;
+uint ConcentrationWall::m_maxEventsPrCycle = 1;

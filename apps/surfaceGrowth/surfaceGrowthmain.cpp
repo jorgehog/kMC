@@ -114,7 +114,7 @@ void initialize_surfaceGrowth(KMCSolver * solver, const Setting & root)
                         //Z + 1 because Z = 0 boundary is already populated with fixed crystals
                         //from the surface boundary condition. This automatically makes activation
                         //crystals unless you set an insane condition for crystallization.
-                        solver->forceSpawnParticle(solver->getSite(X, Y, Z + 1));
+                        solver->forceSpawnParticle(X, Y, Z + 1);
 
                     }
                 }

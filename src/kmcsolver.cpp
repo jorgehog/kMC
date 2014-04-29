@@ -19,6 +19,8 @@
 #include <iomanip>
 #include <fstream>
 
+#include <boost/algorithm/string.hpp>
+#include <regex>
 
 using namespace arma;
 using namespace std;
@@ -130,6 +132,8 @@ void KMCSolver::onConstruct()
 
     Site::setMainSolver(this);
 
+    SoluteParticle::setMainSolver(this);
+
 
     setupMainLattice();
 
@@ -149,7 +153,8 @@ void KMCSolver::setupMainLattice()
 
     if (m_dumpXYZ)
     {
-        m_mainLattice->addEvent(new DumpXYZ());
+        xyzEvent = new DumpXYZ();
+        m_mainLattice->addEvent(xyzEvent);
     }
 }
 
@@ -189,15 +194,17 @@ void KMCSolver::checkAllRefCounters()
 {
     if (SoluteParticle::nParticles() != 0)
     {
-        cout << SoluteParticle::nParticles() << " particles active." << endl;
-        exit();
+        stringstream s;
+        s << "After deletion: " << SoluteParticle::nParticles() << " particles active.";
+        exit(s.str());
     }
 
 
     if (Reaction::_refCount() != 0)
     {
-        cout << Reaction::_refCount() << " reactions active." << endl;
-        exit();
+        stringstream s;
+        s << "After deletion: " << Reaction::_refCount() << " reactions active.";
+        exit(s.str());
     }
 
 }
@@ -208,7 +215,6 @@ void KMCSolver::onAllRatesChanged()
     //Change if added reactions are not on form ..exp(beta...)
 
     m_kTot = 0;
-
 
     uint i = 0;
     for (Reaction * r : m_allPossibleReactions)
@@ -287,6 +293,7 @@ void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate
 
         KMCDebugger_Assert(reaction->address(), !=, Reaction::UNSET_ADDRESS);
         KMCDebugger_AssertBool(!isEmptyAddress(reaction->address()), "address is already set as empty.");
+
 
         m_availableReactionSlots.push_back(reaction->address());
 
@@ -400,6 +407,27 @@ void KMCSolver::postReactionShuffleCleanup(const uint nVacancies)
 
 }
 
+void KMCSolver::updateAccuAllRateElements(const uint from, const uint to, const double value)
+{
+    KMCDebugger_Assert(from, <=, to);
+
+    std::vector<double>::iterator itStart = m_accuAllRates.begin() + from;
+    std::vector<double>::iterator itEnd = m_accuAllRates.begin() + to;
+
+    for (std::vector<double>::iterator it = itStart; it != itEnd; ++it)
+    {
+        *it += value;
+
+        //        if (*it < 0 && *it > -1E-6)
+        //        {
+        //            *it = 0;
+        //        }
+
+        KMCDebugger_Assert(*it, >=, -minRateThreshold());
+    }
+
+}
+
 
 bool KMCSolver::isEmptyAddress(const uint address) const
 {
@@ -410,6 +438,11 @@ bool KMCSolver::isEmptyAddress(const uint address) const
 bool KMCSolver::isRegisteredParticle(SoluteParticle *particle) const
 {
     return std::find(m_particles.begin(), m_particles.end(), particle) != m_particles.end();
+}
+
+bool KMCSolver::isPossibleReaction(Reaction *reaction) const
+{
+    return std::find(m_allPossibleReactions.begin(), m_allPossibleReactions.end(), reaction) != m_allPossibleReactions.end();
 }
 
 string KMCSolver::getReactionVectorDebugMessage()
@@ -457,7 +490,7 @@ void KMCSolver::dumpXYZ(const uint n)
         s << "\n"
           << particle->particleStateShortName() << " "
           << particle->x() << " " << particle->y() << " " << particle->z() << " "
-          << particle->nNeighborsSum() << " "
+          << particle->nNeighbors() << " "
           << particle->energy();
 
         if (particle->isSurface())
@@ -479,13 +512,15 @@ void KMCSolver::dumpXYZ(const uint n)
 
     }
 
-    o << particles().size() << "\n - " << surface.str() << crystal.str() << solution.str();
+    o << particles().size() << "\n";
+    o << m_NX << " " << m_NY << " " << m_NZ;
+    o << surface.str() << crystal.str() << solution.str();
     o.close();
 
 }
 
 
-void KMCSolver::forEachSiteDo(function<void (Site *)> applyFunction) const
+void KMCSolver::forEachSiteDo(function<void (uint x, uint y, uint z, Site *)> applyFunction) const
 {
     for (uint x = 0; x < m_NX; ++x)
     {
@@ -494,7 +529,7 @@ void KMCSolver::forEachSiteDo(function<void (Site *)> applyFunction) const
             for (uint z = 0; z < m_NZ; ++z)
             {
                 KMCDebugger_Assert(getSite(x, y, z), !=, NULL);
-                applyFunction(getSite(x, y, z));
+                applyFunction(x, y, z, getSite(x, y, z));
             }
         }
     }
@@ -506,20 +541,13 @@ void KMCSolver::initializeSites()
 
     KMCDebugger_Assert(Site::_refCount(), ==, 0, "Sites was not cleared properly.");
 
-    uint xTrans, yTrans, zTrans, x, y, z, c, nBoundaries, m_NX_full, m_NY_full, m_NZ_full;
+    uint xTrans, yTrans, zTrans, m_NX_full, m_NY_full, m_NZ_full;
 
 
     m_NX_full = 2*Site::nNeighborsLimit() + m_NX;
     m_NY_full = 2*Site::nNeighborsLimit() + m_NY;
     m_NZ_full = 2*Site::nNeighborsLimit() + m_NZ;
 
-
-    nBoundaries = m_NX_full*m_NY_full*m_NZ_full - m_NX*m_NY*m_NZ;
-
-    uint*** boundarySiteLocations = new uint**[nBoundaries];
-
-
-    c = 0;
 
     sites = new Site***[m_NX_full];
 
@@ -540,66 +568,55 @@ void KMCSolver::initializeSites()
                         (z >= Site::nNeighborsLimit() && z < m_NZ + Site::nNeighborsLimit()))
                 {
                     //renormalize so that Site::nNeighborsLimit() points to site 0 and so on.
-                    sites[x][y][z] = new Site(x - Site::nNeighborsLimit(),
-                                              y - Site::nNeighborsLimit(),
-                                              z - Site::nNeighborsLimit());
-                }
-
-                else
-                {
-
-                    boundarySiteLocations[c] = new uint*[3];
-
-                    boundarySiteLocations[c][0] = new uint(x);
-                    boundarySiteLocations[c][1] = new uint(y);
-                    boundarySiteLocations[c][2] = new uint(z);
-
-                    c++;
+                    sites[x][y][z] = new Site();
                 }
             }
         }
     }
 
+
+    KMCDebugger_Assert(Site::_refCount(), !=, 0, "Can't simulate an empty system.");
     KMCDebugger_Assert(Site::_refCount(), ==, NX()*NY()*NZ(), "Wrong number of sites initialized.");
-    KMCDebugger_Assert(c, ==, nBoundaries, "Not all boundary sites setup for tracking.", nBoundaries - c);
 
     //Boundaries
-    for (uint i = 0; i < nBoundaries; ++i)
+    for (uint x = 0; x < m_NX_full; ++x)
     {
-
-        x = *boundarySiteLocations[i][0];
-        y = *boundarySiteLocations[i][1];
-        z = *boundarySiteLocations[i][2];
-
-        Boundary::setupCurrentBoundaries(x, y, z, Site::nNeighborsLimit());
-
-        xTrans = Site::boundaries(0, 0)->transformCoordinate((int)x - (int)Site::nNeighborsLimit());
-
-        yTrans = Site::boundaries(1, 0)->transformCoordinate((int)y - (int)Site::nNeighborsLimit());
-
-        zTrans = Site::boundaries(2, 0)->transformCoordinate((int)z - (int)Site::nNeighborsLimit());
-
-        if (Boundary::isBlocked(xTrans, yTrans, zTrans))
+        for (uint y = 0; y < m_NY_full; ++y)
         {
-            sites[x][y][z] = NULL;
+            for (uint z = 0; z < m_NZ_full; ++z)
+            {
+                if (!((x >= Site::nNeighborsLimit() && x < m_NX + Site::nNeighborsLimit()) &&
+                      (y >= Site::nNeighborsLimit() && y < m_NY + Site::nNeighborsLimit()) &&
+                      (z >= Site::nNeighborsLimit() && z < m_NZ + Site::nNeighborsLimit())))
+                {
+
+
+                    Boundary::setupCurrentBoundaries(x, y, z, Site::nNeighborsLimit());
+
+                    xTrans = Site::boundaries(0, 0)->transformCoordinate((int)x - (int)Site::nNeighborsLimit());
+
+                    yTrans = Site::boundaries(1, 0)->transformCoordinate((int)y - (int)Site::nNeighborsLimit());
+
+                    zTrans = Site::boundaries(2, 0)->transformCoordinate((int)z - (int)Site::nNeighborsLimit());
+
+                    if (Boundary::isBlocked(xTrans, yTrans, zTrans))
+                    {
+                        sites[x][y][z] = NULL;
+                    }
+
+                    else
+                    {
+                        sites[x][y][z] = sites[xTrans + Site::nNeighborsLimit()]
+                                [yTrans + Site::nNeighborsLimit()]
+                                [zTrans + Site::nNeighborsLimit()];
+                    }
+
+
+
+                }
+            }
         }
-
-        else
-        {
-            sites[x][y][z] = sites[xTrans + Site::nNeighborsLimit()]
-                    [yTrans + Site::nNeighborsLimit()]
-                    [zTrans + Site::nNeighborsLimit()];
-        }
-
-        delete boundarySiteLocations[i][0];
-        delete boundarySiteLocations[i][1];
-        delete boundarySiteLocations[i][2];
-
-        delete [] boundarySiteLocations[i];
-
     }
-
-    delete [] boundarySiteLocations;
 
     initializeParticles();
 
@@ -608,6 +625,8 @@ void KMCSolver::initializeSites()
 
 void KMCSolver::clearSites()
 {
+
+    KMCDebugger_Assert(Site::_refCount(), !=, 0, "Sites already cleared.");
 
     KMCDebugger_Assert(SoluteParticle::nParticles(), ==, 0, "Cannot clear sites with particles active.");
 
@@ -649,23 +668,18 @@ void KMCSolver::clearSites()
 }
 
 
-bool KMCSolver::spawnParticle(SoluteParticle *particle, uint x, uint y, uint z, bool checkIfLegal)
-{
-    return spawnParticle(particle, getSite(x, y, z), checkIfLegal);
-}
 
-
-bool KMCSolver::spawnParticle(SoluteParticle *particle, Site *site, bool checkIfLegal)
+bool KMCSolver::spawnParticle(SoluteParticle *particle, const uint x, const uint y, const uint z, bool checkIfLegal)
 {
 
-    KMCDebugger_AssertBool(!(site->isActive() && !checkIfLegal), "spawning particle on top of another");
+    particle->trySite(x, y, z);
 
-    if (site->isActive())
+    if (particle->site()->isActive())
     {
+        particle->resetSite();
+
         return false;
     }
-
-    particle->trySite(site);
 
     if (checkIfLegal)
     {
@@ -673,13 +687,16 @@ bool KMCSolver::spawnParticle(SoluteParticle *particle, Site *site, bool checkIf
         if (!particle->isLegalToSpawn())
         {
 
-            particle->trySite(NULL);
+            particle->resetSite();
 
             return false;
         }
+
     }
 
-    particle->setSite(site);
+    particle->setSite(x, y, z);
+
+    KMCDebugger_AssertBool(!checkIfLegal || particle->nNeighbors() == 0);
 
     m_particles.push_back(particle);
 
@@ -687,41 +704,30 @@ bool KMCSolver::spawnParticle(SoluteParticle *particle, Site *site, bool checkIf
 
 }
 
-void KMCSolver::forceSpawnParticle(uint i, uint j, uint k)
+void KMCSolver::forceSpawnParticle(const uint x, const uint y, const uint z)
 {
-    forceSpawnParticle(getSite(i, j, k));
-}
-
-void KMCSolver::forceSpawnParticle(Site *site)
-{
-
-    KMCDebugger_AssertBool(!site->isActive());
+    KMCDebugger_AssertBool(!getSite(x, y, z)->isActive());
 
     SoluteParticle *particle = new SoluteParticle();
 
-    spawnParticle(particle, site, false);
+    spawnParticle(particle, x, y, z, false);
+
 }
 
-void KMCSolver::despawnParticle(uint i, uint j, uint k)
+void KMCSolver::despawnParticle(SoluteParticle *particle)
 {
-    despawnParticle(getSite(i, j, k));
-}
+    KMCDebugger_Assert(particle, !=, NULL, "particle does not exist.");
+    KMCDebugger_AssertBool(particle->site()->isActive(), "this should never happen.");
 
-void KMCSolver::despawnParticle(Site *site)
-{
+    SoluteParticle::popAffectedParticle(particle);
 
-    KMCDebugger_AssertBool(site->isActive());
+    KMCDebugger_AssertBool(isRegisteredParticle(particle));
 
-    SoluteParticle::popAffectedParticle(site->associatedParticle());
+    m_particles.erase(std::find(m_particles.begin(), m_particles.end(), particle));
 
-    KMCDebugger_AssertBool(isRegisteredParticle(site->associatedParticle()));
+    KMCDebugger_AssertBool(!isRegisteredParticle(particle));
 
-    m_particles.erase(std::find(m_particles.begin(), m_particles.end(), site->associatedParticle()));
-
-    KMCDebugger_AssertBool(!isRegisteredParticle(site->associatedParticle()));
-
-    delete site->associatedParticle();
-
+    delete particle;
 
 }
 
@@ -729,16 +735,14 @@ void KMCSolver::despawnParticle(Site *site)
 void KMCSolver::initializeCrystal(const double relativeSeedSize)
 {
 
-    if (relativeSeedSize > 1.0)
+    if (relativeSeedSize >= 1.0)
     {
-        cerr << "The seed size cannot exceed the box size." << endl;
-        KMCSolver::exit();
+        KMCSolver::exit("The seed size cannot be or exceed the box size.");
     }
 
     else if (relativeSeedSize < 0)
     {
-        cerr << "The seed size cannot be negative." << endl;
-        KMCSolver::exit();
+        KMCSolver::exit("The seed size cannot be negative.");
     }
 
     KMCDebugger_SetEnabledTo(false);
@@ -790,7 +794,12 @@ void KMCSolver::initializeSolutionBath()
     uint x, y, z;
     bool spawned;
 
-    uint effectiveVolume = 27;
+
+    const double margin = 0.5;
+    uint effectiveVolume = 8; //eV = (difflength + 1)^3
+
+    effectiveVolume *= margin;
+
 
     uint NFree = NX()*NY()*NZ() - SoluteParticle::nParticles();
 
@@ -798,7 +807,7 @@ void KMCSolver::initializeSolutionBath()
 
     if (N > NFree/effectiveVolume)
     {
-        cerr << "Not enough space to place " << N << " particles sufficiently apart from eachother. Maximum concentration: " << 1./effectiveVolume << endl;
+        cerr << "Not enough space to place " << N << "particles sufficiently apart from eachother with concentration " << m_targetConcentration << " Maximum concentration: " << 1./effectiveVolume << endl;
         exit();
     }
 
@@ -826,6 +835,111 @@ void KMCSolver::initializeSolutionBath()
 
         n++;
     }
+
+}
+
+void KMCSolver::initializeFromXYZ(string path, uint frame)
+{
+
+    cout << "initializing from XYZ is highly experimental." << endl;
+
+    string line;
+    vector<string> tokens;
+
+    ifstream file;
+
+    stringstream filename;
+    filename << "kMC" << frame << ".xyz";
+
+    string fullpath = path + "/" + filename.str();
+
+    file.open(fullpath);
+
+    if (!file.good())
+    {
+        exit("file doest exist: " + fullpath);
+    }
+
+    getline(file, line);
+
+    uint N = atoi(line.c_str());
+
+    getline(file, line);
+
+    boost::split(tokens, line, boost::is_any_of(" "));
+
+    uvec3 boxSize;
+
+    bool initBox = true;
+    for (uint i = 0; i < 3; ++i)
+    {
+        boxSize(i) = atoi(tokens.at(i).c_str());
+
+        if (boxSize(i) == 0)
+        {
+            cout << "Warning: Unable to deduce system size from file.";
+
+            initBox = false;
+            break;
+        }
+    }
+
+    if (initBox)
+    {
+        cout << boxSize << endl;
+
+        Site::finalizeBoundaries();
+
+        clearSites();
+        setBoxSize(boxSize);
+        initializeSites();
+
+        Site::initializeBoundaries();
+
+    }
+
+    uint x, y, z;
+
+    vector<uint> nn;
+    vector<double> e;
+    vector<string> t;
+
+    for (uint i = 0; i < N; ++i)
+    {
+        getline(file, line);
+
+        boost::split(tokens, line, boost::is_any_of(" "));
+
+        t.push_back(tokens.at(0));
+
+        x = atoi(tokens.at(1).c_str());
+        y = atoi(tokens.at(2).c_str());
+        z = atoi(tokens.at(3).c_str());
+
+        nn.push_back(atoi(tokens.at(4).c_str()));
+        e.push_back(atof(tokens.at(5).c_str()));
+
+        forceSpawnParticle(x, y, z);
+
+    }
+
+
+#ifndef KMC_NO_DEBUG
+    uint i = 0;
+    for (SoluteParticle *p : m_particles)
+    {
+        KMCDebugger_AssertEqual(t.at(i), p->particleStateShortName());
+        KMCDebugger_AssertEqual(p->nNeighborsSum(), nn.at(i));
+        KMCDebugger_AssertClose(p->energy(), e.at(i), DiffusionReaction::potentialBox().min());
+        ++i;
+    }
+#endif
+
+    if (m_dumpXYZ)
+    {
+        xyzEvent->setOffset(frame + 1);
+    }
+
 }
 
 
@@ -915,16 +1029,16 @@ uint KMCSolver::getReactionChoice(double R)
 
 }
 
-void KMCSolver::setBoxSize(const uvec3 boxSize, bool check)
+void KMCSolver::setBoxSize(const uint NX, const uint NY, const uint NZ, bool check)
 {
 
-    KMCDebugger_Assert(Site::_refCount(), ==, 0, "Sites need to be cleared before a new boxsize is set.");
+    KMCDebugger_Assert(Site::_refCount(), ==, 0, "Sites need to be c.leared before a new boxsize is set.");
 
-    m_NX = boxSize(0);
-    m_NY = boxSize(1);
-    m_NZ = boxSize(2);
+    m_NX = NX;
+    m_NY = NY;
+    m_NZ = NZ;
 
-    m_N = boxSize;
+    m_N = {NX, NY, NZ};
 
     if (Site::nNeighborsLimit() != UNSET_UINT && check)
     {

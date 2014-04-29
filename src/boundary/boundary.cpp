@@ -28,7 +28,7 @@ Boundary::Boundary(const uint dimension, const uint orientation, const uint type
 
 Boundary::~Boundary()
 {
-    m_boundarySites.clear();
+
 }
 
 uint Boundary::transformCoordinate(const int xi) const
@@ -45,63 +45,37 @@ uint Boundary::transformCoordinate(const int xi) const
 
 }
 
-void Boundary::setupBoundarySites()
+void Boundary::getBoundarySite(uint n, uint &x, uint&y, uint &z) const
 {
-
-    uint xi = (orientation() == 0) ? 0 : (span() - 1);
-
-    m_boundarySites.clear();
-
-    if (dimension() == X)
+    if (dimension() == Z)
     {
-
-        for (uint y = 0; y < NY(); ++y)
-        {
-            for (uint z = 0; z < NZ(); ++z)
-            {
-                m_boundarySites.push_back(solver()->getSite(xi, y, z));
-            }
-        }
+        x = n/NY();
+        y = n - x*NY();
+        z = bound();
 
     }
-
     else if (dimension() == Y)
     {
-
-        for (uint x = 0; x < NX(); ++x)
-        {
-            for (uint z = 0; z < NZ(); ++z)
-            {
-                m_boundarySites.push_back(solver()->getSite(x, xi, z));
-            }
-        }
-
+        x = n/NZ();
+        y = bound();
+        z = n - x*NZ();
     }
-
     else
     {
+        KMCDebugger_Assert(dimension(), ==, X);
 
-        KMCDebugger_Assert(dimension(), ==, Z, "This else should always correspond to dim=2");
-
-        for (uint x = 0; x < NX(); ++x)
-        {
-            for (uint y = 0; y < NY(); ++y)
-            {
-                m_boundarySites.push_back(solver()->getSite(x, y, xi));
-            }
-        }
-
+        x = bound();
+        y = n/NZ();
+        z = n - y*NZ();
     }
-
-    KMCDebugger_Assert(m_boundarySites.size(), ==, NX()*NY()*NZ()/span(), "mismatch in boundary site setup.");
 
 }
 
-void Boundary::distanceFromSite(const Site *site, int &dxi, bool abs)
+void Boundary::distanceFrom(const uint xi, int &dxi, bool abs)
 {
-    uint xi = orientation() == 0 ? 0 : span() - 1;
+    uint loc = orientation() == 0 ? 0 : span() - 1;
 
-    dxi = getDistanceBetween(site->r(dimension()), xi);
+    dxi = getDistanceBetween(xi, loc);
 
     if (abs)
     {

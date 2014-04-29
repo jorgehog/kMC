@@ -25,6 +25,10 @@ using namespace arma;
 namespace kMC
 {
 
+const uint UNSET_UINT = std::numeric_limits<uint>::max();
+
+class DumpXYZ;
+
 class KMCSolver
 {
 public:
@@ -38,7 +42,6 @@ public:
 
     void reset();
 
-    const static uint UNSET_UINT = std::numeric_limits<uint>::max();
 
 
     void mainloop()
@@ -70,27 +73,24 @@ public:
     void setupMainLattice();
 
 
-    bool spawnParticle(SoluteParticle *particle, uint x, uint y, uint z, bool checkIfLegal);
+    bool spawnParticle(SoluteParticle *particle, const uint x, const uint y, const uint z, bool checkIfLegal);
 
-    bool spawnParticle(SoluteParticle *particle, Site *site, bool checkIfLegal);
+    void forceSpawnParticle(const uint x, const uint y, const uint z);
 
-    void forceSpawnParticle(uint i, uint j, uint k);
-
-    void forceSpawnParticle(Site *site);
-
-    void despawnParticle(uint i, uint j, uint k);
-
-    void despawnParticle(Site *site);
+    void despawnParticle(SoluteParticle *particle);
 
 
     void initializeCrystal(const double relativeSeedSize);
 
     void initializeSolutionBath();
 
+    void initializeFromXYZ(string path, uint frame);
+
+
     void initializeParticles();
 
 
-    void forEachSiteDo(function<void(Site * site)> applyFunction) const;
+    void forEachSiteDo(function<void(uint, uint, uint, Site *)> applyFunction) const;
 
 
     void getRateVariables();
@@ -167,7 +167,13 @@ public:
 
     //Set functions
 
-    void setBoxSize(const uvec3 boxSize, bool check = true);
+    void setBoxSize(const uvec3 boxSize, bool check = true)
+    {
+        setBoxSize(boxSize(0), boxSize(1), boxSize(2), check);
+    }
+
+    void setBoxSize(const uint NX, const uint NY, const uint NZ, bool check = true);
+
 
     void setNumberOfCycles(const uint nCycles)
     {
@@ -182,15 +188,20 @@ public:
 
     void setTargetConcentration(const double concentration)
     {
+        if (concentration > 1 || concentration < 0)
+        {
+            exit("invalid concentration set,");
+        }
+
         m_targetConcentration = concentration;
     }
 
     void setRNGSeed(uint seedState = Seed::fromTime, int defaultSeed = 0);
 
 
-    static void exit()
+    static void exit(const string s = "Exit failure.")
     {
-        throw std::runtime_error("Exit failure.");
+        throw std::runtime_error(s);
     }
 
 
@@ -207,21 +218,7 @@ public:
 
     void postReactionShuffleCleanup(const uint nVacancies);
 
-    void updateAccuAllRateElements(const uint from, const uint to, const double value)
-    {
-        for (uint i = from; i < to; ++i)
-        {
-            m_accuAllRates.at(i) += value;
-
-            if (m_accuAllRates.at(i) < 0 && m_accuAllRates.at(i) > -1E-8)
-            {
-                m_accuAllRates.at(i) = 0;
-            }
-
-            KMCDebugger_Assert(m_accuAllRates.at(i), >=, 0);
-        }
-
-    }
+    void updateAccuAllRateElements(const uint from, const uint to, const double value);
 
     double prevAccuAllRatesValue(const uint address) const
     {
@@ -232,17 +229,23 @@ public:
 
     bool isRegisteredParticle(SoluteParticle *particle) const;
 
+    bool isPossibleReaction(Reaction *reaction) const;
+
     string getReactionVectorDebugMessage();
 
     void dumpXYZ(const uint n);
 
 
-    double minRateThreshold()
+
+    const static double minRateThreshold()
     {
-        return max((*std::min_element(m_allPossibleReactions.begin(),
-                                  m_allPossibleReactions.end(),
-                                  [] (const Reaction *r1, const Reaction *r2) {return r1->rate() < r2->rate();}))->rate()/2,
-                   1E-8);
+//        return max((*std::min_element(m_allPossibleReactions.begin(),
+//                                  m_allPossibleReactions.end(),
+//                                  [] (const Reaction *r1, const Reaction *r2) {return r1->rate() < r2->rate();}))->rate()/2,
+//                   1E-8);
+
+        return Reaction::linearRateScale()*1E-8;
+
     }
 
 
@@ -296,6 +299,7 @@ private:
 
     static bool m_dumpXYZ;
 
+    DumpXYZ *xyzEvent;
 
     static uint refCounter;
 

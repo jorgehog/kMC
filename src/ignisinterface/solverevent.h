@@ -70,13 +70,18 @@ class DumpXYZ : public KMCEvent
 {
 public:
 
-    DumpXYZ() : KMCEvent("DumpXYZ") {}
+    DumpXYZ() : KMCEvent("DumpXYZ"), offset(0) {}
+
+    void setOffset(const uint offset)
+    {
+        this->offset = offset;
+    }
 
 protected:
 
     void initialize()
     {
-        outputCounter = 0;
+        outputCounter = offset;
     }
 
     void execute()
@@ -87,13 +92,14 @@ protected:
         }
 
         cout << "Storing XYZ: " << outputCounter << endl;
-
         solver()->dumpXYZ(outputCounter++);
+
     }
 
 private:
 
     uint outputCounter;
+    uint offset;
 
 };
 
