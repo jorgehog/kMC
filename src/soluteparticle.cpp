@@ -54,6 +54,10 @@ void SoluteParticle::setNewPosition(const uint x, const uint y, const uint z)
     KMCDebugger_Assert(y, <, NY(), "mismatch in coordiantes. ", info());
     KMCDebugger_Assert(z, <, NZ(), "mismatch in coordiantes. ", info());
 
+    m_x = x;
+    m_y = y;
+    m_z = z;
+
     m_solver->registerParticle(this);
 
     setupAllNeighbors();

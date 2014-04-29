@@ -351,6 +351,15 @@ public:
 
     void forEachActiveReactionDo_sendIndex(function<void (Reaction*, uint)> applyFunction) const;
 
+    SoluteParticle *neighborhood(const int dx, const int dy, const int dz)
+    {
+        return Site::neighborhood(m_x, m_y, m_z, dx, dy, dz);
+    }
+
+    SoluteParticle *neighborhood_fromIndex(const uint i, const uint j, const uint k)
+    {
+        return Site::neighborhood_fromIndex(m_x, m_y, m_z, i, j, k);
+    }
 
     void forEachNeighborSiteDo(function<void (SoluteParticle *)> applyFunction)
     {

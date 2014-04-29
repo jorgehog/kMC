@@ -51,27 +51,29 @@ protected:
 
     void execute()
     {
-        uint A = 0;
-        solver()->forEachSiteDo([&A] (uint x, uint y, uint z, Site* _site)
+        A = 0;
+
+        solver()->forEachSiteDo([this] (uint x, uint y, uint z)
         {
-            Site *site = _site;
 
-            if (!site->isActive())
+            particle = solver()->particle(x, y, z);
+
+            if (particle == NULL)
             {
                 return;
             }
 
-            if (site->associatedParticle()->isCrystal())
+            if (particle->isCrystal())
             {
                 return;
             }
 
-            if (!site->hasNeighboring(x, y, z, ParticleStates::crystal))
+            if (particle->hasNeighboring(ParticleStates::crystal))
             {
                return;
             }
 
-            uint nC = site->countNeighboring(x, y, z, ParticleStates::crystal);
+            uint nC = particle->countNeighboring(ParticleStates::crystal);
 
             if (nC == 1)
             {
@@ -96,6 +98,10 @@ protected:
 private:
 
     static const double pi3root;
+
+    SoluteParticle *particle;
+
+    uint A;
 
 };
 
