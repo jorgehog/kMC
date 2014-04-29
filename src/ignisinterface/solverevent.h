@@ -24,7 +24,6 @@ public:
         KMCDebugger_Init();
 
         KMCDebugger_AssertBool(Site::boundariesIsInitialized(), "Boundaries are not initialized.");
-        KMCDebugger_Assert(Site::_refCount(), !=, 0, "Sites need to be initialized.");
 
         solver()->getRateVariables();
 

@@ -14,18 +14,6 @@
 using namespace kMC;
 
 
-Site::Site()
-{
-    refCounter++;
-}
-
-
-Site::~Site()
-{
-    refCounter--;
-}
-
-
 void Site::loadConfig(const Setting &setting)
 {
 
@@ -49,7 +37,6 @@ void Site::loadConfig(const Setting &setting)
 
 void Site::initializeBoundaries()
 {
-    KMCDebugger_Assert(Site::_refCount(), !=, 0, "Sites needs to be enabled to initialize boundaries.");
     KMCDebugger_AssertBool(!Site::boundariesIsInitialized(), "Boundaries needs to be finalized before they can be initialized.");
 
     KMCDebugger_SetEnabledTo(false);
@@ -379,11 +366,12 @@ void Site::clearAll()
 void Site::resetBoundariesTo(const umat &boundaryMatrix)
 {
 
-    KMCDebugger_Assert(refCounter, ==, 0, "Sites must be cleared before the neighborhood length can change.");
+    if (!m_boundaries.empty())
+    {
+        finalizeBoundaries();
 
-    finalizeBoundaries();
-
-    clearBoundaries();
+        clearBoundaries();
+    }
 
     setInitialBoundaries(boundaryMatrix);
 
@@ -396,11 +384,7 @@ void Site::resetBoundariesTo(const int boundaryType)
 
 void Site::resetNNeighborsLimitTo(const uint &nNeighborsLimit, bool check)
 {
-
-    KMCDebugger_Assert(refCounter, ==, 0, "Sites must be cleared before the neighborhood length can change.");
-
     setInitialNNeighborsLimit(nNeighborsLimit, check);
-
 }
 
 
@@ -485,7 +469,7 @@ const string Site::info(const uint x, const uint y, const uint z, int xr, int yr
                     //BLOCKED
                     if (currentParticle == NULL)
                     {
-                        cout << "need explicit check for blocked." << endl;
+                        cout << "derp: need explicit check for blocked." << endl;
                         nN(i, j, k) = _min;
                         nN(i, j, k) = _min + 1;
                     }
@@ -724,7 +708,5 @@ field<Boundary*> Site::m_boundaries;
 field<const Setting*> Site::m_boundaryConfigs;
 
 umat Site::m_boundaryTypes;
-
-uint Site::refCounter = 0;
 
 

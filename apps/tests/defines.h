@@ -13,7 +13,6 @@
     std::cout << s.str(); \
     \
     KMCDebugger_AssertBool(Site::boundariesIsInitialized(), "Boundaries are not initialized."); \
-    KMCDebugger_Assert(Site::_refCount(), !=, 0, "Sites need to be initialized."); \
     \
     testBed::timer.tic(); \
     testBed::test##which(__VA_ARGS__); \

@@ -69,8 +69,6 @@ void SoluteParticle::setNewPosition(const uint x, const uint y, const uint z)
         neighbor->addNeighbor(this, i, j, k);
     });
 
-
-
     markAsAffected();
 
     forEachActiveReactionDo([] (Reaction *reaction)
@@ -263,6 +261,8 @@ uint SoluteParticle::nActiveReactions() const
 void SoluteParticle::markAsAffected()
 {
     m_affectedParticles.insert(this);
+
+    KMCDebugger_Assert(m_affectedParticles.size(), !=, 0);
 }
 
 void SoluteParticle::updateReactions()
@@ -295,7 +295,19 @@ void SoluteParticle::setupAllNeighbors()
 
     forEachNeighborSiteDo_sendIndices([this] (SoluteParticle *neighbor, uint i, uint j, uint k)
     {
-        this->addNeighbor(neighbor, i, j, k);
+        (void) neighbor;
+
+        const uint level = Site::levelMatrix(i, j, k);
+
+        m_nNeighbors(level)++;
+
+        m_nNeighborsSum++;
+
+        const double dE = DiffusionReaction::potential(i, j, k);
+
+        m_energy += dE;
+
+        m_totalEnergy += dE;
     });
 
 

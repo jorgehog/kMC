@@ -210,7 +210,7 @@ void DiffusionReaction::setupPotential()
 
 }
 
-SoluteParticle *DiffusionReaction::destinationSite() const
+SoluteParticle *DiffusionReaction::destination() const
 {
     return Site::neighborhood(x(), y(), z(), m_path[0], m_path[1], m_path[2]);
 }
@@ -323,9 +323,13 @@ double DiffusionReaction::getSaddleEnergyContributionFrom(const SoluteParticle *
 
     reactant()->distanceTo(particle, X, Y, Z);
 
-    return getSaddleEnergyContributionFromNeighborAt(X + Site::nNeighborsLimit(),
-                                                     Y + Site::nNeighborsLimit(),
-                                                     Z + Site::nNeighborsLimit());
+    double xs, ys, zs;
+
+    xs = reactant()->x() + m_path[0]/2;
+    ys = reactant()->y() + m_path[1]/2;
+    zs = reactant()->z() + m_path[2]/2;
+
+
 
 }
 
@@ -427,7 +431,7 @@ const string DiffusionReaction::info(int xr, int yr, int zr, string desc) const
 
     s << "Reaction initiates diffusion to\n\n";
 
-    if (destinationSite() == NULL)
+    if (destination() == NULL)
     {
         s << "BOUNDARY";
     }
@@ -447,13 +451,7 @@ const string DiffusionReaction::info(int xr, int yr, int zr, string desc) const
 
 bool DiffusionReaction::isAllowed() const
 {
-
-    if (destinationSite() == NULL)
-    {
-        return false;
-    }
-
-    return !destinationSite()->isActive();
+    return destination() == NULL;
 }
 
 void DiffusionReaction::reset()

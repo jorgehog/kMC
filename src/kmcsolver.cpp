@@ -899,8 +899,6 @@ uint KMCSolver::getReactionChoice(double R)
 void KMCSolver::setBoxSize(const uint NX, const uint NY, const uint NZ, bool check)
 {
 
-    KMCDebugger_Assert(Site::_refCount(), ==, 0, "Sites need to be c.leared before a new boxsize is set.");
-
     m_NX = NX;
     m_NY = NY;
     m_NZ = NZ;

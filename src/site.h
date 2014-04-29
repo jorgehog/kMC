@@ -26,10 +26,6 @@ class Site
 {
 public:
 
-    Site();
-
-    ~Site();
-
     /*
      * Static non-trivial functions
      */
@@ -196,10 +192,6 @@ public:
 
     static const uint &N(const uint i);
 
-    static const uint & _refCount()
-    {
-        return refCounter;
-    }
 
 private:
 
@@ -222,9 +214,6 @@ private:
 
 
     static KMCSolver* m_solver;
-
-
-    static uint refCounter;
 
 };
 

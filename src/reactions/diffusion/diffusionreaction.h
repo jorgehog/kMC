@@ -59,7 +59,7 @@ public:
         return m_potential;
     }
 
-    SoluteParticle *destinationSite() const;
+    SoluteParticle *destination() const;
 
     const int &path(const int i) const
     {
@@ -148,7 +148,7 @@ public:
 
         s << setw(2) << m_path[0] << "," << setw(2) << m_path[1] << "," << setw(2) << m_path[2];
 
-        if (destinationSite() == NULL)
+        if (destination() == NULL)
         {
             s << " (b)";
         }

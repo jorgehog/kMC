@@ -10,7 +10,7 @@
 
 
 //#define focusSuite "Misc"
-#define focusTest  "Sequential"
+//#define focusTest  "Sequential"
 
 
 #include "defines.h"
