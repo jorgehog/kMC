@@ -9,8 +9,21 @@
 #include <sstream>
 
 
+#ifndef NDEBUG
+#include <set>
+#else
+#include <unordered_set>
+#endif
+
 namespace kMC
 {
+
+
+#ifndef NDEBUG
+typedef set<SoluteParticle*, function<bool(SoluteParticle*, SoluteParticle*)> > particleSet;
+#else
+typedef unordered_set<SoluteParticle*> particleSet;
+#endif
 
 class Reaction;
 class DiffusionReaction;
@@ -23,13 +36,15 @@ public:
 
     ~SoluteParticle();
 
-    void setSite(Site * site);
+    void setSite(const uint x, const uint y, const uint z);
 
-    void trySite(Site * site);
+    void trySite(const uint x, const uint y, const uint z);
+
+    void resetSite();
 
     void disableSite();
 
-    void changeSite(Site *newSite);
+    void changePosition(const uint x, const uint y, const uint z);
 
     const Site *site() const
     {
@@ -42,6 +57,8 @@ public:
     /*
      * Static non-trivial functions
      */
+
+    static void setMainSolver(KMCSolver* solver);
 
 
     static void selectUpdateFlags();
@@ -57,6 +74,8 @@ public:
      *  Misc static property functions
      */
 
+
+    static double getCurrentSolvantVolume();
 
     static double getCurrentConcentration();
 
@@ -77,6 +96,46 @@ public:
     /*
      * Misc. trivial functions
      */
+
+    static KMCSolver * solver()
+    {
+        return m_solver;
+    }
+
+    const uint & x() const
+    {
+        return m_x;
+    }
+
+    const uint & y() const
+    {
+        return m_y;
+    }
+
+    const uint & z() const
+    {
+        return m_z;
+    }
+
+    const uint & r(const uint i) const
+    {
+        switch (i) {
+        case 0:
+            return m_x;
+            break;
+        case 1:
+            return m_y;
+            break;
+        case 2:
+            return m_z;
+            break;
+        default:
+            break;
+        }
+
+        return m_x;
+
+    }
 
 
     static const uint & nSurfaces()
@@ -112,6 +171,11 @@ public:
     static const uint & totalParticles(const uint i)
     {
         return m_totalParticles(i);
+    }
+
+    static bool isAffected(SoluteParticle *particle)
+    {
+        return m_affectedParticles.find(particle) != m_affectedParticles.end();
     }
 
 
@@ -166,52 +230,15 @@ public:
 
     bool isAffected()
     {
-        return m_affectedParticles.find(this) != m_affectedParticles.end();
+        return isAffected(this);
     }
 
     void markAsAffected();
 
-    const vector<vector<SoluteParticle*> > & neighbouringParticles() const
-    {
-        return m_neighboringParticles;
-    }
 
-
-    const vector<SoluteParticle*> & neighbouringParticles(const uint level) const
-    {
-        return m_neighboringParticles.at(level);
-    }
-
-    const vector<SoluteParticle*> & closestNeighbors() const
-    {
-        return m_neighboringParticles.at(0);
-    }
-
-
-
-    const static set<SoluteParticle*, function<bool(SoluteParticle*, SoluteParticle*)> > & affectedParticles()
+    static const particleSet & affectedParticles()
     {
         return m_affectedParticles;
-    }
-
-    const uint & x() const
-    {
-        return m_site->x();
-    }
-
-    const uint & y() const
-    {
-        return m_site->y();
-    }
-
-    const uint & z() const
-    {
-        return m_site->z();
-    }
-
-    const uint & r(const uint i) const
-    {
-        return m_site->r(i);
     }
 
 
@@ -221,7 +248,7 @@ public:
     }
 
 
-    DiffusionReaction* diffusionReactions(const uint i, const uint j, const uint k)
+    DiffusionReaction* diffusionReactions(const uint i, const uint j, const uint k) const
     {
         return m_diffusionReactions[i][j][k];
     }
@@ -233,10 +260,20 @@ public:
         return this == &other;
     }
 
+    bool operator < (const SoluteParticle * other) const
+    {
+        return this->ID() < other->ID();
+    }
+
+    bool operator > (const SoluteParticle * other) const
+    {
+        return this->ID() > other->ID();
+    }
+
     const string str() const
     {
         stringstream s;
-        s << "SoluteParticle@(" << x() << ", " << y() << ", " << z() << ")";
+        s << "SoluteParticle" << m_ID << "@(" << x() << ", " << y() << ", " << z() << ")";
         return s.str();
     }
 
@@ -254,7 +291,6 @@ public:
     /*
      * Non-trivial functions
      */
-
 
     void setParticleState(int newState);
 
@@ -274,8 +310,6 @@ public:
     {
         return nNeighbors() == 0;
     }
-
-    bool isNeighbor(SoluteParticle *particle, uint level);
 
     void reset();
 
@@ -297,14 +331,47 @@ public:
     void _updateNeighborProps(const int sign, const SoluteParticle *neighbor, const uint level);
 
 
+    void distanceTo(const SoluteParticle *other, int &dx, int &dy, int &dz, bool absolutes = false) const;
+
     double potentialBetween(const SoluteParticle *other);
 
+    uint maxDistanceTo(const SoluteParticle *other) const;
 
-    inline void forEachNeighborDo(function<void (SoluteParticle*, const uint)> applyFunction) const;
+    bool hasNeighboring(const int state) const
+    {
+        return Site::countNeighboring(m_x, m_y, m_z, state);
+    }
+
+    uint countNeighboring(const int state) const
+    {
+        return Site::countNeighboring(m_x, m_y, m_z, state);
+    }
+
 
     void forEachActiveReactionDo(function<void (Reaction*)> applyFunction) const;
 
     void forEachActiveReactionDo_sendIndex(function<void (Reaction*, uint)> applyFunction) const;
+
+
+    void forEachNeighborSiteDo(function<void (Site *)> applyFunction)
+    {
+        Site::forEachNeighborDo(m_x, m_y, m_z, applyFunction);
+    }
+
+    void forEachNeighborSiteDo(function<void (Site *)> applyFunction) const
+    {
+        Site::forEachNeighborDo(m_x, m_y, m_z, applyFunction);
+    }
+
+    void forEachNeighborSiteDo_sendPath(function<void (Site *, int, int, int)> applyFunction)
+    {
+        Site::forEachNeighborDo_sendPath(m_x, m_y, m_z, applyFunction);
+    }
+
+    void forEachNeighborSiteDo_sendIndices(function<void (Site *, uint, uint, uint)> applyFunction)
+    {
+        Site::forEachNeighborDo_sendIndices(m_x, m_y, m_z, applyFunction);
+    }
 
 
     const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const;
@@ -321,7 +388,7 @@ private:
     static double m_totalEnergy;
 
 
-    static set<SoluteParticle*, function<bool(SoluteParticle*, SoluteParticle*)> > m_affectedParticles;
+    static particleSet m_affectedParticles;
 
 
     int m_particleState;
@@ -335,14 +402,18 @@ private:
     Site *m_site;
 
 
+    uint m_x;
+
+    uint m_y;
+
+    uint m_z;
+
+
     uvec m_nNeighbors;
 
     uint m_nNeighborsSum;
 
     double m_energy;
-
-
-    vector<vector<SoluteParticle*> > m_neighboringParticles;
 
 
     void initializeDiffusionReactions();
@@ -357,25 +428,14 @@ private:
 
     const uint m_ID;
 
+    static uint ID_count;
+
     static uint refCounter;
+
+    static KMCSolver* m_solver;
 
 
 };
-
-
-void SoluteParticle::forEachNeighborDo(function<void (SoluteParticle *, const uint)> applyFunction) const
-{
-
-    for (uint level = 0; level < Site::nNeighborsLimit(); ++level)
-    {
-        for (SoluteParticle *neighbor : m_neighboringParticles.at(level))
-        {
-            applyFunction(neighbor, level);
-        }
-    }
-
-}
-
 
 
 }

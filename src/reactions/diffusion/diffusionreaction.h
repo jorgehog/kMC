@@ -30,11 +30,9 @@ public:
 
     double getSaddleEnergy();
 
-    double getSaddleEnergyContributionFrom(const Site* site);
+    double getSaddleEnergyContributionFrom(const SoluteParticle *particle);
 
     double getSaddleEnergyContributionFromNeighborAt(const uint &i, const uint &j, const uint &k);
-
-    ivec3 getPath() const;
 
     static umat::fixed<3, 2> makeSaddleOverlapMatrix(const ivec &relCoor);
 
@@ -51,7 +49,6 @@ public:
         neighborSetIntersectionPoints.reset();
     }
 
-
     static const double & potential(const uint & x, const uint & y, const uint & z)
     {
         return m_potential(x, y, z);
@@ -64,16 +61,21 @@ public:
 
     Site *destinationSite() const;
 
+    const int &path(const int i) const
+    {
+        return m_path[i];
+    }
+
     const double & lastUsedEsp() const
     {
         return m_lastUsedEsp;
     }
 
-    const uint & xD () const;
+    uint xD() const;
 
-    const uint & yD () const;
+    uint yD() const;
 
-    const uint & zD () const;
+    uint zD() const;
 
 
     //static setters
@@ -121,7 +123,7 @@ private:
 
     uint saddleFieldIndices[3];
 
-    int path[3];
+    int m_path[3];
 
     // Reaction interface
 public:
@@ -144,7 +146,17 @@ public:
     {
         stringstream s;
 
-        s << setw(3) << xD() << "," << setw(3) << yD() << "," << setw(3) << zD();
+        s << setw(2) << m_path[0] << "," << setw(2) << m_path[1] << "," << setw(2) << m_path[2];
+
+        if (destinationSite() == NULL)
+        {
+            s << " (b)";
+        }
+
+        else
+        {
+            s << "    ";
+        }
 
         return s.str();
     }

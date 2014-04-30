@@ -19,7 +19,8 @@
     testBed::test##which(__VA_ARGS__); \
     std::cout << "Done (" << std::setprecision(1) << std::fixed << testBed::timer.toc() << " s)" << std::endl; \
     \
-    testBed::solver->reset()
+    testBed::solver->reset(); \
+    testBed::initSimpleSystemParameters()
 
 
 #ifdef focusTest

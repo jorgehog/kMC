@@ -37,6 +37,9 @@
     __PRETTY_FUNCTION__, \
     __LINE__, ##__VA_ARGS__))
 
+#define KMCDebugger_AssertEqual(A, B, ...) \
+    KMCDebugger_Assert(A, ==, B, ##__VA_ARGS__)
+
 #define KMCDebugger_AssertClose(A, B, lim, ...) \
     ((A > B) \
     ? KMCDebugger_Assert(A - B, <=, lim, ##__VA_ARGS__) \

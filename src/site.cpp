@@ -14,11 +14,8 @@
 using namespace kMC;
 
 
-Site::Site(uint _x, uint _y, uint _z) :
-    m_associatedParticle(NULL),
-    m_x(_x),
-    m_y(_y),
-    m_z(_z)
+Site::Site() :
+    m_associatedParticle(NULL)
 {
     refCounter++;
 }
@@ -70,6 +67,7 @@ void Site::initializeBoundaries()
 
 void Site::updateBoundaries()
 {
+
     for (uint i = 0; i < 3; ++i) {
         for (uint j = 0; j < 2; ++j) {
             m_boundaries(i, j)->update();
@@ -100,9 +98,9 @@ uint Site::maxNeighbors()
 
 
 
-void Site::forEachNeighborDo(function<void (Site *)> applyFunction) const
+void Site::forEachNeighborDo(uint x, uint y, uint z, function<void (Site *)> applyFunction)
 {
-    forEachNeighborDo_sendPath([&applyFunction] (Site *site, int dx, int dy, int dz)
+    forEachNeighborDo_sendPath(x, y, z, [&applyFunction] (Site *site, int dx, int dy, int dz)
     {
         (void)dx;
         (void)dy;
@@ -111,8 +109,9 @@ void Site::forEachNeighborDo(function<void (Site *)> applyFunction) const
     });
 }
 
-void Site::forEachNeighborDo_sendPath(function<void (Site *, int, int, int)> applyFunction) const
+void Site::forEachNeighborDo_sendPath(uint x, uint y, uint z, function<void (Site *, int, int, int)> applyFunction)
 {
+
     Site *neighbor;
 
     for (const int &dx : m_originTransformVector)
@@ -121,16 +120,15 @@ void Site::forEachNeighborDo_sendPath(function<void (Site *, int, int, int)> app
         {
             for (const int &dz : m_originTransformVector)
             {
-                neighbor = neighborhood(dx, dy, dz);
+                neighbor = neighborhood(x, y, z, dx, dy, dz);
 
                 if (neighbor == NULL)
                 {
                     continue;
                 }
 
-                else if (neighbor == this)
+                else if (dx == dy && dy == dz && dz == 0)
                 {
-                    KMCDebugger_AssertBool(dx == dy && dy == dz && dz == 0);
                     continue;
                 }
 
@@ -141,7 +139,7 @@ void Site::forEachNeighborDo_sendPath(function<void (Site *, int, int, int)> app
     }
 }
 
-void Site::forEachNeighborDo_sendIndices(function<void (Site *, uint, uint, uint)> applyFunction) const
+void Site::forEachNeighborDo_sendIndices(uint x, uint y, uint z, function<void (Site *, uint, uint, uint)> applyFunction)
 {
 
     Site * neighbor;
@@ -153,15 +151,15 @@ void Site::forEachNeighborDo_sendIndices(function<void (Site *, uint, uint, uint
             for (const uint &k : m_neighborhoodIndices)
             {
 
-                neighbor = neighborhood_fromIndex(i, j, k);
+                neighbor = neighborhood_fromIndex(x, y, z, i, j, k);
 
                 if (neighbor == NULL)
                 {
                     continue;
                 }
 
-                else if (neighbor == this) {
-                    KMCDebugger_AssertBool(i == j && j == k && k == m_nNeighborsLimit);
+                else if (i == j && j == k && k == m_nNeighborsLimit)
+                {
                     continue;
                 }
 
@@ -174,9 +172,28 @@ void Site::forEachNeighborDo_sendIndices(function<void (Site *, uint, uint, uint
     }
 }
 
-Site *Site::neighborhood(const int x, const int y, const int z) const
+Site *Site::neighborhood(const int x, const int y, const int z, const int xr, const int yr, const int zr)
 {
-    return m_solver->getSite(x + (int)m_x, y + (int)m_y, z + (int)m_z);
+    KMCDebugger_Assert(x, >=, 0);
+    KMCDebugger_Assert(y, >=, 0);
+    KMCDebugger_Assert(z, >=, 0);
+
+    KMCDebugger_Assert(x, <, (int)NX());
+    KMCDebugger_Assert(y, <, (int)NY());
+    KMCDebugger_Assert(z, <, (int)NZ());
+
+    return m_solver->getSite(xr + x, yr + y, zr + z);
+}
+
+const string Site::str(const uint x, const uint y, const uint z)
+
+{
+    stringstream s;
+
+    s << "Site@(" << setw(3) << x << "," << setw(3) << y << "," << setw(3) << z << ")";
+
+
+    return s.str();
 }
 
 
@@ -187,12 +204,12 @@ void Site::setMainSolver(KMCSolver *solver)
 }
 
 
-void Site::distanceTo(const Site *other, int &dx, int &dy, int &dz, bool absolutes) const
+void Site::distanceBetween(const uint x0, const uint y0, const uint z0, const uint x1, const uint y1, const uint z1, int &dx, int &dy, int &dz, bool absolutes)
 {
 
-    dx = m_boundaries(0)->getDistanceBetween(other->x(), m_x);
-    dy = m_boundaries(1)->getDistanceBetween(other->y(), m_y);
-    dz = m_boundaries(2)->getDistanceBetween(other->z(), m_z);
+    dx = m_boundaries(0)->getDistanceBetween(x1, x0);
+    dy = m_boundaries(1)->getDistanceBetween(y1, y0);
+    dz = m_boundaries(2)->getDistanceBetween(z1, z0);
 
     if (absolutes) {
         dx = std::abs(dx);
@@ -202,19 +219,17 @@ void Site::distanceTo(const Site *other, int &dx, int &dy, int &dz, bool absolut
 
 }
 
-uint Site::maxDistanceTo(const Site *other) const
+uint Site::maxDistanceBetween(const uint x0, const uint y0, const uint z0, const uint x1, const uint y1, const uint z1)
 {
     int X, Y, Z;
 
-    this->distanceTo(other, X, Y, Z, true);
+    distanceBetween(x0, y0, z0, x1, y1, z1, X, Y, Z, true);
 
     return getLevel((uint)X, (uint)Y, (uint)Z) + 1;
-
 }
 
 
-
-bool Site::hasNeighboring(const int state) const
+bool Site::hasNeighboring(const uint x, const uint y, const uint z, const int state)
 {
 
     Site * nextNeighbor;
@@ -226,21 +241,21 @@ bool Site::hasNeighboring(const int state) const
             for (int k = -1; k <= 1; ++k)
             {
 
-                nextNeighbor = neighborhood(i, j, k);
+                nextNeighbor = neighborhood(x, y, z, i, j, k);
 
                 if (nextNeighbor == NULL)
                 {
                     continue;
                 }
 
-                else if (nextNeighbor == this)
+                else if (i == j && j == k && k == 0)
                 {
                     continue;
                 }
 
                 else if (nextNeighbor->isActive())
                 {
-                    if (m_associatedParticle->particleState() == state)
+                    if (nextNeighbor->associatedParticle()->particleState() == state)
                     {
                         return true;
                     }
@@ -254,8 +269,7 @@ bool Site::hasNeighboring(const int state) const
 
 }
 
-
-uint Site::countNeighboring(int state) const
+uint Site::countNeighboring(const uint x, const uint y, const uint z, const int state)
 {
 
     Site * nextNeighbor;
@@ -268,22 +282,21 @@ uint Site::countNeighboring(int state) const
         {
             for (int k = -1; k <= 1; ++k)
             {
+                if (i == j && j == k && k == 0)
+                {
+                    continue;
+                }
 
-                nextNeighbor = neighborhood(i, j, k);
+                nextNeighbor = neighborhood(x, y, z, i, j, k);
 
                 if (nextNeighbor == NULL)
                 {
                     continue;
                 }
 
-                else if (nextNeighbor == this)
-                {
-                    continue;
-                }
-
                 else if (nextNeighbor->isActive())
                 {
-                    if (m_associatedParticle->particleState() == state)
+                    if (nextNeighbor->associatedParticle()->particleState() == state)
                     {
                         count++;
                     }
@@ -354,8 +367,8 @@ umat Site::getCurrentCrystalBoxTopology()
 void Site::clearAll()
 {
 
-    m_nNeighborsLimit = KMCSolver::UNSET_UINT;
-    m_neighborhoodLength = KMCSolver::UNSET_UINT;
+    m_nNeighborsLimit = UNSET_UINT;
+    m_neighborhoodLength = UNSET_UINT;
 
     m_levelMatrix.reset();
     m_originTransformVector.reset();
@@ -422,21 +435,22 @@ void Site::finalizeBoundaries()
 }
 
 
-const string Site::info(int xr, int yr, int zr, string desc) const
+const string Site::info(const uint x, const uint y, const uint z, int xr, int yr, int zr, string desc)
 {
 
     stringstream s_full;
 
-    s_full << str();
-    s_full << "[" << NX() << " x " << NY() << " x " << NZ() << "] * ";
+    s_full << str(x, y, z);
+    s_full << "[" << NX() << " x " << NY() << " x " << NZ() << "]";
 
-    if (isActive())
+    Site *site = solver()->getSite(x, y, z);
+
+    if (site->isActive())
     {
-        s_full << "Active";
 
-        const SoluteParticle *particle = associatedParticle();
+        const SoluteParticle *particle = site->associatedParticle();
 
-        s_full << " " << particle->particleStateName();
+        s_full << " * " << particle->particleStateName();
 
         s_full << " * Neighbors: ";
 
@@ -446,14 +460,7 @@ const string Site::info(int xr, int yr, int zr, string desc) const
 
         }
 
-
     }
-
-    else
-    {
-        s_full << "Deactive";
-    }
-
 
     s_full << "\n";
 
@@ -462,40 +469,49 @@ const string Site::info(int xr, int yr, int zr, string desc) const
     ucube nN;
     nN.copy_size(m_levelMatrix);
 
-    forEachNeighborDo_sendIndices([&] (Site *currentSite, uint i, uint j, uint k)
+    Site * currentSite;
+
+    for (const uint &i : m_neighborhoodIndices)
     {
-        //BLOCKED
-        if (currentSite == NULL)
+        for (const uint &j : m_neighborhoodIndices)
         {
-            nN(i, j, k) = _min + 1;
+            for (const uint &k : m_neighborhoodIndices)
+            {
+
+                currentSite = neighborhood_fromIndex(x, y, z, i, j, k);
+
+                //BLOCKED
+                if (currentSite == NULL)
+                {
+                    nN(i, j, k) = _min + 1;
+                }
+
+                //THIS SITE
+                else if (currentSite == site)
+                {
+                    nN(i, j, k) = _min + 2;
+                }
+
+                //MARKED SITE
+                else if ((i == Site::nNeighborsLimit() + xr) && (j == Site::nNeighborsLimit() + yr) && (k == Site::nNeighborsLimit() + zr))
+                {
+                    nN(i, j, k) = _min + 3;
+                }
+
+                //ACTIVE PARTICLE
+                else if (currentSite->isActive())
+                {
+                    nN(i, j, k) = currentSite->associatedParticle()->particleState();
+                }
+
+                else
+                {
+                    nN(i, j, k) = _min;
+                }
+
+            }
         }
-
-        //THIS SITE
-        else if (currentSite == this)
-        {
-            nN(i, j, k) = _min + 2;
-        }
-
-        //MARKED SITE
-        else if ((i == Site::nNeighborsLimit() + xr) && (j == Site::nNeighborsLimit() + yr) && (k == Site::nNeighborsLimit() + zr))
-        {
-            nN(i, j, k) = _min + 3;
-        }
-
-        //ACTIVE PARTICLE
-        else if (currentSite->isActive())
-        {
-            KMCDebugger_Assert(currentSite->associatedParticle(), !=, NULL);
-
-            nN(i, j, k) = currentSite->associatedParticle()->particleState();
-        }
-
-        else
-        {
-            nN(i, j, k) = _min;
-        }
-
-    });
+    }
 
 
     umat A;
@@ -555,7 +571,7 @@ const string Site::info(int xr, int yr, int zr, string desc) const
 
     numberSearchRepl(_min+0, ".");
     numberSearchRepl(_min+1, "#");
-    numberSearchRepl(_min+2, isActive() ? associatedParticle()->particleStateShortName() + "^" : "D");
+    numberSearchRepl(_min+2, site->isActive() ? site->associatedParticle()->particleStateShortName() + "^" : "D");
     numberSearchRepl(_min+3, desc);
 
     s_full << s;
@@ -697,9 +713,9 @@ const uint &Site::N(const uint i)
 
 KMCSolver* Site::m_solver;
 
-uint       Site::m_nNeighborsLimit = KMCSolver::UNSET_UINT;
+uint       Site::m_nNeighborsLimit = UNSET_UINT;
 
-uint       Site::m_neighborhoodLength = KMCSolver::UNSET_UINT;
+uint       Site::m_neighborhoodLength = UNSET_UINT;
 
 
 ucube      Site::m_levelMatrix;
@@ -727,9 +743,16 @@ ostream & operator << (ostream& os, const Site& ss)
         os << "NULL";
     }
 
+    else if (ss.isActive())
+    {
+        os << Site::str(ss.associatedParticle()->x(),
+                        ss.associatedParticle()->y(),
+                        ss.associatedParticle()->z());
+    }
+
     else
     {
-        os << ss.str();
+        os << "Deactive site.";
     }
 
     return os;

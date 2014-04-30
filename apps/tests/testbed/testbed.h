@@ -31,9 +31,15 @@ public:
 
     static void testRNG();
 
+    static void testBoundarySites();
+
+    static void testConcentrationWall();
+
     static void testBinarySearchChoise();
 
     static void testReactionChoise();
+
+    static void testAffectedParticles();
 
     static void testRateCalculation();
 
@@ -66,6 +72,8 @@ public:
     static void testInitialSiteSetup();
 
 
+    static void initSimpleSystemParameters(bool clean = true);
+
     static void initBoundarySuite(const umat &boundaries);
 
     static KMCSolver* solver;
@@ -96,17 +104,18 @@ private:
 
     static void fill_rate_stuff(vector<double> &accuAllRates, vector<Reaction *> &allPossibleReactions, double &kTot);
 
-    static const SnapShot *testSequentialCore();
+    static const SnapShot *sequentialCore();
 
     static void initBoundaryTestParameters();
 
-    static void initSimpleSystemParameters();
 
     static void activateAllSites();
 
     static void deactivateAllSites();
 
     static Site * getBoxCenter(const int dx = 0, const int dy = 0, const int dz = 0);
+
+    static void forceSpawnCenter(const int dx = 0, const int dy = 0, const int dz = 0);
 
     static string lastBoundariesName;
 

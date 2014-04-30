@@ -27,7 +27,7 @@ public:
     // Boundary interface
 public:
     void update();
-    void initialize();
+    void initialize() {}
 
 private:
 
