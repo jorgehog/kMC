@@ -256,7 +256,7 @@ public:
 
 
 
-    const static double minRateThreshold()
+    static double minRateThreshold()
     {
 //        return max((*std::min_element(m_allPossibleReactions.begin(),
 //                                  m_allPossibleReactions.end(),
