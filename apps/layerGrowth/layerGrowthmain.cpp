@@ -258,6 +258,8 @@ void initialize_layerGrowth(KMCSolver * solver, const Setting & root)
         }
     }
 
+    solver->initializeSolutionBath();
+
     LayerSize *layerSize = new LayerSize();
     solver->addEvent(layerSize);
     solver->addEvent(new ClusterNess(layerSize));
