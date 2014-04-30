@@ -23,7 +23,7 @@ int main()
 
     KMCDebugger_SetFilename("diamondSquareSurface");
 
-    KMCDebugger_SetEnabledTo(getSurfaceSetting<int>(root, "buildTrace") == 0 ? false : true);
+    KMCDebugger_SetEnabledTo(getSetting<int>(root, "buildTrace") == 0 ? false : true);
 
 
     KMCSolver* solver = new KMCSolver(root);
@@ -57,17 +57,17 @@ enum RNG
 void initialize_diamondSquareSurface(KMCSolver * solver, const Setting & root)
 {
 
-    const Setting & initCFG  = getSurfaceSetting(root, "Initialization");
+    const Setting & initCFG  = getSetting(root, "Initialization");
 
-    double H                 = getSurfaceSetting<double>(initCFG, "H");
+    double H                 = getSetting<double>(initCFG, "H");
 
-    double sigma             = getSurfaceSetting<double>(initCFG, "sigma");
+    double sigma             = getSetting<double>(initCFG, "sigma");
 
-    uint clearing            = getSurfaceSetting<uint>  (initCFG, "clearing");
+    uint clearing            = getSetting<uint>  (initCFG, "clearing");
 
-    uint maxSpan             = getSurfaceSetting<uint>  (initCFG, "maxSpan");
+    uint maxSpan             = getSetting<uint>  (initCFG, "maxSpan");
 
-    double occupancyTreshold = getSurfaceSetting<double>(initCFG, "treshold");
+    double occupancyTreshold = getSetting<double>(initCFG, "treshold");
 
 
     uint NX = solver->NX();

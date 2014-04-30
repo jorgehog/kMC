@@ -2,21 +2,17 @@ buildTrace = 0;
 
 System = {
 
-    BoxSize = [30, 30, 30];
+    BoxSize = [100, 100, 100];
 
     nNeighborsLimit = 2;
 
 
-    nNeighboursToCrystallize = 5;
-
-
-    SaturationLevel = 0.01;
+    SaturationLevel = 0.001;
 
 
     #0 = Periodic
-    #1 = Edge
-    #2 = Surface
-    #3 = ConcentrationWall
+    #1 = Surface
+    #2 = ConcentrationWall
     Boundaries = {
     #            #back #front
          types = ([0,    0],   #X
@@ -34,10 +30,8 @@ Reactions = {
 
     Diffusion = {
 
-        separation = 1;
-
-        rPower = 0.5;
-        scale =  0.5;
+        rPower = 0.25;
+        scale =  1.0;
 
     };
 
@@ -59,6 +53,5 @@ Solver = {
 
     seedType = 0;
     specificSeed = 1394447431;
-#    specificSeed = 1392202630;
 
 };

@@ -9,7 +9,7 @@ using ignis::Event;
 namespace kMC
 {
 
-class KMCParticles;
+class DiffusionReaction;
 
 class KMCEvent : public Event<uint>
 {
@@ -17,10 +17,10 @@ class KMCEvent : public Event<uint>
 
 public:
 
-    KMCEvent(string type = "kMCEvent",
-               string unit = "",
-               bool doOutput = false,
-               bool toFile = false) :
+    KMCEvent(std::string type = "kMCEvent",
+             std::string unit = "",
+             bool doOutput = false,
+             bool toFile = false) :
         Event<uint>(type,
                     unit,
                     doOutput,
@@ -29,12 +29,21 @@ public:
 
     }
 
+
 protected:
 
-    KMCSolver *solver()
+    KMCSolver *solver() const
     {
         return particles().solver();
     }
+
+    const DiffusionReaction *lastReaction() const;
+
+    const uint &NX() const;
+
+    const uint &NY() const;
+
+    const uint &NZ() const;
 
 };
 

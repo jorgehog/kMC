@@ -30,9 +30,9 @@ Site::~Site()
 void Site::loadConfig(const Setting &setting)
 {
 
-    setInitialNNeighborsLimit(getSurfaceSetting<uint>(setting, "nNeighborsLimit"));
+    setInitialNNeighborsLimit(getSetting<uint>(setting, "nNeighborsLimit"));
 
-    const Setting & boundariesConfig = getSurfaceSetting(setting, "Boundaries");
+    const Setting & boundariesConfig = getSetting(setting, "Boundaries");
 
     umat boundaryTypes(3, 2);
 
@@ -40,7 +40,7 @@ void Site::loadConfig(const Setting &setting)
     {
         for (uint orientation = 0; orientation < 2; ++orientation)
         {
-            boundaryTypes(XYZ, orientation) = getSurfaceSetting(boundariesConfig, "types")[XYZ][orientation];
+            boundaryTypes(XYZ, orientation) = getSetting(boundariesConfig, "types")[XYZ][orientation];
         }
     }
 

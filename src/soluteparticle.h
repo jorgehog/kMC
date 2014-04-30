@@ -353,6 +353,16 @@ public:
     void forEachActiveReactionDo_sendIndex(function<void (Reaction*, uint)> applyFunction) const;
 
 
+    Site* neighborhood(const int dx, const int dy, const int dz) const
+    {
+        return Site::neighborhood(m_x, m_y, m_z, dx, dy, dz);
+    }
+
+    Site* neighborhood_fromIndex(const uint dx, const uint dy, const uint dz) const
+    {
+        return Site::neighborhood_fromIndex(m_x, m_y, m_z, dx, dy, dz);
+    }
+
     void forEachNeighborSiteDo(function<void (Site *)> applyFunction)
     {
         Site::forEachNeighborDo(m_x, m_y, m_z, applyFunction);

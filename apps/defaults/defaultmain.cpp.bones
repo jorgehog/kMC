@@ -21,7 +21,7 @@ int main()
 
     KMCDebugger_SetFilename("__name__");
 
-    KMCDebugger_SetEnabledTo(getSurfaceSetting<int>(root, "buildTrace") == 0 ? false : true);
+    KMCDebugger_SetEnabledTo(getSetting<int>(root, "buildTrace") == 0 ? false : true);
 
 
     KMCSolver* solver = new KMCSolver(root);
@@ -38,18 +38,29 @@ int main()
 
     KMCDebugger_DumpFullTrace();
 
-    delete solver;
-
-
     return 0;
 
 }
 
+class CustomEvent : public KMCEvent
+{
+public:
+
+    CustomEvent() : KMCEvent("", "", true, true) {}
+
+protected:
+
+    void execute()
+    {
+        setValue(0);
+    }
+
+};
 
 void initialize___name__(KMCSolver * solver, const Setting & root)
 {
 
-    const Setting & initCFG = getSurfaceSetting(root, "Initialization");
+    const Setting & initCFG = getSetting(root, "Initialization");
 
     const uint & NX = solver->NX();
     const uint & NY = solver->NY();

@@ -13,8 +13,7 @@ class SolverEvent : public KMCEvent
 {
 public:
 
-    SolverEvent() :
-        KMCEvent("kmC::SolverEvent")
+    SolverEvent() : KMCEvent("kmC::SolverEvent")
     {
 
     }
@@ -28,8 +27,25 @@ public:
 
         solver()->getRateVariables();
 
-        totalTime = 0;
+        m_totalTime = 0;
 
+        resetReaction();
+
+    }
+
+    const double & totalTime() const
+    {
+        return m_totalTime;
+    }
+
+    const Reaction * selectedReaction() const
+    {
+        return m_selectedReaction;
+    }
+
+    void resetReaction()
+    {
+        m_selectedReaction = NULL;
     }
 
 protected:
@@ -40,16 +56,16 @@ protected:
 
         choice = solver()->getReactionChoice(R);
 
-        selectedReaction = solver()->allPossibleReactions().at(choice);
-        KMCDebugger_SetActiveReaction(selectedReaction);
+        m_selectedReaction = solver()->allPossibleReactions().at(choice);
+        KMCDebugger_SetActiveReaction(m_selectedReaction);
 
-        selectedReaction->execute();
+        m_selectedReaction->execute();
 
         Site::updateBoundaries();
 
         solver()->getRateVariables();
 
-        totalTime += Reaction::linearRateScale()/solver()->kTot();
+        m_totalTime += Reaction::linearRateScale()/solver()->kTot();
 
     }
 
@@ -57,11 +73,11 @@ private:
 
     double R;
 
-    double totalTime;
+    double m_totalTime;
 
     uint choice;
 
-    Reaction * selectedReaction;
+    Reaction * m_selectedReaction;
 
 };
 

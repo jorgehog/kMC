@@ -33,12 +33,12 @@ KMCSolver::KMCSolver(const Setting & root)
 
     onConstruct();
 
-    const Setting & SystemSettings = getSurfaceSetting(root, "System");
-    const Setting & SolverSettings = getSurfaceSetting(root, "Solver");
+    const Setting & SystemSettings = getSetting(root, "System");
+    const Setting & SolverSettings = getSetting(root, "Solver");
     const Setting & diffusionSettings = getSetting(root, {"Reactions", "Diffusion"});
 
 
-    Reaction::loadConfig(getSurfaceSetting(root, "Reactions"));
+    Reaction::loadConfig(getSetting(root, "Reactions"));
 
     DiffusionReaction::loadConfig(diffusionSettings);
 
@@ -46,24 +46,24 @@ KMCSolver::KMCSolver(const Setting & root)
 
 
     setNumberOfCycles(
-                getSurfaceSetting<uint>(SolverSettings, "nCycles"));
+                getSetting<uint>(SolverSettings, "nCycles"));
 
     setCyclesPerOutput(
-                getSurfaceSetting<uint>(SolverSettings, "cyclesPerOutput"));
+                getSetting<uint>(SolverSettings, "cyclesPerOutput"));
 
     setRNGSeed(
-                getSurfaceSetting<uint>(SolverSettings, "seedType"),
-                getSurfaceSetting<int>(SolverSettings, "specificSeed"));
+                getSetting<uint>(SolverSettings, "seedType"),
+                getSetting<int>(SolverSettings, "specificSeed"));
 
     setTargetConcentration(
-                getSurfaceSetting<double>(SystemSettings, "SaturationLevel"));
+                getSetting<double>(SystemSettings, "SaturationLevel"));
 
 
     uvec3 boxSize;
 
-    boxSize(0) = getSurfaceSetting(SystemSettings, "BoxSize")[0];
-    boxSize(1) = getSurfaceSetting(SystemSettings, "BoxSize")[1];
-    boxSize(2) = getSurfaceSetting(SystemSettings, "BoxSize")[2];
+    boxSize(0) = getSetting(SystemSettings, "BoxSize")[0];
+    boxSize(1) = getSetting(SystemSettings, "BoxSize")[1];
+    boxSize(2) = getSetting(SystemSettings, "BoxSize")[2];
 
     setBoxSize(boxSize);
 
@@ -151,7 +151,8 @@ void KMCSolver::setupMainLattice()
 
     m_mainLattice = new MainLattice();
 
-    m_mainLattice->addEvent(new SolverEvent());
+    m_solverEvent = new SolverEvent();
+    m_mainLattice->addEvent(m_solverEvent);
 
     if (m_dumpXYZ)
     {
@@ -660,6 +661,11 @@ void KMCSolver::clearSites()
 
     KMCDebugger_ResetEnabled();
 
+}
+
+void KMCSolver::resetLastReaction()
+{
+    m_solverEvent->resetReaction();
 }
 
 

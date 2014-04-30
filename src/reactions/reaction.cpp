@@ -7,6 +7,8 @@
 
 #include "../debugger/debugger.h"
 
+#include "../ignisinterface/solverevent.h"
+
 using namespace kMC;
 
 Reaction::Reaction(SoluteParticle *reactant):
@@ -26,6 +28,11 @@ Reaction::~Reaction()
     m_reactant = NULL;
 
     KMCDebugger_Assert(refCount, !=, 0);
+
+    if (solver()->solverEvent()->selectedReaction() == this)
+    {
+        solver()->resetLastReaction();
+    }
 
     refCount--;
 }
@@ -148,8 +155,8 @@ void Reaction::setMainSolver(KMCSolver *solver)
 void Reaction::loadConfig(const Setting &setting)
 {
 
-    m_beta            = getSurfaceSetting<double>(setting, "beta");
-    m_linearRateScale = getSurfaceSetting<double>(setting, "scale");
+    m_beta            = getSetting<double>(setting, "beta");
+    m_linearRateScale = getSetting<double>(setting, "scale");
 
 }
 

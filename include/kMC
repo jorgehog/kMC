@@ -21,4 +21,4 @@
 
 #include "../ignis/include/ignis.h"
 
-#include "../src/ignisinterface/kmcevent.h"
+#include "../src/ignisinterface/solverevent.h"

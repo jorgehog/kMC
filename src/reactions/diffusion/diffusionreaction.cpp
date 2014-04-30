@@ -35,8 +35,8 @@ DiffusionReaction::~DiffusionReaction()
 void DiffusionReaction::loadConfig(const Setting &setting)
 {
 
-    m_rPower = getSurfaceSetting<double>(setting, "rPower");
-    m_scale  = getSurfaceSetting<double>(setting, "scale");
+    m_rPower = getSetting<double>(setting, "rPower");
+    m_scale  = getSetting<double>(setting, "scale");
 
 }
 

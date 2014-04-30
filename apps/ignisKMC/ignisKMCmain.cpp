@@ -23,7 +23,7 @@ int main()
 
     KMCDebugger_SetFilename("ignisKMC");
 
-    KMCDebugger_SetEnabledTo(getSurfaceSetting<int>(root, "buildTrace") == 0 ? false : true);
+    KMCDebugger_SetEnabledTo(getSetting<int>(root, "buildTrace") == 0 ? false : true);
 
 
     KMCSolver* solver = new KMCSolver(root);
@@ -165,7 +165,7 @@ protected:
 void initialize_ignisKMC(KMCSolver * solver, const Setting & root)
 {
 
-    const Setting & initCFG = getSurfaceSetting(root, "Initialization");
+    const Setting & initCFG = getSetting(root, "Initialization");
 
     const uint & NX = solver->NX();
     const uint & NY = solver->NY();
@@ -175,8 +175,8 @@ void initialize_ignisKMC(KMCSolver * solver, const Setting & root)
     (void) NY;
     (void) NZ;
 
-    const uint therm     = getSurfaceSetting<uint>(initCFG, "therm");
-    const double endBeta = getSurfaceSetting<double>(initCFG, "endBeta");
+    const uint therm     = getSetting<uint>(initCFG, "therm");
+    const double endBeta = getSetting<double>(initCFG, "endBeta");
 
 
     KMCEvent *heating = new tempChange(endBeta, therm);

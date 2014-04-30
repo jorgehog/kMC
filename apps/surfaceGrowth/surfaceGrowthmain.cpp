@@ -21,7 +21,7 @@ int main()
 
     KMCDebugger_SetFilename("surfaceGrowth");
 
-    KMCDebugger_SetEnabledTo(getSurfaceSetting<int>(root, "buildTrace") == 0 ? false : true);
+    KMCDebugger_SetEnabledTo(getSetting<int>(root, "buildTrace") == 0 ? false : true);
 
 
     KMCSolver* solver = new KMCSolver(root);
@@ -48,13 +48,13 @@ int main()
 void initialize_surfaceGrowth(KMCSolver * solver, const Setting & root)
 {
 
-    const Setting & initCFG = getSurfaceSetting(root, "Initialization");
+    const Setting & initCFG = getSetting(root, "Initialization");
 
     const uint & NX = solver->NX();
     const uint & NY = solver->NY();
 
-    uint toothWidth   = getSurfaceSetting<uint>(initCFG, "toothWidth");
-    uint toothSpacing = getSurfaceSetting<uint>(initCFG, "toothSpacing");
+    uint toothWidth   = getSetting<uint>(initCFG, "toothWidth");
+    uint toothSpacing = getSetting<uint>(initCFG, "toothSpacing");
 
     uint toothHeight           =   toothWidth + 1;
     uint fullToothSize         = 2*toothWidth + 1;

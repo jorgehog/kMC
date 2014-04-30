@@ -28,6 +28,7 @@ namespace kMC
 const uint UNSET_UINT = std::numeric_limits<uint>::max();
 
 class DumpXYZ;
+class SolverEvent;
 
 class KMCSolver
 {
@@ -259,6 +260,13 @@ public:
 
     void clearSites();
 
+    const SolverEvent *solverEvent() const
+    {
+        return m_solverEvent;
+    }
+
+    void resetLastReaction();
+
 
 private:
 
@@ -300,6 +308,8 @@ private:
     static bool m_dumpXYZ;
 
     DumpXYZ *xyzEvent;
+
+    SolverEvent *m_solverEvent;
 
     static uint refCounter;
 

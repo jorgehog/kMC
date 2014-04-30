@@ -1011,6 +1011,7 @@ void testBed::testUpdateNeigbors()
     double eMax = 0;
     Site::forEachNeighborDo_sendIndices(0, 0, 0, [&eMax] (Site * site, uint i, uint j, uint k)
     {
+        (void) site;
         eMax += DiffusionReaction::potential(i, j, k);
     });
 

@@ -22,6 +22,11 @@ ConcentrationWall::~ConcentrationWall()
 
 void ConcentrationWall::update()
 {
+    counter++;
+    if (counter%m_coolDown != 0)
+    {
+        return;
+    }
 
     KMCDebugger_Assert(m_maxEventsPrCycle, <=, boundarySize(), "Max events pr cycle cannot exceed the number of boundary sites.");
 
@@ -94,9 +99,5 @@ void ConcentrationWall::update()
 
 }
 
-
-
-
-uint ConcentrationWall::m_minDistanceFromSurface;
-
 uint ConcentrationWall::m_maxEventsPrCycle = 1;
+uint ConcentrationWall::counter = 0;

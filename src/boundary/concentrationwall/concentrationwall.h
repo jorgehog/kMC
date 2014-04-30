@@ -14,11 +14,6 @@ public:
 
     ~ConcentrationWall();
 
-    static void setMinDistanceFromSite(const uint minDistanceFromSite)
-    {
-        m_minDistanceFromSurface = minDistanceFromSite;
-    }
-
     static void setMaxEventsPrCycle(uint val)
     {
         m_maxEventsPrCycle = val;
@@ -31,9 +26,10 @@ public:
 
 private:
 
-    static uint m_minDistanceFromSurface;
-
+    //TMP
     static uint m_maxEventsPrCycle;
+    static constexpr uint m_coolDown = 20u;
+    static uint counter;
 
 };
 

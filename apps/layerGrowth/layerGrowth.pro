@@ -1,11 +1,11 @@
 include(../app_defaults.pri)
 
-TARGET  = realChalkSetup
+TARGET  = layerGrowth
 
-SOURCES = realChalkSetupmain.cpp
+SOURCES = layerGrowthmain.cpp
 
 
-OTHER_FILES += infiles/realChalkSetup.cfg
+OTHER_FILES += infiles/layerGrowth.cfg
 
 
 copydata.commands = $(COPY_DIR) $$PWD/infiles $$OUT_PWD
