@@ -407,8 +407,6 @@ void KMCSolver::updateAccuAllRateElements(const uint from, const uint to, const 
 
     m_partialAccuAllRateUpdates.push_back(new partialRangeChunk(from, to, value));
 
-//    cout << "updating [" << from << " - " << to << "] " << value << endl;
-
 }
 
 void KMCSolver::pushAccuAllRatesUpdates()
@@ -964,8 +962,6 @@ void KMCSolver::getRateVariables()
     reshuffleReactions();
 
     KMCDebugger_AssertClose(accuAllRates().at(0), allPossibleReactions().at(0)->rate(), minRateThreshold(), "zeroth accuallrate should be the first rate.");
-
-//    cout << "cycle done." << endl;
 
 }
 
