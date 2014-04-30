@@ -262,11 +262,7 @@ void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate
 
             m_allPossibleReactions.at(slot) = reaction;
 
-            m_accuAllRates.at(slot) = prevAccuAllRatesValue(slot);
-
-
             updateAccuAllRateElements(slot, m_accuAllRates.size(), newRate);
-
 
             m_availableReactionSlots.pop_back();
 
@@ -297,11 +293,7 @@ void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate
 
         m_availableReactionSlots.push_back(reaction->address());
 
-        //reset the accuallrates value to the previous value or zero, so that when we swap in a reaction to a vacant spot,
-        //we simply add the rate value on top of all higher elements.
-        m_accuAllRates.at(reaction->address()) = prevAccuAllRatesValue(reaction->address());
-
-        updateAccuAllRateElements(reaction->address() + 1, m_accuAllRates.size(), -prevRate);
+        updateAccuAllRateElements(reaction->address(), m_accuAllRates.size(), -prevRate);
 
         reaction->setAddress(Reaction::UNSET_ADDRESS);
 
@@ -421,20 +413,13 @@ void KMCSolver::updateAccuAllRateElements(const uint from, const uint to, const 
 
 void KMCSolver::pushAccuAllRatesUpdates()
 {
-    std::vector<double>::iterator itStart;
-    std::vector<double>::iterator itEnd;
 
     for (const partialRangeChunk *rangeChunk : m_partialAccuAllRateUpdates)
     {
 
-        itStart = m_accuAllRates.begin() + rangeChunk->start;
-        itEnd = m_accuAllRates.begin() + rangeChunk->end;
-
-        for (std::vector<double>::iterator it = itStart; it != itEnd; ++it)
+        for (uint i = rangeChunk->start; i < rangeChunk->end; ++i)
         {
-            *it += rangeChunk->value;
-
-//            KMCDebugger_Assert(*it, >=, -minRateThreshold());
+            *(m_accuAllRates.begin() + i) += rangeChunk->value;
         }
 
         delete [] rangeChunk;
