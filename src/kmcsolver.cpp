@@ -11,6 +11,8 @@
 #include "ignisinterface/solverevent.h"
 #include "ignisinterface/kmcparticles.h"
 
+#include <omp.h>
+
 #include <sys/time.h>
 
 #include <armadillo>
@@ -411,19 +413,12 @@ void KMCSolver::updateAccuAllRateElements(const uint from, const uint to, const 
 {
     KMCDebugger_Assert(from, <=, to);
 
-    std::vector<double>::iterator itStart = m_accuAllRates.begin() + from;
-    std::vector<double>::iterator itEnd = m_accuAllRates.begin() + to;
-
-    for (std::vector<double>::iterator it = itStart; it != itEnd; ++it)
+#pragma omp parallel for
+    for (uint i = from; i < to; ++i)
     {
-        *it += value;
+        m_accuAllRates[i] += value;
 
-        //        if (*it < 0 && *it > -1E-6)
-        //        {
-        //            *it = 0;
-        //        }
-
-        KMCDebugger_Assert(*it, >=, -minRateThreshold());
+        KMCDebugger_Assert(m_accuAllRates.at(i), >=, -minRateThreshold());
     }
 
 }

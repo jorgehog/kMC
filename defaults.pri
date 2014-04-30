@@ -4,7 +4,7 @@ CONFIG += RNG_ZIG
 
 QMAKE_CXX = gcc
 
-COMMON_CXXFLAGS = -std=c++11
+COMMON_CXXFLAGS = -std=c++11 -fopenmp
 
 QMAKE_CXXFLAGS += \
     $$COMMON_CXXFLAGS
@@ -29,7 +29,8 @@ QMAKE_LIBDIR += $$PWD/ignis/lib
 LIBS += \
     -larmadillo \
     -lconfig++ \
-    -lignis
+    -lignis \
+    -fopenmp
 
 DEFINES += \
     ARMA_MAT_PREALLOC=3

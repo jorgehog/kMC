@@ -182,12 +182,11 @@ void SoluteParticle::updateAffectedParticles()
 
     for (SoluteParticle* particle : m_affectedParticles)
     {
-        if (particle == NULL)
+        if (particle != NULL)
         {
-            continue;
+            particle->updateReactions();
         }
 
-        particle->updateReactions();
     }
 
     clearAffectedParticles();
