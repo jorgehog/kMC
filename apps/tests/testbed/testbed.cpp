@@ -2247,6 +2247,17 @@ void testBed::testAccuAllRates()
 
     solver->getRateVariables();
 
+    uint NC = 1000;
+    Reaction *r;
+
+    for (uint i = 0; i < NC; ++i)
+    {
+        r = solver->allPossibleReactions().at(KMC_RNG_UNIFORM()*solver->allPossibleReactions().size());
+        r->execute();
+
+        solver->getRateVariables();
+    }
+
     uint i = 0;
     double kTot = 0;
 
