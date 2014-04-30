@@ -11,6 +11,8 @@
 #include "ignisinterface/solverevent.h"
 #include "ignisinterface/kmcparticles.h"
 
+#include <omp.h>
+
 #include <sys/time.h>
 
 #include <armadillo>
@@ -415,6 +417,7 @@ void KMCSolver::pushAccuAllRatesUpdates()
     for (const partialRangeChunk *rangeChunk : m_partialAccuAllRateUpdates)
     {
 
+#pragma omp parallel for
         for (uint i = rangeChunk->start; i < rangeChunk->end; ++i)
         {
             *(m_accuAllRates.begin() + i) += rangeChunk->value;
