@@ -2247,7 +2247,7 @@ void testBed::testAccuAllRates()
 
     solver->getRateVariables();
 
-    uint NC = 1000;
+    uint NC = 100;
     Reaction *r;
 
     for (uint i = 0; i < NC; ++i)
