@@ -25,6 +25,23 @@ using namespace arma;
 namespace kMC
 {
 
+struct partialRangeChunk
+{
+    uint start;
+    uint end;
+
+    double value;
+
+    partialRangeChunk(uint start, uint end, double value) :
+        start(start),
+        end(end),
+        value(value)
+    {
+
+    }
+
+};
+
 const uint UNSET_UINT = std::numeric_limits<uint>::max();
 
 class DumpXYZ;
@@ -220,6 +237,8 @@ public:
 
     void updateAccuAllRateElements(const uint from, const uint to, const double value);
 
+    void pushAccuAllRatesUpdates();
+
     double prevAccuAllRatesValue(const uint address) const
     {
         return address == 0 ? 0 : m_accuAllRates.at(address - 1);
@@ -278,9 +297,13 @@ private:
 
     vector<SoluteParticle*> m_particles;
 
+
     double m_kTot;
 
     vector<double> m_accuAllRates;
+
+    vector<partialRangeChunk*> m_partialAccuAllRateUpdates;
+
 
     vector<Reaction*> m_allPossibleReactions;
 

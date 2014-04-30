@@ -392,6 +392,8 @@ void KMCSolver::swapReactionAddresses(const uint dest, const uint orig)
 void KMCSolver::postReactionShuffleCleanup(const uint nVacancies)
 {
 
+    pushAccuAllRatesUpdates();
+
     //Optimize further: Do not use resize, but rather keep the limit in memory.
     m_allPossibleReactions.resize(m_allPossibleReactions.size() - nVacancies);
     m_accuAllRates.resize(m_accuAllRates.size() - nVacancies);
@@ -411,21 +413,34 @@ void KMCSolver::updateAccuAllRateElements(const uint from, const uint to, const 
 {
     KMCDebugger_Assert(from, <=, to);
 
-    std::vector<double>::iterator itStart = m_accuAllRates.begin() + from;
-    std::vector<double>::iterator itEnd = m_accuAllRates.begin() + to;
+    m_partialAccuAllRateUpdates.push_back(new partialRangeChunk(from, to, value));
 
-    for (std::vector<double>::iterator it = itStart; it != itEnd; ++it)
+    cout << "updating [" << from << " - " << to << "] " << value << endl;
+
+}
+
+void KMCSolver::pushAccuAllRatesUpdates()
+{
+    std::vector<double>::iterator itStart;
+    std::vector<double>::iterator itEnd;
+
+    for (const partialRangeChunk *rangeChunk : m_partialAccuAllRateUpdates)
     {
-        *it += value;
 
-        //        if (*it < 0 && *it > -1E-6)
-        //        {
-        //            *it = 0;
-        //        }
+        itStart = m_accuAllRates.begin() + rangeChunk->start;
+        itEnd = m_accuAllRates.begin() + rangeChunk->end;
 
-        KMCDebugger_Assert(*it, >=, -minRateThreshold());
+        for (std::vector<double>::iterator it = itStart; it != itEnd; ++it)
+        {
+            *it += rangeChunk->value;
+
+            KMCDebugger_Assert(*it, >=, -minRateThreshold());
+        }
+
     }
 
+
+    m_partialAccuAllRateUpdates.clear();
 }
 
 
@@ -963,6 +978,8 @@ void KMCSolver::getRateVariables()
     reshuffleReactions();
 
     KMCDebugger_AssertClose(accuAllRates().at(0), allPossibleReactions().at(0)->rate(), minRateThreshold(), "zeroth accuallrate should be the first rate.");
+
+    cout << "cycle done." << endl;
 
 }
 
