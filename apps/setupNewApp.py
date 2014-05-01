@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, re
 
 from os.path import join
 
@@ -10,6 +10,7 @@ def main():
         return
         
     appName = sys.argv[1]
+    appNameC = appName[0].upper() + appName[1:]
     
     cwd = os.getcwd()    
     
@@ -43,7 +44,7 @@ def main():
             
         with open(join(cwd, "defaults", "defaultmain.cpp.bones"), 'r') as defaultFile:
             
-            appMainFile.write(defaultFile.read().replace("__name__", appName))
+            appMainFile.write(defaultFile.read().replace("__name__", appName).replace("__cname__", appNameC))
            
     with open(configFileAbsPath, 'w') as appConfigFile:
             
@@ -56,8 +57,10 @@ def main():
     
     with open(appsProFileAbspath, 'r') as appsProFile:
         
-        newAppsProFile = appsProFile.read().replace("#__next_app__", "\\\n           %s #__next_app__" % appName)
-        
+        newAppsProFile = re.sub("(SUBDIRS\s*\+\=+s*.+\n)(\s+)(\w+)\n", 
+                                "\g<1>\g<2>\g<3> \\\n\g<2>%s\n" % appName,
+                                appsProFile.read(), flags=re.DOTALL)
+                                
     with open(appsProFileAbspath, 'w') as appsProFile:
         
         appsProFile.write(newAppsProFile)

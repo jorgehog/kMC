@@ -5,7 +5,7 @@ using namespace libconfig;
 using namespace kMC;
 
 
-void initialize___name__(KMCSolver * solver, const Setting & root);
+void initialize__cname__(KMCSolver * solver, const Setting & root);
 
 int main()
 {
@@ -26,7 +26,7 @@ int main()
 
     KMCSolver* solver = new KMCSolver(root);
 
-    initialize___name__(solver, root);
+    initialize__cname__(solver, root);
 
 
     t.tic();
@@ -42,11 +42,11 @@ int main()
 
 }
 
-class CustomEvent : public KMCEvent
+class __cname__Event : public KMCEvent
 {
 public:
 
-    CustomEvent() : KMCEvent("", "", true, true) {}
+    __cname__Event() : KMCEvent("__name__", "", true, true) {}
 
 protected:
 
@@ -57,7 +57,7 @@ protected:
 
 };
 
-void initialize___name__(KMCSolver * solver, const Setting & root)
+void initialize__cname__(KMCSolver *solver, const Setting &root)
 {
 
     const Setting & initCFG = getSetting(root, "Initialization");
@@ -66,5 +66,14 @@ void initialize___name__(KMCSolver * solver, const Setting & root)
     const uint & NY = solver->NY();
     const uint & NZ = solver->NZ();
 
+    const uint & someValue = getSetting<uint>(initCFG, "someValue");
+
+    (void)NX;
+    (void)NY;
+    (void)NZ;
+
+    (void)someValue;
+
+    solver->addEvent(new __cname__Event());
 
 }

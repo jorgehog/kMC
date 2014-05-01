@@ -28,7 +28,7 @@ private:
 
     //TMP
     static uint m_maxEventsPrCycle;
-    static constexpr uint m_coolDown = 50u;
+    static constexpr uint m_coolDown = 100u;
     static uint counter;
 
 };

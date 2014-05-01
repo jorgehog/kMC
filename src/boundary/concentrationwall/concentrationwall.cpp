@@ -39,6 +39,11 @@ void ConcentrationWall::update()
 
     uint targetN = solver()->targetConcentration()*SoluteParticle::getCurrentSolvantVolume();
 
+    if (targetN == 0)
+    {
+        targetN = 1;
+    }
+
     if (SoluteParticle::nSolutionParticles() > targetN)
     {
 

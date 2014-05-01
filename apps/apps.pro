@@ -6,9 +6,10 @@ SUBDIRS += tests \
            surfaceGrowth \
            diamondSquareSurface \
            ignisKMC \
-           layerGrowth #__next_app__
+           layerGrowth \
+           movingSteppes
+
 
 OTHER_FILES += defaults/default.pro.bones \
                defaults/defaultmain.cpp.bones \
-               defaults/defaultconfig.cfg.bones \
-               events/solverevent.h
+               defaults/defaultconfig.cfg.bones
