@@ -17,6 +17,10 @@ export(copydata.commands)
 export(createDirs.commands)
 
 
+QMAKE_EXTRA_TARGETS += first
+
 !equals(PWD, $${OUT_PWD}) {
-    QMAKE_EXTRA_TARGETS += first copydata createDirs
+    QMAKE_EXTRA_TARGETS += copydata
 }
+
+QMAKE_EXTRA_TARGETS += createDirs
