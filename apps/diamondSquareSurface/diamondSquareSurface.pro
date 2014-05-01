@@ -15,7 +15,9 @@ export(first.depends)
 export(copydata.commands)
 export(createDirs.commands)
 
-QMAKE_EXTRA_TARGETS += first copydata createDirs
+!equals(PWD, $${OUT_PWD}) {
+    QMAKE_EXTRA_TARGETS += first copydata createDirs
+}
 
 ### DiamondSquare interface
 

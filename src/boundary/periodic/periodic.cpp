@@ -4,8 +4,8 @@
 
 using namespace kMC;
 
-Periodic::Periodic(const uint dimension, const uint orientation) :
-    Boundary(dimension, orientation, Boundary::Periodic)
+Periodic::Periodic(const uint dimension, const uint orientation, const BoundaryTypes type) :
+    Boundary(dimension, orientation, type)
 {
 
 }

@@ -17,6 +17,7 @@
 #include "../src/boundary/periodic/periodic.h"
 #include "../src/boundary/edge/edge.h"
 #include "../src/boundary/concentrationwall/concentrationwall.h"
+#include "../src/boundary/periodicshifted/periodicshifted.h"
 
 
 #include "../ignis/include/ignis.h"

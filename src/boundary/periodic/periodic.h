@@ -10,7 +10,7 @@ class Periodic : public Boundary
 {
 public:
 
-    Periodic(const uint dimension, const uint orientation);
+    Periodic(const uint dimension, const uint orientation, const BoundaryTypes type = Boundary::Periodic);
 
     ~Periodic();
 
@@ -18,9 +18,9 @@ public:
     // Boundary interface
 public:
 
-    uint transformCoordinate(const int xi) const;
+    virtual uint transformCoordinate(const int xi) const;
 
-    int getDistanceBetween(int x1, int x2);
+    virtual int getDistanceBetween(int x1, int x2);
 
     void initialize();
 

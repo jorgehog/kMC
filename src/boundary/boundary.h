@@ -16,11 +16,11 @@ class Boundary
 {
 public:
 
-    Boundary(const uint dimension, const uint orientation, const uint type);
+    Boundary(const uint dimension, const uint orientation, const uint m_type);
 
     virtual ~Boundary();
 
-    const uint type;
+    const uint m_type;
 
     virtual uint transformCoordinate(const int xi) const;
 
@@ -87,7 +87,8 @@ public:
     {
         Periodic,
         Edge,
-        ConcentrationWall
+        ConcentrationWall,
+        PeriodicShifted
     };
 
 
