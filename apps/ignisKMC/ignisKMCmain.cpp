@@ -2,6 +2,8 @@
 #include <libconfig_utils/libconfig_utils.h>
 #include <DCViz.h>
 
+#include <armadillo>
+
 using namespace libconfig;
 using namespace kMC;
 using namespace ignis;
@@ -31,8 +33,8 @@ int main()
     initialize_ignisKMC(solver, root);
 
 
-    DCViz viz("/tmp/ignisEventsOut.arma");
-    viz.launch(true, 0.2, 30, 16);
+//    DCViz viz("/tmp/ignisEventsOut.arma");
+//    viz.launch(true, 10, 30, 16);
 
     t.tic();
 
@@ -42,8 +44,6 @@ int main()
 
 
     KMCDebugger_DumpFullTrace();
-
-    delete solver;
 
 
     return 0;
@@ -160,6 +160,47 @@ protected:
     }
 };
 
+class Sort : public KMCEvent
+{
+public:
+
+    Sort() : KMCEvent() {}
+
+protected:
+
+    void execute()
+    {
+        if ((nTimesExecuted+1)%250000 == 0)
+        {
+            solver()->sortReactionsByRate();
+        }
+    }
+
+};
+
+class CPUTime : public KMCEvent
+{
+public:
+
+    CPUTime() : KMCEvent("CPUTime", "s", true, true) {}
+
+    void initialize()
+    {
+        clock.tic();
+    }
+
+protected:
+
+
+    void execute()
+    {
+        setValue(clock.toc());
+    }
+
+    arma::wall_clock clock;
+
+
+};
 
 
 void initialize_ignisKMC(KMCSolver * solver, const Setting & root)
@@ -192,7 +233,8 @@ void initialize_ignisKMC(KMCSolver * solver, const Setting & root)
     solver->addEvent(new MeasureTemp());
     solver->addEvent(new AverageNeighbors());
     solver->addEvent(new TotalEnergy());
-
+    solver->addEvent(new Sort());
+    solver->addEvent(new CPUTime());
 
     solver->initializeSolutionBath();
 

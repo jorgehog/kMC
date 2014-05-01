@@ -668,6 +668,102 @@ void KMCSolver::resetLastReaction()
     m_solverEvent->resetReaction();
 }
 
+void KMCSolver::sortReactionsByRate()
+{
+    std::sort(m_allPossibleReactions.begin(),
+              m_allPossibleReactions.end(),
+              [] (const Reaction * r1, const Reaction * r2)
+              {
+                    return r1->rate() < r2->rate();
+              });
+
+
+    double kTot = 0;
+
+    uint address = 0;
+
+    for (Reaction *r : m_allPossibleReactions)
+    {
+        r->setAddress(address);
+
+        kTot += r->rate();
+
+        m_accuAllRates.at(address) = kTot;
+
+        address++;
+    }
+
+    KMCDebugger_AssertClose(kTot, m_kTot, 1E-15);
+
+}
+
+uint KMCSolver::binarySearchForInterval(const double target, const vector<double> &intervals)
+{
+
+    KMCDebugger_Assert(intervals.size(), !=, 0, "Number of intervals cannot be zero.");
+
+    uint imax = intervals.size() - 1;
+    uint MAX = imax;
+
+    uint imin = 0;
+    uint imid;
+
+    // continue searching while imax != imin + 1
+    do
+    {
+
+        // calculate the midpoint for roughly equal partition
+        imid = imin + (imax - imin)/2;
+
+        //Is the upper limit above mid?
+        if (target > intervals[imid])
+        {
+
+            //This means that the target is the last interval.
+            if (imid == MAX)
+            {
+                return MAX;
+            }
+
+            //Are we just infront of the limit?
+            else if (target < intervals[imid + 1])
+            {
+                //yes we were! Returning current mid + 1.
+                //If item i in accuAllrates > R, then reaction i is selected.
+                //This because there is no zero at the start of accuAllrates.
+
+                return imid + 1;
+            }
+
+            //No we're not there yet, so we search above us.
+            else
+            {
+                imin = imid + 1;
+            }
+        }
+
+        //No it's not. Starting new search below mid!
+        else
+        {
+
+            //This means that the target is the first inteval.
+            if (imid == 0)
+            {
+                return 0;
+            }
+
+            imax = imid;
+        }
+
+
+    } while (imid != imin);
+
+    //If we get here, imid = imin, which means that imax = imid + 1 (deduced by integer division).
+    //We choose the max value as out match.
+    return imid + 1;
+
+}
+
 
 
 bool KMCSolver::spawnParticle(SoluteParticle *particle, const uint x, const uint y, const uint z, bool checkIfLegal)
@@ -967,68 +1063,6 @@ void KMCSolver::getRateVariables()
 
 }
 
-
-uint KMCSolver::getReactionChoice(double R)
-{
-
-    KMCDebugger_Assert(m_accuAllRates.size(), !=, 0, "No active reactions.");
-
-    uint imax = m_accuAllRates.size() - 1;
-    uint MAX = imax;
-    uint imin = 0;
-    uint imid = 1;
-
-    // continue searching while imax != imin + 1
-    while (imid != imin)
-    {
-
-        // calculate the midpoint for roughly equal partition
-        imid = imin + (imax - imin)/2;
-
-        //Is the upper limit above mid?
-        if (R > m_accuAllRates.at(imid))
-        {
-
-            if (imid == MAX)
-            {
-                return MAX;
-            }
-
-            //Are we just infront of the limit?
-            else if (R < m_accuAllRates.at(imid + 1))
-            {
-                //yes we were! Returning current mid + 1.
-                //If item i in accuAllrates > R, then reaction i is selected.
-                //This because there is no zero at the start of accuAllrates.
-
-                return imid + 1;
-            }
-
-            //No we're not there yet, so we search above us.
-            else
-            {
-                imin = imid + 1;
-            }
-        }
-
-        //No it's not. Starting new search below mid!
-        else
-        {
-
-            if (imid == 0)
-            {
-                return 0;
-            }
-
-            imax = imid;
-        }
-
-
-    }
-
-    return imid + 1;
-
-}
 
 void KMCSolver::setBoxSize(const uint NX, const uint NY, const uint NZ, bool check)
 {

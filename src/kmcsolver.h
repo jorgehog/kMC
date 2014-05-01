@@ -96,7 +96,10 @@ public:
 
     void getRateVariables();
 
-    uint getReactionChoice(double R);
+    uint getReactionChoice(const double R) const
+    {
+        return binarySearchForInterval(R, m_accuAllRates);
+    }
 
 
     Site* getSite(const int i, const int j, const int k) const
@@ -266,6 +269,10 @@ public:
     }
 
     void resetLastReaction();
+
+    void sortReactionsByRate();
+
+    static uint binarySearchForInterval(const double target, const vector<double> & intervals);
 
 
 private:

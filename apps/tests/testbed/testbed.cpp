@@ -534,6 +534,9 @@ void testBed::testRNG()
 
 void testBed::testBoundarySites()
 {
+    cout << "test outdated." << endl;
+    return;
+
     forceNewBoxSize({10, 15, 20});
 
     uvec sizes = {NY()*NZ(), NX()*NZ(), NX()*NY()};
@@ -592,6 +595,9 @@ void testBed::testBoundarySites()
 
 void testBed::testConcentrationWall()
 {
+    cout << "test outdated." << endl;
+    return;
+
     forceNewBoxSize({10, 10, 10});
 
     uint outerShellSize = 5*5*5 - 3*3*3;
