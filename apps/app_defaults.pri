@@ -18,10 +18,9 @@ for(DIR, DIRS) {
 
 QMAKE_EXTRA_TARGETS += first
 
-message($$PWD)
-message($$OUT_PWD)
+appDir = $$section(OUT_PWD, "/", 0, -2)
 
-!equals(PWD, $${OUT_PWD}) {
+!equals(PWD, $${appDir}) {
 
     splitdir = $$split(OUT_PWD, "/")
     appname  = $$last(splitdir)
