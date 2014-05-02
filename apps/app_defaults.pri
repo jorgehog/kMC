@@ -1,7 +1,7 @@
 include(../defaults.pri)
 
-#TEMPLATE = app
-#CONFIG += console
+TEMPLATE = app
+CONFIG += console
 
 INCLUDEPATH  += $$TOP_PWD/include
 

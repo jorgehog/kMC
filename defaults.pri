@@ -2,7 +2,7 @@ CONFIG -= app_bundle
 CONFIG -= qt
 CONFIG += RNG_ZIG
 
-QMAKE_CXX = gcc
+QMAKE_CXX = ccache gcc
 
 COMMON_CXXFLAGS = -std=c++11 -fopenmp
 
