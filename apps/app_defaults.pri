@@ -5,10 +5,33 @@ CONFIG += console
 
 INCLUDEPATH  += $$TOP_PWD/include
 
-LIBS += -L$$TOP_PWD/lib -lkMC
+QMAKE_LIBDIR += $$TOP_PWD/lib
+
+LIBS += -lkMC
 
 DIRS = outfiles
 
 for(DIR, DIRS) {
      mkcommands += $$OUT_PWD/$$DIR
 }
+
+
+QMAKE_EXTRA_TARGETS += first
+
+!equals(PWD, $${OUT_PWD}) {
+
+    splitdir = $$split(OUT_PWD, "/")
+    appname  = $$last(splitdir)
+
+    copydata.commands = $(COPY_DIR) $$PWD/$$appname/infiles $$OUT_PWD
+
+    first.depends += copydata
+
+    QMAKE_EXTRA_TARGETS += copydata
+}
+
+createDirs.commands = $(MKDIR) $$mkcommands
+
+first.depends = $(first) $$first.depends createDirs
+
+QMAKE_EXTRA_TARGETS += createDirs

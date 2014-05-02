@@ -24,10 +24,12 @@ INCLUDEPATH += \
     $(HOME)/Dropbox/libs \
     $$PWD/ignis/include
 
+QMAKE_LIBDIR += $$PWD/ignis/lib
+
 LIBS += \
     -larmadillo \
     -lconfig++ \
-    -L$$PWD/ignis/lib -lignis \
+    -lignis \
     -fopenmp
 
 DEFINES += \
@@ -45,6 +47,7 @@ CONFIG(compphys) {
     INCLUDEPATH  += $(HOME)/shared/code
     INCLUDEPATH  += $(HOME)/shared/armadillo-4.200.0/usr/include
     QMAKE_LIBDIR += $(HOME)/shared/armadillo-4.200.0/usr/lib
+
 
 }
 
