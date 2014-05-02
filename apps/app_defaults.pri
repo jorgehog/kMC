@@ -5,9 +5,7 @@ CONFIG += console
 
 INCLUDEPATH  += $$TOP_PWD/include
 
-QMAKE_LIBDIR += $$TOP_PWD/lib
-
-LIBS += -lkMC
+LIBS += -L$$TOP_PWD/lib -lkMC
 
 DIRS = outfiles
 

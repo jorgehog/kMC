@@ -24,12 +24,10 @@ INCLUDEPATH += \
     $(HOME)/Dropbox/libs \
     $$PWD/ignis/include
 
-QMAKE_LIBDIR += $$PWD/ignis/lib
-
 LIBS += \
     -larmadillo \
     -lconfig++ \
-    -lignis \
+    -L$$PWD/ignis/lib -lignis \
     -fopenmp
 
 DEFINES += \
