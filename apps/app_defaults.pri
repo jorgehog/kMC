@@ -18,6 +18,9 @@ for(DIR, DIRS) {
 
 QMAKE_EXTRA_TARGETS += first
 
+message($$PWD)
+message($$OUT_PWD)
+
 !equals(PWD, $${OUT_PWD}) {
 
     splitdir = $$split(OUT_PWD, "/")
