@@ -41,4 +41,13 @@ CONFIG(RNG_ZIG) {
 
 }
 
+
+CONFIG(compphys) {
+
+    INCLUDEPATH  += $(HOME)/shared/code
+    INCLUDEPATH  += $(HOME)/shared/armadillo-4.200.0/usr/include
+    QMAKE_LIBDIR += $(HOME)/shared/armadillo-4.200.0/usr/lib
+
+}
+
 TOP_PWD = $$PWD

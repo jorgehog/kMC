@@ -23,11 +23,6 @@ createDirs.commands = $(MKDIR) $$mkcommands
 first.depends += createDirs
 
 QMAKE_EXTRA_TARGETS += createDirs
-
-
-
-INCLUDEPATH += $(HOME)/code/DCViz/include
-
 INCLUDEPATH += /usr/include/python2.7
 
 LIBS += -lpython2.7
