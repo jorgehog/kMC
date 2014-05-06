@@ -414,7 +414,9 @@ void KMCSolver::updateAccuAllRateElements(const uint from, const uint to, const 
 {
     KMCDebugger_Assert(from, <=, to);
 
+#ifndef KMC_NO_OMP
 #pragma omp parallel for
+#endif
     for (uint i = from; i < to; ++i)
     {
         m_accuAllRates[i] += value;
