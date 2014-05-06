@@ -4,11 +4,11 @@
 
 //Ignore everything if we are not debugging.
 #define KMCDebugger_PopAffected(site) \
-    _KMCDebugger_IGNORE(site)
+    _KMCDebugger_IGNORE(0)
 #define KMCDebugger_MarkPre(pre) \
-    _KMCDebugger_IGNORE(pre)
+    _KMCDebugger_IGNORE(0)
 #define KMCDebugger_SetEnabledTo(state) \
-    _KMCDebugger_IGNORE(state)
+    _KMCDebugger_IGNORE(0)
 #define KMCDebugger_ResetEnabled() \
     _KMCDebugger_IGNORE(0)
 #define KMCDebugger_IsEnabled \
@@ -16,7 +16,9 @@
 #define KMCDebugger_Assert(A, OP, B, ...) \
     _KMCDebugger_IGNORE(0)
 #define KMCDebugger_AssertBool(expr, ...) \
-    _KMCDebugger_IGNORE(expr)
+    _KMCDebugger_IGNORE(0)
+#define KMCDebugger_AssertEqual(A, B, ...) \
+    _KMCDebugger_IGNORE(0)
 #define KMCDebugger_AssertBreak(...) \
     _KMCDebugger_IGNORE(0)
 #define KMCDebugger_AssertClose(A, B, lim, ...) \
@@ -24,29 +26,28 @@
 #define KMCDebugger_GetReaction(which) \
     _KMCDebugger_IGNORE(0)
 #define KMCDebugger_SetFilename(filename) \
-    _KMCDebugger_IGNORE(filename)
+    _KMCDebugger_IGNORE(0)
 #define KMCDebugger_SetPath(path) \
-    _KMCDebugger_IGNORE(path)
+    _KMCDebugger_IGNORE(0)
 #define KMCDebugger_SetActiveReaction(reaction) \
-    _KMCDebugger_IGNORE(reaction)
+    _KMCDebugger_IGNORE(0)
 #define KMCDebugger_Init() \
     _KMCDebugger_IGNORE(0)
 #define KMCDebugger_Finalize() \
     _KMCDebugger_IGNORE(0)
 #define KMCDebugger_DumpTrace(i) \
-    _KMCDebugger_IGNORE(i)
+    _KMCDebugger_IGNORE(0)
 #define KMCDebugger_DumpFullTrace(...) \
     _KMCDebugger_IGNORE(0)
 #define KMCDebugger_MarkPartialStep(_msg) \
-    _KMCDebugger_IGNORE(_msg)
+    _KMCDebugger_IGNORE(0)
 #define KMCDebugger_SearchReactionTraceBefore(i) \
-    _KMCDebugger_IGNORE(i)
+    _KMCDebugger_IGNORE(0)
 #define KMCDebugger_SearchReactionTraceAfter(i) \
-    _KMCDebugger_IGNORE(i)
+    _KMCDebugger_IGNORE(0)
 #define KMCDebugger_SearchImplicationTrace(i) \
-    _KMCDebugger_IGNORE(i)
+    _KMCDebugger_IGNORE(0)
 #define KMCDebugger_PushTraces() \
     _KMCDebugger_IGNORE(0)
 #define KMCDebugger_PushImplication(site, _new) \
-    _KMCDebugger_IGNORE(site); \
-    _KMCDebugger_IGNORE(_new)
+    _KMCDebugger_IGNORE(0)

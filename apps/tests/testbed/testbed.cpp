@@ -1251,7 +1251,7 @@ void testBed::initSimpleSystemParameters(bool clean)
 
     Reaction::setBeta(0.5);
 
-    DiffusionReaction::setPotentialParameters(1.0, 0.5, false);
+    DiffusionReaction::setPotentialParameters({1.0}, 0.5, false);
 
 
     solver->setBoxSize({15, 15, 15}, false);

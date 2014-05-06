@@ -12,15 +12,18 @@
 using namespace kMC;
 
 
-SoluteParticle::SoluteParticle() :
+SoluteParticle::SoluteParticle(const uint species) :
     m_particleState(ParticleStates::solvant),
     m_x(UNSET_UINT),
     m_y(UNSET_UINT),
     m_z(UNSET_UINT),
     m_nNeighborsSum(0),
     m_energy(0),
+    m_species(species),
     m_ID(ID_count++)
 {
+
+    KMCDebugger_Assert(species, <, m_nSpecies, "invalid species.");
 
     initializeDiffusionReactions();
 
@@ -158,6 +161,19 @@ void SoluteParticle::changePosition(const uint x, const uint y, const uint z)
 void SoluteParticle::setMainSolver(KMCSolver *solver)
 {
     m_solver = solver;
+}
+
+void SoluteParticle::nSpecies(const uint nSpecies)
+{
+    KMCDebugger_Assert(nSpecies, !=, 0);
+    KMCDebugger_AssertEqual(refCounter, 0);
+
+    m_nSpecies = nSpecies;
+
+    if (!DiffusionReaction::potentialBox().empty())
+    {
+        DiffusionReaction::setupPotential();
+    }
 }
 
 void SoluteParticle::popAffectedParticle(SoluteParticle *particle)
@@ -625,6 +641,8 @@ particleSet SoluteParticle::m_affectedParticles = particleSet([] (SoluteParticle
 #else
 particleSet SoluteParticle::m_affectedParticles;
 #endif
+
+uint        SoluteParticle::m_nSpecies = 1;
 
 uint SoluteParticle::ID_count = 0;
 uint SoluteParticle::refCounter = 0;

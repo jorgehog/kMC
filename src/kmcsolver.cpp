@@ -1029,7 +1029,7 @@ void KMCSolver::initializeFromXYZ(string path, uint frame)
     {
         KMCDebugger_AssertEqual(t.at(i), p->particleStateShortName());
         KMCDebugger_AssertEqual(p->nNeighborsSum(), nn.at(i));
-        KMCDebugger_AssertClose(p->energy(), e.at(i), DiffusionReaction::potentialBox().min());
+        KMCDebugger_AssertClose(p->energy(), e.at(i), 1E-5);
         ++i;
     }
 #endif

@@ -32,7 +32,7 @@ class SoluteParticle
 {
 public:
 
-    SoluteParticle();
+    SoluteParticle(const uint species = 0);
 
     ~SoluteParticle();
 
@@ -60,6 +60,7 @@ public:
 
     static void setMainSolver(KMCSolver* solver);
 
+    static void nSpecies(const uint nSpecies);
 
     static void selectUpdateFlags();
 
@@ -137,6 +138,17 @@ public:
 
     }
 
+
+    const uint & species() const
+    {
+        return m_species;
+    }
+
+
+    static const uint & nSpecies()
+    {
+        return m_nSpecies;
+    }
 
     static const uint & nSurfaces()
     {
@@ -401,6 +413,9 @@ private:
     static particleSet m_affectedParticles;
 
 
+    static uint m_nSpecies;
+
+
     int m_particleState;
 
 
@@ -424,6 +439,9 @@ private:
     uint m_nNeighborsSum;
 
     double m_energy;
+
+
+    const uint m_species;
 
 
     void initializeDiffusionReactions();
