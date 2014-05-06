@@ -46,6 +46,19 @@ void Site::loadConfig(const Setting &setting)
 
     setInitialBoundaries(boundaryTypes);
 
+    uint CD;
+    try
+    {
+        CD = boundariesConfig["coolDown"];
+    }
+
+    catch (const exception & e)
+    {
+        CD = 1;
+    }
+
+    ConcentrationWall::setCooldown(CD);
+
 }
 
 void Site::initializeBoundaries()
