@@ -105,4 +105,5 @@ void ConcentrationWall::update()
 }
 
 uint ConcentrationWall::m_maxEventsPrCycle = 1;
+uint ConcentrationWall::m_coolDown = 1u;
 uint ConcentrationWall::counter = 0;

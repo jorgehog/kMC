@@ -10,7 +10,7 @@
 
 
 //#define focusSuite "Misc"
-//#define focusTest  "AccuAllRates"
+#define focusTest  "KnownCase"
 
 
 #include "defines.h"
