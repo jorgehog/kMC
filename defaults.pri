@@ -2,7 +2,7 @@ CONFIG -= app_bundle
 CONFIG -= qt
 CONFIG += RNG_ZIG
 
-QMAKE_CXX = gcc
+QMAKE_CXX = ccache gcc
 
 COMMON_CXXFLAGS = -std=c++11 -fopenmp
 
@@ -38,6 +38,16 @@ DEFINES += \
 CONFIG(RNG_ZIG) {
 
     DEFINES += KMC_RNG_ZIG
+
+}
+
+
+CONFIG(compphys) {
+
+    INCLUDEPATH  += $(HOME)/shared/code
+    INCLUDEPATH  += $(HOME)/shared/armadillo-4.200.0/usr/include
+    QMAKE_LIBDIR += $(HOME)/shared/armadillo-4.200.0/usr/lib
+
 
 }
 

@@ -1,6 +1,6 @@
 #include <kMC>
 #include <libconfig_utils/libconfig_utils.h>
-#include <DCViz.h>
+#include <DCViz/include/DCViz.h>
 
 #include <armadillo>
 
