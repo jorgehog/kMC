@@ -217,24 +217,25 @@ void initialize_ignisKMC(KMCSolver * solver, const Setting & root)
     (void) NZ;
 
     const uint therm     = getSetting<uint>(initCFG, "therm");
-    const double endBeta = getSetting<double>(initCFG, "endBeta");
+    const double betaCoolMax = getSetting<double>(initCFG, "betaCoolMax");
+    const double betaHeatMin = getSetting<double>(initCFG, "betaHeatMin");
 
 
-    KMCEvent *heating = new tempChange(endBeta, therm);
-    heating->setOffsetTime(MainLattice::nCycles/2 - 1);
+    KMCEvent *cooling = new tempChange(betaCoolMax, therm);
+    cooling->setOffsetTime(MainLattice::nCycles/2 - 1);
 
-    KMCEvent *cooling = new tempChange(DiffusionReaction::beta(), therm);
-    cooling->setOnsetTime(MainLattice::nCycles/2);
+    KMCEvent *heating = new tempChange(betaHeatMin, therm);
+    heating->setOnsetTime(MainLattice::nCycles/2);
 
 
-    solver->addEvent(*heating);
     solver->addEvent(*cooling);
+    solver->addEvent(*heating);
 
     solver->addEvent(new MeasureTemp());
     solver->addEvent(new AverageNeighbors());
     solver->addEvent(new TotalEnergy());
-    solver->addEvent(new Sort());
-    solver->addEvent(new CPUTime());
+//    solver->addEvent(new Sort());
+//    solver->addEvent(new CPUTime());
 
     solver->initializeSolutionBath();
 
