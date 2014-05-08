@@ -12,6 +12,7 @@
 #include "ignisinterface/kmcevent.h"
 
 #include <sys/types.h>
+
 #include <armadillo>
 
 #include <limits>
@@ -27,7 +28,7 @@ namespace kMC
 
 const uint UNSET_UINT = std::numeric_limits<uint>::max();
 
-class DumpXYZ;
+class DumpFile;
 class SolverEvent;
 
 class KMCSolver
@@ -239,14 +240,15 @@ public:
 
     void dumpXYZ(const uint n);
 
+    void dumpLAMMPS(const uint n);
 
 
     static double minRateThreshold()
     {
-//        return max((*std::min_element(m_allPossibleReactions.begin(),
-//                                  m_allPossibleReactions.end(),
-//                                  [] (const Reaction *r1, const Reaction *r2) {return r1->rate() < r2->rate();}))->rate()/2,
-//                   1E-8);
+        //        return max((*std::min_element(m_allPossibleReactions.begin(),
+        //                                  m_allPossibleReactions.end(),
+        //                                  [] (const Reaction *r1, const Reaction *r2) {return r1->rate() < r2->rate();}))->rate()/2,
+        //                   1E-8);
 
         return Reaction::linearRateScale()*1E-8;
 
@@ -256,6 +258,11 @@ public:
     static void enableDumpXYZ(bool state)
     {
         m_dumpXYZ = state;
+    }
+
+    static void enableDumpLAMMPS(bool state)
+    {
+        m_dumpLAMMPS = state;
     }
 
 
@@ -273,6 +280,12 @@ public:
     void sortReactionsByRate();
 
     static uint binarySearchForInterval(const double target, const vector<double> & intervals);
+
+
+    void setFilepath(const string filepath)
+    {
+        m_filepath = filepath;
+    }
 
 
 private:
@@ -313,8 +326,11 @@ private:
 
 
     static bool m_dumpXYZ;
+    static bool m_dumpLAMMPS;
 
-    DumpXYZ *xyzEvent;
+    DumpFile *dumpFileEvent;
+
+    string m_filepath = "outfiles/";
 
     SolverEvent *m_solverEvent;
 

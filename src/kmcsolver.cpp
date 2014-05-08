@@ -11,6 +11,8 @@
 #include "ignisinterface/solverevent.h"
 #include "ignisinterface/kmcparticles.h"
 
+#include <lammpswriter/lammpswriter.h>
+
 #include <omp.h>
 
 #include <sys/time.h>
@@ -43,6 +45,8 @@ KMCSolver::KMCSolver(const Setting & root)
     DiffusionReaction::loadConfig(diffusionSettings);
 
     Site::loadConfig(SystemSettings);
+
+    lammpswriter::setFilePath(getSetting<string>(SystemSettings, "path"));
 
 
     setNumberOfCycles(
@@ -120,6 +124,9 @@ void KMCSolver::reset()
 void KMCSolver::onConstruct()
 {
 
+    lammpswriter::setFileNamePrefix("kMC");
+    lammpswriter::setNumberOfParticleProperties(6);
+
     m_NX = UNSET_UINT;
     m_NY = UNSET_UINT;
     m_NZ = UNSET_UINT;
@@ -154,10 +161,16 @@ void KMCSolver::setupMainLattice()
     m_solverEvent = new SolverEvent();
     m_mainLattice->addEvent(m_solverEvent);
 
-    if (m_dumpXYZ)
+    if (m_dumpLAMMPS)
     {
-        xyzEvent = new DumpXYZ();
-        m_mainLattice->addEvent(xyzEvent);
+        dumpFileEvent = new DumpLAMMPS();
+        m_mainLattice->addEvent(dumpFileEvent);
+    }
+
+    else if (m_dumpXYZ)
+    {
+        dumpFileEvent = new DumpXYZ();
+        m_mainLattice->addEvent(dumpFileEvent);
     }
 }
 
@@ -472,9 +485,7 @@ void KMCSolver::dumpXYZ(const uint n)
     s << "kMC" << n << ".xyz";
 
     ofstream o;
-    o.open("outfiles/" + s.str());
-
-
+    o.open(m_filepath + s.str());
 
     stringstream surface;
     stringstream crystal;
@@ -516,6 +527,22 @@ void KMCSolver::dumpXYZ(const uint n)
     o.close();
 
 }
+
+void KMCSolver::dumpLAMMPS(const uint n)
+{
+    lammpswriter writer(n, SoluteParticle::nParticles());
+
+    for (SoluteParticle *particle : m_particles)
+    {
+        writer.write((double)particle->particleState(),
+                     (double)particle->x(),
+                     (double)particle->y(),
+                     (double)particle->z(),
+                     (double)particle->nNeighbors(),
+                     particle->energy());
+    }
+}
+
 
 
 void KMCSolver::forEachSiteDo(function<void (uint x, uint y, uint z, Site *)> applyFunction) const
@@ -675,9 +702,9 @@ void KMCSolver::sortReactionsByRate()
     std::sort(m_allPossibleReactions.begin(),
               m_allPossibleReactions.end(),
               [] (const Reaction * r1, const Reaction * r2)
-              {
-                    return r1->rate() < r2->rate();
-              });
+    {
+        return r1->rate() < r2->rate();
+    });
 
 
     double kTot = 0;
@@ -1034,9 +1061,9 @@ void KMCSolver::initializeFromXYZ(string path, uint frame)
     }
 #endif
 
-    if (m_dumpXYZ)
+    if (m_dumpXYZ || m_dumpLAMMPS)
     {
-        xyzEvent->setOffset(frame + 1);
+        dumpFileEvent->setOffset(frame + 1);
     }
 
 }
@@ -1086,9 +1113,11 @@ void KMCSolver::setBoxSize(const uint NX, const uint NY, const uint NZ, bool che
         }
     }
 
-    m_mainLattice->setTopology({0, m_NX,
-                                0, m_NY,
-                                0, m_NZ});
+    m_mainLattice->setTopology({0, NX,
+                                0, NY,
+                                0, NZ});
+
+    lammpswriter::setSystemSize(NX, NY, NZ);
 
 }
 
@@ -1143,5 +1172,7 @@ void KMCSolver::clearParticles()
 
 
 bool KMCSolver::m_dumpXYZ = true;
+bool KMCSolver::m_dumpLAMMPS = false;
 
 uint KMCSolver::refCounter = 0;
+
