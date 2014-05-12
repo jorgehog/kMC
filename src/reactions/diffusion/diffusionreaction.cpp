@@ -36,19 +36,25 @@ void DiffusionReaction::loadConfig(const Setting &setting)
 {
 
     const Setting & rPowerSettings = getSetting(setting, "rPowers");
+    const Setting & strengthSettings = getSetting(setting, "strengths");
+
+    if (rPowerSettings.getLength() != strengthSettings.getLength())
+    {
+        KMCSolver::exit("Mismatch in diffusionreaction species parameter lengths.");
+    }
 
     SoluteParticle::nSpecies(rPowerSettings.getLength());
 
     vector<double> rPowers;
+    vector<double> strengths;
 
     for (uint i = 0; i < SoluteParticle::nSpecies(); ++i)
     {
         rPowers.push_back(rPowerSettings[i]);
+        strengths.push_back(strengthSettings[i]);
     }
 
-    const double & scale  = getSetting<double>(setting, "scale");
-
-    setPotentialParameters(rPowers, scale, false);
+    setPotentialParameters(rPowers, strengths, false);
 
 }
 
@@ -70,10 +76,11 @@ uint DiffusionReaction::zD() const
     return Boundary::currentBoundaries(2)->transformCoordinate(z() + m_path[2]);
 }
 
-void DiffusionReaction::setPotentialParameters(const vector<double> &rPowers, const double scale, bool setup)
+void DiffusionReaction::setPotentialParameters(const vector<double> &rPowers, const vector<double> &strenghts, bool setup)
 {
 
-    if (rPowers.size() != SoluteParticle::nSpecies())
+    if (rPowers.size() != SoluteParticle::nSpecies() ||
+        strenghts.size() != SoluteParticle::nSpecies())
     {
         KMCSolver::exit("mismatch in number of species.");
     }
@@ -81,15 +88,18 @@ void DiffusionReaction::setPotentialParameters(const vector<double> &rPowers, co
     m_rPowers.reset();
     m_rPowers.set_size(SoluteParticle::nSpecies(), SoluteParticle::nSpecies());
 
+    m_strengths.reset();
+    m_strengths.set_size(SoluteParticle::nSpecies(), SoluteParticle::nSpecies());
+
     for (uint speciesA = 0; speciesA < SoluteParticle::nSpecies(); ++speciesA)
     {
         for (uint speciesB = 0; speciesB < SoluteParticle::nSpecies(); ++speciesB)
         {
-            m_rPowers(speciesA, speciesB) = std::sqrt(rPowers.at(speciesA)*rPowers.at(speciesB));
+            //geometric mean for powers and arithmetic mean for strengths
+            m_rPowers(speciesA, speciesB)   = std::sqrt(rPowers.at(speciesA)*rPowers.at(speciesB));
+            m_strengths(speciesA, speciesB) = (strenghts.at(speciesA) + strenghts.at(speciesB))/2;
         }
     }
-
-    m_scale = scale;
 
     if (setup)
     {
@@ -140,12 +150,13 @@ string DiffusionReaction::getFinalizingDebugMessage() const
 void DiffusionReaction::setupPotential()
 {
 
+    using std::pow;
+
     uint i, j, k;
     double dx, dy, dz, r2;
+    double rPower, strength;
 
     umat::fixed<3, 2> overlapBox;
-
-    KMCDebugger_Assert(m_scale, !=, 0, "Potential parameters not set.");
 
     m_potential.reset_objects();
     m_potential.reset();
@@ -202,11 +213,13 @@ void DiffusionReaction::setupPotential()
                             m_potential(i, j, k)(speciesA, speciesB) = numeric_limits<double>::max();
                             continue;
                         }
+                        rPower = m_rPowers(speciesA, speciesB);
+                        strength = m_strengths(speciesA, speciesB);
 
-                        m_potential(i, j, k)(speciesA, speciesB) = m_scale/std::pow(Site::originTransformVector(i)*Site::originTransformVector(i)
-                                                                                    + Site::originTransformVector(j)*Site::originTransformVector(j)
-                                                                                    + Site::originTransformVector(k)*Site::originTransformVector(k),
-                                                                                    m_rPowers(speciesA, speciesB)/2);
+                        m_potential(i, j, k)(speciesA, speciesB) = strength/std::pow(Site::originTransformVector(i)*Site::originTransformVector(i)
+                                                                                   + Site::originTransformVector(j)*Site::originTransformVector(j)
+                                                                                   + Site::originTransformVector(k)*Site::originTransformVector(k),
+                                                                                     rPower/2);
                     }
                 }
             }
@@ -270,9 +283,12 @@ void DiffusionReaction::setupPotential()
                                 for (uint speciesB = 0; speciesB < SoluteParticle::nSpecies(); ++speciesB)
                                 {
 
+                                    rPower = m_rPowers(speciesA, speciesB);
+                                    strength = m_strengths(speciesA, speciesB);
+
                                     m_saddlePotential(i, j, k)(xn - overlapBox(0, 0),
                                                                yn - overlapBox(1, 0),
-                                                               zn - overlapBox(2, 0))(speciesA, speciesB) = m_scale/pow(r2, m_rPowers(speciesA, speciesB)/2);
+                                                               zn - overlapBox(2, 0))(speciesA, speciesB) = strength/pow(r2, rPower/2);
                                 }
                             }
 
@@ -420,8 +436,8 @@ double DiffusionReaction::getSaddleEnergyContributionFromNeighborAt(const uint i
 {
     return m_saddlePotential(m_saddleFieldIndices[0], m_saddleFieldIndices[1], m_saddleFieldIndices[2])
             (i - m_neighborSetIntersectionPoints(m_saddleFieldIndices[0], m_saddleFieldIndices[1], m_saddleFieldIndices[2])(0, 0),
-             j - m_neighborSetIntersectionPoints(m_saddleFieldIndices[0], m_saddleFieldIndices[1], m_saddleFieldIndices[2])(1, 0),
-             k - m_neighborSetIntersectionPoints(m_saddleFieldIndices[0], m_saddleFieldIndices[1], m_saddleFieldIndices[2])(2, 0))(s1, s2);
+            j - m_neighborSetIntersectionPoints(m_saddleFieldIndices[0], m_saddleFieldIndices[1], m_saddleFieldIndices[2])(1, 0),
+            k - m_neighborSetIntersectionPoints(m_saddleFieldIndices[0], m_saddleFieldIndices[1], m_saddleFieldIndices[2])(2, 0))(s1, s2);
 }
 
 
@@ -563,15 +579,15 @@ void DiffusionReaction::registerBetaChange(const double newBeta)
 }
 
 
-mat        DiffusionReaction::m_rPowers = {1.0};
-double     DiffusionReaction::m_scale  = 1.0;
+mat        DiffusionReaction::m_rPowers   = {1.0};
+mat        DiffusionReaction::m_strengths = {1.0};
 
 double     DiffusionReaction::m_betaChangeScaleFactor;
 
 field<mat> DiffusionReaction::m_potential;
 
 field<field<mat>>
-                  DiffusionReaction::m_saddlePotential;
+DiffusionReaction::m_saddlePotential;
 
 field<umat::fixed<3, 2> >
 DiffusionReaction::m_neighborSetIntersectionPoints;

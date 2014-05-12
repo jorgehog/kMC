@@ -84,7 +84,7 @@ public:
         m_betaChangeScaleFactor = factor;
     }
 
-    static void setPotentialParameters(const vector<double> &rPowers, const double scale, bool setup = true);
+    static void setPotentialParameters(const vector<double> &rPowers, const vector<double> &strenghts, bool setup = true);
 
 
     string getFinalizingDebugMessage() const;
@@ -93,7 +93,7 @@ private:
 
     static mat m_rPowers;
 
-    static double m_scale;
+    static mat m_strengths;
 
     static double m_betaChangeScaleFactor;
 
