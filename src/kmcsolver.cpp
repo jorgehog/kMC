@@ -840,11 +840,11 @@ bool KMCSolver::spawnParticle(SoluteParticle *particle, const uint x, const uint
 
 }
 
-void KMCSolver::forceSpawnParticle(const uint x, const uint y, const uint z)
+void KMCSolver::forceSpawnParticle(const uint x, const uint y, const uint z, const uint particleType)
 {
     KMCDebugger_AssertBool(!getSite(x, y, z)->isActive());
 
-    SoluteParticle *particle = new SoluteParticle();
+    SoluteParticle *particle = new SoluteParticle(particleType);
 
     spawnParticle(particle, x, y, z, false);
 

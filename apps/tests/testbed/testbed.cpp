@@ -532,6 +532,11 @@ void testBed::testRNG()
 
 }
 
+void testBed::testParticleMixing()
+{
+
+}
+
 void testBed::testBoundarySites()
 {
     cout << "test outdated." << endl;
