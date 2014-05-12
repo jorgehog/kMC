@@ -536,10 +536,12 @@ void testBed::testParticleMixing()
 {
 
     SoluteParticle *A, *B;
-    DiffusionReaction *rA, *rB;
+    DiffusionReaction *rA_toCenter, *rB_toCenter, *rA_fromCenter, *rB_fromCenter;
+    uint n_rA, n_rB;
 
     forceNewBoundaries(Boundary::Edge); //Not periodic
     forceNewBoxSize({10, 1, 1});        //make a 1D system
+    forceNewNNeighborLimit(3);          //Increase range of interaction to test all cases.
 
     vector<double> strengths = {1.0, 10.0, 100.0};
     vector<double> powers = {1.0, 2.0, 3.0};
@@ -550,24 +552,18 @@ void testBed::testParticleMixing()
 
     for (uint typeA = 0; typeA < SoluteParticle::nSpecies(); ++typeA)
     {
-        //Spawning a particle of type A. Since it's a 1D system, it should have 2 reactions.
+        //Spawning a particle of type A.
         A = forceSpawnCenter(-1, 0, 0, typeA);
-
         CHECK_EQUAL(typeA, A->species());
 
-//        CHECK_EQUAL(2, A->reactions().size());
-//        rA = A->diffusionReactions(2, 0, 0); //left-going reaction
 
         for (uint typeB = 0; typeB < SoluteParticle::nSpecies(); ++typeB)
         {
             B = forceSpawnCenter(1, 0, 0, typeB); //A and B are at a distance 2 from eachother.
-
             CHECK_EQUAL(typeB, B->species());
 
+            CHECK_EQUAL(2, SoluteParticle::affectedParticles().size());
             solver->getRateVariables();
-
-//            CHECK_EQUAL(2, B->reactions().size());
-//            rB = B->diffusionReactions(0, 0, 0); //right->going reaction
 
             CHECK_EQUAL(A->energy(), B->energy());
 
@@ -578,9 +574,44 @@ void testBed::testParticleMixing()
 
             CHECK_CLOSE(eCombo, A->energy(), 1E-10);
 
-            //and the saddle energies of the reactions of moving towards the center (site between A and B)
-//            CHECK_EQUAL(rA->lastUsedEsp(), rB->lastUsedEsp());
-            solver->dumpLAMMPS(typeA*SoluteParticle::nSpecies() + typeB);
+
+            //Count of the 1D system works (2 reactions)
+            n_rA = 0;
+            n_rB = 0;
+
+            A->forEachActiveReactionDo([&n_rA] (void *r) {(void)r; n_rA++;});
+            B->forEachActiveReactionDo([&n_rB] (void *r) {(void)r; n_rB++;});
+
+            CHECK_EQUAL(2, n_rA);
+            CHECK_EQUAL(2, n_rB);
+
+
+            //pick out reactions pointing to the center.
+            rA_toCenter = A->diffusionReactions(2, 1, 1); //left-going reaction
+            rB_toCenter = B->diffusionReactions(0, 1, 1); //right->going reaction
+
+            //and from the center
+            rA_fromCenter = A->diffusionReactions(0, 1, 1); //right-going reaction
+            rB_fromCenter = B->diffusionReactions(2, 1, 1); //left->going reaction
+
+            CHECK_EQUAL(true, rA_toCenter->isAllowed());
+            CHECK_EQUAL(true, rB_toCenter->isAllowed());
+            CHECK_EQUAL(true, rA_fromCenter->isAllowed());
+            CHECK_EQUAL(true, rB_fromCenter->isAllowed());
+
+
+            //These should have equal saddle energies for all cases
+            CHECK_EQUAL(false, rA_toCenter->lastUsedEsp() == Reaction::UNSET_ENERGY);
+            CHECK_EQUAL(false, rA_fromCenter->lastUsedEsp() == Reaction::UNSET_ENERGY);
+
+            CHECK_EQUAL(rA_toCenter->lastUsedEsp(), rB_toCenter->lastUsedEsp());
+            CHECK_EQUAL(rA_fromCenter->lastUsedEsp(), rB_fromCenter->lastUsedEsp());
+
+            double eSaddleToCenter = strengthCombo/pow(1.5, rPowerCombo);
+            double eSaddleFromCenter = strengthCombo/pow(2.5, rPowerCombo);
+
+            CHECK_EQUAL(eSaddleToCenter,   rA_toCenter->lastUsedEsp());
+            CHECK_EQUAL(eSaddleFromCenter, rA_fromCenter->lastUsedEsp());
 
             solver->despawnParticle(B);
 
@@ -588,7 +619,6 @@ void testBed::testParticleMixing()
 
         solver->despawnParticle(A);
     }
-
 
 
 }
