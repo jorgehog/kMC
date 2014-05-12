@@ -542,11 +542,11 @@ void KMCSolver::dumpLAMMPS(const uint n)
     for (SoluteParticle *particle : m_particles)
     {
         (*m_lammpswriter) << particle->particleState()
-                  << particle->x()
-                  << particle->y()
-                  << particle->z()
-                  << particle->nNeighbors()
-                  << particle->energy();
+                          << particle->x()
+                          << particle->y()
+                          << particle->z()
+                          << particle->nNeighbors()
+                          << particle->energy();
     }
 
     m_lammpswriter->finalize();
@@ -1122,10 +1122,16 @@ void KMCSolver::setBoxSize(const uint NX, const uint NY, const uint NZ, bool che
 
     if (Site::nNeighborsLimit() != UNSET_UINT && check)
     {
-        if (Site::nNeighborsLimit() >= min(m_N)/2)
+        for (uint i = 0; i < 3; ++i)
         {
-            cerr << "Neighbor reach must be lower than half the minimum box dimension to avoid sites directly affecting themselves." << endl;
-            KMCSolver::exit();
+            if (Site::boundaries(i, 0)->type() == Boundary::Periodic)
+            {
+                if (Site::nNeighborsLimit() >= m_N(i)/2)
+                {
+                    cerr << "Neighbor reach must be lower than half the box dimension (periodic only) to avoid sites directly affecting themselves." << endl;
+                    KMCSolver::exit();
+                }
+            }
         }
     }
 

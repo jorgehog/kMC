@@ -534,8 +534,12 @@ void testBed::testRNG()
 
 void testBed::testParticleMixing()
 {
-    SoluteParticle *A;
-    SoluteParticle *B;
+
+    SoluteParticle *A, *B;
+    DiffusionReaction *rA, *rB;
+
+    forceNewBoxSize({10, 1, 1});        //make a 1D system
+    forceNewBoundaries(Boundary::Edge); //Not periodic
 
     vector<double> strengths = {1.0, 10.0, 100.0};
     vector<double> powers = {1.0, 2.0, 3.0};
@@ -546,15 +550,39 @@ void testBed::testParticleMixing()
 
     for (uint typeA = 0; typeA < SoluteParticle::nSpecies(); ++typeA)
     {
-        A = forceSpawnCenter(0, 0, 0, typeA);
+        //Spawning a particle of type A. Since it's a 1D system, it should have 2 reactions.
+        A = forceSpawnCenter(-1, 0, 0, typeA);
+
+        CHECK_EQUAL(2, A->reactions().size());
+        rA = A->diffusionReactions(2, 0, 0); //left-going reaction
 
         for (uint typeB = 0; typeB < SoluteParticle::nSpecies(); ++typeB)
         {
-            B = forceSpawnCenter(0, 0, 0, typeB);
+            B = forceSpawnCenter(1, 0, 0, typeB); //A and B are at a distance 2 from eachother.
+
+            solver->getRateVariables();
+
+            CHECK_EQUAL(2, B->reactions().size());
+            rB = B->diffusionReactions(0, 0, 0); //right->going reaction
+
+            CHECK_EQUAL(A->energy(), B->energy());
+
+            //checking value of energy
+            double rPowerCombo = sqrt(powers.at(typeA)*powers.at(typeB));
+            double strengthCombo = 0.5*(strengths.at(typeA) + strengths.at(typeB));
+            double eCombo = strengthCombo/pow(2.0, rPowerCombo);
+
+            CHECK_CLOSE(eCombo, A->energy(), 1E-10);
+
+            //and the saddle energies of the reactions of moving towards the center (site between A and B)
+            CHECK_EQUAL(rA->lastUsedEsp(), rB->lastUsedEsp());
 
 
+            solver->despawnParticle(B);
 
         }
+
+        solver->despawnParticle(A);
     }
 
 

@@ -9,8 +9,8 @@
 #include <sys/types.h>
 
 
-//#define focusSuite "Misc"
-#define focusTest  "KnownCase"
+#define focusSuite "Misc"
+#define focusTest  "ParticleMixing"
 
 
 #include "defines.h"
@@ -22,6 +22,8 @@ SUITE(Misc)
     TESTWRAPPER(BinarySearchChoise)
 
     TESTWRAPPER(BoundarySites)
+
+    TESTWRAPPER(ParticleMixing)
 
     TESTWRAPPER(ConcentrationWall)
 
