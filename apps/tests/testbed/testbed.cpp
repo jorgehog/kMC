@@ -538,8 +538,8 @@ void testBed::testParticleMixing()
     SoluteParticle *A, *B;
     DiffusionReaction *rA, *rB;
 
-    forceNewBoxSize({10, 1, 1});        //make a 1D system
     forceNewBoundaries(Boundary::Edge); //Not periodic
+    forceNewBoxSize({10, 1, 1});        //make a 1D system
 
     vector<double> strengths = {1.0, 10.0, 100.0};
     vector<double> powers = {1.0, 2.0, 3.0};
