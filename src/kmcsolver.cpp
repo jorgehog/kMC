@@ -62,17 +62,16 @@ KMCSolver::KMCSolver(const Setting & root)
 
 
     setNumberOfCycles(
-                getSetting<uint>(SolverSettings, "nCycles"));
+               getSetting<uint>(SolverSettings, "nCycles"));
 
     setCyclesPerOutput(
-                getSetting<uint>(SolverSettings, "cyclesPerOutput"));
+               getSetting<uint>(SolverSettings, "cyclesPerOutput"));
 
-    setRNGSeed(
-                getSetting<uint>(SolverSettings, "seedType"),
-                getSetting<int>(SolverSettings, "specificSeed"));
+    setRNGSeed(getSetting<uint>(SolverSettings, "seedType"),
+               getSetting<int>(SolverSettings, "specificSeed"));
 
     setTargetConcentration(
-                getSetting<double>(SystemSettings, "SaturationLevel"));
+               getSetting<double>(SystemSettings, "SaturationLevel"));
 
 
     uvec3 boxSize;
