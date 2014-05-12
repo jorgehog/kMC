@@ -1318,9 +1318,9 @@ Site *testBed::getBoxCenter(const int dx, const int dy, const int dz)
     return solver->getSite(NX()/2 + dx, NY()/2 + dy, NZ()/2 + dz);
 }
 
-void testBed::forceSpawnCenter(const int dx, const int dy, const int dz)
+void testBed::forceSpawnCenter(const int dx, const int dy, const int dz, const uint particleType)
 {
-    solver->forceSpawnParticle(NX()/2 + dx, NY()/2 + dy, NZ()/2 + dz);
+    solver->forceSpawnParticle(NX()/2 + dx, NY()/2 + dy, NZ()/2 + dz, particleType);
 }
 
 void testBed::_reactionShufflerCheck(uint nReacs)
