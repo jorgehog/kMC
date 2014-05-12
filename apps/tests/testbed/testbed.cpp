@@ -534,6 +534,30 @@ void testBed::testRNG()
 
 void testBed::testParticleMixing()
 {
+    SoluteParticle *A;
+    SoluteParticle *B;
+
+    vector<double> strengths = {1.0, 10.0, 100.0};
+    vector<double> powers = {1.0, 2.0, 3.0};
+
+    DiffusionReaction::setPotentialParameters(powers, strengths);
+
+    CHECK_EQUAL(SoluteParticle::nSpecies(), strengths.size());
+
+    for (uint typeA = 0; typeA < SoluteParticle::nSpecies(); ++typeA)
+    {
+        A = forceSpawnCenter(0, 0, 0, typeA);
+
+        for (uint typeB = 0; typeB < SoluteParticle::nSpecies(); ++typeB)
+        {
+            B = forceSpawnCenter(0, 0, 0, typeB);
+
+
+
+        }
+    }
+
+
 
 }
 
@@ -1318,9 +1342,9 @@ Site *testBed::getBoxCenter(const int dx, const int dy, const int dz)
     return solver->getSite(NX()/2 + dx, NY()/2 + dy, NZ()/2 + dz);
 }
 
-void testBed::forceSpawnCenter(const int dx, const int dy, const int dz, const uint particleType)
+SoluteParticle *testBed::forceSpawnCenter(const int dx, const int dy, const int dz, const uint particleType)
 {
-    solver->forceSpawnParticle(NX()/2 + dx, NY()/2 + dy, NZ()/2 + dz, particleType);
+    return solver->forceSpawnParticle(NX()/2 + dx, NY()/2 + dy, NZ()/2 + dz, particleType);
 }
 
 void testBed::_reactionShufflerCheck(uint nReacs)

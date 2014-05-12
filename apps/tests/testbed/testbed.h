@@ -31,6 +31,8 @@ public:
 
     static void testRNG();
 
+    static void testParticleMixing();
+
     static void testBoundarySites();
 
     static void testConcentrationWall();
@@ -115,7 +117,7 @@ private:
 
     static Site * getBoxCenter(const int dx = 0, const int dy = 0, const int dz = 0);
 
-    static void forceSpawnCenter(const int dx = 0, const int dy = 0, const int dz = 0);
+    static SoluteParticle *forceSpawnCenter(const int dx = 0, const int dy = 0, const int dz = 0, const uint particleType = 0);
 
     static string lastBoundariesName;
 

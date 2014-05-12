@@ -79,7 +79,7 @@ public:
 
     bool spawnParticle(SoluteParticle *particle, const uint x, const uint y, const uint z, bool checkIfLegal);
 
-    void forceSpawnParticle(const uint x, const uint y, const uint z);
+    SoluteParticle *forceSpawnParticle(const uint x, const uint y, const uint z, const uint particleType = 0);
 
     void despawnParticle(SoluteParticle *particle);
 
