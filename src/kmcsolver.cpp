@@ -166,10 +166,11 @@ void KMCSolver::setupMainLattice()
     m_solverEvent = new SolverEvent();
     m_mainLattice->addEvent(m_solverEvent);
 
+    m_lammpswriter = new lammpswriter(6, m_filepath, "kMC");
+
     if (m_dumpLAMMPS)
     {
         m_dumpFileEvent = new DumpLAMMPS();
-        m_lammpswriter = new lammpswriter(6, m_filepath, "kMC");
         m_mainLattice->addEvent(m_dumpFileEvent);
     }
 

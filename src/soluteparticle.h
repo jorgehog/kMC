@@ -60,7 +60,7 @@ public:
 
     static void setMainSolver(KMCSolver* solver);
 
-    static void nSpecies(const uint nSpecies);
+    static void nSpecies(const uint _nSpecies, bool recalculatePotential = false);
 
     static void selectUpdateFlags();
 

@@ -79,11 +79,12 @@ uint DiffusionReaction::zD() const
 void DiffusionReaction::setPotentialParameters(const vector<double> &rPowers, const vector<double> &strenghts, bool setup)
 {
 
-    if (rPowers.size() != SoluteParticle::nSpecies() ||
-        strenghts.size() != SoluteParticle::nSpecies())
+    if (rPowers.size() != strenghts.size())
     {
-        KMCSolver::exit("mismatch in number of species.");
+        KMCSolver::exit("mismatch in species mixing data.");
     }
+
+    SoluteParticle::nSpecies(rPowers.size());
 
     m_rPowers.reset();
     m_rPowers.set_size(SoluteParticle::nSpecies(), SoluteParticle::nSpecies());

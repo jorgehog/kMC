@@ -163,14 +163,14 @@ void SoluteParticle::setMainSolver(KMCSolver *solver)
     m_solver = solver;
 }
 
-void SoluteParticle::nSpecies(const uint nSpecies)
+void SoluteParticle::nSpecies(const uint _nSpecies, bool recalculatePotential)
 {
-    KMCDebugger_Assert(nSpecies, !=, 0);
+    KMCDebugger_Assert(_nSpecies, !=, 0);
     KMCDebugger_AssertEqual(refCounter, 0);
 
-    m_nSpecies = nSpecies;
+    m_nSpecies = _nSpecies;
 
-    if (!DiffusionReaction::potentialBox().empty())
+    if (recalculatePotential)
     {
         DiffusionReaction::setupPotential();
     }
