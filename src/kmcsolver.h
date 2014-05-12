@@ -23,6 +23,8 @@
 using namespace arma;
 
 
+class lammpswriter;
+
 namespace kMC
 {
 
@@ -284,7 +286,7 @@ public:
 
     void setFilepath(const string filepath)
     {
-        m_filepath = filepath;
+        m_filepath = filepath.empty() ? filepath : filepath + "/";
     }
 
 
@@ -328,7 +330,8 @@ private:
     static bool m_dumpXYZ;
     static bool m_dumpLAMMPS;
 
-    DumpFile *dumpFileEvent;
+    DumpFile *m_dumpFileEvent;
+    lammpswriter *m_writer;
 
     string m_filepath = "outfiles/";
 

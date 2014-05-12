@@ -33,12 +33,14 @@ using namespace kMC;
 KMCSolver::KMCSolver(const Setting & root)
 {
 
-    onConstruct();
-
     const Setting & SystemSettings = getSetting(root, "System");
     const Setting & SolverSettings = getSetting(root, "Solver");
     const Setting & diffusionSettings = getSetting(root, {"Reactions", "Diffusion"});
 
+    const string & path = getSetting<string>(SystemSettings, "path");
+    setFilepath(path);
+
+    onConstruct();
 
     Reaction::loadConfig(getSetting(root, "Reactions"));
 
@@ -46,7 +48,6 @@ KMCSolver::KMCSolver(const Setting & root)
 
     Site::loadConfig(SystemSettings);
 
-    lammpswriter::setFilePath(getSetting<string>(SystemSettings, "path"));
 
 
     setNumberOfCycles(
@@ -99,6 +100,13 @@ KMCSolver::~KMCSolver()
 
     checkAllRefCounters();
 
+
+    if (m_dumpLAMMPS)
+    {
+        delete m_lammpswriter;
+    }
+
+
     refCounter--;
 
 }
@@ -123,9 +131,6 @@ void KMCSolver::reset()
 
 void KMCSolver::onConstruct()
 {
-
-    lammpswriter::setFileNamePrefix("kMC");
-    lammpswriter::setNumberOfParticleProperties(6);
 
     m_NX = UNSET_UINT;
     m_NY = UNSET_UINT;
@@ -163,14 +168,15 @@ void KMCSolver::setupMainLattice()
 
     if (m_dumpLAMMPS)
     {
-        dumpFileEvent = new DumpLAMMPS();
-        m_mainLattice->addEvent(dumpFileEvent);
+        m_dumpFileEvent = new DumpLAMMPS();
+        m_lammpswriter = new lammpswriter(6, m_filepath, "kMC");
+        m_mainLattice->addEvent(m_dumpFileEvent);
     }
 
     else if (m_dumpXYZ)
     {
-        dumpFileEvent = new DumpXYZ();
-        m_mainLattice->addEvent(dumpFileEvent);
+        m_dumpFileEvent = new DumpXYZ();
+        m_mainLattice->addEvent(m_dumpFileEvent);
     }
 }
 
@@ -530,17 +536,21 @@ void KMCSolver::dumpXYZ(const uint n)
 
 void KMCSolver::dumpLAMMPS(const uint n)
 {
-    lammpswriter writer(n, SoluteParticle::nParticles());
+
+    m_lammpswriter->initializeNewFile(n, SoluteParticle::nParticles());
 
     for (SoluteParticle *particle : m_particles)
     {
-        writer.write((double)particle->particleState(),
-                     (double)particle->x(),
-                     (double)particle->y(),
-                     (double)particle->z(),
-                     (double)particle->nNeighbors(),
-                     particle->energy());
+        (*m_lammpswriter) << particle->particleState()
+                  << particle->x()
+                  << particle->y()
+                  << particle->z()
+                  << particle->nNeighbors()
+                  << particle->energy();
     }
+
+    m_lammpswriter->finalize();
+
 }
 
 
@@ -1063,7 +1073,7 @@ void KMCSolver::initializeFromXYZ(string path, uint frame)
 
     if (m_dumpXYZ || m_dumpLAMMPS)
     {
-        dumpFileEvent->setOffset(frame + 1);
+        m_dumpFileEvent->setOffset(frame + 1);
     }
 
 }

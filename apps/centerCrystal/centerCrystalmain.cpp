@@ -106,13 +106,13 @@ class TotalEnergy : public KMCEvent
 {
 public:
 
-    TotalEnergy() : KMCEvent("TotalEnergy", "E*", true, true) {}
+    TotalEnergy() : KMCEvent("TotalEnergy", "E* N", true, true) {}
 
 protected:
 
     void execute()
     {
-        setValue(SoluteParticle::totalEnergy());
+        setValue(SoluteParticle::totalEnergy()/SoluteParticle::nParticles());
     }
 
 };
