@@ -33,11 +33,22 @@ using namespace kMC;
 KMCSolver::KMCSolver(const Setting & root)
 {
 
-    const Setting & SystemSettings = getSetting(root, "System");
     const Setting & SolverSettings = getSetting(root, "Solver");
     const Setting & diffusionSettings = getSetting(root, {"Reactions", "Diffusion"});
+    const Setting & SystemSettings = getSetting(root, "System");
 
-    const string & path = getSetting<string>(SystemSettings, "path");
+    string path;
+
+    try
+    {
+        path = (string)(SystemSettings["path"].c_str());
+    }
+
+    catch(const libconfig::SettingNotFoundException & exc)
+    {
+         path = "outfiles";
+    }
+
     setFilepath(path);
 
     onConstruct();
