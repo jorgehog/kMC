@@ -331,7 +331,7 @@ private:
     static bool m_dumpLAMMPS;
 
     DumpFile *m_dumpFileEvent;
-    lammpswriter *m_writer;
+    lammpswriter *m_lammpswriter;
 
     string m_filepath = "outfiles/";
 
