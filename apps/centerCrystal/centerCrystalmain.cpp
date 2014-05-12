@@ -23,7 +23,7 @@ int main()
 
     KMCDebugger_SetEnabledTo(getSetting<int>(root, "buildTrace") == 0 ? false : true);
 
-
+    KMCSolver::enableDumpLAMMPS(true);
     KMCSolver* solver = new KMCSolver(root);
 
     initialize_centerCrystal(solver, root);
@@ -106,13 +106,13 @@ class TotalEnergy : public KMCEvent
 {
 public:
 
-    TotalEnergy() : KMCEvent("TotalEnergy", "E*", true, true) {}
+    TotalEnergy() : KMCEvent("TotalEnergy", "E* N", true, true) {}
 
 protected:
 
     void execute()
     {
-        setValue(SoluteParticle::totalEnergy());
+        setValue(SoluteParticle::totalEnergy()/SoluteParticle::nParticles());
     }
 
 };
