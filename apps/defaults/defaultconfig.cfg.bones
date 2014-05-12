@@ -11,7 +11,7 @@ System = {
 
 
     #0 = Periodic
-    #1 = Surface
+    #1 = Edge
     #2 = ConcentrationWall
     Boundaries = {
     #            #back #front
