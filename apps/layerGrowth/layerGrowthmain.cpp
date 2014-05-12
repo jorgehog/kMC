@@ -243,7 +243,7 @@ void initialize_layerGrowth(KMCSolver * solver, const Setting & root)
 
         x = i*deltaX;
 
-        if (x > NX)
+        if (x >= NX)
         {
             j++;
             y = j*deltaY;

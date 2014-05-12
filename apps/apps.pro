@@ -7,7 +7,8 @@ SUBDIRS += tests \
            diamondSquareSurface \
            ignisKMC \
            layerGrowth \
-           movingSteppes
+           movingSteppes \
+           impureSurface
 
 
 OTHER_FILES += defaults/default.pro.bones \
