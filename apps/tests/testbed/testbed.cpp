@@ -553,12 +553,16 @@ void testBed::testParticleMixing()
         //Spawning a particle of type A. Since it's a 1D system, it should have 2 reactions.
         A = forceSpawnCenter(-1, 0, 0, typeA);
 
+        CHECK_EQUAL(typeA, A->species());
+
 //        CHECK_EQUAL(2, A->reactions().size());
 //        rA = A->diffusionReactions(2, 0, 0); //left-going reaction
 
         for (uint typeB = 0; typeB < SoluteParticle::nSpecies(); ++typeB)
         {
             B = forceSpawnCenter(1, 0, 0, typeB); //A and B are at a distance 2 from eachother.
+
+            CHECK_EQUAL(typeB, B->species());
 
             solver->getRateVariables();
 

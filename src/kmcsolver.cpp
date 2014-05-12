@@ -166,7 +166,7 @@ void KMCSolver::setupMainLattice()
     m_solverEvent = new SolverEvent();
     m_mainLattice->addEvent(m_solverEvent);
 
-    m_lammpswriter = new lammpswriter(6, m_filepath, "kMC");
+    m_lammpswriter = new lammpswriter(7, m_filepath, "kMC");
 
     if (m_dumpLAMMPS)
     {
@@ -547,7 +547,8 @@ void KMCSolver::dumpLAMMPS(const uint n)
                           << particle->y()
                           << particle->z()
                           << particle->nNeighbors()
-                          << particle->energy();
+                          << particle->energy()
+                          << particle->species();
     }
 
     m_lammpswriter->finalize();
