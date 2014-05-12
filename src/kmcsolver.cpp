@@ -101,10 +101,8 @@ KMCSolver::~KMCSolver()
     checkAllRefCounters();
 
 
-    if (m_dumpLAMMPS)
-    {
-        delete m_lammpswriter;
-    }
+    delete m_lammpswriter;
+
 
 
     refCounter--;

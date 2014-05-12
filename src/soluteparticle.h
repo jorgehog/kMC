@@ -336,16 +336,36 @@ public:
 
     void setupAllNeighbors();
 
-    void removeNeighbor(SoluteParticle *neighbor, uint level);
+    void removeNeighbor(SoluteParticle *neighbor,
+                        const uint i,
+                        const uint j,
+                        const uint k);
 
-    void addNeighbor(SoluteParticle *neighbor, uint level);
+    void addNeighbor(SoluteParticle *neighbor,
+                     const uint i,
+                     const uint j,
+                     const uint k);
 
-    void _updateNeighborProps(const int sign, const SoluteParticle *neighbor, const uint level);
+    void _updateNeighborProps(const int sign,
+                              const SoluteParticle *neighbor,
+                              const uint i,
+                              const uint j,
+                              const uint k);
 
 
-    void distanceTo(const SoluteParticle *other, int &dx, int &dy, int &dz, bool absolutes = false) const;
+    void distanceTo(const SoluteParticle *other,
+                    int &dx,
+                    int &dy,
+                    int &dz,
+                    bool absolutes = false) const;
 
     double potentialBetween(const SoluteParticle *other);
+
+    double potentialBetween(const SoluteParticle *other,
+                            const uint i,
+                            const uint j,
+                            const uint k);
+
 
     uint maxDistanceTo(const SoluteParticle *other) const;
 
