@@ -430,7 +430,6 @@ void testBed::testStrainedInterface()
                     }
                 }
 
-                particle.setParticleState(ParticleStates::solvant);
                 ifs->onNeighborChange(&particle, NULL, 0, 0, 0, 0); //hack to reset
 
             }

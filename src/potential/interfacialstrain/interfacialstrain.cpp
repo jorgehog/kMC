@@ -107,11 +107,20 @@ double InterfacialStrain::onNeighborChange(SoluteParticle *particle,
 
         if (isTracked(particle))
         {
+            //not qualified and affected.
             m_trackedParticles.erase(particle);
         }
 
         return 0;
     }
+
+    if (isTracked(particle))
+    {
+        return 0;
+    }
+
+    //qualified and not affected.
+    m_trackedParticles.insert(particle);
 
     return evaluateGivenQualified(particle);
 
@@ -119,13 +128,6 @@ double InterfacialStrain::onNeighborChange(SoluteParticle *particle,
 
 double InterfacialStrain::evaluateGivenQualified(SoluteParticle *particle)
 {
-    //already affected
-    if (isTracked(particle))
-    {
-        return 0;
-    }
-    m_trackedParticles.insert(particle);
-
     return m_potential.at(2*particle->r(m_interface->dimension()));
 }
 
