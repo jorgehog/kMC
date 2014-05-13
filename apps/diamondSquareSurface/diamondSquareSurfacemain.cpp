@@ -222,8 +222,9 @@ void initialize_diamondSquareSurface(KMCSolver * solver, const Setting & root)
 
     uint newNZ = 2*maxSpan - (topCutoff + bottomCutoff) + clearing;
 
+    solver->clearSites();
     solver->setBoxSize({NX, NY, newNZ});
-
+    solver->initializeSites();
 
     for (uint x = 0; x < solver->NX(); ++x)
     {

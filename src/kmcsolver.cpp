@@ -11,6 +11,8 @@
 #include "ignisinterface/solverevent.h"
 #include "ignisinterface/kmcparticles.h"
 
+#include <lammpswriter/lammpswriter.h>
+
 #include <omp.h>
 
 #include <sys/time.h>
@@ -31,12 +33,25 @@ using namespace kMC;
 KMCSolver::KMCSolver(const Setting & root)
 {
 
-    onConstruct();
-
-    const Setting & SystemSettings = getSetting(root, "System");
     const Setting & SolverSettings = getSetting(root, "Solver");
     const Setting & diffusionSettings = getSetting(root, {"Reactions", "Diffusion"});
+    const Setting & SystemSettings = getSetting(root, "System");
 
+    string path;
+
+    try
+    {
+        path = (string)(SystemSettings["path"].c_str());
+    }
+
+    catch(const libconfig::SettingNotFoundException & exc)
+    {
+         path = "outfiles";
+    }
+
+    setFilepath(path);
+
+    onConstruct();
 
     Reaction::loadConfig(getSetting(root, "Reactions"));
 
@@ -45,18 +60,18 @@ KMCSolver::KMCSolver(const Setting & root)
     Site::loadConfig(SystemSettings);
 
 
+
     setNumberOfCycles(
-                getSetting<uint>(SolverSettings, "nCycles"));
+               getSetting<uint>(SolverSettings, "nCycles"));
 
     setCyclesPerOutput(
-                getSetting<uint>(SolverSettings, "cyclesPerOutput"));
+               getSetting<uint>(SolverSettings, "cyclesPerOutput"));
 
-    setRNGSeed(
-                getSetting<uint>(SolverSettings, "seedType"),
-                getSetting<int>(SolverSettings, "specificSeed"));
+    setRNGSeed(getSetting<uint>(SolverSettings, "seedType"),
+               getSetting<int>(SolverSettings, "specificSeed"));
 
     setTargetConcentration(
-                getSetting<double>(SystemSettings, "SaturationLevel"));
+               getSetting<double>(SystemSettings, "SaturationLevel"));
 
 
     uvec3 boxSize;
@@ -94,6 +109,11 @@ KMCSolver::~KMCSolver()
 
 
     checkAllRefCounters();
+
+
+    delete m_lammpswriter;
+
+
 
     refCounter--;
 
@@ -154,10 +174,18 @@ void KMCSolver::setupMainLattice()
     m_solverEvent = new SolverEvent();
     m_mainLattice->addEvent(m_solverEvent);
 
-    if (m_dumpXYZ)
+    m_lammpswriter = new lammpswriter(7, m_filepath, "kMC");
+
+    if (m_dumpLAMMPS)
     {
-        xyzEvent = new DumpXYZ();
-        m_mainLattice->addEvent(xyzEvent);
+        m_dumpFileEvent = new DumpLAMMPS();
+        m_mainLattice->addEvent(m_dumpFileEvent);
+    }
+
+    else if (m_dumpXYZ)
+    {
+        m_dumpFileEvent = new DumpXYZ();
+        m_mainLattice->addEvent(m_dumpFileEvent);
     }
 }
 
@@ -472,9 +500,7 @@ void KMCSolver::dumpXYZ(const uint n)
     s << "kMC" << n << ".xyz";
 
     ofstream o;
-    o.open("outfiles/" + s.str());
-
-
+    o.open(m_filepath + s.str());
 
     stringstream surface;
     stringstream crystal;
@@ -516,6 +542,27 @@ void KMCSolver::dumpXYZ(const uint n)
     o.close();
 
 }
+
+void KMCSolver::dumpLAMMPS(const uint n)
+{
+
+    m_lammpswriter->initializeNewFile(n, SoluteParticle::nParticles());
+
+    for (SoluteParticle *particle : m_particles)
+    {
+        (*m_lammpswriter) << particle->particleState()
+                          << particle->x()
+                          << particle->y()
+                          << particle->z()
+                          << particle->nNeighbors()
+                          << particle->energy()
+                          << particle->species();
+    }
+
+    m_lammpswriter->finalize();
+
+}
+
 
 
 void KMCSolver::forEachSiteDo(function<void (uint x, uint y, uint z, Site *)> applyFunction) const
@@ -675,9 +722,9 @@ void KMCSolver::sortReactionsByRate()
     std::sort(m_allPossibleReactions.begin(),
               m_allPossibleReactions.end(),
               [] (const Reaction * r1, const Reaction * r2)
-              {
-                    return r1->rate() < r2->rate();
-              });
+    {
+        return r1->rate() < r2->rate();
+    });
 
 
     double kTot = 0;
@@ -803,13 +850,19 @@ bool KMCSolver::spawnParticle(SoluteParticle *particle, const uint x, const uint
 
 }
 
-void KMCSolver::forceSpawnParticle(const uint x, const uint y, const uint z)
+SoluteParticle *KMCSolver::forceSpawnParticle(const uint x, const uint y, const uint z, const uint particleType)
 {
     KMCDebugger_AssertBool(!getSite(x, y, z)->isActive());
 
-    SoluteParticle *particle = new SoluteParticle();
+    SoluteParticle *particle = new SoluteParticle(particleType);
 
-    spawnParticle(particle, x, y, z, false);
+    if (!spawnParticle(particle, x, y, z, false))
+    {
+        delete particle;
+        return NULL;
+    }
+
+    return particle;
 
 }
 
@@ -1029,14 +1082,14 @@ void KMCSolver::initializeFromXYZ(string path, uint frame)
     {
         KMCDebugger_AssertEqual(t.at(i), p->particleStateShortName());
         KMCDebugger_AssertEqual(p->nNeighborsSum(), nn.at(i));
-        KMCDebugger_AssertClose(p->energy(), e.at(i), DiffusionReaction::potentialBox().min());
+        KMCDebugger_AssertClose(p->energy(), e.at(i), 1E-5);
         ++i;
     }
 #endif
 
-    if (m_dumpXYZ)
+    if (m_dumpXYZ || m_dumpLAMMPS)
     {
-        xyzEvent->setOffset(frame + 1);
+        m_dumpFileEvent->setOffset(frame + 1);
     }
 
 }
@@ -1079,16 +1132,24 @@ void KMCSolver::setBoxSize(const uint NX, const uint NY, const uint NZ, bool che
 
     if (Site::nNeighborsLimit() != UNSET_UINT && check)
     {
-        if (Site::nNeighborsLimit() >= min(m_N)/2)
+        for (uint i = 0; i < 3; ++i)
         {
-            cerr << "Neighbor reach must be lower than half the minimum box dimension to avoid sites directly affecting themselves." << endl;
-            KMCSolver::exit();
+            if (Site::boundaries(i, 0)->type() == Boundary::Periodic)
+            {
+                if (Site::nNeighborsLimit() >= m_N(i)/2)
+                {
+                    cerr << "Neighbor reach must be lower than half the box dimension (periodic only) to avoid sites directly affecting themselves." << endl;
+                    KMCSolver::exit();
+                }
+            }
         }
     }
 
-    m_mainLattice->setTopology({0, m_NX,
-                                0, m_NY,
-                                0, m_NZ});
+    m_mainLattice->setTopology({0, NX,
+                                0, NY,
+                                0, NZ});
+
+    lammpswriter::setSystemSize(NX, NY, NZ);
 
 }
 
@@ -1143,5 +1204,7 @@ void KMCSolver::clearParticles()
 
 
 bool KMCSolver::m_dumpXYZ = true;
+bool KMCSolver::m_dumpLAMMPS = false;
 
 uint KMCSolver::refCounter = 0;
+

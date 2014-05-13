@@ -23,7 +23,7 @@ int main()
 
     KMCDebugger_SetEnabledTo(getSetting<int>(root, "buildTrace") == 0 ? false : true);
 
-
+    KMCSolver::enableDumpLAMMPS(true);
     KMCSolver* solver = new KMCSolver(root);
 
     initialize_centerCrystal(solver, root);

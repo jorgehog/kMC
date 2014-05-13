@@ -81,24 +81,26 @@ private:
 
 };
 
-
-class DumpXYZ : public KMCEvent
+class DumpFile : public KMCEvent
 {
+
 public:
 
-    DumpXYZ() : KMCEvent("DumpXYZ"), offset(0) {}
+    DumpFile() : KMCEvent("DumpFile"), m_offset(0) {}
 
     void setOffset(const uint offset)
     {
-        this->offset = offset;
+        m_offset = offset;
+    }
+
+    void initialize()
+    {
+        m_outputCounter = m_offset;
     }
 
 protected:
 
-    void initialize()
-    {
-        outputCounter = offset;
-    }
+    virtual void dumpFile() const = 0;
 
     void execute()
     {
@@ -107,15 +109,53 @@ protected:
             return;
         }
 
-        cout << "Storing XYZ: " << outputCounter << endl;
-        solver()->dumpXYZ(outputCounter++);
+        cout << "Storing file: " << m_outputCounter << endl;
+        dumpFile();
 
+        m_outputCounter++;
     }
+
+    const uint &outputCounter() const
+    {
+        return m_outputCounter;
+    }
+
 
 private:
 
-    uint outputCounter;
-    uint offset;
+    uint m_outputCounter;
+    uint m_offset;
+
+};
+
+class DumpXYZ : public DumpFile
+{
+public:
+
+    DumpXYZ() : DumpFile() {}
+
+protected:
+
+    void dumpFile() const
+    {
+        solver()->dumpXYZ(outputCounter());
+    }
+
+};
+
+
+class DumpLAMMPS: public DumpFile
+{
+public:
+
+    DumpLAMMPS() : DumpFile() {}
+
+protected:
+
+    void dumpFile() const
+    {
+        solver()->dumpLAMMPS(outputCounter());
+    }
 
 };
 

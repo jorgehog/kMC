@@ -46,6 +46,19 @@ void Site::loadConfig(const Setting &setting)
 
     setInitialBoundaries(boundaryTypes);
 
+    uint CD;
+    try
+    {
+        CD = boundariesConfig["coolDown"];
+    }
+
+    catch (const exception & e)
+    {
+        CD = 1;
+    }
+
+    ConcentrationWall::setCooldown(CD);
+
 }
 
 void Site::initializeBoundaries()
@@ -586,10 +599,19 @@ const string Site::info(const uint x, const uint y, const uint z, int xr, int yr
 void Site::setInitialNNeighborsLimit(const uint &nNeighborsLimit, bool check)
 {
 
-    if (nNeighborsLimit >= min(uvec({NX(), NY(), NZ()}))/2 && check)
+    if (check && !m_boundaries.empty())
     {
-        cerr << "Neighbor reach must be lower than half the minimum box dimension to avoid sites directly affecting themselves." << endl;
-        KMCSolver::exit();
+        for (uint i = 0; i < 3; ++i)
+        {
+            if (m_boundaries(i, 0)->type() == Boundary::Periodic)
+            {
+                if (nNeighborsLimit >= N(i)/2)
+                {
+                    cerr << "Neighbor reach must be lower than half the box dimension (periodic only) to avoid sites directly affecting themselves." << endl;
+                    KMCSolver::exit();
+                }
+            }
+        }
     }
 
 

@@ -11,7 +11,7 @@ System = {
 
 
     #0 = Periodic
-    #1 = Surface
+    #1 = Edge
     #2 = ConcentrationWall
     Boundaries = {
     #            #back #front
@@ -25,13 +25,13 @@ System = {
 
 Reactions = {
 
-    beta = 0.5;
+    beta = 1.0;
     scale = 1.0;
 
     Diffusion = {
 
-        rPower = 0.25;
-        scale =  1.0;
+        rPowers =   [1.0];
+        strengths = [1.0];
 
     };
 

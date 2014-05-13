@@ -19,6 +19,11 @@ public:
         m_maxEventsPrCycle = val;
     }
 
+    static void setCooldown(uint val)
+    {
+        m_coolDown = val;
+    }
+
     // Boundary interface
 public:
     void update();
@@ -28,7 +33,7 @@ private:
 
     //TMP
     static uint m_maxEventsPrCycle;
-    static constexpr uint m_coolDown = 100u;
+    static uint m_coolDown;
     static uint counter;
 
 };

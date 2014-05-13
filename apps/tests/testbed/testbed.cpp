@@ -532,6 +532,97 @@ void testBed::testRNG()
 
 }
 
+void testBed::testParticleMixing()
+{
+
+    SoluteParticle *A, *B;
+    DiffusionReaction *rA_toCenter, *rB_toCenter, *rA_fromCenter, *rB_fromCenter;
+    uint n_rA, n_rB;
+
+    forceNewBoundaries(Boundary::Edge); //Not periodic
+    forceNewBoxSize({10, 1, 1});        //make a 1D system
+    forceNewNNeighborLimit(3);          //Increase range of interaction to test all cases.
+
+    vector<double> strengths = {1.0, 10.0, 100.0};
+    vector<double> powers = {1.0, 2.0, 3.0};
+
+    DiffusionReaction::setPotentialParameters(powers, strengths);
+
+    CHECK_EQUAL(SoluteParticle::nSpecies(), strengths.size());
+
+    for (uint typeA = 0; typeA < SoluteParticle::nSpecies(); ++typeA)
+    {
+        //Spawning a particle of type A.
+        A = forceSpawnCenter(-1, 0, 0, typeA);
+        CHECK_EQUAL(typeA, A->species());
+
+
+        for (uint typeB = 0; typeB < SoluteParticle::nSpecies(); ++typeB)
+        {
+            B = forceSpawnCenter(1, 0, 0, typeB); //A and B are at a distance 2 from eachother.
+            CHECK_EQUAL(typeB, B->species());
+
+            CHECK_EQUAL(2, SoluteParticle::affectedParticles().size());
+            solver->getRateVariables();
+
+            CHECK_EQUAL(A->energy(), B->energy());
+
+            //checking value of energy
+            double rPowerCombo = sqrt(powers.at(typeA)*powers.at(typeB));
+            double strengthCombo = 0.5*(strengths.at(typeA) + strengths.at(typeB));
+            double eCombo = strengthCombo/pow(2.0, rPowerCombo);
+
+            CHECK_CLOSE(eCombo, A->energy(), 1E-10);
+
+
+            //Count of the 1D system works (2 reactions)
+            n_rA = 0;
+            n_rB = 0;
+
+            A->forEachActiveReactionDo([&n_rA] (void *r) {(void)r; n_rA++;});
+            B->forEachActiveReactionDo([&n_rB] (void *r) {(void)r; n_rB++;});
+
+            CHECK_EQUAL(2, n_rA);
+            CHECK_EQUAL(2, n_rB);
+
+
+            //pick out reactions pointing to the center.
+            rA_toCenter = A->diffusionReactions(2, 1, 1); //left-going reaction
+            rB_toCenter = B->diffusionReactions(0, 1, 1); //right->going reaction
+
+            //and from the center
+            rA_fromCenter = A->diffusionReactions(0, 1, 1); //right-going reaction
+            rB_fromCenter = B->diffusionReactions(2, 1, 1); //left->going reaction
+
+            CHECK_EQUAL(true, rA_toCenter->isAllowed());
+            CHECK_EQUAL(true, rB_toCenter->isAllowed());
+            CHECK_EQUAL(true, rA_fromCenter->isAllowed());
+            CHECK_EQUAL(true, rB_fromCenter->isAllowed());
+
+
+            //These should have equal saddle energies for all cases
+            CHECK_EQUAL(false, rA_toCenter->lastUsedEsp() == Reaction::UNSET_ENERGY);
+            CHECK_EQUAL(false, rA_fromCenter->lastUsedEsp() == Reaction::UNSET_ENERGY);
+
+            CHECK_EQUAL(rA_toCenter->lastUsedEsp(), rB_toCenter->lastUsedEsp());
+            CHECK_EQUAL(rA_fromCenter->lastUsedEsp(), rB_fromCenter->lastUsedEsp());
+
+            double eSaddleToCenter = strengthCombo/pow(1.5, rPowerCombo);
+            double eSaddleFromCenter = strengthCombo/pow(2.5, rPowerCombo);
+
+            CHECK_EQUAL(eSaddleToCenter,   rA_toCenter->lastUsedEsp());
+            CHECK_EQUAL(eSaddleFromCenter, rA_fromCenter->lastUsedEsp());
+
+            solver->despawnParticle(B);
+
+        }
+
+        solver->despawnParticle(A);
+    }
+
+
+}
+
 void testBed::testBoundarySites()
 {
     cout << "test outdated." << endl;
@@ -1251,7 +1342,7 @@ void testBed::initSimpleSystemParameters(bool clean)
 
     Reaction::setBeta(0.5);
 
-    DiffusionReaction::setPotentialParameters(1.0, 0.5, false);
+    DiffusionReaction::setPotentialParameters({1.0}, {1.0}, false);
 
 
     solver->setBoxSize({15, 15, 15}, false);
@@ -1313,9 +1404,9 @@ Site *testBed::getBoxCenter(const int dx, const int dy, const int dz)
     return solver->getSite(NX()/2 + dx, NY()/2 + dy, NZ()/2 + dz);
 }
 
-void testBed::forceSpawnCenter(const int dx, const int dy, const int dz)
+SoluteParticle *testBed::forceSpawnCenter(const int dx, const int dy, const int dz, const uint particleType)
 {
-    solver->forceSpawnParticle(NX()/2 + dx, NY()/2 + dy, NZ()/2 + dz);
+    return solver->forceSpawnParticle(NX()/2 + dx, NY()/2 + dy, NZ()/2 + dz, particleType);
 }
 
 void testBed::_reactionShufflerCheck(uint nReacs)

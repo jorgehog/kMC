@@ -20,7 +20,6 @@ public:
 
     virtual ~Boundary();
 
-    const uint m_type;
 
     virtual uint transformCoordinate(const int xi) const;
 
@@ -38,6 +37,11 @@ public:
     void getBoundarySite(uint n, uint &x, uint &y, uint &z) const;
 
     void distanceFrom(const uint xi, int & dxi, bool abs = false);
+
+    const uint &type() const
+    {
+        return m_type;
+    }
 
     const bool &initialized() const
     {
@@ -137,6 +141,8 @@ public:
     }
 
 private:
+
+    const uint m_type;
 
     static uint BLOCKED_COORDINATE;
 

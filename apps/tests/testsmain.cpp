@@ -10,7 +10,7 @@
 
 
 //#define focusSuite "Misc"
-//#define focusTest  "AccuAllRates"
+//#define focusTest  "ParticleMixing"
 
 
 #include "defines.h"
@@ -22,6 +22,8 @@ SUITE(Misc)
     TESTWRAPPER(BinarySearchChoise)
 
     TESTWRAPPER(BoundarySites)
+
+    TESTWRAPPER(ParticleMixing)
 
     TESTWRAPPER(ConcentrationWall)
 

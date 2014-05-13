@@ -32,7 +32,7 @@ public:
 
     double getSaddleEnergyContributionFrom(const SoluteParticle *particle);
 
-    double getSaddleEnergyContributionFromNeighborAt(const uint &i, const uint &j, const uint &k);
+    double getSaddleEnergyContributionFromNeighborAt(const uint i, const uint j, const uint k, const uint s1, const uint s2);
 
     static umat::fixed<3, 2> makeSaddleOverlapMatrix(const ivec &relCoor);
 
@@ -45,16 +45,16 @@ public:
         m_potential.reset();
         m_saddlePotential.reset_objects();
         m_saddlePotential.reset();
-        neighborSetIntersectionPoints.reset_objects();
-        neighborSetIntersectionPoints.reset();
+        m_neighborSetIntersectionPoints.reset_objects();
+        m_neighborSetIntersectionPoints.reset();
     }
 
-    static const double & potential(const uint & x, const uint & y, const uint & z)
+    static const double & potential(const uint & x, const uint & y, const uint & z, const uint speciesA = 0, const uint speciesB = 0)
     {
-        return m_potential(x, y, z);
+        return m_potential(x, y, z)(speciesA, speciesB);
     }
 
-    static const cube & potentialBox()
+    static const field<mat> & potentialBox()
     {
         return m_potential;
     }
@@ -84,34 +84,23 @@ public:
         m_betaChangeScaleFactor = factor;
     }
 
-    static void setPotentialParameters(const double rPower, const double scale, bool setup = true)
-    {
-
-        m_rPower = rPower;
-
-        m_scale = scale;
-
-        if (setup)
-        {
-            setupPotential();
-        }
-
-    }
+    static void setPotentialParameters(const vector<double> &rPowers, const vector<double> &strenghts, bool setup = true);
 
 
     string getFinalizingDebugMessage() const;
 
 private:
 
-    static double m_rPower;
+    static mat m_rPowers;
 
-    static double m_scale;
+    static mat m_strengths;
 
     static double m_betaChangeScaleFactor;
 
-    static cube m_potential;
-    static field<cube>  m_saddlePotential;
-    static field<umat::fixed<3, 2> > neighborSetIntersectionPoints;
+    static field<mat> m_potential;
+    static field<field<mat>> m_saddlePotential;
+
+    static field<umat::fixed<3, 2> > m_neighborSetIntersectionPoints;
 
 
     double m_lastUsedEsp;
@@ -121,7 +110,7 @@ private:
         updateKeepSaddle = 2
     };
 
-    uint saddleFieldIndices[3];
+    uint m_saddleFieldIndices[3];
 
     int m_path[3];
 

@@ -12,15 +12,18 @@
 using namespace kMC;
 
 
-SoluteParticle::SoluteParticle() :
+SoluteParticle::SoluteParticle(const uint species) :
     m_particleState(ParticleStates::solvant),
     m_x(UNSET_UINT),
     m_y(UNSET_UINT),
     m_z(UNSET_UINT),
     m_nNeighborsSum(0),
     m_energy(0),
+    m_species(species),
     m_ID(ID_count++)
 {
+
+    KMCDebugger_Assert(species, <, m_nSpecies, "invalid species.");
 
     initializeDiffusionReactions();
 
@@ -73,7 +76,7 @@ void SoluteParticle::setSite(const uint x, const uint y, const uint z)
     {
         if (neighbor->isActive())
         {
-            neighbor->associatedParticle()->addNeighbor(this, Site::levelMatrix(i, j, k));
+            neighbor->associatedParticle()->addNeighbor(this, i, j, k);
         }
 
     });
@@ -131,7 +134,7 @@ void SoluteParticle::disableSite()
     {
         if (neighbor->isActive())
         {
-            neighbor->associatedParticle()->removeNeighbor(this, Site::levelMatrix(i, j, k));
+            neighbor->associatedParticle()->removeNeighbor(this, i, j, k);
         }
     });
 
@@ -158,6 +161,19 @@ void SoluteParticle::changePosition(const uint x, const uint y, const uint z)
 void SoluteParticle::setMainSolver(KMCSolver *solver)
 {
     m_solver = solver;
+}
+
+void SoluteParticle::nSpecies(const uint _nSpecies, bool recalculatePotential)
+{
+    KMCDebugger_Assert(_nSpecies, !=, 0);
+    KMCDebugger_AssertEqual(refCounter, 0);
+
+    m_nSpecies = _nSpecies;
+
+    if (recalculatePotential)
+    {
+        DiffusionReaction::setupPotential();
+    }
 }
 
 void SoluteParticle::popAffectedParticle(SoluteParticle *particle)
@@ -345,8 +361,7 @@ void SoluteParticle::setupAllNeighbors()
         m_nNeighbors(Site::levelMatrix(i, j, k))++;
 
         m_nNeighborsSum++;
-
-        dE = DiffusionReaction::potential(i,  j,  k);
+        dE = potentialBetween(neighbor->associatedParticle(), i, j, k);
 
         m_energy += dE;
 
@@ -358,25 +373,37 @@ void SoluteParticle::setupAllNeighbors()
 
 }
 
-void SoluteParticle::removeNeighbor(SoluteParticle *neighbor, uint level)
+void SoluteParticle::removeNeighbor(SoluteParticle *neighbor,
+                                    const uint i,
+                                    const uint j,
+                                    const uint k)
 {
-    _updateNeighborProps(-1, neighbor, level);
+    _updateNeighborProps(-1, neighbor, i, j, k);
 }
 
-void SoluteParticle::addNeighbor(SoluteParticle *neighbor, uint level)
+void SoluteParticle::addNeighbor(SoluteParticle *neighbor,
+                                 const uint i,
+                                 const uint j,
+                                 const uint k)
 {
-    _updateNeighborProps(+1, neighbor, level);
+    _updateNeighborProps(+1, neighbor, i, j, k);
 }
 
-void SoluteParticle::_updateNeighborProps(const int sign, const SoluteParticle * neighbor, const uint level)
+void SoluteParticle::_updateNeighborProps(const int sign,
+                                          const SoluteParticle *neighbor,
+                                          const uint i,
+                                          const uint j,
+                                          const uint k)
 {
     KMCDebugger_MarkPre(neighbor->particleStateName());
+
+    const uint &level = Site::levelMatrix(i, j, k);
 
     m_nNeighbors(level) += sign;
 
     m_nNeighborsSum += sign;
 
-    double dE = sign*potentialBetween(neighbor);
+    double dE = sign*potentialBetween(neighbor, i, j, k);
 
     m_energy += dE;
 
@@ -491,7 +518,15 @@ double SoluteParticle::potentialBetween(const SoluteParticle *other)
     Y += Site::nNeighborsLimit();
     Z += Site::nNeighborsLimit();
 
-    return DiffusionReaction::potential(X, Y, Z);
+    return potentialBetween(other, X, Y, Z);
+}
+
+double SoluteParticle::potentialBetween(const SoluteParticle *other,
+                                        const uint i,
+                                        const uint j,
+                                        const uint k)
+{
+    return DiffusionReaction::potential(i, j, k, m_species, other->species());
 }
 
 uint SoluteParticle::maxDistanceTo(const SoluteParticle *other) const
@@ -625,6 +660,8 @@ particleSet SoluteParticle::m_affectedParticles = particleSet([] (SoluteParticle
 #else
 particleSet SoluteParticle::m_affectedParticles;
 #endif
+
+uint        SoluteParticle::m_nSpecies = 1;
 
 uint SoluteParticle::ID_count = 0;
 uint SoluteParticle::refCounter = 0;
