@@ -24,9 +24,16 @@ public:
 
     virtual double evaluateFor(SoluteParticle *particle) = 0;
 
-    virtual double evaluateSaddleFor(SoluteParticle *particle, const uint dx, const uint dy, const uint dz) = 0;
+    virtual double evaluateSaddleFor(SoluteParticle *particle,
+                                     const uint dx,
+                                     const uint dy,
+                                     const uint dz) = 0;
 
-    virtual double onNeighborChange(SoluteParticle *neighbor, const uint dx, const uint dy, const uint dz) = 0;
+    virtual double onNeighborChange(SoluteParticle *neighbor,
+                                    const uint dx,
+                                    const uint dy,
+                                    const uint dz,
+                                    int sign) = 0;
 
 };
 

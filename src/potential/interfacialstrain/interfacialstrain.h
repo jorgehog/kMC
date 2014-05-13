@@ -6,15 +6,33 @@
 
 #include <vector>
 
+#ifdef KMC_NO_DEBUG
+#include <unordered_map>
+#else
+#include <map>
+#endif
+
 using namespace std;
 
 namespace kMC
 {
 
+#ifdef KMC_NO_DEBUG
+typedef unordered_map<uint, SoluteParticle*> particleMap;
+#else
+typedef map<uint, SoluteParticle*, function<bool(SoluteParticle*, SoluteParticle*)> > particleMap;
+#endif
+
 class InterfacialStrain : public Potential
 {
 public:
+
     InterfacialStrain(const Edge *interface, const double Es, const double r0, const uint nEdgeLayers);
+
+    ~InterfacialStrain()
+    {
+
+    }
 
     void initialize();
 
@@ -30,7 +48,7 @@ public:
     double onNeighborChange(SoluteParticle *neighbor,
                             const uint dx,
                             const uint dy,
-                            const uint dz);
+                            const uint dz, int sign);
 
 private:
 
@@ -44,6 +62,8 @@ private:
     const uint m_nEdgeLayers;
 
     vector<double> m_potential;
+
+    particleMap m_trackedParticles;
 
 
     double strain(const double r) const;
