@@ -14,6 +14,7 @@ using namespace kMC;
 
 SoluteParticle::SoluteParticle(const uint species) :
     m_particleState(ParticleStates::solvant),
+    m_site(NULL),
     m_x(UNSET_UINT),
     m_y(UNSET_UINT),
     m_z(UNSET_UINT),
@@ -57,13 +58,13 @@ SoluteParticle::~SoluteParticle()
 void SoluteParticle::setSite(const uint x, const uint y, const uint z)
 {    
 
-    KMCDebugger_AssertBool(!m_site->isActive(), "particle already present at site.", info());
-
     KMCDebugger_Assert(x, <, NX(), "mismatch in coordiantes. ", info());
     KMCDebugger_Assert(y, <, NY(), "mismatch in coordiantes. ", info());
     KMCDebugger_Assert(z, <, NZ(), "mismatch in coordiantes. ", info());
 
     trySite(x, y, z);
+
+    KMCDebugger_AssertBool(!m_site->isActive(), "particle already present at site.", info());
 
     m_site->associateWith(this);
 

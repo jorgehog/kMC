@@ -72,16 +72,16 @@ void Boundary::getBoundarySite(uint n, uint &x, uint&y, uint &z) const
 
 }
 
-void Boundary::distanceFrom(const uint xi, int &dxi, bool abs)
+int Boundary::distanceFrom(const uint xi, bool abs)
 {
-    uint loc = orientation() == 0 ? 0 : span() - 1;
-
-    dxi = getDistanceBetween(xi, loc);
+    int dxi = getDistanceBetween(xi, bound());
 
     if (abs)
     {
-        dxi = std::abs(dxi);
+        return std::abs(dxi);
     }
+
+    return dxi;
 
 }
 

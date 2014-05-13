@@ -47,7 +47,6 @@ SOURCES += \
     ignisinterface/kmcparticles.cpp \
     ignisinterface/kmcevent.cpp \
     boundary/periodicshifted/periodicshifted.cpp \
-    potential/potential.cpp \
     potential/interfacialstrain/interfacialstrain.cpp
 
 

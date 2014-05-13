@@ -23,3 +23,6 @@
 #include "../ignis/include/ignis.h"
 
 #include "../src/ignisinterface/solverevent.h"
+
+#include "../src/potential/potential.h"
+#include "../src/potential/interfacialstrain/interfacialstrain.h"

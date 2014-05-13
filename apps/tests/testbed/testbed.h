@@ -27,6 +27,8 @@ public:
 
     static void testNeighbors();
 
+    static void testStrainedInterface();
+
     static void testPropertyCalculations();
 
     static void testRNG();

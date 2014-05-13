@@ -319,6 +319,85 @@ void testBed::testNeighbors()
     });
 }
 
+void testBed::testStrainedInterface()
+{
+    forceNewBoundaries(Boundary::Edge);
+
+    Potential *ifs;
+    const Edge *edge;
+
+    double Es = 2.0;
+    double r0 = NX()/10.0;
+
+    uint nEdgeLayers = 2;
+
+    SoluteParticle particle(0);
+    particle.setSite(0, 0, 0);
+
+    uint x, y, z;
+
+    for (uint dim = 0; dim < 3; ++dim)
+    {
+        for (uint orientation = 0; orientation < 2; ++orientation)
+        {
+            edge = dynamic_cast<const Edge*>(Site::boundaries(dim, orientation));
+
+            ifs = new InterfacialStrain(edge,
+                                        Es,
+                                        r0,
+                                        nEdgeLayers);
+
+            ifs->initialize();
+
+            for (uint i = 0; i < edge->span(); ++i)
+            {
+                x = y = z = 0;
+
+                switch (dim) {
+                case 0:
+                    x = i;
+                    break;
+                case 1:
+                    y = i;
+                    break;
+                case 2:
+                    z = i;
+                    break;
+                default:
+                    break;
+                }
+
+                particle.changePosition(x, y, z);
+                CHECK_EQUAL(ifs->valueAt(x, y, z), ifs->evaluateFor(&particle));
+
+//                for (int dx = -1; dx <= 1; ++dx)
+//                {
+//                    for (int dy = -1; dy <= 1; ++dy)
+//                    {
+//                        for (int dz = -1; dz <= 1; ++dz)
+//                        {
+//                            CHECK_EQUAL(ifs->valueAt(i + double(dx)/2,
+//                                                     i + double(dy)/2,
+//                                                     i + double(dz)/2),
+//                                        ifs->evaluateSaddleFor(&particle,
+//                                                               dx + 1,
+//                                                               dy + 1,
+//                                                               dz + 1));
+
+//                        }
+//                    }
+//                }
+
+            }
+
+
+            delete ifs;
+        }
+    }
+
+
+}
+
 
 void testBed::testPropertyCalculations()
 {

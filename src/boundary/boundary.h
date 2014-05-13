@@ -36,7 +36,7 @@ public:
 
     void getBoundarySite(uint n, uint &x, uint &y, uint &z) const;
 
-    void distanceFrom(const uint xi, int & dxi, bool abs = false);
+    int distanceFrom(const uint xi, bool abs = false);
 
     const uint &type() const
     {
@@ -135,10 +135,23 @@ public:
         return orientation() == 0 ? 0 : span() - 1;
     }
 
+    uint bigbound() const
+    {
+        return orientation() == 0 ? 0 : span() - 2;
+    }
+
     uint boundarySize() const
     {
         return (NX()*NY()*NZ())/span();
     }
+
+
+    enum Dimensions
+    {
+        X,
+        Y,
+        Z
+    };
 
 private:
 
@@ -167,12 +180,6 @@ protected:
     static vector<const Boundary*> m_currentBoundaries;
 
 
-    enum Dimensions
-    {
-        X,
-        Y,
-        Z
-    };
 
     enum Orientations
     {

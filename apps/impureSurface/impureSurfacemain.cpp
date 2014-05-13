@@ -64,14 +64,11 @@ void initializeImpureSurface(KMCSolver *solver, const Setting &root)
 
     const uint & NX = solver->NX();
     const uint & NY = solver->NY();
-    const uint & NZ = solver->NZ();
 
     const double & impurityDensity = getSetting<double>(initCFG, "impurityDensity");
     const uint & nInitialLayers = getSetting<uint>(initCFG, "nInitialLayers");
 
     const uint totalImpurities = impurityDensity*NX*NY;
-
-    (void)NZ;
 
     for (uint x = 0; x < NX; ++x)
     {
@@ -112,7 +109,7 @@ void initializeImpureSurface(KMCSolver *solver, const Setting &root)
             i = 0;
             x = 0;
 
-            if (y > NY)
+            if (y >= NY)
             {
                 break;
             }

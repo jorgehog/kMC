@@ -9,8 +9,8 @@
 #include <sys/types.h>
 
 
-//#define focusSuite "Misc"
-//#define focusTest  "ParticleMixing"
+#define focusSuite "Misc"
+#define focusTest  "StrainedInterface"
 
 
 #include "defines.h"
@@ -20,6 +20,8 @@ SUITE(Misc)
     TESTWRAPPER(RNG)
 
     TESTWRAPPER(BinarySearchChoise)
+
+    TESTWRAPPER(StrainedInterface)
 
     TESTWRAPPER(BoundarySites)
 
@@ -159,5 +161,5 @@ int main()
 
     delete testBed::solver;
 
-    return exitSuccess;
+    return exitSuccess == 0 ? 0 : 1;
 }

@@ -168,7 +168,7 @@ public:
         return m_neighborhoodIndices;
     }
 
-    static const Boundary * boundaries(const uint xyz, const uint loc)
+    static const Boundary *boundaries(const uint xyz, const uint loc)
     {
         return m_boundaries(xyz, loc);
     }
