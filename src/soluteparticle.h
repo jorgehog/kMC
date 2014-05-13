@@ -68,6 +68,8 @@ public:
 
     static void updateAffectedParticles();
 
+    static function<bool(SoluteParticle *, SoluteParticle *)> compareFunc;
+
 
 
 

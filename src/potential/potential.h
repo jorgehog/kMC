@@ -29,7 +29,8 @@ public:
                                      const uint dy,
                                      const uint dz) = 0;
 
-    virtual double onNeighborChange(SoluteParticle *neighbor,
+    virtual double onNeighborChange(SoluteParticle *particle,
+                                    SoluteParticle *neighbor,
                                     const uint dx,
                                     const uint dy,
                                     const uint dz,

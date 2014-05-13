@@ -370,6 +370,7 @@ void testBed::testStrainedInterface()
                 }
 
                 particle.changePosition(x, y, z);
+                particle.setParticleState(ParticleStates::surface);
 
                 value = ifs->evaluateFor(&particle);
 
@@ -429,6 +430,9 @@ void testBed::testStrainedInterface()
                     }
                 }
 
+                particle.setParticleState(ParticleStates::solvant);
+                ifs->onNeighborChange(&particle, NULL, 0, 0, 0, 0); //hack to reset
+
             }
 
 
@@ -436,6 +440,13 @@ void testBed::testStrainedInterface()
         }
     }
 
+    ifs = new InterfacialStrain(dynamic_cast<const Edge*>(Site::boundaries(0, 1)), Es, r0, nEdgeLayers);
+
+
+    //perform test on energy of particles given various configurations.
+
+
+    delete ifs;
 
 }
 

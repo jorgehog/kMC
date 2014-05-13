@@ -656,8 +656,10 @@ uvec4      SoluteParticle::m_totalParticles;
 
 double     SoluteParticle::m_totalEnergy = 0;
 
+function<bool(SoluteParticle *, SoluteParticle *)> SoluteParticle::compareFunc = [] (SoluteParticle * s1, SoluteParticle * s2) {return s1->ID() < s2->ID();};
+
 #ifndef NDEBUG
-particleSet SoluteParticle::m_affectedParticles = particleSet([] (SoluteParticle * s1, SoluteParticle * s2) {return s1->ID() < s2->ID();});
+particleSet SoluteParticle::m_affectedParticles = particleSet(SoluteParticle::compareFunc);
 #else
 particleSet SoluteParticle::m_affectedParticles;
 #endif

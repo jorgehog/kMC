@@ -22,7 +22,7 @@ std::vector<std::string> Debugger::reactionTraceAfter;
 std::vector<std::string> Debugger::implicationTrace;
 std::vector<double>      Debugger::timerData;
 
-std::set<SoluteParticle*, function<bool(SoluteParticle*, SoluteParticle*)> > Debugger::affectedUnion = std::set<SoluteParticle*, function<bool(SoluteParticle*, SoluteParticle*)> >([](SoluteParticle* s1, SoluteParticle* s2) {return s1->ID() < s2->ID();});
+std::set<SoluteParticle*, decltype(SoluteParticle::compareFunc)> Debugger::affectedUnion = std::set<SoluteParticle*, decltype(SoluteParticle::compareFunc) >(SoluteParticle::compareFunc);
 
 std::string Debugger::implications;
 std::string Debugger::reactionString;

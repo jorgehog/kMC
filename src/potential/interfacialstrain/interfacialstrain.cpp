@@ -1,6 +1,5 @@
 #include "interfacialstrain.h"
 
-#include "../../soluteparticle.h"
 #include "../../debugger/debugger.h"
 
 #include <algorithm>
@@ -13,18 +12,24 @@ InterfacialStrain::InterfacialStrain(const Edge *interface,
                                      const double r0,
                                      const uint nEdgeLayers) :
     Potential(),
+    #ifndef KMC_NO_DEBUG
+    m_trackedParticles(particleSet(SoluteParticle::compareFunc)),
+    #endif
     m_Es(Es),
     m_r0(r0),
     m_interface(interface),
-    m_nEdgeLayers(nEdgeLayers),
-    #ifndef KMC_NO_DEBUG
-    m_trackedParticles (particleMap([] (SoluteParticle * s1, SoluteParticle * s2) {return s1->ID() < s2->ID();}))
-    #endif
+    m_nEdgeLayers(nEdgeLayers)
 {
     if (m_nEdgeLayers == 0 || m_nEdgeLayers >= m_interface->span())
     {
         throw std::runtime_error("invalid number of interface layers.");
     }
+}
+
+InterfacialStrain::~InterfacialStrain()
+{
+    m_trackedParticles.clear();
+    m_potential.clear();
 }
 
 
@@ -59,7 +64,13 @@ double InterfacialStrain::valueAt(const double x, const double y, const double z
 
 double InterfacialStrain::evaluateFor(SoluteParticle *particle)
 {
-    return m_potential.at(2*particle->r(m_interface->dimension()));
+
+    if (!isQualified(particle))
+    {
+        return 0;
+    }
+
+    return evaluateGivenQualified(particle);
 }
 
 double InterfacialStrain::evaluateSaddleFor(SoluteParticle *particle,
@@ -76,13 +87,56 @@ double InterfacialStrain::evaluateSaddleFor(SoluteParticle *particle,
     return m_potential.at(2*r + dr);
 }
 
-double InterfacialStrain::onNeighborChange(SoluteParticle *neighbor,
+double InterfacialStrain::onNeighborChange(SoluteParticle *particle,
+                                           SoluteParticle *neighbor,
                                            const uint dx,
                                            const uint dy,
                                            const uint dz,
                                            int sign)
 {
 
+    (void) neighbor;
+    (void) dx;
+    (void) dy;
+    (void) dz;
+    (void) sign;
+
+
+    if (!isQualified(particle))
+    {
+
+        if (isTracked(particle))
+        {
+            m_trackedParticles.erase(particle);
+        }
+
+        return 0;
+    }
+
+    return evaluateGivenQualified(particle);
+
+}
+
+double InterfacialStrain::evaluateGivenQualified(SoluteParticle *particle)
+{
+    //already affected
+    if (isTracked(particle))
+    {
+        return 0;
+    }
+    m_trackedParticles.insert(particle);
+
+    return m_potential.at(2*particle->r(m_interface->dimension()));
+}
+
+bool InterfacialStrain::isTracked(SoluteParticle *particle) const
+{
+    return m_trackedParticles.find(particle) != m_trackedParticles.end();
+}
+
+bool InterfacialStrain::isQualified(const SoluteParticle *particle) const
+{
+    return particle->isSurface();
 }
 
 double InterfacialStrain::strain(const double r) const
