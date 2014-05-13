@@ -335,6 +335,7 @@ void testBed::testStrainedInterface()
     particle.setSite(0, 0, 0);
 
     uint x, y, z, r_i;
+    int dr;
     double value;
 
     for (uint dim = 0; dim < 3; ++dim)
@@ -388,23 +389,45 @@ void testBed::testStrainedInterface()
                     }
 
                 }
-//                for (int dx = -1; dx <= 1; ++dx)
-//                {
-//                    for (int dy = -1; dy <= 1; ++dy)
-//                    {
-//                        for (int dz = -1; dz <= 1; ++dz)
-//                        {
-//                            CHECK_EQUAL(ifs->valueAt(i + double(dx)/2,
-//                                                     i + double(dy)/2,
-//                                                     i + double(dz)/2),
-//                                        ifs->evaluateSaddleFor(&particle,
-//                                                               dx + 1,
-//                                                               dy + 1,
-//                                                               dz + 1));
 
-//                        }
-//                    }
-//                }
+                for (int dx = -1; dx <= 1; ++dx)
+                {
+                    for (int dy = -1; dy <= 1; ++dy)
+                    {
+                        for (int dz = -1; dz <= 1; ++dz)
+                        {
+                            const uint & r = particle.r(dim);
+
+                            switch (dim) {
+                            case 0:
+                                dr = dx;
+                                break;
+                            case 1:
+                                dr = dy;
+                                break;
+                            case 2:
+                                dr = dz;
+                                break;
+                            default:
+                                break;
+                            }
+
+                            if((int)r + dr < 0 || (int)r + dr >= (int)edge->span())
+                            {
+                                continue;
+                            }
+
+                            CHECK_EQUAL(ifs->valueAt(i + double(dx)/2,
+                                                     i + double(dy)/2,
+                                                     i + double(dz)/2),
+                                        ifs->evaluateSaddleFor(&particle,
+                                                               dx + 1,
+                                                               dy + 1,
+                                                               dz + 1));
+
+                        }
+                    }
+                }
 
             }
 

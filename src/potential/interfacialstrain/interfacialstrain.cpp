@@ -1,6 +1,5 @@
 #include "interfacialstrain.h"
 
-#include "../../boundary/edge/edge.h"
 #include "../../soluteparticle.h"
 #include "../../debugger/debugger.h"
 
@@ -26,7 +25,7 @@ InterfacialStrain::InterfacialStrain(const Edge *interface,
 }
 
 
-void kMC::InterfacialStrain::initialize()
+void InterfacialStrain::initialize()
 {
     m_potential.clear();
 
@@ -50,49 +49,34 @@ void kMC::InterfacialStrain::initialize()
 }
 
 
-double kMC::InterfacialStrain::valueAt(const double x, const double y, const double z)
+double InterfacialStrain::valueAt(const double x, const double y, const double z)
 {
-    double strainValue;
-
-    switch (m_interface->dimension())
-    {
-
-    case Boundary::X:
-        strainValue = strain(std::abs(x - (int)m_interface->bound()) - m_nEdgeLayers);
-        break;
-
-    case Boundary::Y:
-        strainValue = strain(std::abs(y - (int)m_interface->bound()) - m_nEdgeLayers);
-        break;
-
-    case Boundary::Z:
-        strainValue = strain(std::abs(z - (int)m_interface->bound()) - m_nEdgeLayers);
-        break;
-
-    default:
-        break;
-    }
-
-    return strainValue;
+    return strain(std::abs(selectXYZ(x, y, z) - (int)m_interface->bound()) - m_nEdgeLayers);
 }
 
-double kMC::InterfacialStrain::evaluateFor(SoluteParticle *particle)
+double InterfacialStrain::evaluateFor(SoluteParticle *particle)
 {
     return m_potential.at(2*particle->r(m_interface->dimension()));
 }
 
-double kMC::InterfacialStrain::evaluateSaddleFor(SoluteParticle *particle,
-                                                 const uint dx,
-                                                 const uint dy,
-                                                 const uint dz)
+double InterfacialStrain::evaluateSaddleFor(SoluteParticle *particle,
+                                            const uint dx,
+                                            const uint dy,
+                                            const uint dz)
 {
+    const uint & r = particle->r(m_interface->dimension());
+    int dr   = selectXYZ(dx, dy, dz) - 1;
 
+    KMCDebugger_Assert((int)r + dr, >=, 0,"out of bounds.");
+    KMCDebugger_Assert((int)r + dr, < , (int)m_interface->span(), "out of bounds.");
+
+    return m_potential.at(2*r + dr);
 }
 
-double kMC::InterfacialStrain::onNeighborChange(SoluteParticle *neighbor,
-                                                const uint dx,
-                                                const uint dy,
-                                                const uint dz)
+double InterfacialStrain::onNeighborChange(SoluteParticle *neighbor,
+                                           const uint dx,
+                                           const uint dy,
+                                           const uint dz)
 {
 
 }

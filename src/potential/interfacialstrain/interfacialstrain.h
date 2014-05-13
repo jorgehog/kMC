@@ -2,14 +2,14 @@
 
 #include "../potential.h"
 
+#include "../../boundary/edge/edge.h"
+
 #include <vector>
 
 using namespace std;
 
 namespace kMC
 {
-
-class Edge;
 
 class InterfacialStrain : public Potential
 {
@@ -47,6 +47,31 @@ private:
 
 
     double strain(const double r) const;
+
+    template<typename T>
+    T selectXYZ(const T &x, const T &y, const T &z) const
+    {
+        switch (m_interface->dimension())
+        {
+
+        case 0:
+            return x;
+            break;
+
+        case 1:
+            return y;
+            break;
+
+        case 2:
+            return z;
+            break;
+
+        default:
+            break;
+        }
+
+        return x;
+    }
 
 
 };
