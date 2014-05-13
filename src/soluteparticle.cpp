@@ -354,6 +354,7 @@ void SoluteParticle::setupAllNeighbors()
 
     forEachNeighborSiteDo_sendIndices([&dE, this] (Site * neighbor, uint i, uint j, uint k)
     {
+
         if (!neighbor->isActive())
         {
             return;
@@ -361,7 +362,9 @@ void SoluteParticle::setupAllNeighbors()
 
         m_nNeighbors(Site::levelMatrix(i, j, k))++;
 
-        m_nNeighborsSum++;
+        m_nNeighborsSum++;        
+
+
         dE = potentialBetween(neighbor->associatedParticle(), i, j, k);
 
         m_energy += dE;
@@ -400,20 +403,17 @@ void SoluteParticle::_updateNeighborProps(const int sign,
 
     const uint &level = Site::levelMatrix(i, j, k);
 
+
     m_nNeighbors(level) += sign;
 
     m_nNeighborsSum += sign;
 
-    double dE = sign*potentialBetween(neighbor, i, j, k);
-
-    m_energy += dE;
-
-    m_totalEnergy += dE;
 
     if (level == 0)
     {
         changeParticleState(detectParticleState());
     }
+
 
     forEachActiveReactionDo([&level, &neighbor] (Reaction *reaction)
     {
@@ -421,6 +421,14 @@ void SoluteParticle::_updateNeighborProps(const int sign,
     });
 
     markAsAffected();
+
+
+    double dE = sign*potentialBetween(neighbor, i, j, k);
+
+    m_energy += dE;
+
+    m_totalEnergy += dE;
+
 
     KMCDebugger_PushImplication(neighbor, neighbor->particleStateName().c_str());
 }

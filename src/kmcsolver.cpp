@@ -174,7 +174,7 @@ void KMCSolver::setupMainLattice()
     m_solverEvent = new SolverEvent();
     m_mainLattice->addEvent(m_solverEvent);
 
-    m_lammpswriter = new lammpswriter(7, m_filepath, "kMC");
+    m_lammpswriter = new lammpswriter(7, "kMC", m_filepath);
 
     if (m_dumpLAMMPS)
     {
@@ -1149,7 +1149,7 @@ void KMCSolver::setBoxSize(const uint NX, const uint NY, const uint NZ, bool che
                                 0, NY,
                                 0, NZ});
 
-    lammpswriter::setSystemSize(NX, NY, NZ);
+    m_lammpswriter->setSystemSize(NX, NY, NZ);
 
 }
 

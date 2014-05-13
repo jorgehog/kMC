@@ -30,7 +30,8 @@ HEADERS = RNG/kMCRNG.h \
     soluteparticle.h \
     boundary/periodicshifted/periodicshifted.h \
     potential/potential.h \
-    potential/interfacialstrain/interfacialstrain.h
+    potential/interfacialstrain/interfacialstrain.h \
+    potential/electrostatic/electrostatic.h
 
 SOURCES += \
     reactions/reaction.cpp \
@@ -47,7 +48,8 @@ SOURCES += \
     ignisinterface/kmcparticles.cpp \
     ignisinterface/kmcevent.cpp \
     boundary/periodicshifted/periodicshifted.cpp \
-    potential/interfacialstrain/interfacialstrain.cpp
+    potential/interfacialstrain/interfacialstrain.cpp \
+    potential/electrostatic/electrostatic.cpp
 
 
 RNG_ZIG {
