@@ -439,10 +439,15 @@ void testBed::testStrainedInterface()
         }
     }
 
+    particle.setParticleState(ParticleStates::solvant);
+
+    CHECK_EQUAL(0, SoluteParticle::nSurfaces());
+    CHECK_EQUAL(1, SoluteParticle::nSolutionParticles());
+
     ifs = new InterfacialStrain(dynamic_cast<const Edge*>(Site::boundaries(0, 1)), Es, r0, nEdgeLayers);
 
 
-    //perform test on energy of particles given various configurations.
+    //perform test on energy of particles given various configurations (all types of surface movement).
 
 
     delete ifs;
