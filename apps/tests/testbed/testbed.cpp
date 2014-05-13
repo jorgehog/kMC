@@ -334,7 +334,8 @@ void testBed::testStrainedInterface()
     SoluteParticle particle(0);
     particle.setSite(0, 0, 0);
 
-    uint x, y, z;
+    uint x, y, z, r_i;
+    double value;
 
     for (uint dim = 0; dim < 3; ++dim)
     {
@@ -368,8 +369,25 @@ void testBed::testStrainedInterface()
                 }
 
                 particle.changePosition(x, y, z);
-                CHECK_EQUAL(ifs->valueAt(x, y, z), ifs->evaluateFor(&particle));
 
+                value = ifs->evaluateFor(&particle);
+
+                CHECK_EQUAL(ifs->valueAt(x, y, z), value);
+
+                if (value != 0)
+                {
+                    r_i = std::round(std::log(Es/value)*r0);
+
+                    if (orientation == 0)
+                    {
+                        CHECK_EQUAL(i - nEdgeLayers, r_i);
+                    }
+                    else
+                    {
+                        CHECK_EQUAL((edge->span() - 1) - i - nEdgeLayers, r_i);
+                    }
+
+                }
 //                for (int dx = -1; dx <= 1; ++dx)
 //                {
 //                    for (int dy = -1; dy <= 1; ++dy)
