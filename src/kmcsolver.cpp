@@ -46,7 +46,7 @@ KMCSolver::KMCSolver(const Setting & root)
 
     catch(const libconfig::SettingNotFoundException & exc)
     {
-         path = "outfiles";
+        path = "outfiles";
     }
 
     setFilepath(path);
@@ -62,16 +62,16 @@ KMCSolver::KMCSolver(const Setting & root)
 
 
     setNumberOfCycles(
-               getSetting<uint>(SolverSettings, "nCycles"));
+                getSetting<uint>(SolverSettings, "nCycles"));
 
     setCyclesPerOutput(
-               getSetting<uint>(SolverSettings, "cyclesPerOutput"));
+                getSetting<uint>(SolverSettings, "cyclesPerOutput"));
 
     setRNGSeed(getSetting<uint>(SolverSettings, "seedType"),
                getSetting<int>(SolverSettings, "specificSeed"));
 
     setTargetConcentration(
-               getSetting<double>(SystemSettings, "SaturationLevel"));
+                getSetting<double>(SystemSettings, "SaturationLevel"));
 
 
     uvec3 boxSize;
@@ -988,6 +988,20 @@ void KMCSolver::initializeSolutionBath()
         n++;
     }
 
+}
+
+void KMCSolver::initializeLayers(const uint height, const uint start, const uint particleType)
+{
+    for (uint x = 0; x < m_NX; ++x)
+    {
+        for (uint y = 0; y < m_NY; ++y)
+        {
+            for (uint h = 0; h < height; ++h)
+            {
+                forceSpawnParticle(x, y, start + h, particleType);
+            }
+        }
+    }
 }
 
 void KMCSolver::initializeFromXYZ(string path, uint frame)

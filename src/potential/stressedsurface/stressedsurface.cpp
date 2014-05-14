@@ -1,4 +1,4 @@
-#include "interfacialstrain.h"
+#include "stressedsurface.h"
 
 #include "../../debugger/debugger.h"
 
@@ -7,10 +7,10 @@
 
 using namespace kMC;
 
-InterfacialStrain::InterfacialStrain(const Edge *interface,
-                                     const double Es,
-                                     const double r0,
-                                     const uint nEdgeLayers) :
+StressedSurface::StressedSurface(const Edge *interface,
+                                 const double Es,
+                                 const double r0,
+                                 const uint nEdgeLayers) :
     Potential(),
     #ifndef KMC_NO_DEBUG
     m_trackedParticles(particleSet(SoluteParticle::compareFunc)),
@@ -26,14 +26,14 @@ InterfacialStrain::InterfacialStrain(const Edge *interface,
     }
 }
 
-InterfacialStrain::~InterfacialStrain()
+StressedSurface::~StressedSurface()
 {
     m_trackedParticles.clear();
     m_potential.clear();
 }
 
 
-void InterfacialStrain::initialize()
+void StressedSurface::initialize()
 {
     m_potential.clear();
 
@@ -57,12 +57,12 @@ void InterfacialStrain::initialize()
 }
 
 
-double InterfacialStrain::valueAt(const double x, const double y, const double z)
+double StressedSurface::valueAt(const double x, const double y, const double z)
 {
     return strain(std::abs(selectXYZ(x, y, z) - (int)m_interface->bound()) - m_nEdgeLayers);
 }
 
-double InterfacialStrain::evaluateFor(SoluteParticle *particle)
+double StressedSurface::evaluateFor(SoluteParticle *particle)
 {
 
     if (!isQualified(particle))
@@ -73,10 +73,10 @@ double InterfacialStrain::evaluateFor(SoluteParticle *particle)
     return evaluateGivenQualified(particle);
 }
 
-double InterfacialStrain::evaluateSaddleFor(SoluteParticle *particle,
-                                            const uint dx,
-                                            const uint dy,
-                                            const uint dz)
+double StressedSurface::evaluateSaddleFor(SoluteParticle *particle,
+                                          const uint dx,
+                                          const uint dy,
+                                          const uint dz)
 {
     const uint & r = particle->r(m_interface->dimension());
     int dr   = selectXYZ(dx, dy, dz) - 1;
@@ -87,12 +87,12 @@ double InterfacialStrain::evaluateSaddleFor(SoluteParticle *particle,
     return m_potential.at(2*r + dr);
 }
 
-double InterfacialStrain::onNeighborChange(SoluteParticle *particle,
-                                           SoluteParticle *neighbor,
-                                           const uint dx,
-                                           const uint dy,
-                                           const uint dz,
-                                           int sign)
+double StressedSurface::onNeighborChange(SoluteParticle *particle,
+                                         const SoluteParticle *neighbor,
+                                         const uint dx,
+                                         const uint dy,
+                                         const uint dz,
+                                         int sign)
 {
 
     (void) neighbor;
@@ -109,6 +109,8 @@ double InterfacialStrain::onNeighborChange(SoluteParticle *particle,
         {
             //not qualified and affected.
             m_trackedParticles.erase(particle);
+
+            return -evaluateGivenQualified(particle);
         }
 
         return 0;
@@ -126,22 +128,36 @@ double InterfacialStrain::onNeighborChange(SoluteParticle *particle,
 
 }
 
-double InterfacialStrain::evaluateGivenQualified(SoluteParticle *particle)
+double StressedSurface::evaluateGivenQualified(SoluteParticle *particle)
 {
     return m_potential.at(2*particle->r(m_interface->dimension()));
 }
 
-bool InterfacialStrain::isTracked(SoluteParticle *particle) const
+bool StressedSurface::isTracked(SoluteParticle *particle) const
 {
     return m_trackedParticles.find(particle) != m_trackedParticles.end();
 }
 
-bool InterfacialStrain::isQualified(const SoluteParticle *particle) const
+bool StressedSurface::isQualified(const SoluteParticle *particle) const
 {
-    return particle->isSurface();
+    if (!particle->isSurface())
+    {
+        return false;
+    }
+
+    int orientation = particle->detectSurfaceOrientation(m_interface->dimension());
+
+    if (orientation == 0)
+    {
+        return false;
+    }
+
+    //rescale orientations from -1 1 to 0 1
+    return ((uint)(orientation + 1)/2 == m_interface->orientation());
+
 }
 
-double InterfacialStrain::strain(const double r) const
+double StressedSurface::strain(const double r) const
 {
     //We demand at least one cell separation to induce a pressure
     if (r < 1)

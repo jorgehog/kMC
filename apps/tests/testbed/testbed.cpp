@@ -319,11 +319,12 @@ void testBed::testNeighbors()
     });
 }
 
-void testBed::testStrainedInterface()
+void testBed::testStressedSurface()
 {
     forceNewBoundaries(Boundary::Edge);
+    forceNewNNeighborLimit(1);
 
-    Potential *ifs;
+    StressedSurface *ifs;
     const Edge *edge;
 
     double Es = 2.0;
@@ -331,10 +332,10 @@ void testBed::testStrainedInterface()
 
     uint nEdgeLayers = 2;
 
-    SoluteParticle particle(0);
-    particle.setSite(0, 0, 0);
+    SoluteParticle* particle = solver->forceSpawnParticle(0, 0, 0);
+    SoluteParticle* crystal;
 
-    uint x, y, z, r_i;
+    uint x, y, z, xc, yc, zc, r_i;
     int dr;
     double value;
 
@@ -344,7 +345,7 @@ void testBed::testStrainedInterface()
         {
             edge = dynamic_cast<const Edge*>(Site::boundaries(dim, orientation));
 
-            ifs = new InterfacialStrain(edge,
+            ifs = new StressedSurface(edge,
                                         Es,
                                         r0,
                                         nEdgeLayers);
@@ -354,25 +355,43 @@ void testBed::testStrainedInterface()
             for (uint i = 0; i < edge->span(); ++i)
             {
                 x = y = z = 0;
+                xc = yc = zc = 0;
 
                 switch (dim) {
                 case 0:
                     x = i;
+                    xc = i + 1 - 2*orientation; // i - 1 if orientation = 1 else i + 1
                     break;
                 case 1:
                     y = i;
+                    yc = i + 1 - 2*orientation;
                     break;
                 case 2:
                     z = i;
+                    zc = i + 1 - 2*orientation;
                     break;
                 default:
                     break;
                 }
 
-                particle.changePosition(x, y, z);
-                particle.setParticleState(ParticleStates::surface);
+                particle->changePosition(x, y, z);
+                particle->setParticleState(ParticleStates::surface);
 
-                value = ifs->evaluateFor(&particle);
+                if ((x == y && y == z && z == 0) || (xc == NX() || yc == NY() || zc == NZ()))
+                {
+                    CHECK_EQUAL(false, ifs->isQualified(particle));
+                    continue;
+                }
+
+                crystal = solver->forceSpawnParticle(xc, yc, zc);
+                crystal->setParticleState(ParticleStates::crystal);
+
+                CHECK_EQUAL(true, ifs->isQualified(particle));
+
+                value = ifs->evaluateFor(particle);
+
+                solver->despawnParticle(crystal);
+
 
                 CHECK_EQUAL(ifs->valueAt(x, y, z), value);
 
@@ -397,7 +416,7 @@ void testBed::testStrainedInterface()
                     {
                         for (int dz = -1; dz <= 1; ++dz)
                         {
-                            const uint & r = particle.r(dim);
+                            const uint & r = particle->r(dim);
 
                             switch (dim) {
                             case 0:
@@ -421,7 +440,7 @@ void testBed::testStrainedInterface()
                             CHECK_EQUAL(ifs->valueAt(i + double(dx)/2,
                                                      i + double(dy)/2,
                                                      i + double(dz)/2),
-                                        ifs->evaluateSaddleFor(&particle,
+                                        ifs->evaluateSaddleFor(particle,
                                                                dx + 1,
                                                                dy + 1,
                                                                dz + 1));
@@ -430,8 +449,6 @@ void testBed::testStrainedInterface()
                     }
                 }
 
-                ifs->onNeighborChange(&particle, NULL, 0, 0, 0, 0); //hack to reset
-
             }
 
 
@@ -439,18 +456,57 @@ void testBed::testStrainedInterface()
         }
     }
 
-    particle.setParticleState(ParticleStates::solvant);
+    particle->setParticleState(ParticleStates::solvant);
 
     CHECK_EQUAL(0, SoluteParticle::nSurfaces());
     CHECK_EQUAL(1, SoluteParticle::nSolutionParticles());
 
-    ifs = new InterfacialStrain(dynamic_cast<const Edge*>(Site::boundaries(0, 1)), Es, r0, nEdgeLayers);
+    solver->despawnParticle(particle);
 
+    CHECK_EQUAL(0, SoluteParticle::nParticles());
 
+    umat newBoundaries(3, 2);
+
+    newBoundaries(0, 0) = Boundary::Periodic;
+    newBoundaries(0, 1) = Boundary::Periodic;
+
+    newBoundaries(1, 0) = Boundary::Periodic;
+    newBoundaries(1, 1) = Boundary::Periodic;
+
+    newBoundaries(2, 0) = Boundary::Edge;
+    newBoundaries(2, 0) = Boundary::Edge;
+
+    forceNewBoundaries(newBoundaries);
+
+    ifs = new StressedSurface(dynamic_cast<const Edge*>(Site::boundaries(2, 1)), Es, r0, nEdgeLayers);
+    ifs->initialize();
+
+    SoluteParticle::ss = ifs;
     //perform test on energy of particles given various configurations (all types of surface movement).
 
+    const uint z0 = 3;
+    solver->initializeLayers(z0);
 
-    delete ifs;
+    for (uint x = 0; x < NX(); ++x)
+    {
+        for (uint y = 0; y < NY(); ++y)
+        {
+            for (uint z = 0; z < z0 - 1; ++z)
+            {
+                CHECK_EQUAL(false, ifs->isQualified(solver->getSite(x, y, z)->associatedParticle())); //bottom should point the wrong way, rest is crystals.
+            }
+
+            CHECK_EQUAL(true, ifs->isQualified(solver->getSite(x, y, z0 - 1)->associatedParticle())); //should be valid.
+        }
+    }
+
+    //test: linear move gives zero energy change and zero last saddle.
+    //test: disconnect from surface gives zero energy but nonzero last saddle.
+    //test: reconnnect to surface gives energy and same saddle as for disconnect.
+    //test: downwards and upwards surface move removes and gives increase / decrease in energy
+    //test: movement on wall is not qualified.
+
+    solver->dumpLAMMPS(1337);
 
 }
 

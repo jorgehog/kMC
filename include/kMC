@@ -25,5 +25,5 @@
 #include "../src/ignisinterface/solverevent.h"
 
 #include "../src/potential/potential.h"
-#include "../src/potential/interfacialstrain/interfacialstrain.h"
+#include "../src/potential/stressedsurface/stressedsurface.h"
 #include "../src/potential/electrostatic/electrostatic.h"

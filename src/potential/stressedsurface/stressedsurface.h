@@ -11,13 +11,13 @@ using namespace std;
 namespace kMC
 {
 
-class InterfacialStrain : public Potential
+class StressedSurface : public Potential
 {
 public:
 
-    InterfacialStrain(const Edge *interface, const double Es, const double r0, const uint nEdgeLayers);
+    StressedSurface(const Edge *interface, const double Es, const double r0, const uint nEdgeLayers);
 
-    ~InterfacialStrain();
+    ~StressedSurface();
 
 
     void initialize();
@@ -32,11 +32,15 @@ public:
                              const uint dz);
 
     double onNeighborChange(SoluteParticle *particle,
-                            SoluteParticle *neighbor,
+                            const SoluteParticle *neighbor,
                             const uint dx,
                             const uint dy,
                             const uint dz,
                             int sign);
+
+    bool isTracked(SoluteParticle *particle) const;
+
+    bool isQualified(const SoluteParticle *particle) const;
 
 private:
 
@@ -55,9 +59,6 @@ private:
 
     double evaluateGivenQualified(SoluteParticle *particle);
 
-    bool isTracked(SoluteParticle *particle) const;
-
-    bool isQualified(const SoluteParticle *particle) const;
 
     double strain(const double r) const;
 

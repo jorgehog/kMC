@@ -88,6 +88,8 @@ public:
 
     void initializeSolutionBath();
 
+    void initializeLayers(const uint height, const uint start = 0, const uint particleType = 0);
+
     void initializeFromXYZ(string path, uint frame);
 
 

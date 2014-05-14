@@ -30,7 +30,7 @@ public:
                                      const uint dz) = 0;
 
     virtual double onNeighborChange(SoluteParticle *particle,
-                                    SoluteParticle *neighbor,
+                                    const SoluteParticle *neighbor,
                                     const uint dx,
                                     const uint dy,
                                     const uint dz,

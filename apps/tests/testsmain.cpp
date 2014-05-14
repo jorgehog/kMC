@@ -10,7 +10,7 @@
 
 
 #define focusSuite "Misc"
-#define focusTest  "StrainedInterface"
+#define focusTest  "StressedSurface"
 
 
 #include "defines.h"
@@ -21,7 +21,7 @@ SUITE(Misc)
 
     TESTWRAPPER(BinarySearchChoise)
 
-    TESTWRAPPER(StrainedInterface)
+    TESTWRAPPER(StressedSurface)
 
     TESTWRAPPER(BoundarySites)
 

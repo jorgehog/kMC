@@ -8,6 +8,7 @@
 
 #include "reactions/diffusion/diffusionreaction.h"
 
+#include "potential/stressedsurface/stressedsurface.h"
 
 using namespace kMC;
 
@@ -275,6 +276,69 @@ void SoluteParticle::clearAllReactions()
 
 }
 
+Site *SoluteParticle::getNextNeighbor(const int dr, const uint dim) const
+{
+    if (dim == 0)
+    {
+        return neighborhood(dr, 0, 0);
+    }
+
+    else if (dim == 1)
+    {
+        return neighborhood(0, dr, 0);
+    }
+
+    else
+    {
+        KMCDebugger_Assert(dim, ==, 2);
+
+        return neighborhood(0, 0, dr);
+    }
+}
+
+ivec3 SoluteParticle::getSurfaceNormal() const
+{
+    return ivec3({detectSurfaceOrientation(0),
+                  detectSurfaceOrientation(1),
+                  detectSurfaceOrientation(2)});
+}
+
+int SoluteParticle::detectSurfaceOrientation(const uint dim) const
+{
+    return checkDirectionForCrystals(dim, -1) + checkDirectionForCrystals(dim, 1);
+}
+
+int SoluteParticle::checkDirectionForCrystals(const uint dim, const int orientation) const
+{
+
+    SoluteParticle *nextNeighbor;
+
+
+    int level = orientation;
+
+    Site* nextNeighborSite = getNextNeighbor(level, dim);
+
+    while (nextNeighborSite != NULL)
+    {
+        if (!nextNeighborSite->isActive())
+        {
+            return 0;
+        }
+
+        nextNeighbor = nextNeighborSite->associatedParticle();
+
+        if (nextNeighbor->isCrystal())
+        {
+            return -orientation;
+        }
+
+        level += orientation;
+        nextNeighborSite = getNextNeighbor(level, dim);
+    }
+
+    return 0;
+}
+
 
 
 const string SoluteParticle::info(int xr, int yr, int zr, string desc) const
@@ -352,6 +416,14 @@ void SoluteParticle::setupAllNeighbors()
 
     double dE;
 
+    //tmp
+    if (ss != NULL)
+    {
+        dE = ss->evaluateFor(this);
+        m_energy += dE;
+        m_totalEnergy += dE;
+    }
+
     forEachNeighborSiteDo_sendIndices([&dE, this] (Site * neighbor, uint i, uint j, uint k)
     {
 
@@ -362,7 +434,7 @@ void SoluteParticle::setupAllNeighbors()
 
         m_nNeighbors(Site::levelMatrix(i, j, k))++;
 
-        m_nNeighborsSum++;        
+        m_nNeighborsSum++;
 
 
         dE = potentialBetween(neighbor->associatedParticle(), i, j, k);
@@ -424,6 +496,12 @@ void SoluteParticle::_updateNeighborProps(const int sign,
 
 
     double dE = sign*potentialBetween(neighbor, i, j, k);
+
+    //tmp
+    if (ss != NULL)
+    {
+        dE += ss->onNeighborChange(this, neighbor, i, j, k, sign);
+    }
 
     m_energy += dE;
 
@@ -505,7 +583,7 @@ int SoluteParticle::detectParticleState()
         return ParticleStates::crystal;
     }
 
-    else if (isSolvant())
+    else if (qualifiesAsSolvant())
     {
         return ParticleStates::solvant;
     }
@@ -562,6 +640,14 @@ uint SoluteParticle::nNeighborsSum() const
 void SoluteParticle::clearAll()
 {
     KMCDebugger_Assert(refCounter, ==, 0, "cannot clear static members with object alive.");
+
+    //tmp
+    if (ss != NULL)
+    {
+        delete ss;
+        ss = NULL;
+    }
+
 
     clearAffectedParticles();
     ID_count = 0;
@@ -657,6 +743,8 @@ const uint &SoluteParticle::NZ()
     return Site::NZ();
 }
 
+
+Potential *SoluteParticle::ss = NULL;
 
 KMCSolver *SoluteParticle::m_solver;
 

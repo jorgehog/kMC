@@ -8,6 +8,8 @@
 
 #include "../../debugger/debugger.h"
 
+#include "../../potential/potential.h"
+
 
 using namespace kMC;
 
@@ -414,6 +416,11 @@ double DiffusionReaction::getSaddleEnergy()
         }
     }
 
+    //tmp
+    if (SoluteParticle::ss != NULL)
+    {
+        Esp += SoluteParticle::ss->evaluateSaddleFor(reactant(), m_path[0], m_path[1], m_path[2]);
+    }
 
     return Esp;
 

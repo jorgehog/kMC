@@ -27,10 +27,15 @@ typedef unordered_set<SoluteParticle*> particleSet;
 
 class Reaction;
 class DiffusionReaction;
+class Potential;
+
 
 class SoluteParticle
 {
 public:
+
+    //tmp till cleanup
+    static Potential *ss;
 
     SoluteParticle(const uint species = 0);
 
@@ -242,6 +247,12 @@ public:
         return m_particleState == ParticleStates::surface;
     }
 
+    bool isSolvant() const
+    {
+        return m_particleState == ParticleStates::solvant;
+    }
+
+
     bool isAffected()
     {
         return isAffected(this);
@@ -306,6 +317,14 @@ public:
      * Non-trivial functions
      */
 
+    Site *getNextNeighbor(const int dr, const uint dim) const;
+
+    ivec3 getSurfaceNormal() const;
+
+    int detectSurfaceOrientation(const uint dim) const;
+
+    int checkDirectionForCrystals(const uint dim, const int orientation) const;
+
     void setParticleState(int newState);
 
     bool isLegalToSpawn() const;
@@ -320,7 +339,7 @@ public:
         return (nNeighbors() > 0) && !qualifiesAsCrystal();
     }
 
-    bool isSolvant() const
+    bool qualifiesAsSolvant() const
     {
         return nNeighbors() == 0;
     }

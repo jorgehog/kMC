@@ -27,7 +27,7 @@ public:
 
     static void testNeighbors();
 
-    static void testStrainedInterface();
+    static void testStressedSurface();
 
     static void testPropertyCalculations();
 
