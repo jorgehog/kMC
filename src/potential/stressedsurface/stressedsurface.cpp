@@ -2,6 +2,8 @@
 
 #include "../../debugger/debugger.h"
 
+#include "../../reactions/diffusion/diffusionreaction.h"
+
 #include <algorithm>
 
 
@@ -12,9 +14,6 @@ StressedSurface::StressedSurface(const Edge *interface,
                                  const double r0,
                                  const uint nEdgeLayers) :
     Potential(),
-    #ifndef KMC_NO_DEBUG
-    m_trackedParticles(particleSet(SoluteParticle::compareFunc)),
-    #endif
     m_Es(Es),
     m_r0(r0),
     m_interface(interface),
@@ -70,16 +69,25 @@ double StressedSurface::evaluateFor(SoluteParticle *particle)
         return 0;
     }
 
+    //qualified. If already affected the set will not increase.
+    m_trackedParticles.insert(particle->ID());
+
     return evaluateGivenQualified(particle);
 }
 
-double StressedSurface::evaluateSaddleFor(SoluteParticle *particle,
-                                          const uint dx,
-                                          const uint dy,
-                                          const uint dz)
+double StressedSurface::evaluateSaddleFor(const DiffusionReaction *currentReaction)
 {
-    const uint & r = particle->r(m_interface->dimension());
-    int dr   = selectXYZ(dx, dy, dz) - 1;
+
+    if (!isQualifiedSaddle(currentReaction))
+    {
+        return 0;
+    }
+
+    const uint & r = currentReaction->reactant()->r(m_interface->dimension());
+
+    int dr = selectXYZ(currentReaction->path(0),
+                       currentReaction->path(1),
+                       currentReaction->path(2));
 
     KMCDebugger_Assert((int)r + dr, >=, 0,"out of bounds.");
     KMCDebugger_Assert((int)r + dr, < , (int)m_interface->span(), "out of bounds.");
@@ -108,7 +116,8 @@ double StressedSurface::onNeighborChange(SoluteParticle *particle,
         if (isTracked(particle))
         {
             //not qualified and affected.
-            m_trackedParticles.erase(particle);
+            m_trackedParticles.erase(particle->ID());
+            KMCDebugger_AssertBool(!isTracked(particle));
 
             return -evaluateGivenQualified(particle);
         }
@@ -121,8 +130,8 @@ double StressedSurface::onNeighborChange(SoluteParticle *particle,
         return 0;
     }
 
-    //qualified and not affected.
-    m_trackedParticles.insert(particle);
+    //qualified. If already affected the set will not increase.
+    m_trackedParticles.insert(particle->ID());
 
     return evaluateGivenQualified(particle);
 
@@ -135,7 +144,7 @@ double StressedSurface::evaluateGivenQualified(SoluteParticle *particle)
 
 bool StressedSurface::isTracked(SoluteParticle *particle) const
 {
-    return m_trackedParticles.find(particle) != m_trackedParticles.end();
+    return m_trackedParticles.find(particle->ID()) != m_trackedParticles.end();
 }
 
 bool StressedSurface::isQualified(const SoluteParticle *particle) const
@@ -145,16 +154,16 @@ bool StressedSurface::isQualified(const SoluteParticle *particle) const
         return false;
     }
 
-    int orientation = particle->detectSurfaceOrientation(m_interface->dimension());
+    return hasCorrectOrientation(particle->x(), particle->y(), particle->z());
+}
 
-    if (orientation == 0)
-    {
-        return false;
-    }
-
-    //rescale orientations from -1 1 to 0 1
-    return ((uint)(orientation + 1)/2 == m_interface->orientation());
-
+bool StressedSurface::isQualifiedSaddle(const DiffusionReaction *currentReaction) const
+{
+    //Passing reaction site as phantom site to the calculations. This results in it being treated as invisible.
+    return isQualified(currentReaction->reactant()) || hasCorrectOrientation(currentReaction->xD(),
+                                                                             currentReaction->yD(),
+                                                                             currentReaction->zD(),
+                                                                             currentReaction->reactant()->site());
 }
 
 double StressedSurface::strain(const double r) const
@@ -166,5 +175,19 @@ double StressedSurface::strain(const double r) const
     }
 
     return m_Es*std::exp(-r/m_r0);
+}
+
+bool StressedSurface::hasCorrectOrientation(const uint x, const uint y, const uint z, const Site *phantomSite) const
+{
+    int orientation = Site::detectSurfaceOrientation(x, y, z, m_interface->dimension(), phantomSite);
+
+    if (orientation == 0)
+    {
+        return false;
+    }
+
+    //rescale orientations from -1 1 to 0 1
+    return ((uint)(orientation + 1)/2 == m_interface->orientation());
+
 }
 

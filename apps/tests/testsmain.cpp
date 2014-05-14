@@ -9,8 +9,8 @@
 #include <sys/types.h>
 
 
-#define focusSuite "Misc"
-#define focusTest  "StressedSurface"
+//#define focusSuite "Misc"
+//#define focusTest  "StressedSurface"
 
 
 #include "defines.h"

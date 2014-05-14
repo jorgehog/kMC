@@ -259,7 +259,7 @@ void testBed::testDiffusionSiteMatrixSetup()
                         continue;
                     }
 
-                    currentDiffReaction = particle->diffusionReactions(i, j, k);
+                    currentDiffReaction = particle->diffusionReactions_fromIndex(i, j, k);
 
                     const Site & site = *(currentDiffReaction->reactant()->site());
                     const Site & dest  = *(currentDiffReaction->destinationSite());
@@ -333,9 +333,9 @@ void testBed::testStressedSurface()
     uint nEdgeLayers = 2;
 
     SoluteParticle* particle = solver->forceSpawnParticle(0, 0, 0);
-    SoluteParticle* crystal;
+    SoluteParticle* neighbor;
 
-    uint x, y, z, xc, yc, zc, r_i;
+    uint x, y, z, xn, yn, zn, r_i;
     int dr;
     double value;
 
@@ -354,43 +354,40 @@ void testBed::testStressedSurface()
 
             for (uint i = 0; i < edge->span(); ++i)
             {
-                x = y = z = 0;
-                xc = yc = zc = 0;
+                x = y = z = NX()/2;
+                xn = yn = zn = NX()/2;
 
                 switch (dim) {
                 case 0:
                     x = i;
-                    xc = i + 1 - 2*orientation; // i - 1 if orientation = 1 else i + 1
+                    xn = i + 1 - 2*orientation; // i - 1 if orientation = 1 else i + 1
                     break;
                 case 1:
                     y = i;
-                    yc = i + 1 - 2*orientation;
+                    yn = i + 1 - 2*orientation;
                     break;
                 case 2:
                     z = i;
-                    zc = i + 1 - 2*orientation;
+                    zn = i + 1 - 2*orientation;
                     break;
                 default:
                     break;
                 }
 
                 particle->changePosition(x, y, z);
-                particle->setParticleState(ParticleStates::surface);
 
-                if ((x == y && y == z && z == 0) || (xc == NX() || yc == NY() || zc == NZ()))
+                if ((i == 0 && orientation == 1) || ((i == edge->span() - 1) && orientation == 0))
                 {
                     CHECK_EQUAL(false, ifs->isQualified(particle));
                     continue;
                 }
 
-                crystal = solver->forceSpawnParticle(xc, yc, zc);
-                crystal->setParticleState(ParticleStates::crystal);
+                neighbor = solver->forceSpawnParticle(xn, yn, zn);
 
                 CHECK_EQUAL(true, ifs->isQualified(particle));
 
                 value = ifs->evaluateFor(particle);
 
-                solver->despawnParticle(crystal);
 
 
                 CHECK_EQUAL(ifs->valueAt(x, y, z), value);
@@ -416,6 +413,11 @@ void testBed::testStressedSurface()
                     {
                         for (int dz = -1; dz <= 1; ++dz)
                         {
+                            if (dx == dy && dy == dz && dz == 0)
+                            {
+                                continue;
+                            }
+
                             const uint & r = particle->r(dim);
 
                             switch (dim) {
@@ -440,15 +442,13 @@ void testBed::testStressedSurface()
                             CHECK_EQUAL(ifs->valueAt(i + double(dx)/2,
                                                      i + double(dy)/2,
                                                      i + double(dz)/2),
-                                        ifs->evaluateSaddleFor(particle,
-                                                               dx + 1,
-                                                               dy + 1,
-                                                               dz + 1));
+                                        ifs->evaluateSaddleFor(particle->diffusionReactions(dx, dy, dz)));
 
                         }
                     }
                 }
 
+                solver->despawnParticle(neighbor);
             }
 
 
@@ -456,7 +456,6 @@ void testBed::testStressedSurface()
         }
     }
 
-    particle->setParticleState(ParticleStates::solvant);
 
     CHECK_EQUAL(0, SoluteParticle::nSurfaces());
     CHECK_EQUAL(1, SoluteParticle::nSolutionParticles());
@@ -474,7 +473,7 @@ void testBed::testStressedSurface()
     newBoundaries(1, 1) = Boundary::Periodic;
 
     newBoundaries(2, 0) = Boundary::Edge;
-    newBoundaries(2, 0) = Boundary::Edge;
+    newBoundaries(2, 1) = Boundary::Edge;
 
     forceNewBoundaries(newBoundaries);
 
@@ -500,13 +499,232 @@ void testBed::testStressedSurface()
         }
     }
 
-    //test: linear move gives zero energy change and zero last saddle.
-    //test: disconnect from surface gives zero energy but nonzero last saddle.
-    //test: reconnnect to surface gives energy and same saddle as for disconnect.
-    //test: downwards and upwards surface move removes and gives increase / decrease in energy
-    //test: movement on wall is not qualified.
 
-    solver->dumpLAMMPS(1337);
+    const uint NX2 = NX()/2;
+    const uint NY2 = NY()/2;
+
+    SoluteParticle *base = solver->getSite(NX2, NY2, z0 - 1)->associatedParticle();
+    CHECK_EQUAL(true, ifs->isTracked(base));
+
+    double eBasePre = base->energy();                                      //take the energy of a surface particle.
+
+    SoluteParticle *baseCover = solver->forceSpawnParticle(NX2, NY2, z0);  //add a particle on top of it.
+    CHECK_EQUAL(false, ifs->isTracked(base));
+    CHECK_EQUAL(true, ifs->isTracked(baseCover));
+
+
+    double eDeltaBase = base->energy() - eBasePre;                         //take the difference in energy (the amount of energy gained by adding a particle on top)
+    eDeltaBase -= base->potentialBetween(baseCover);                       //remove the electrostatic contribution
+
+    CHECK_CLOSE(ifs->valueAt(0, 0, z0 - 1), -eDeltaBase, 1E-10);           //we should now see that the strain contribution has been lost and accounts for the energy difference.
+
+    solver->despawnParticle(baseCover);                                    //removing the cover should bring the energy back to eBasePre
+
+    CHECK_CLOSE(eBasePre, base->energy(), 1E-10);
+
+
+    baseCover = solver->forceSpawnParticle(NX2, NY2, z0);
+    CHECK_EQUAL(true, ifs->isQualified(baseCover));
+
+    double eBaseCoverStressPre = baseCover->energy() - getElectroStaticEnergyContribution(baseCover);
+
+    double eTotalPre = SoluteParticle::totalEnergy();
+
+    //linear motion should not change the energy (dz = 0)
+    baseCover->diffusionReactions(1, 0, 0)->execute();
+    CHECK_EQUAL(z0, baseCover->z());
+    CHECK_CLOSE(ifs->valueAt(0, 0, z0), baseCover->energy() - getElectroStaticEnergyContribution(baseCover), 1E-10);
+    CHECK_CLOSE(eBaseCoverStressPre, baseCover->energy() - getElectroStaticEnergyContribution(baseCover), 1E-10);
+    CHECK_CLOSE(eTotalPre, SoluteParticle::totalEnergy(), 1E-10);
+
+    solver->getRateVariables();
+
+    //disconnect from surface
+    double saddleEnergy = ifs->evaluateSaddleFor(baseCover->diffusionReactions(0, 0, 1));
+    baseCover->diffusionReactions(0, 0, 1)->execute();
+    CHECK_EQUAL(saddleEnergy, baseCover->diffusionReactions(0, 0, 1)->lastUsedEsp());
+    CHECK_EQUAL(0, baseCover->energy()); //free from the surface, basecover should have zero energy (with 1 int len)
+
+    solver->getRateVariables();
+
+    //Check if saddle energy for reconnecting is the same as for disconnecting.
+    for (int dx = -1; dx <= 1; ++dx)
+    {
+        for (int dy = -1; dy <= 1; ++dy)
+        {
+            for (int dz = -1; dz <= 1; ++dz)
+            {
+                if (dx == dy && dy == dz && dz == 0)
+                {
+                    continue;
+                }
+
+                double baseCoverRate = baseCover->diffusionReactions(dx, dy, dz)->rate();
+
+                if (dz == -1)
+                {
+                    CHECK_EQUAL(true, ifs->isQualifiedSaddle(baseCover->diffusionReactions(dx, dy, dz)));
+                    CHECK_EQUAL(false, ifs->isQualified(baseCover));
+                    CHECK_CLOSE(Reaction::linearRateScale()*std::exp(DiffusionReaction::beta()*saddleEnergy), baseCoverRate, 1E-10);
+                }
+
+                else
+                {
+                    CHECK_EQUAL(1, baseCoverRate);
+                }
+
+            }
+        }
+    }
+
+    solver->despawnParticle(baseCover);
+
+
+    uint pikeSize = 6;
+
+
+    vector<SoluteParticle *> pikeParticles;
+
+    //create a pike of size h
+    for (uint h = 0; h < pikeSize; ++h)
+    {
+        pikeParticles.push_back(solver->forceSpawnParticle(NX2, NY2, z0 + h));
+    }
+
+    //at the center of the pike we spawn a neighbor particle
+    SoluteParticle *pikeNeighbor = solver->forceSpawnParticle(NX2, NY2-1, z0 + pikeSize/2);
+
+    //this should not be affected by stress
+    CHECK_EQUAL(false, ifs->isQualified(pikeNeighbor));
+    CHECK_EQUAL(false, ifs->isQualifiedSaddle(pikeNeighbor->diffusionReactions(0, 0,  1)));
+    CHECK_EQUAL(false, ifs->isQualifiedSaddle(pikeNeighbor->diffusionReactions(0, 0, -1)));
+
+    solver->despawnParticle(pikeNeighbor);
+
+    for (SoluteParticle *pikeParticle : pikeParticles)
+    {
+        solver->despawnParticle(pikeParticle);
+    }
+
+    //building two particles on top of eachother. The one on top should be stressed.
+    SoluteParticle *bottom = solver->forceSpawnParticle(NX2, NY2, z0);
+    CHECK_EQUAL(true, ifs->isQualified(bottom));
+
+    SoluteParticle *top    = solver->forceSpawnParticle(NX2, NY2, z0 + 1);
+
+
+    double eTopPrev = top->energy();
+    double eBottomPrev = bottom->energy();
+
+    CHECK_EQUAL(false, ifs->isQualified(bottom));
+    CHECK_EQUAL(true, ifs->isQualified(top));
+
+    CHECK_CLOSE(getElectroStaticEnergyContribution(bottom), bottom->energy(), 1E-10);
+    CHECK_CLOSE(top->energy() - getElectroStaticEnergyContribution(top), ifs->valueAt(0, 0, z0 + 1), 1E-10);
+
+    //when we remove the bottom, the top should become unaffected by stress
+    bottom->diffusionReactions(1, 0, 1)->execute();
+    CHECK_EQUAL(false, ifs->isQualified(bottom));
+    CHECK_EQUAL(false, ifs->isQualified(top));
+
+    CHECK_EQUAL(1, bottom->energy());
+    CHECK_EQUAL(1, top->energy());
+
+    CHECK_EQUAL(eBasePre, base->energy());
+
+    //then we slide it back in
+    bottom->diffusionReactions(-1, 0, -1)->execute();
+
+    CHECK_EQUAL(false, ifs->isQualified(bottom));
+    CHECK_EQUAL(true, ifs->isQualified(top));
+
+    CHECK_EQUAL(eTopPrev, top->energy());
+    CHECK_CLOSE(getElectroStaticEnergyContribution(bottom), bottom->energy(), 1E-10);
+
+    //then we slide it sideways
+    bottom->diffusionReactions(1, 0, 0)->execute();
+    CHECK_EQUAL(true, ifs->isQualified(bottom));
+    CHECK_EQUAL(false, ifs->isQualified(top));
+
+    CHECK_CLOSE(ifs->valueAt(0, 0, z0), bottom->energy() - getElectroStaticEnergyContribution(bottom), 1E-10);
+    CHECK_CLOSE(getElectroStaticEnergyContribution(top), top->energy(), 1E-10);
+
+    //then we slide the top down
+    top->diffusionReactions(0, 0, -1)->execute();
+    CHECK_EQUAL(true, ifs->isQualified(bottom));
+    CHECK_EQUAL(true, ifs->isQualified(top));
+
+    CHECK_CLOSE(top->energy(), bottom->energy(), 1E-10);
+    CHECK_CLOSE(ifs->valueAt(0, 0, z0), top->energy() - getElectroStaticEnergyContribution(top), 1E-10);
+
+    //then we slide to bottom onto the top
+    bottom->diffusionReactions(-1, 0, 1)->execute();
+    CHECK_EQUAL(true, ifs->isQualified(bottom));
+    CHECK_EQUAL(false, ifs->isQualified(top));
+
+    CHECK_CLOSE(eBottomPrev, top->energy(), 1E-10);
+    CHECK_CLOSE(eTopPrev, bottom->energy(), 1E-10);
+
+    solver->despawnParticle(top);
+    solver->despawnParticle(bottom);
+
+    //constructing a pyramid:
+
+    int h = 3;
+    int w = (h-1)*2 + 1;
+
+    for (int dz = 0; dz < h; ++dz)
+    {
+        for (int x = 0; x < w; ++x)
+        {
+            solver->forceSpawnParticle(NX2 - h + 1 + x + dz, NY2, z0 + dz);
+        }
+
+        w -= 2;
+    }
+
+    w = (h-1)*2 + 1;
+
+    uint zs = z0 - 1;
+    uint xs = NX2 - h;
+
+    SoluteParticle *pyramidClimber;
+
+    //check if every surface of the pyramid is qualified for stress and that it is given the correct value and that the puramid is symmetrical.
+    for (int i = 0; i <= h; ++i)
+    {
+        pyramidClimber = solver->getSite(xs, NY2, zs)->associatedParticle();
+
+        CHECK_EQUAL(true, ifs->isQualified(pyramidClimber));
+        CHECK_CLOSE(ifs->valueAt(0, 0, zs), pyramidClimber->energy() - getElectroStaticEnergyContribution(pyramidClimber), 1E-10);
+        CHECK_CLOSE(pyramidClimber->energy(), solver->getSite(xs + 2*(h - i), NY2, zs)->associatedParticle()->energy(), 1E-10);
+
+        zs++;
+        xs++;
+    }
+
+    //spawn a particle at a kink in the pyramid.
+    int xPyramidKink = NX2 - h + 1;
+    int yPyramidKink = NY2;
+    int zPyramidKink = z0 + 1;
+    pyramidClimber = solver->forceSpawnParticle(xPyramidKink, yPyramidKink, zPyramidKink);
+
+    double eDelta = ifs->valueAt(0, 0, zPyramidKink + 1) - ifs->valueAt(0, 0, zPyramidKink);
+
+    double eClimberPrev = pyramidClimber->energy();
+
+    //move it to the next kink. This should only increase its stress energy by one increment.
+    pyramidClimber->diffusionReactions(1, 0, 1)->execute();
+
+    CHECK_CLOSE(eDelta, pyramidClimber->energy() - eClimberPrev, 1E-10);
+
+    double eClimberPrev2 = pyramidClimber->energy();
+
+    //check if we get back to the old value when we go down.
+    pyramidClimber->diffusionReactions(-1, 0, -1)->execute();
+
+    CHECK_CLOSE(eClimberPrev, pyramidClimber->energy(), 1E-10);
+    CHECK_CLOSE(-eDelta, pyramidClimber->energy() - eClimberPrev2, 1E-10);
 
 }
 
@@ -778,12 +996,12 @@ void testBed::testParticleMixing()
 
 
             //pick out reactions pointing to the center.
-            rA_toCenter = A->diffusionReactions(2, 1, 1); //left-going reaction
-            rB_toCenter = B->diffusionReactions(0, 1, 1); //right->going reaction
+            rA_toCenter = A->diffusionReactions( 1, 0, 0); //left-going reaction
+            rB_toCenter = B->diffusionReactions(-1, 0, 0); //right->going reaction
 
             //and from the center
-            rA_fromCenter = A->diffusionReactions(0, 1, 1); //right-going reaction
-            rB_fromCenter = B->diffusionReactions(2, 1, 1); //left->going reaction
+            rA_fromCenter = A->diffusionReactions(-1 , 0, 0); //right-going reaction
+            rB_fromCenter = B->diffusionReactions( 1, 0, 0); //left->going reaction
 
             CHECK_EQUAL(true, rA_toCenter->isAllowed());
             CHECK_EQUAL(true, rB_toCenter->isAllowed());
@@ -1645,6 +1863,20 @@ void testBed::forceNewBoundaries(const umat &boundaryMatrix)
 void testBed::forceNewBoundaries(const int boundaryType)
 {
     forceNewBoundaries(umat::fixed<3, 2>(fill::zeros) + boundaryType);
+}
+
+double testBed::getElectroStaticEnergyContribution(const SoluteParticle *particle)
+{
+    double Es = 0;
+    particle->forEachNeighborSiteDo_sendIndices([&] (Site *neighbor, uint i, uint j, uint k)
+    {
+        if (neighbor->isActive())
+        {
+            Es += particle->potentialBetween(neighbor->associatedParticle(), i, j, k);
+        }
+    });
+
+    return Es;
 }
 
 void testBed::testKnownCase()

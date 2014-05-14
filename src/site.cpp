@@ -242,6 +242,74 @@ uint Site::maxDistanceBetween(const uint x0, const uint y0, const uint z0, const
 }
 
 
+Site *Site::getNextNeighbor(const uint x, const uint y, const uint z, const int dr, const uint dim)
+{
+    if (dim == 0)
+    {
+        return Site::neighborhood(x, y, z, dr, 0, 0);
+    }
+
+    else if (dim == 1)
+    {
+        return Site::neighborhood(x, y, z, 0, dr, 0);
+    }
+
+    else
+    {
+        KMCDebugger_Assert(dim, ==, 2);
+
+        return Site::neighborhood(x, y, z, 0, 0, dr);
+    }
+}
+
+ivec3 Site::getSurfaceNormal(const uint x, const uint y, const uint z, const Site *phantomSite)
+{
+    return ivec3({detectSurfaceOrientation(x, y, z, 0, phantomSite),
+                  detectSurfaceOrientation(x, y, z, 1, phantomSite),
+                  detectSurfaceOrientation(x, y, z, 2, phantomSite)});
+}
+
+int Site::detectSurfaceOrientation(const uint x, const uint y, const uint z, const uint dim, const Site *phantomSite)
+{
+    return checkDirectionForCrystals(x, y, z, dim, -1, phantomSite) + checkDirectionForCrystals(x, y, z, dim, 1, phantomSite);
+}
+
+int Site::checkDirectionForCrystals(const uint x, const uint y, const uint z, const uint dim, const int orientation, const Site *phantomSite)
+{
+
+    SoluteParticle *nextNeighbor;
+
+
+    int level = orientation;
+
+    Site* nextNeighborSite = getNextNeighbor(x, y, z, level, dim);
+
+    while (nextNeighborSite != NULL)
+    {
+
+        //Phantom site is an active site that is flagged for being treated as deactive (needed for saddles).
+        if (!nextNeighborSite->isActive() || nextNeighborSite == phantomSite)
+        {
+            return 0;
+        }
+
+        nextNeighbor = nextNeighborSite->associatedParticle();
+
+        if (!nextNeighbor->isSolvant())
+        {
+            return -orientation;
+        }
+
+        level += orientation;
+        nextNeighborSite = getNextNeighbor(x, y, z, level, dim);
+    }
+
+    return 0;
+}
+
+
+
+
 bool Site::hasNeighboring(const uint x, const uint y, const uint z, const int state)
 {
 

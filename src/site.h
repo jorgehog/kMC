@@ -97,6 +97,15 @@ public:
      * Non-trivial functions
      */
 
+    static Site *getNextNeighbor(const uint x, const uint y, const uint z, const int dr, const uint dim);
+
+    static ivec3 getSurfaceNormal(const uint x, const uint y, const uint z, const Site *phantomSite = NULL);
+
+    static int detectSurfaceOrientation(const uint x, const uint y, const uint z, const uint dim, const Site *phantomSite = NULL);
+
+    static int checkDirectionForCrystals(const uint x, const uint y, const uint z, const uint dim, const int orientation, const Site *phantomSite = NULL);
+
+
 
     static bool hasNeighboring(const uint x, const uint y, const uint z, const int state);
 

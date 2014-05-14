@@ -6,6 +6,7 @@ namespace kMC
 {
 
 class SoluteParticle;
+class DiffusionReaction;
 
 class Potential
 {
@@ -24,10 +25,7 @@ public:
 
     virtual double evaluateFor(SoluteParticle *particle) = 0;
 
-    virtual double evaluateSaddleFor(SoluteParticle *particle,
-                                     const uint dx,
-                                     const uint dy,
-                                     const uint dz) = 0;
+    virtual double evaluateSaddleFor(const DiffusionReaction *currentReaction) = 0;
 
     virtual double onNeighborChange(SoluteParticle *particle,
                                     const SoluteParticle *neighbor,

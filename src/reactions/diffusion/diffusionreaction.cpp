@@ -357,15 +357,23 @@ void DiffusionReaction::setDirectUpdateFlags(const SoluteParticle *changedReacta
 double DiffusionReaction::getSaddleEnergy()
 {
 
+    double Esp = 0;
+
+    //tmp
+    if (SoluteParticle::ss != NULL)
+    {
+        Esp += SoluteParticle::ss->evaluateSaddleFor(this);
+    }
+
+
     if (reactant()->nNeighborsSum() == 0)
     {
-        return 0;
+        return Esp;
     }
 
     Site *targetSite;
     SoluteParticle *neighbor;
 
-    double Esp = 0;
 
     const field<mat> & saddlePot = m_saddlePotential(m_saddleFieldIndices[0],
             m_saddleFieldIndices[1],
@@ -416,11 +424,6 @@ double DiffusionReaction::getSaddleEnergy()
         }
     }
 
-    //tmp
-    if (SoluteParticle::ss != NULL)
-    {
-        Esp += SoluteParticle::ss->evaluateSaddleFor(reactant(), m_path[0], m_path[1], m_path[2]);
-    }
 
     return Esp;
 
@@ -496,7 +499,8 @@ void DiffusionReaction::calcRate()
 
         double Esp = getSaddleEnergy();
 
-        newRate = linearRateScale()*std::exp(-beta()*(reactant()->energy()- Esp));
+        //MAJOR BUG?!?! SIGN WRONG?!?!
+        newRate = linearRateScale()*std::exp(-beta()*(reactant()->energy() - Esp));
 
         m_lastUsedEsp = Esp;
     }

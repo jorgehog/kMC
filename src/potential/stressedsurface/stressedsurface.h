@@ -6,10 +6,25 @@
 
 #include "../../soluteparticle.h"
 
+#ifndef NDEBUG
+#include <set>
+#else
+#include <unordered_set>
+#endif
+
+
 using namespace std;
 
 namespace kMC
 {
+
+
+#ifndef NDEBUG
+typedef set<uint> trackerSet;
+#else
+typedef unordered_set<uint> trackerSet;
+#endif
+
 
 class StressedSurface : public Potential
 {
@@ -26,10 +41,7 @@ public:
 
     double evaluateFor(SoluteParticle *particle);
 
-    double evaluateSaddleFor(SoluteParticle *particle,
-                             const uint dx,
-                             const uint dy,
-                             const uint dz);
+    double evaluateSaddleFor(const DiffusionReaction *currentReaction);
 
     double onNeighborChange(SoluteParticle *particle,
                             const SoluteParticle *neighbor,
@@ -42,9 +54,14 @@ public:
 
     bool isQualified(const SoluteParticle *particle) const;
 
+    bool isQualifiedSaddle(const DiffusionReaction *currentReaction) const;
+
+    bool hasCorrectOrientation(const uint x, const uint y, const uint z, const Site *phantomSite = NULL) const;
+
+
 private:
 
-    particleSet m_trackedParticles;
+    trackerSet m_trackedParticles;
 
     const double m_Es;
 

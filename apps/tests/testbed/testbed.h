@@ -135,5 +135,7 @@ private:
 
     static void forceNewBoundaries(const int boundaryType);
 
+    static double getElectroStaticEnergyContribution(const SoluteParticle *particle);
+
 
 };

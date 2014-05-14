@@ -83,7 +83,13 @@ void SoluteParticle::setSite(const uint x, const uint y, const uint z)
 
     });
 
-
+    //tmp
+    if (ss != NULL)
+    {
+        double dE = ss->evaluateFor(this);
+        m_energy += dE;
+        m_totalEnergy += dE;
+    }
 
     markAsAffected();
 
@@ -246,12 +252,12 @@ bool SoluteParticle::isLegalToSpawn() const
                     continue;
                 }
 
-                else if (diffusionReactions(i, j, k)->destinationSite() == NULL)
+                else if (diffusionReactions_fromIndex(i, j, k)->destinationSite() == NULL)
                 {
                     continue;
                 }
 
-                else if (diffusionReactions(i, j, k)->destinationSite()->isActive())
+                else if (diffusionReactions_fromIndex(i, j, k)->destinationSite()->isActive())
                 {
                     return false;
                 }
@@ -275,70 +281,6 @@ void SoluteParticle::clearAllReactions()
     m_reactions.clear();
 
 }
-
-Site *SoluteParticle::getNextNeighbor(const int dr, const uint dim) const
-{
-    if (dim == 0)
-    {
-        return neighborhood(dr, 0, 0);
-    }
-
-    else if (dim == 1)
-    {
-        return neighborhood(0, dr, 0);
-    }
-
-    else
-    {
-        KMCDebugger_Assert(dim, ==, 2);
-
-        return neighborhood(0, 0, dr);
-    }
-}
-
-ivec3 SoluteParticle::getSurfaceNormal() const
-{
-    return ivec3({detectSurfaceOrientation(0),
-                  detectSurfaceOrientation(1),
-                  detectSurfaceOrientation(2)});
-}
-
-int SoluteParticle::detectSurfaceOrientation(const uint dim) const
-{
-    return checkDirectionForCrystals(dim, -1) + checkDirectionForCrystals(dim, 1);
-}
-
-int SoluteParticle::checkDirectionForCrystals(const uint dim, const int orientation) const
-{
-
-    SoluteParticle *nextNeighbor;
-
-
-    int level = orientation;
-
-    Site* nextNeighborSite = getNextNeighbor(level, dim);
-
-    while (nextNeighborSite != NULL)
-    {
-        if (!nextNeighborSite->isActive())
-        {
-            return 0;
-        }
-
-        nextNeighbor = nextNeighborSite->associatedParticle();
-
-        if (nextNeighbor->isCrystal())
-        {
-            return -orientation;
-        }
-
-        level += orientation;
-        nextNeighborSite = getNextNeighbor(level, dim);
-    }
-
-    return 0;
-}
-
 
 
 const string SoluteParticle::info(int xr, int yr, int zr, string desc) const
@@ -414,15 +356,7 @@ void SoluteParticle::setupAllNeighbors()
     m_nNeighborsSum = 0;
 
 
-    double dE;
-
-    //tmp
-    if (ss != NULL)
-    {
-        dE = ss->evaluateFor(this);
-        m_energy += dE;
-        m_totalEnergy += dE;
-    }
+    double dE = 0;
 
     forEachNeighborSiteDo_sendIndices([&dE, this] (Site * neighbor, uint i, uint j, uint k)
     {
@@ -437,15 +371,12 @@ void SoluteParticle::setupAllNeighbors()
         m_nNeighborsSum++;
 
 
-        dE = potentialBetween(neighbor->associatedParticle(), i, j, k);
-
-        m_energy += dE;
-
-        m_totalEnergy += dE;
+        dE += potentialBetween(neighbor->associatedParticle(), i, j, k);
 
     });
 
-
+    m_energy += dE;
+    m_totalEnergy += dE;
 
 }
 
@@ -481,10 +412,26 @@ void SoluteParticle::_updateNeighborProps(const int sign,
     m_nNeighborsSum += sign;
 
 
+
+    double dE = sign*potentialBetween(neighbor, i, j, k);
+
+
     if (level == 0)
     {
         changeParticleState(detectParticleState());
+
+        //tmp
+        if (ss != NULL)
+        {
+            dE += ss->onNeighborChange(this, neighbor, i, j, k, sign);
+        }
+
     }
+
+    m_energy += dE;
+
+    m_totalEnergy += dE;
+
 
 
     forEachActiveReactionDo([&level, &neighbor] (Reaction *reaction)
@@ -493,19 +440,6 @@ void SoluteParticle::_updateNeighborProps(const int sign,
     });
 
     markAsAffected();
-
-
-    double dE = sign*potentialBetween(neighbor, i, j, k);
-
-    //tmp
-    if (ss != NULL)
-    {
-        dE += ss->onNeighborChange(this, neighbor, i, j, k, sign);
-    }
-
-    m_energy += dE;
-
-    m_totalEnergy += dE;
 
 
     KMCDebugger_PushImplication(neighbor, neighbor->particleStateName().c_str());
@@ -595,7 +529,7 @@ int SoluteParticle::detectParticleState()
 }
 
 
-double SoluteParticle::potentialBetween(const SoluteParticle *other)
+double SoluteParticle::potentialBetween(const SoluteParticle *other) const
 {
     int X, Y, Z;
 
@@ -611,7 +545,7 @@ double SoluteParticle::potentialBetween(const SoluteParticle *other)
 double SoluteParticle::potentialBetween(const SoluteParticle *other,
                                         const uint i,
                                         const uint j,
-                                        const uint k)
+                                        const uint k) const
 {
     return DiffusionReaction::potential(i, j, k, m_species, other->species());
 }

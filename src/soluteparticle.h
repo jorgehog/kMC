@@ -273,11 +273,16 @@ public:
     }
 
 
-    DiffusionReaction* diffusionReactions(const uint i, const uint j, const uint k) const
+    DiffusionReaction* diffusionReactions_fromIndex(const uint i, const uint j, const uint k) const
     {
         return m_diffusionReactions[i][j][k];
     }
 
+
+    DiffusionReaction* diffusionReactions(const int dx, const int dy, const int dz) const
+    {
+        return m_diffusionReactions[dx + 1][dy + 1][dz + 1];
+    }
 
 
     bool operator == (const SoluteParticle & other) const
@@ -317,13 +322,15 @@ public:
      * Non-trivial functions
      */
 
-    Site *getNextNeighbor(const int dr, const uint dim) const;
+    ivec3 getSurfaceNormal() const
+    {
+        return Site::getSurfaceNormal(m_x, m_y, m_z);
+    }
 
-    ivec3 getSurfaceNormal() const;
-
-    int detectSurfaceOrientation(const uint dim) const;
-
-    int checkDirectionForCrystals(const uint dim, const int orientation) const;
+    int detectSurfaceOrientation(const uint dim) const
+    {
+        return Site::detectSurfaceOrientation(m_x, m_y, m_z, dim);
+    }
 
     void setParticleState(int newState);
 
@@ -380,12 +387,12 @@ public:
                     int &dz,
                     bool absolutes = false) const;
 
-    double potentialBetween(const SoluteParticle *other);
+    double potentialBetween(const SoluteParticle *other) const;
 
     double potentialBetween(const SoluteParticle *other,
                             const uint i,
                             const uint j,
-                            const uint k);
+                            const uint k) const;
 
 
     uint maxDistanceTo(const SoluteParticle *other) const;
@@ -431,7 +438,17 @@ public:
         Site::forEachNeighborDo_sendPath(m_x, m_y, m_z, applyFunction);
     }
 
+    void forEachNeighborSiteDo_sendPath(function<void (Site *, int, int, int)> applyFunction) const
+    {
+        Site::forEachNeighborDo_sendPath(m_x, m_y, m_z, applyFunction);
+    }
+
     void forEachNeighborSiteDo_sendIndices(function<void (Site *, uint, uint, uint)> applyFunction)
+    {
+        Site::forEachNeighborDo_sendIndices(m_x, m_y, m_z, applyFunction);
+    }
+
+    void forEachNeighborSiteDo_sendIndices(function<void (Site *, uint, uint, uint)> applyFunction) const
     {
         Site::forEachNeighborDo_sendIndices(m_x, m_y, m_z, applyFunction);
     }
