@@ -565,7 +565,7 @@ void testBed::testStressedSurface()
                 {
                     CHECK_EQUAL(true, ifs->isQualifiedSaddle(baseCover->diffusionReactions(dx, dy, dz)));
                     CHECK_EQUAL(false, ifs->isQualified(baseCover));
-                    CHECK_CLOSE(Reaction::linearRateScale()*std::exp(DiffusionReaction::beta()*saddleEnergy), baseCoverRate, 1E-10);
+                    CHECK_CLOSE(Reaction::linearRateScale()*std::exp(-DiffusionReaction::beta()*saddleEnergy), baseCoverRate, 1E-10);
                 }
 
                 else

@@ -500,7 +500,7 @@ void DiffusionReaction::calcRate()
         double Esp = getSaddleEnergy();
 
         //MAJOR BUG?!?! SIGN WRONG?!?!
-        newRate = linearRateScale()*std::exp(-beta()*(reactant()->energy() - Esp));
+        newRate = linearRateScale()*std::exp(-beta()*(Esp - reactant()->energy()));
 
         m_lastUsedEsp = Esp;
     }
@@ -512,7 +512,7 @@ void DiffusionReaction::calcRate()
         KMCDebugger_Assert(updateFlag(), ==, updateKeepSaddle, "Errorous updateFlag.", getFinalizingDebugMessage());
         KMCDebugger_Assert(lastUsedEnergy(), !=, UNSET_ENERGY, "energy never calculated before.", getFinalizingDebugMessage());
 
-        newRate = rate()*std::exp(-beta()*(reactant()->energy() - lastUsedEnergy()));
+        newRate = rate()*std::exp(beta()*(reactant()->energy() - lastUsedEnergy()));
 
         KMCDebugger_AssertClose(getSaddleEnergy(), m_lastUsedEsp, 1E-10, "Saddle energy was not conserved as assumed by flag. ", getFinalizingDebugMessage());
 
