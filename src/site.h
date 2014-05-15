@@ -125,12 +125,13 @@ public:
 
     static uint maxDistanceBetween(const uint x0, const uint y0, const uint z0, const uint x1, const uint y1, const uint z1);
 
-    static void forEachNeighborDo(uint x, uint y, uint z, function<void (Site *)> applyFunction);
+    static void forEachNeighborDo(const uint x, const uint y, const uint z, function<void (Site *)> applyFunction);
 
-    static void forEachNeighborDo_sendPath(uint x, uint y, uint z, function<void (Site *, int, int, int)> applyFunction);
+    static void forEachNeighborDo_sendPath(const uint x, const uint y, const uint z, function<void (Site *, int, int, int)> applyFunction);
 
-    static void forEachNeighborDo_sendIndices(uint x, uint y, uint z, function<void (Site *, uint, uint, uint)> applyFunction);
+    static void forEachNeighborDo_sendIndices(const uint x, const uint y, const uint z, function<void (Site *, uint, uint, uint)> applyFunction);
 
+    static void forShellDo(const uint x, const uint y, const uint z, const int shellNumber, function<void(SoluteParticle *)> applyFunction);
 
 
     /*

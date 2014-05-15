@@ -111,7 +111,7 @@ uint Site::maxNeighbors()
 
 
 
-void Site::forEachNeighborDo(uint x, uint y, uint z, function<void (Site *)> applyFunction)
+void Site::forEachNeighborDo(const uint x, const uint y, const uint z, function<void (Site *)> applyFunction)
 {
     forEachNeighborDo_sendPath(x, y, z, [&applyFunction] (Site *site, int dx, int dy, int dz)
     {
@@ -122,7 +122,7 @@ void Site::forEachNeighborDo(uint x, uint y, uint z, function<void (Site *)> app
     });
 }
 
-void Site::forEachNeighborDo_sendPath(uint x, uint y, uint z, function<void (Site *, int, int, int)> applyFunction)
+void Site::forEachNeighborDo_sendPath(const uint x, const uint y, const uint z, function<void (Site *, int, int, int)> applyFunction)
 {
 
     Site *neighbor;
@@ -152,7 +152,7 @@ void Site::forEachNeighborDo_sendPath(uint x, uint y, uint z, function<void (Sit
     }
 }
 
-void Site::forEachNeighborDo_sendIndices(uint x, uint y, uint z, function<void (Site *, uint, uint, uint)> applyFunction)
+void Site::forEachNeighborDo_sendIndices(const uint x, const uint y, const uint z, function<void (Site *, uint, uint, uint)> applyFunction)
 {
 
     Site * neighbor;
@@ -183,6 +183,84 @@ void Site::forEachNeighborDo_sendIndices(uint x, uint y, uint z, function<void (
             }
         }
     }
+}
+
+void Site::forShellDo(const uint x, const uint y, const uint z, const int shellNumber, function<void (SoluteParticle *)> applyFunction)
+{
+    int dx;
+    int dy;
+    int dz;
+
+    KMCDebugger_Assert(shellNumber, >=, 1);
+
+    Site * shellSite;
+
+    //front and back
+    for (dz = -shellNumber; dz <= shellNumber; dz += 2*shellNumber)
+    {
+        for (dx = -shellNumber; dx <= shellNumber; ++dx)
+        {
+            for (dy = -shellNumber; dy <= shellNumber; ++dy)
+            {
+                shellSite = neighborhood(x, y, z, dx, dy, dz);
+
+                if (shellSite == NULL)
+                {
+                    continue;
+                }
+
+                if (shellSite->isActive())
+                {
+                    applyFunction(shellSite->associatedParticle());
+                }
+            }
+        }
+    }
+
+    //left and right sides
+    for (dx = -shellNumber; dx <= shellNumber; dx += 2*shellNumber)
+    {
+        for (dy = -shellNumber + 1; dy <= shellNumber - 1; ++dy)
+        {
+            for (dz = -shellNumber; dz <= shellNumber; ++dz)
+            {
+                shellSite = neighborhood(x, y, z, dx, dy, dz);
+
+                if (shellSite == NULL)
+                {
+                    continue;
+                }
+
+                if (shellSite->isActive())
+                {
+                    applyFunction(shellSite->associatedParticle());
+                }
+            }
+        }
+    }
+
+    //top and bottom
+    for (dy = -shellNumber; dy <= shellNumber; dy += 2*shellNumber)
+    {
+        for (dx = -shellNumber + 1; dx <= shellNumber - 1; ++dx)
+        {
+            for (dz = -shellNumber + 1; dz <= shellNumber - 1; ++dz)
+            {
+                shellSite = neighborhood(x, y, z, dx, dy, dz);
+
+                if (shellSite == NULL)
+                {
+                    continue;
+                }
+
+                if (shellSite->isActive())
+                {
+                    applyFunction(shellSite->associatedParticle());
+                }
+            }
+        }
+    }
+
 }
 
 Site *Site::neighborhood(const int x, const int y, const int z, const int xr, const int yr, const int zr)

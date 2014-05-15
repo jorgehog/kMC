@@ -91,6 +91,8 @@ void SoluteParticle::setSite(const uint x, const uint y, const uint z)
         m_totalEnergy += dE;
     }
 
+    informOuterNeighbors();
+
     markAsAffected();
 
     forEachActiveReactionDo([] (Reaction *reaction)
@@ -146,6 +148,7 @@ void SoluteParticle::disableSite()
         }
     });
 
+    informOuterNeighbors();
 
     m_totalParticles(particleState())--;
 
@@ -406,32 +409,36 @@ void SoluteParticle::_updateNeighborProps(const int sign,
 
     const uint &level = Site::levelMatrix(i, j, k);
 
-
-    m_nNeighbors(level) += sign;
-
-    m_nNeighborsSum += sign;
-
-
-
-    double dE = sign*potentialBetween(neighbor, i, j, k);
-
-
-    if (level == 0)
+    if (level != Site::nNeighborsLimit())
     {
-        changeParticleState(detectParticleState());
 
-        //tmp
-        if (ss != NULL)
+
+        m_nNeighbors(level) += sign;
+
+        m_nNeighborsSum += sign;
+
+
+
+        double dE = sign*potentialBetween(neighbor, i, j, k);
+
+
+        if (level == 0)
         {
-            dE += ss->onNeighborChange(this, neighbor, i, j, k, sign);
+            changeParticleState(detectParticleState());
+
+            //tmp
+            if (ss != NULL)
+            {
+                dE += ss->onNeighborChange(this, neighbor, i, j, k, sign);
+            }
+
         }
 
+        m_energy += dE;
+
+        m_totalEnergy += dE;
+
     }
-
-    m_energy += dE;
-
-    m_totalEnergy += dE;
-
 
 
     forEachActiveReactionDo([&level, &neighbor] (Reaction *reaction)
@@ -443,6 +450,18 @@ void SoluteParticle::_updateNeighborProps(const int sign,
 
 
     KMCDebugger_PushImplication(neighbor, neighbor->particleStateName().c_str());
+}
+
+void SoluteParticle::informOuterNeighbors() const
+{
+    forShellDo(Site::nNeighborsLimit() + 1, [this] (SoluteParticle *shellOccupant)
+    {
+        shellOccupant->markAsAffected();
+        shellOccupant->forEachActiveReactionDo([this] (Reaction *reaction)
+        {
+            reaction->setDirectUpdateFlags(this, Site::nNeighborsLimit());
+        });
+    });
 }
 
 void SoluteParticle::distanceTo(const SoluteParticle *other, int &dx, int &dy, int &dz, bool absolutes) const

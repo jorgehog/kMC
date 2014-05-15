@@ -380,6 +380,7 @@ public:
                               const uint j,
                               const uint k);
 
+    void informOuterNeighbors() const;
 
     void distanceTo(const SoluteParticle *other,
                     int &dx,
@@ -451,6 +452,16 @@ public:
     void forEachNeighborSiteDo_sendIndices(function<void (Site *, uint, uint, uint)> applyFunction) const
     {
         Site::forEachNeighborDo_sendIndices(m_x, m_y, m_z, applyFunction);
+    }
+
+    void forShellDo(const int shellNumber, function<void(SoluteParticle *)> applyFunction)
+    {
+        Site::forShellDo(m_x, m_y, m_z, shellNumber, applyFunction);
+    }
+
+    void forShellDo(const int shellNumber, function<void(SoluteParticle *)> applyFunction) const
+    {
+        Site::forShellDo(m_x, m_y, m_z, shellNumber, applyFunction);
     }
 
 
