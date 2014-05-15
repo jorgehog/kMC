@@ -849,6 +849,15 @@ void testBed::testStressedSurface()
 
     CHECK_EQUAL(0, SoluteParticle::nParticles());
 
+    auto electroSaddleEnergy = [&] (DiffusionReaction *r)
+    {
+        Potential *pOld = SoluteParticle::ss;
+        SoluteParticle::ss = NULL;
+        double Esp = r->getSaddleEnergy();
+        SoluteParticle::ss = pOld;
+        return Esp;
+    };
+
     umat newBoundaries(3, 2);
 
     newBoundaries(0, 0) = Boundary::Periodic;
@@ -926,8 +935,9 @@ void testBed::testStressedSurface()
 
     //disconnect from surface
     double saddleEnergy = ifs->evaluateSaddleFor(baseCover->diffusionReactions(0, 0, 1));
+    double electroSaddle = electroSaddleEnergy(baseCover->diffusionReactions(0, 0, 1));
     baseCover->diffusionReactions(0, 0, 1)->execute();
-    CHECK_EQUAL(saddleEnergy, baseCover->diffusionReactions(0, 0, 1)->lastUsedEsp());
+    CHECK_CLOSE(saddleEnergy, baseCover->diffusionReactions(0, 0, 1)->lastUsedEsp() - electroSaddle, 1E-10);
     CHECK_EQUAL(0, baseCover->energy()); //free from the surface, basecover should have zero energy (with 1 int len)
 
     solver->getRateVariables();
@@ -944,13 +954,14 @@ void testBed::testStressedSurface()
                     continue;
                 }
 
-                double baseCoverRate = baseCover->diffusionReactions(dx, dy, dz)->rate();
+                DiffusionReaction *r = baseCover->diffusionReactions(dx, dy, dz);
+                double baseCoverRate = r->rate();
 
                 if (dz == -1)
                 {
-                    CHECK_EQUAL(true, ifs->isQualifiedSaddle(baseCover->diffusionReactions(dx, dy, dz)));
+                    CHECK_EQUAL(true, ifs->isQualifiedSaddle(r));
                     CHECK_EQUAL(false, ifs->isQualified(baseCover));
-                    CHECK_CLOSE(Reaction::linearRateScale()*std::exp(DiffusionReaction::beta()*saddleEnergy), baseCoverRate, 1E-10);
+                    CHECK_CLOSE(electroSaddleEnergy(r), -log(baseCoverRate) - saddleEnergy, 1E-10);
                 }
 
                 else
