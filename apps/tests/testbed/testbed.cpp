@@ -2707,10 +2707,10 @@ void testBed::testReactionVectorUpdate()
 
 
     //creating a with 26 fresh reactions.
-    Site * distantCousin = getBoxCenter(0, 0, Site::nNeighborsLimit() + 1);
+    Site * distantCousin = getBoxCenter(0, 0, Site::nNeighborsLimit() + 2);
 
     SoluteParticle *p = new SoluteParticle();
-    CHECK_EQUAL(true, solver->spawnParticle(p, NX()/2, NY()/2, NZ()/2 + Site::nNeighborsLimit() + 1, true));
+    CHECK_EQUAL(true, solver->spawnParticle(p, NX()/2, NY()/2, NZ()/2 + Site::nNeighborsLimit() + 2, true));
 
     CHECK_EQUAL(1, SoluteParticle::affectedParticles().size());
 
@@ -2772,6 +2772,11 @@ void testBed::testReactionVectorUpdate()
     CHECK_EQUAL(100, solver->allPossibleReactions().size());
     CHECK_EQUAL(100, solver->accuAllRates().size());
 
+    //updated saddle point range so have to move it (hack)
+    p2->diffusionReactions(0, 0, -1)->execute();
+    SoluteParticle::updateAffectedParticles();
+
+    solver->dumpLAMMPS(0);
     CHECK_CLOSE(2*26*Reaction::linearRateScale(), solver->kTot(), 0.00001);
 
     c = 0;
@@ -2795,7 +2800,7 @@ void testBed::testReactionVectorUpdate()
     //removing both the particles should even out everything to the maximum amount of reactions ever existing at once.
 
     solver->despawnParticle(center->associatedParticle());
-    solver->despawnParticle(distantCousin2->associatedParticle());
+    solver->despawnParticle(p2);
 
     SoluteParticle::updateAffectedParticles();
 
