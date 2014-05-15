@@ -21,6 +21,8 @@ public:
 
     static void testSaddleOverlapBoxes();
 
+    static void testRateUpdateReach();
+
     static void testTotalParticleStateCounters();
 
     static void testDistanceTo();
@@ -115,7 +117,7 @@ private:
     static void initBoundaryTestParameters();
 
 
-    static void activateAllSites();
+    static void activateAllSites(const uint sep = 0);
 
     static void deactivateAllSites();
 

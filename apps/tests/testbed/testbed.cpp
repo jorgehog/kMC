@@ -102,6 +102,26 @@ void testBed::testSaddleOverlapBoxes()
             }
         }
     }
+
+    activateAllSites(1);
+    solver->dumpLAMMPS(1337);
+
+    solver->getRateVariables();
+
+    getBoxCenter(1)->associatedParticle()->diffusionReactions(1, 1, 1)->execute();
+
+
+    solver->getRateVariables();
+
+
+
+
+
+}
+
+void testBed::testRateUpdateReach()
+{
+
 }
 
 void testBed::testTotalParticleStateCounters()
@@ -433,9 +453,9 @@ void testBed::testStressedSurface()
             edge = dynamic_cast<const Edge*>(Site::boundaries(dim, orientation));
 
             ifs = new StressedSurface(edge,
-                                        Es,
-                                        r0,
-                                        nEdgeLayers);
+                                      Es,
+                                      r0,
+                                      nEdgeLayers);
 
             ifs->initialize();
 
@@ -1864,16 +1884,18 @@ void testBed::initSimpleSystemParameters(bool clean)
 
 }
 
-void testBed::activateAllSites()
+void testBed::activateAllSites(const uint sep)
 {
-
-    solver->forEachSiteDo([] (uint x, uint y, uint z, Site * currentSite)
+    solver->forEachSiteDo([&sep] (uint x, uint y, uint z, Site * currentSite)
     {
-
-        if (!currentSite->isActive())
+        if ((x + y + z) % (sep + 1) == 0)
         {
-            SoluteParticle *particle = new SoluteParticle();
-            solver->spawnParticle(particle, x, y, z, false);
+
+            if (!currentSite->isActive())
+            {
+                SoluteParticle *particle = new SoluteParticle();
+                solver->spawnParticle(particle, x, y, z, false);
+            }
         }
     });
 
@@ -2851,6 +2873,7 @@ void testBed::testNeighborlist()
 void testBed::testAccuAllRates()
 {
 
+    solver->setTargetConcentration(0.07);
     solver->initializeCrystal(0.3);
 
     solver->getRateVariables();

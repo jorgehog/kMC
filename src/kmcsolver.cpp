@@ -588,10 +588,11 @@ void KMCSolver::initializeSites()
 
     uint xTrans, yTrans, zTrans, m_NX_full, m_NY_full, m_NZ_full;
 
+    m_boundaryPadding = Site::nNeighborsLimit() + 1;
 
-    m_NX_full = 2*Site::nNeighborsLimit() + m_NX;
-    m_NY_full = 2*Site::nNeighborsLimit() + m_NY;
-    m_NZ_full = 2*Site::nNeighborsLimit() + m_NZ;
+    m_NX_full = 2*m_boundaryPadding + m_NX;
+    m_NY_full = 2*m_boundaryPadding + m_NY;
+    m_NZ_full = 2*m_boundaryPadding + m_NZ;
 
 
     sites = new Site***[m_NX_full];
@@ -608,9 +609,9 @@ void KMCSolver::initializeSites()
 
             for (uint z = 0; z < m_NZ_full; ++z)
             {
-                if ((x >= Site::nNeighborsLimit() && x < m_NX + Site::nNeighborsLimit()) &&
-                        (y >= Site::nNeighborsLimit() && y < m_NY + Site::nNeighborsLimit()) &&
-                        (z >= Site::nNeighborsLimit() && z < m_NZ + Site::nNeighborsLimit()))
+                if ((x >= m_boundaryPadding && x < m_NX + m_boundaryPadding) &&
+                        (y >= m_boundaryPadding && y < m_NY + m_boundaryPadding) &&
+                        (z >= m_boundaryPadding && z < m_NZ + m_boundaryPadding))
                 {
                     //renormalize so that Site::nNeighborsLimit() points to site 0 and so on.
                     sites[x][y][z] = new Site();
@@ -630,19 +631,19 @@ void KMCSolver::initializeSites()
         {
             for (uint z = 0; z < m_NZ_full; ++z)
             {
-                if (!((x >= Site::nNeighborsLimit() && x < m_NX + Site::nNeighborsLimit()) &&
-                      (y >= Site::nNeighborsLimit() && y < m_NY + Site::nNeighborsLimit()) &&
-                      (z >= Site::nNeighborsLimit() && z < m_NZ + Site::nNeighborsLimit())))
+                if (!((x >= m_boundaryPadding && x < m_NX + m_boundaryPadding) &&
+                      (y >= m_boundaryPadding && y < m_NY + m_boundaryPadding) &&
+                      (z >= m_boundaryPadding && z < m_NZ + m_boundaryPadding)))
                 {
 
 
-                    Boundary::setupCurrentBoundaries(x, y, z, Site::nNeighborsLimit());
+                    Boundary::setupCurrentBoundaries(x, y, z, m_boundaryPadding);
 
-                    xTrans = Site::boundaries(0, 0)->transformCoordinate((int)x - (int)Site::nNeighborsLimit());
+                    xTrans = Site::boundaries(0, 0)->transformCoordinate((int)x - (int)m_boundaryPadding);
 
-                    yTrans = Site::boundaries(1, 0)->transformCoordinate((int)y - (int)Site::nNeighborsLimit());
+                    yTrans = Site::boundaries(1, 0)->transformCoordinate((int)y - (int)m_boundaryPadding);
 
-                    zTrans = Site::boundaries(2, 0)->transformCoordinate((int)z - (int)Site::nNeighborsLimit());
+                    zTrans = Site::boundaries(2, 0)->transformCoordinate((int)z - (int)m_boundaryPadding);
 
                     if (Boundary::isBlocked(xTrans, yTrans, zTrans))
                     {
@@ -651,9 +652,7 @@ void KMCSolver::initializeSites()
 
                     else
                     {
-                        sites[x][y][z] = sites[xTrans + Site::nNeighborsLimit()]
-                                [yTrans + Site::nNeighborsLimit()]
-                                [zTrans + Site::nNeighborsLimit()];
+                        sites[x][y][z] = getSite(xTrans, yTrans, zTrans);
                     }
 
 
@@ -678,9 +677,9 @@ void KMCSolver::clearSites()
     KMCDebugger_SetEnabledTo(false);
 
 
-    uint m_NX_full = 2*Site::nNeighborsLimit() + m_NX;
-    uint m_NY_full = 2*Site::nNeighborsLimit() + m_NY;
-    uint m_NZ_full = 2*Site::nNeighborsLimit() + m_NZ;
+    uint m_NX_full = 2*m_boundaryPadding + m_NX;
+    uint m_NY_full = 2*m_boundaryPadding + m_NY;
+    uint m_NZ_full = 2*m_boundaryPadding + m_NZ;
 
 
     for (uint x = 0; x < m_NX_full; ++x)
@@ -689,9 +688,9 @@ void KMCSolver::clearSites()
         {
             for (uint z = 0; z < m_NZ_full; ++z)
             {
-                if ((x >= Site::nNeighborsLimit() && x < m_NX + Site::nNeighborsLimit()) &&
-                        (y >= Site::nNeighborsLimit() && y < m_NY + Site::nNeighborsLimit()) &&
-                        (z >= Site::nNeighborsLimit() && z < m_NZ + Site::nNeighborsLimit()))
+                if ((x >= m_boundaryPadding && x < m_NX + m_boundaryPadding) &&
+                        (y >= m_boundaryPadding && y < m_NY + m_boundaryPadding) &&
+                        (z >= m_boundaryPadding && z < m_NZ + m_boundaryPadding))
                 {
                     delete sites[x][y][z];
                 }
@@ -947,7 +946,7 @@ void KMCSolver::initializeSolutionBath()
     bool spawned;
 
 
-    const double margin = 0.5;
+    const double margin = 1.75;
     uint effectiveVolume = 8; //eV = (difflength + 1)^3
 
     effectiveVolume *= margin;
@@ -974,7 +973,6 @@ void KMCSolver::initializeSolutionBath()
 
         while (!spawned)
         {
-
             x = KMC_RNG_UNIFORM()*NX();
 
             y = KMC_RNG_UNIFORM()*NY();
@@ -1128,13 +1126,13 @@ void KMCSolver::getRateVariables()
 
     reshuffleReactions();
 
-//    Reaction* r = (*max_element(m_allPossibleReactions.begin(), m_allPossibleReactions.end(), [] (Reaction* r1, Reaction* r2) {return r1->rate() < r2->rate();}));
+    //    Reaction* r = (*max_element(m_allPossibleReactions.begin(), m_allPossibleReactions.end(), [] (Reaction* r1, Reaction* r2) {return r1->rate() < r2->rate();}));
 
-//    DiffusionReaction *r2 = (DiffusionReaction*)r;
-//    cout << r2->info() << endl;
-//    double E = r2->reactant()->energy();
-//    cout << E << endl;
-//    cout << exp(E) << endl;
+    //    DiffusionReaction *r2 = (DiffusionReaction*)r;
+    //    cout << r2->info() << endl;
+    //    double E = r2->reactant()->energy();
+    //    cout << E << endl;
+    //    cout << exp(E) << endl;
 
 
 

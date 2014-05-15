@@ -324,7 +324,7 @@ void DiffusionReaction::setDirectUpdateFlags(const SoluteParticle *changedReacta
     else
     {
 
-        if (level == 0)
+        if (level < Site::nNeighborsLimit())
         {
             registerUpdateFlag(defaultUpdateFlag);
         }
@@ -332,18 +332,21 @@ void DiffusionReaction::setDirectUpdateFlags(const SoluteParticle *changedReacta
         else
         {
 
-            uint d_maxDistance = reactant()->maxDistanceTo(changedReactant);
+            uint d_maxDistance = Site::maxDistanceBetween(changedReactant->x(),
+                                                          changedReactant->y(),
+                                                          changedReactant->z(),
+                                                          xD(), yD(), zD());
 
             //if the destination is outsite the interaction cutoff, we can keep the old saddle energy.
-            if (d_maxDistance > Site::nNeighborsLimit())
+            if (d_maxDistance == Site::nNeighborsLimit())
             {
-                KMCDebugger_Assert(Site::nNeighborsLimit() + 1, ==,  d_maxDistance);
-                registerUpdateFlag(updateKeepSaddle);
+                KMCDebugger_Assert(level, ==, Site::nNeighborsLimit());
+                registerUpdateFlag(defaultUpdateFlag);
             }
 
             else
             {
-                registerUpdateFlag(defaultUpdateFlag);
+                registerUpdateFlag(skipUpdateFlag);
             }
         }
 
@@ -500,26 +503,16 @@ void DiffusionReaction::calcRate()
 
     if (updateFlag() == defaultUpdateFlag)
     {
-
         double Esp = getSaddleEnergy();
 
-        //MAJOR BUG?!?! SIGN WRONG?!?!
         newRate = linearRateScale()*std::exp(-beta()*(Esp - reactant()->energy()));
 
         m_lastUsedEsp = Esp;
     }
 
-    else //m_udateFlag = updateKeepSaddle
+    else if(updateFlag() == skipUpdateFlag)
     {
-
-        KMCDebugger_Assert(rate(), !=, UNSET_RATE ,"Saddle can't update when the rate has not been calculated.", getFinalizingDebugMessage());
-        KMCDebugger_Assert(updateFlag(), ==, updateKeepSaddle, "Errorous updateFlag.", getFinalizingDebugMessage());
-        KMCDebugger_Assert(lastUsedEnergy(), !=, UNSET_ENERGY, "energy never calculated before.", getFinalizingDebugMessage());
-
-        newRate = rate()*std::exp(beta()*(reactant()->energy() - lastUsedEnergy()));
-
-        KMCDebugger_AssertClose(getSaddleEnergy(), m_lastUsedEsp, 1E-10, "Saddle energy was not conserved as assumed by flag. ", getFinalizingDebugMessage());
-
+        return;
     }
 
     setRate(newRate);

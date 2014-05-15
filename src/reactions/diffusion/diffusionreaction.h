@@ -105,11 +105,6 @@ private:
 
     double m_lastUsedEsp;
 
-    enum SpecificUpdateFlags
-    {
-        updateKeepSaddle = 2
-    };
-
     uint m_saddleFieldIndices[3];
 
     int m_path[3];

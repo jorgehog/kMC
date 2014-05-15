@@ -109,7 +109,7 @@ public:
 
     Site* getSite(const int i, const int j, const int k) const
     {
-        return sites[i + Site::nNeighborsLimit()][j+ Site::nNeighborsLimit()][k + Site::nNeighborsLimit()];
+        return sites[i + m_boundaryPadding][j + m_boundaryPadding][k + m_boundaryPadding];
     }
 
     const vector<SoluteParticle*> & particles() const
@@ -300,6 +300,7 @@ private:
 
     Site**** sites;
 
+    uint m_boundaryPadding;
 
     uint m_NX;
     uint m_NY;

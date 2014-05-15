@@ -170,6 +170,7 @@ public:
     enum AllUpdateFlags
     {
         UNSET_UPDATE_FLAG = std::numeric_limits<int>::max(),
+        skipUpdateFlag = std::numeric_limits<int>::max() - 1,
         defaultUpdateFlag = 0
     };
 
