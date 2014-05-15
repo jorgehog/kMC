@@ -49,18 +49,18 @@ void testBed::testSaddleOverlapBoxes()
 
     uint bx, by, bz;
 
-    for (int x = -1; x <= 1; ++x)
+    for (int dx = -1; dx <= 1; ++dx)
     {
-        for (int y = -1; y <= 1; ++y)
+        for (int dy = -1; dy <= 1; ++dy)
         {
-            for (int z = -1; z <= 1; ++z)
+            for (int dz = -1; dz <= 1; ++dz)
             {
-                if (x == y && y == z && z == 0)
+                if (dx == dy && dy == dz && dz == 0)
                 {
                     continue;
                 }
 
-                const auto & box = allBoxes(x+1, y+1, z+1);
+                const auto & box = allBoxes(dx+1, dy+1, dz+1);
 
                 CHECK_EQUAL(true, box(0, 1) > box(0, 0));
                 CHECK_EQUAL(true, box(1, 1) > box(1, 0));
@@ -70,7 +70,7 @@ void testBed::testSaddleOverlapBoxes()
                 by = box(1, 1) - box(1, 0);
                 bz = box(2, 1) - box(2, 0);
 
-                if (x == 0)
+                if (dx == 0)
                 {
                     CHECK_EQUAL(2*Site::nNeighborsLimit(), bx);
                 }
@@ -79,7 +79,7 @@ void testBed::testSaddleOverlapBoxes()
                     CHECK_EQUAL(2*Site::nNeighborsLimit() + 1, bx);
                 }
 
-                if (y == 0)
+                if (dy == 0)
                 {
                     CHECK_EQUAL(2*Site::nNeighborsLimit(), by);
                 }
@@ -89,7 +89,7 @@ void testBed::testSaddleOverlapBoxes()
                 }
 
 
-                if (z == 0)
+                if (dz == 0)
                 {
                     CHECK_EQUAL(2*Site::nNeighborsLimit(), bz);
                 }
@@ -103,24 +103,40 @@ void testBed::testSaddleOverlapBoxes()
         }
     }
 
-    activateAllSites(1);
-    solver->dumpLAMMPS(1337);
-
-    solver->getRateVariables();
-
-    getBoxCenter(1)->associatedParticle()->diffusionReactions(1, 1, 1)->execute();
-
-
-    solver->getRateVariables();
-
-
-
-
-
 }
 
 void testBed::testRateUpdateReach()
 {
+
+    DiffusionReaction::setPotentialParameters({1, 1, 1, 1}, {1, 1, 1, 1});
+
+    SoluteParticle *red    = forceSpawnCenter(0,  0, 0, 1);
+    SoluteParticle *green  = forceSpawnCenter(1,  1, 0, 0);
+    SoluteParticle *blue   = forceSpawnCenter(3,  2, 0, 2);
+    SoluteParticle *yellow = forceSpawnCenter(3, -2, 0, 3);
+
+    solver->dumpLAMMPS(1337);
+
+    solver->getRateVariables();
+
+    CHECK_EQUAL(0, yellow->energy());
+    CHECK_EQUAL(1, yellow->diffusionReactions(1, 0, 0)->rate());
+
+    DiffusionReaction *lgr = yellow->diffusionReactions(-1, 0, 0);
+
+    double eSad = lgr->getSaddleEnergyContributionFrom(red);
+
+    const auto & leftBox = DiffusionReaction::neighborSetIntersectionPoints(0, 1, 1);
+
+    CHECK_EQUAL(-3, leftBox(0, 0));
+    CHECK_EQUAL( 2, leftBox(0, 1));
+    CHECK_EQUAL(-2, leftBox(1, 0));
+    CHECK_EQUAL( 2, leftBox(1, 1));
+    CHECK_EQUAL(-2, leftBox(1, 0));
+    CHECK_EQUAL( 2, leftBox(1, 1));
+
+    CHECK_CLOSE(eSad, lgr->saddlePotential(red), 1E-10);
+    CHECK_CLOSE(eSad, -log(lgr->rate()), 1E-10);
 
 }
 
@@ -1856,7 +1872,7 @@ void testBed::initSimpleSystemParameters(bool clean)
 
     solver->setTargetConcentration(0.005);
 
-    Reaction::setBeta(0.5);
+    Reaction::setBeta(1.0);
 
     DiffusionReaction::setPotentialParameters({1.0}, {1.0}, false);
 

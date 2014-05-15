@@ -33,7 +33,6 @@ DiffusionReaction::~DiffusionReaction()
 
 }
 
-
 void DiffusionReaction::loadConfig(const Setting &setting)
 {
 
@@ -247,21 +246,21 @@ void DiffusionReaction::setupPotential()
 
                 overlapBox = m_neighborSetIntersectionPoints(i, j, k);
 
-                m_saddlePotential(i, j, k).set_size(overlapBox(0, 1) - overlapBox(0, 0),
-                                                    overlapBox(1, 1) - overlapBox(1, 0),
-                                                    overlapBox(2, 1) - overlapBox(2, 0));
+                m_saddlePotential(i, j, k).set_size(overlapBox(0, 1) - overlapBox(0, 0) + 1,
+                                                    overlapBox(1, 1) - overlapBox(1, 0) + 1,
+                                                    overlapBox(2, 1) - overlapBox(2, 0) + 1);
 
-                for (int dxn = overlapBox(0, 0); dxn < overlapBox(0, 1); ++dxn)
+                for (int dxn = overlapBox(0, 0); dxn <= overlapBox(0, 1); ++dxn)
                 {
 
                     dx = xPath/2.0 - dxn;
 
-                    for (int dyn = overlapBox(1, 0); dyn < overlapBox(1, 1); ++dyn)
+                    for (int dyn = overlapBox(1, 0); dyn <= overlapBox(1, 1); ++dyn)
                     {
 
                         dy = yPath/2.0 - dyn;
 
-                        for (int dzn = overlapBox(2, 0); dzn < overlapBox(2, 1); ++dzn)
+                        for (int dzn = overlapBox(2, 0); dzn <= overlapBox(2, 1); ++dzn)
                         {
 
                             if (dxn == dyn && dyn == dzn && dzn == 0)
@@ -301,6 +300,31 @@ void DiffusionReaction::setupPotential()
         }
     }
 
+}
+
+double DiffusionReaction::saddlePotential(SoluteParticle *particle)
+{
+    int X, Y, Z;
+
+    reactant()->distanceTo(particle, X, Y, Z);
+
+    return saddlePotential(m_path[0] + 1, m_path[1] + 1, m_path[2] + 1, X, Y, Z, reactant()->species(), particle->species());
+}
+
+double DiffusionReaction::saddlePotential(const uint i,
+                                          const uint j,
+                                          const uint k,
+                                          const int dx,
+                                          const int dy,
+                                          const int dz,
+                                          const uint speciesA,
+                                          const uint speciesB)
+{
+    return getSaddlePot(i, j, k)
+            (dx - m_neighborSetIntersectionPoints(i, j, k)(0, 0),
+             dy - m_neighborSetIntersectionPoints(i, j, k)(1, 0),
+             dz - m_neighborSetIntersectionPoints(i, j, k)(2, 0))
+            (speciesA, speciesB);
 }
 
 
@@ -366,17 +390,11 @@ double DiffusionReaction::getSaddleEnergy()
         Esp += SoluteParticle::ss->evaluateSaddleFor(this);
     }
 
-
-    if (reactant()->nNeighborsSum() == 0)
-    {
-        return Esp;
-    }
-
     Site *targetSite;
     SoluteParticle *neighbor;
 
 
-    const field<mat> & saddlePot = m_saddlePotential(m_saddleFieldIndices[0],
+    const field<mat> & saddlePot = getSaddlePot(m_saddleFieldIndices[0],
             m_saddleFieldIndices[1],
             m_saddleFieldIndices[2]);
 
@@ -384,11 +402,11 @@ double DiffusionReaction::getSaddleEnergy()
             m_saddleFieldIndices[1],
             m_saddleFieldIndices[2]);
 
-    for (int dxn = myIntersectionPoints(0, 0); dxn < myIntersectionPoints(0, 1); ++dxn)
+    for (int dxn = myIntersectionPoints(0, 0); dxn <= myIntersectionPoints(0, 1); ++dxn)
     {
-        for (int dyn = myIntersectionPoints(1, 0); dyn < myIntersectionPoints(1, 1); ++dyn)
+        for (int dyn = myIntersectionPoints(1, 0); dyn <= myIntersectionPoints(1, 1); ++dyn)
         {
-            for (int dzn = myIntersectionPoints(2, 0); dzn < myIntersectionPoints(2, 1); ++dzn)
+            for (int dzn = myIntersectionPoints(2, 0); dzn <= myIntersectionPoints(2, 1); ++dzn)
             {
 
                 if (dxn == dyn && dyn == dzn && dzn == 0)

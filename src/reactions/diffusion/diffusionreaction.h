@@ -54,10 +54,31 @@ public:
         return m_potential(x, y, z)(speciesA, speciesB);
     }
 
+
+    double saddlePotential(SoluteParticle *particle);
+
+    static double saddlePotential(const uint i,
+                                          const uint j,
+                                          const uint k,
+                                          const int dx,
+                                          const int dy,
+                                          const int dz, const uint speciesA, const uint speciesB);
+
     static const field<mat> & potentialBox()
     {
         return m_potential;
     }
+
+    static const field<mat> & getSaddlePot(const uint i, const uint j, const uint k)
+    {
+        return m_saddlePotential(i, j, k);
+    }
+
+    static const imat::fixed<3, 2> & neighborSetIntersectionPoints(const uint i, const uint j, const uint k)
+    {
+        return m_neighborSetIntersectionPoints(i, j, k);
+    }
+
 
     Site *destinationSite() const;
 
@@ -84,7 +105,9 @@ public:
         m_betaChangeScaleFactor = factor;
     }
 
-    static void setPotentialParameters(const vector<double> &rPowers, const vector<double> &strenghts, bool setup = true);
+    static void setPotentialParameters(const vector<double> &rPowers,
+                                       const vector<double> &strenghts,
+                                       bool setup = true);
 
 
     string getFinalizingDebugMessage() const;
