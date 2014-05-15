@@ -32,9 +32,9 @@ public:
 
     double getSaddleEnergyContributionFrom(const SoluteParticle *particle);
 
-    double getSaddleEnergyContributionFromNeighborAt(const uint i, const uint j, const uint k, const uint s1, const uint s2);
+    double getSaddleEnergyContributionFromNeighborAt(const int dxn, const int dyn, const int dzn, const uint s1, const uint s2);
 
-    static umat::fixed<3, 2> makeSaddleOverlapMatrix(const ivec &relCoor);
+    static imat::fixed<3, 2> makeSaddleOverlapMatrix(const ivec &relCoor);
 
     static void loadConfig(const Setting & setting);
 
@@ -100,7 +100,7 @@ private:
     static field<mat> m_potential;
     static field<field<mat>> m_saddlePotential;
 
-    static field<umat::fixed<3, 2> > m_neighborSetIntersectionPoints;
+    static field<imat::fixed<3, 2> > m_neighborSetIntersectionPoints;
 
 
     double m_lastUsedEsp;

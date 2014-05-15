@@ -159,7 +159,7 @@ void DiffusionReaction::setupPotential()
     double dx, dy, dz, r2;
     double rPower, strength;
 
-    umat::fixed<3, 2> overlapBox;
+    imat::fixed<3, 2> overlapBox;
 
     m_potential.reset_objects();
     m_potential.reset();
@@ -220,8 +220,8 @@ void DiffusionReaction::setupPotential()
                         strength = m_strengths(speciesA, speciesB);
 
                         m_potential(i, j, k)(speciesA, speciesB) = strength/std::pow(Site::originTransformVector(i)*Site::originTransformVector(i)
-                                                                                   + Site::originTransformVector(j)*Site::originTransformVector(j)
-                                                                                   + Site::originTransformVector(k)*Site::originTransformVector(k),
+                                                                                     + Site::originTransformVector(j)*Site::originTransformVector(j)
+                                                                                     + Site::originTransformVector(k)*Site::originTransformVector(k),
                                                                                      rPower/2);
                     }
                 }
@@ -230,20 +230,20 @@ void DiffusionReaction::setupPotential()
     }
 
 
-    for (int x = -1; x <= 1; ++x)
+    for (int xPath = -1; xPath <= 1; ++xPath)
     {
-        for (int y = -1; y <= 1; ++y)
+        for (int yPath = -1; yPath <= 1; ++yPath)
         {
-            for (int z = -1; z <= 1; ++z)
+            for (int zPath = -1; zPath <= 1; ++zPath)
             {
-                if ((x == 0) && (y == 0) && (z == 0))
+                if ((xPath == 0) && (yPath == 0) && (zPath == 0))
                 {
                     continue;
                 }
 
-                i = x + 1;
-                j = y + 1;
-                k = z + 1;
+                i = xPath + 1;
+                j = yPath + 1;
+                k = zPath + 1;
 
                 overlapBox = m_neighborSetIntersectionPoints(i, j, k);
 
@@ -251,33 +251,30 @@ void DiffusionReaction::setupPotential()
                                                     overlapBox(1, 1) - overlapBox(1, 0),
                                                     overlapBox(2, 1) - overlapBox(2, 0));
 
-                KMCDebugger_Assert(m_saddlePotential.n_elem, !=, 0, "illegal box size.");
-                KMCDebugger_Assert(m_saddlePotential.n_elem, !=, arma::prod(overlapBox.col(1)-overlapBox.col(0)), "saddle mat fail.");
-
-                for (uint xn = overlapBox(0, 0); xn < overlapBox(0, 1); ++xn)
+                for (int dxn = overlapBox(0, 0); dxn < overlapBox(0, 1); ++dxn)
                 {
 
-                    dx = x/2.0 - (int)xn + (int)Site::nNeighborsLimit();
+                    dx = xPath/2.0 - dxn;
 
-                    for (uint yn = overlapBox(1, 0); yn < overlapBox(1, 1); ++yn)
+                    for (int dyn = overlapBox(1, 0); dyn < overlapBox(1, 1); ++dyn)
                     {
 
-                        dy = y/2.0 - (int)yn + (int)Site::nNeighborsLimit();
+                        dy = yPath/2.0 - dyn;
 
-                        for (uint zn = overlapBox(2, 0); zn < overlapBox(2, 1); ++zn)
+                        for (int dzn = overlapBox(2, 0); dzn < overlapBox(2, 1); ++dzn)
                         {
 
-                            if (xn == yn && yn == zn && zn == Site::nNeighborsLimit())
+                            if (dxn == dyn && dyn == dzn && dzn == 0)
                             {
                                 continue;
                             }
 
 
-                            m_saddlePotential(i, j, k)(xn - overlapBox(0, 0),
-                                                       yn - overlapBox(1, 0),
-                                                       zn - overlapBox(2, 0)).set_size(SoluteParticle::nSpecies(), SoluteParticle::nSpecies());
+                            m_saddlePotential(i, j, k)(dxn - overlapBox(0, 0),
+                                                       dyn - overlapBox(1, 0),
+                                                       dzn - overlapBox(2, 0)).set_size(SoluteParticle::nSpecies(), SoluteParticle::nSpecies());
 
-                            dz = z/2.0 - (int)zn + (int)Site::nNeighborsLimit();
+                            dz = zPath/2.0 - dzn;
 
                             r2 = dx*dx + dy*dy + dz*dz;
 
@@ -289,15 +286,16 @@ void DiffusionReaction::setupPotential()
                                     rPower = m_rPowers(speciesA, speciesB);
                                     strength = m_strengths(speciesA, speciesB);
 
-                                    m_saddlePotential(i, j, k)(xn - overlapBox(0, 0),
-                                                               yn - overlapBox(1, 0),
-                                                               zn - overlapBox(2, 0))(speciesA, speciesB) = strength/pow(r2, rPower/2);
+                                    m_saddlePotential(i, j, k)(dxn - overlapBox(0, 0),
+                                                               dyn - overlapBox(1, 0),
+                                                               dzn - overlapBox(2, 0))(speciesA, speciesB) = strength/pow(r2, rPower/2);
                                 }
                             }
 
                         }
                     }
                 }
+
 
             }
         }
@@ -379,23 +377,23 @@ double DiffusionReaction::getSaddleEnergy()
             m_saddleFieldIndices[1],
             m_saddleFieldIndices[2]);
 
-    const umat::fixed<3, 2> & myIntersectionPoints = m_neighborSetIntersectionPoints(m_saddleFieldIndices[0],
+    const imat::fixed<3, 2> & myIntersectionPoints = m_neighborSetIntersectionPoints(m_saddleFieldIndices[0],
             m_saddleFieldIndices[1],
             m_saddleFieldIndices[2]);
 
-    for (uint xn = myIntersectionPoints(0, 0); xn < myIntersectionPoints(0, 1); ++xn)
+    for (int dxn = myIntersectionPoints(0, 0); dxn < myIntersectionPoints(0, 1); ++dxn)
     {
-        for (uint yn = myIntersectionPoints(1, 0); yn < myIntersectionPoints(1, 1); ++yn)
+        for (int dyn = myIntersectionPoints(1, 0); dyn < myIntersectionPoints(1, 1); ++dyn)
         {
-            for (uint zn = myIntersectionPoints(2, 0); zn < myIntersectionPoints(2, 1); ++zn)
+            for (int dzn = myIntersectionPoints(2, 0); dzn < myIntersectionPoints(2, 1); ++dzn)
             {
 
-                if (xn == yn && yn == zn && zn == Site::nNeighborsLimit())
+                if (dxn == dyn && dyn == dzn && dzn == 0)
                 {
                     continue;
                 }
 
-                targetSite = Site::neighborhood_fromIndex(x(), y(), z(), xn, yn, zn);
+                targetSite = Site::neighborhood(x(), y(), z(), dxn, dyn, dzn);
 
                 if (targetSite == NULL)
                 {
@@ -409,16 +407,16 @@ double DiffusionReaction::getSaddleEnergy()
 
                 neighbor = targetSite->associatedParticle();
 
-                double dEsp = saddlePot(xn - myIntersectionPoints(0, 0),
-                                        yn - myIntersectionPoints(1, 0),
-                                        zn - myIntersectionPoints(2, 0))(reactant()->species(), neighbor->species());
+                double dEsp = saddlePot(dxn - myIntersectionPoints(0, 0),
+                                        dyn - myIntersectionPoints(1, 0),
+                                        dzn - myIntersectionPoints(2, 0))(reactant()->species(), neighbor->species());
 
 
                 Esp += dEsp;
 
                 KMCDebugger_AssertClose(dEsp, getSaddleEnergyContributionFrom(targetSite->associatedParticle()), 1E-10,
-                                   "Mismatch in saddle energy contribution.",
-                                   getFinalizingDebugMessage());
+                                        "Mismatch in saddle energy contribution.",
+                                        getFinalizingDebugMessage());
             }
         }
     }
@@ -434,66 +432,59 @@ double DiffusionReaction::getSaddleEnergyContributionFrom(const SoluteParticle *
 
     reactant()->distanceTo(particle, X, Y, Z);
 
-    return getSaddleEnergyContributionFromNeighborAt(X + Site::nNeighborsLimit(),
-                                                     Y + Site::nNeighborsLimit(),
-                                                     Z + Site::nNeighborsLimit(),
-                                                     reactant()->species(),
-                                                     particle->species());
+    return getSaddleEnergyContributionFromNeighborAt(X, Y, Z, reactant()->species(), particle->species());
 
 }
 
-double DiffusionReaction::getSaddleEnergyContributionFromNeighborAt(const uint i, const uint j, const uint k, const uint s1, const uint s2)
+double DiffusionReaction::getSaddleEnergyContributionFromNeighborAt(const int dxn, const int dyn, const int dzn, const uint s1, const uint s2)
 {
 
     double dx = path(0)/2.0;
     double dy = path(1)/2.0;
     double dz = path(2)/2.0;
 
-    int dxn = Site::originTransformVector(i);
-    int dyn = Site::originTransformVector(j);
-    int dzn = Site::originTransformVector(k);
-
     double dxf = dx - dxn;
     double dyf = dy - dyn;
     double dzf = dz - dzn;
 
-    double dr = std::sqrt(dxf*dxf + dyf*dyf + dzf*dzf);
+    double dr2 = dxf*dxf + dyf*dyf + dzf*dzf;
 
-    double dEsp2 = 1.0/dr;
+    double dEsp2 = m_strengths(s1, s2)/std::pow(dr2, m_rPowers(s1, s2)/2);
 
     return dEsp2;
 }
 
 
-umat::fixed<3, 2> DiffusionReaction::makeSaddleOverlapMatrix(const ivec & relCoor)
+imat::fixed<3, 2> DiffusionReaction::makeSaddleOverlapMatrix(const ivec & relCoor)
 {
 
-    umat::fixed<3, 2> overlap;
+    imat::fixed<3, 2> overlap;
+    int span = static_cast<int>(Site::nNeighborsLimit());
 
     for (uint xyz = 0; xyz < 3; ++xyz)
     {
         if (relCoor(xyz) == 1)
         {
 
-            overlap(xyz, 0) = 1;
-            overlap(xyz, 1) = Site::neighborhoodLength();
+            overlap(xyz, 0) = -span;
+            overlap(xyz, 1) = span + 1;
 
         }
 
         else if (relCoor(xyz) == -1)
         {
 
-            overlap(xyz, 0) = 0;
-            overlap(xyz, 1) = Site::neighborhoodLength() - 1;
+            overlap(xyz, 0) = -span - 1;
+            overlap(xyz, 1) = span;
         }
 
         else
         {
 
-            overlap(xyz, 0) = 0;
-            overlap(xyz, 1) = Site::neighborhoodLength();
+            overlap(xyz, 0) = -span;
+            overlap(xyz, 1) = span;
 
-            KMCDebugger_Assert(overlap(xyz), ==, 0, "There should be no other option.");
+            KMCDebugger_Assert(relCoor(xyz), ==, 0, "There should be no other option.");
         }
     }
 
@@ -614,5 +605,5 @@ field<mat> DiffusionReaction::m_potential;
 field<field<mat>>
 DiffusionReaction::m_saddlePotential;
 
-field<umat::fixed<3, 2> >
+field<imat::fixed<3, 2> >
 DiffusionReaction::m_neighborSetIntersectionPoints;

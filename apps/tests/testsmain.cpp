@@ -9,8 +9,8 @@
 #include <sys/types.h>
 
 
-#define focusSuite "PeriodicBoundaries"
-//#define focusTest  "StressedSurface"
+#define focusSuite "Misc"
+#define focusTest  "SaddleOverlapBoxes"
 
 
 #include "defines.h"
@@ -20,6 +20,8 @@ SUITE(Misc)
     TESTWRAPPER(RNG)
 
     TESTWRAPPER(BinarySearchChoise)
+
+    TESTWRAPPER(SaddleOverlapBoxes)
 
     TESTWRAPPER(StressedSurface)
 

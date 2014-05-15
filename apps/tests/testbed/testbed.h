@@ -19,6 +19,8 @@ public:
 
     static void makeSolver();
 
+    static void testSaddleOverlapBoxes();
+
     static void testTotalParticleStateCounters();
 
     static void testDistanceTo();

@@ -17,6 +17,93 @@ void testBed::makeSolver()
 
 }
 
+void testBed::testSaddleOverlapBoxes()
+{
+
+    field<imat::fixed<3, 2> > allBoxes;
+
+    allBoxes.reset_objects();
+    allBoxes.reset();
+    allBoxes.set_size(3, 3, 3);
+
+    uint i, j, k;
+    for (int x = -1; x <= 1; ++x)
+    {
+        for (int y = -1; y <= 1; ++y)
+        {
+            for (int z = -1; z <= 1; ++z)
+            {
+                if ((x == 0) && (y == 0) && (z == 0))
+                {
+                    continue;
+                }
+
+                i = x + 1;
+                j = y + 1;
+                k = z + 1;
+
+                allBoxes(i, j, k) = DiffusionReaction::makeSaddleOverlapMatrix({x, y, z});
+            }
+        }
+    }
+
+    uint bx, by, bz;
+
+    for (int x = -1; x <= 1; ++x)
+    {
+        for (int y = -1; y <= 1; ++y)
+        {
+            for (int z = -1; z <= 1; ++z)
+            {
+                if (x == y && y == z && z == 0)
+                {
+                    continue;
+                }
+
+                const auto & box = allBoxes(x+1, y+1, z+1);
+
+                CHECK_EQUAL(true, box(0, 1) > box(0, 0));
+                CHECK_EQUAL(true, box(1, 1) > box(1, 0));
+                CHECK_EQUAL(true, box(2, 1) > box(2, 0));
+
+                bx = box(0, 1) - box(0, 0);
+                by = box(1, 1) - box(1, 0);
+                bz = box(2, 1) - box(2, 0);
+
+                if (x == 0)
+                {
+                    CHECK_EQUAL(2*Site::nNeighborsLimit(), bx);
+                }
+                else
+                {
+                    CHECK_EQUAL(2*Site::nNeighborsLimit() + 1, bx);
+                }
+
+                if (y == 0)
+                {
+                    CHECK_EQUAL(2*Site::nNeighborsLimit(), by);
+                }
+                else
+                {
+                    CHECK_EQUAL(2*Site::nNeighborsLimit() + 1, by);
+                }
+
+
+                if (z == 0)
+                {
+                    CHECK_EQUAL(2*Site::nNeighborsLimit(), bz);
+                }
+                else
+                {
+                    CHECK_EQUAL(2*Site::nNeighborsLimit() + 1, bz);
+                }
+
+
+            }
+        }
+    }
+}
+
 void testBed::testTotalParticleStateCounters()
 {
 
