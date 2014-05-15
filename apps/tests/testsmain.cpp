@@ -9,8 +9,8 @@
 #include <sys/types.h>
 
 
-#define focusSuite "Reactions"
-#define focusTest  "RateUpdateReach"
+//#define focusSuite "Reactions"
+//#define focusTest  "RateUpdateReach"
 
 
 #include "defines.h"
