@@ -409,15 +409,14 @@ double DiffusionReaction::getSaddleEnergy()
 
                 neighbor = targetSite->associatedParticle();
 
-                Esp += saddlePot(xn - myIntersectionPoints(0, 0),
-                                 yn - myIntersectionPoints(1, 0),
-                                 zn - myIntersectionPoints(2, 0))(reactant()->species(), neighbor->species());
+                double dEsp = saddlePot(xn - myIntersectionPoints(0, 0),
+                                        yn - myIntersectionPoints(1, 0),
+                                        zn - myIntersectionPoints(2, 0))(reactant()->species(), neighbor->species());
 
-                KMCDebugger_Assert(saddlePot(xn - myIntersectionPoints(0, 0),
-                                             yn - myIntersectionPoints(1, 0),
-                                             zn - myIntersectionPoints(2, 0))(reactant()->species(), neighbor->species()),
-                                   ==,
-                                   getSaddleEnergyContributionFrom(targetSite->associatedParticle()),
+
+                Esp += dEsp;
+
+                KMCDebugger_AssertClose(dEsp, getSaddleEnergyContributionFrom(targetSite->associatedParticle()), 1E-10,
                                    "Mismatch in saddle energy contribution.",
                                    getFinalizingDebugMessage());
             }
@@ -445,10 +444,24 @@ double DiffusionReaction::getSaddleEnergyContributionFrom(const SoluteParticle *
 
 double DiffusionReaction::getSaddleEnergyContributionFromNeighborAt(const uint i, const uint j, const uint k, const uint s1, const uint s2)
 {
-    return m_saddlePotential(m_saddleFieldIndices[0], m_saddleFieldIndices[1], m_saddleFieldIndices[2])
-            (i - m_neighborSetIntersectionPoints(m_saddleFieldIndices[0], m_saddleFieldIndices[1], m_saddleFieldIndices[2])(0, 0),
-            j - m_neighborSetIntersectionPoints(m_saddleFieldIndices[0], m_saddleFieldIndices[1], m_saddleFieldIndices[2])(1, 0),
-            k - m_neighborSetIntersectionPoints(m_saddleFieldIndices[0], m_saddleFieldIndices[1], m_saddleFieldIndices[2])(2, 0))(s1, s2);
+
+    double dx = path(0)/2.0;
+    double dy = path(1)/2.0;
+    double dz = path(2)/2.0;
+
+    int dxn = Site::originTransformVector(i);
+    int dyn = Site::originTransformVector(j);
+    int dzn = Site::originTransformVector(k);
+
+    double dxf = dx - dxn;
+    double dyf = dy - dyn;
+    double dzf = dz - dzn;
+
+    double dr = std::sqrt(dxf*dxf + dyf*dyf + dzf*dzf);
+
+    double dEsp2 = 1.0/dr;
+
+    return dEsp2;
 }
 
 

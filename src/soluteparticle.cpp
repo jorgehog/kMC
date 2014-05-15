@@ -500,6 +500,7 @@ void SoluteParticle::initializeDiffusionReactions()
                 }
 
                 DiffusionReaction* diffusionReaction = new DiffusionReaction(this, dx, dy, dz);
+
                 addReaction(diffusionReaction);
 
                 m_diffusionReactions[dx + 1][dy + 1][dz + 1] = diffusionReaction;
