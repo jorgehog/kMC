@@ -131,7 +131,7 @@ public:
 
     static void forEachNeighborDo_sendIndices(const uint x, const uint y, const uint z, function<void (Site *, uint, uint, uint)> applyFunction);
 
-    static void forShellDo(const uint x, const uint y, const uint z, const int shellNumber, function<void(SoluteParticle *)> applyFunction);
+    static void forShellDo(const uint x, const uint y, const uint z, const int shellNumber, function<void(Site *, int, int, int)> applyFunction);
 
 
     /*

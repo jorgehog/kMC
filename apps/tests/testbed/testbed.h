@@ -23,6 +23,8 @@ public:
 
     static void testRateUpdateReach();
 
+    static void testShells();
+
     static void testTotalParticleStateCounters();
 
     static void testDistanceTo();

@@ -454,8 +454,21 @@ void SoluteParticle::_updateNeighborProps(const int sign,
 
 void SoluteParticle::informOuterNeighbors() const
 {
-    forShellDo(Site::nNeighborsLimit() + 1, [this] (SoluteParticle *shellOccupant)
+    SoluteParticle *shellOccupant;
+
+    forShellDo(Site::nNeighborsLimit() + 1, [&shellOccupant, this] (Site *shellSite, int dx, int dy, int dz)
     {
+        (void) dx;
+        (void) dy;
+        (void) dz;
+
+        if (!shellSite->isActive())
+        {
+            return;
+        }
+
+        shellOccupant = shellSite->associatedParticle();
+
         shellOccupant->markAsAffected();
         shellOccupant->forEachActiveReactionDo([this] (Reaction *reaction)
         {

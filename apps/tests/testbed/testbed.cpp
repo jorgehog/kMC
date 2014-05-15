@@ -115,19 +115,19 @@ void testBed::testRateUpdateReach()
     SoluteParticle *blue   = forceSpawnCenter(3,  2, 0, 2);
     SoluteParticle *yellow = forceSpawnCenter(3, -2, 0, 3);
 
-    solver->dumpLAMMPS(1337);
-
     solver->getRateVariables();
 
+    //check if yellow site has no neighbors and thus unit rate to escape the cluster.
     CHECK_EQUAL(0, yellow->energy());
     CHECK_EQUAL(1, yellow->diffusionReactions(1, 0, 0)->rate());
 
-    DiffusionReaction *lgr = yellow->diffusionReactions(-1, 0, 0);
+    DiffusionReaction *diffReaction = yellow->diffusionReactions(-1, 0, 0);
 
-    double eSad = lgr->getSaddleEnergyContributionFrom(red);
+    double eSad = diffReaction->getSaddleEnergyContributionFrom(red);
 
     const auto & leftBox = DiffusionReaction::neighborSetIntersectionPoints(0, 1, 1);
 
+    //check if box of a left-going interaction is ok
     CHECK_EQUAL(-3, leftBox(0, 0));
     CHECK_EQUAL( 2, leftBox(0, 1));
     CHECK_EQUAL(-2, leftBox(1, 0));
@@ -135,9 +135,271 @@ void testBed::testRateUpdateReach()
     CHECK_EQUAL(-2, leftBox(1, 0));
     CHECK_EQUAL( 2, leftBox(1, 1));
 
-    CHECK_CLOSE(eSad, lgr->saddlePotential(red), 1E-10);
-    CHECK_CLOSE(eSad, -log(lgr->rate()), 1E-10);
+    //check if saddle energy of yellow left is what we expect (should see the red site).
+    CHECK_CLOSE(eSad, diffReaction->saddlePotential(red), 1E-10);
+    CHECK_CLOSE(eSad, -log(diffReaction->rate()), 1E-10);
 
+    //check if the red right sees all the other particles in saddle.
+    diffReaction = red->diffusionReactions(1, 0, 0);
+
+    double eSadRed = diffReaction->getSaddleEnergyContributionFrom(yellow);
+    eSadRed += diffReaction->getSaddleEnergyContributionFrom(green);
+    eSadRed += diffReaction->getSaddleEnergyContributionFrom(blue);
+
+    CHECK_CLOSE(eSadRed, diffReaction->getSaddleEnergy(), 1E-10);
+    CHECK_CLOSE(eSadRed, diffReaction->lastUsedEsp(), 1E-10);
+
+
+    //check if the green diagonal move has all the correct values.
+    diffReaction = green->diffusionReactions(1, -1, 0);
+    double eGreenDiag = diffReaction->lastUsedEsp();
+    double eSadGreen = diffReaction->getSaddleEnergyContributionFrom(yellow);
+    eSadGreen += diffReaction->getSaddleEnergyContributionFrom(red);
+    eSadGreen += diffReaction->getSaddleEnergyContributionFrom(blue);
+
+    CHECK_CLOSE(eSadGreen, eGreenDiag, 1E-10);
+    double yellowCont = diffReaction->getSaddleEnergyContributionFrom(yellow);
+
+
+    //Test if moving the yellow out of the cluster removes it's contribution from the saddle energy of green down and red right.
+    double eRedRight = red->diffusionReactions(1, 0, 0)->getSaddleEnergy();
+    double eRedRightYellow = red->diffusionReactions(1, 0, 0)->getSaddleEnergyContributionFrom(yellow);
+
+    double eGreenDown = green->diffusionReactions(0, -1, 0)->getSaddleEnergy();
+    double eGreenDownYellow = green->diffusionReactions(0, -1, 0)->getSaddleEnergyContributionFrom(yellow);
+
+
+
+    yellow->diffusionReactions(1, 0, 0)->execute();
+    solver->getRateVariables();
+
+    double eRedRightNew = red->diffusionReactions(1, 0, 0)->lastUsedEsp();
+    double eGreenDownNew = green->diffusionReactions(0, -1, 0)->lastUsedEsp();
+
+    CHECK_EQUAL(red->diffusionReactions(1, 0, 0)->getSaddleEnergy(), eRedRightNew);
+    CHECK_EQUAL(green->diffusionReactions(0, -1, 0)->getSaddleEnergy(), eGreenDownNew);
+
+    CHECK_CLOSE(eRedRight - eRedRightYellow, eRedRightNew, 1E-10);
+    CHECK_CLOSE(eGreenDown - eGreenDownYellow, eGreenDownNew, 1E-10);
+
+    //Check if moving yellow successfully updated the value of the green diagonal move.
+    CHECK_CLOSE(eGreenDiag, diffReaction->lastUsedEsp() - diffReaction->getSaddleEnergyContributionFrom(yellow) + yellowCont, 1E-10);
+
+    //Move yellow up left such that it is saddle seen by red right and blue down and seen by green.
+    double eRedPre = red->diffusionReactions(1, 0, 0)->getSaddleEnergy();
+    double eBluePre = blue->diffusionReactions(0, -1, 0)->getSaddleEnergy();
+    double eGreenPre = green->diffusionReactions(-1, 1, 0)->getSaddleEnergy();
+
+    yellow->diffusionReactions(-1, 1, 0)->execute();
+    solver->getRateVariables();
+
+    double eRedNew = red->diffusionReactions(1, 0, 0)->lastUsedEsp();
+    double eBlueNew = blue->diffusionReactions(0, -1, 0)->lastUsedEsp();
+    double eGreenNew = green->diffusionReactions(-1, 1, 0)->lastUsedEsp();
+
+    double eRedY = red->diffusionReactions(1, 0, 0)->getSaddleEnergyContributionFrom(yellow);
+    double eBlueY = blue->diffusionReactions(0, -1, 0)->getSaddleEnergyContributionFrom(yellow);
+    double eGreenY = green->diffusionReactions(-1, 1, 0)->getSaddleEnergyContributionFrom(yellow);
+
+    CHECK_CLOSE(eRedPre, eRedNew - eRedY, 1E-10);
+    CHECK_CLOSE(eBluePre, eBlueNew - eBlueY, 1E-10);
+    CHECK_CLOSE(eGreenPre, eGreenNew - eGreenY, 1E-10);
+
+
+    //Moving green right (everyone should notice it.)
+
+    CHECK_EQUAL(3, green->nNeighborsSum());
+
+    cube redPre(3, 3, 3, fill::zeros);
+    cube yellowPre(3, 3, 3, fill::zeros);
+    cube bluePre(3, 3, 3, fill::zeros);
+
+    cube redPreGreen(3, 3, 3, fill::zeros);
+    cube yellowPreGreen(3, 3, 3, fill::zeros);
+    cube bluePreGreen(3, 3, 3, fill::zeros);
+
+    uint i, j, k;
+
+    DiffusionReaction *redReaction;
+    DiffusionReaction *yellowReaction;
+    DiffusionReaction *blueReaction;
+
+    vector<DiffusionReaction*> blockedPre;
+
+    for (int dx = -1; dx <= 1; ++dx)
+    {
+        for (int dy = -1; dy <= 1; ++dy)
+        {
+            for (int dz = -1; dz <= 1; ++dz)
+            {
+                if (dx == dy && dy == dz && dz == 0)
+                {
+                    continue;
+                }
+
+                i = dx + 1;
+                j = dy + 1;
+                k = dz + 1;
+
+                redReaction = red->diffusionReactions(dx, dy, dz);
+                blueReaction = blue->diffusionReactions(dx, dy, dz);
+                yellowReaction = yellow->diffusionReactions(dx, dy, dz);
+
+
+                if (redReaction->isAllowed())
+                {
+                    redPre(i, j, k) = redReaction->lastUsedEsp();
+                    redPreGreen(i, j, k) = redReaction->saddlePotential(green);
+                }
+                else
+                {
+                    blockedPre.push_back(redReaction);
+                }
+
+                if (blueReaction->isAllowed())
+                {
+                    bluePre(i, j, k) = blueReaction->lastUsedEsp();
+                    bluePreGreen(i, j, k) = blueReaction->saddlePotential(green);
+                }
+                else
+                {
+                    blockedPre.push_back(blueReaction);
+                }
+
+                if (yellowReaction->isAllowed())
+                {
+                    yellowPre(i, j, k) = yellowReaction->lastUsedEsp();
+                    yellowPreGreen(i, j, k) = yellowReaction->saddlePotential(green);
+                }
+                else
+                {
+                    blockedPre.push_back(yellowReaction);
+                }
+
+            }
+        }
+
+    }
+
+    green->diffusionReactions(1, 0, 0)->execute();
+    solver->getRateVariables();
+
+    for (int dx = -1; dx <= 1; ++dx)
+    {
+        for (int dy = -1; dy <= 1; ++dy)
+        {
+            for (int dz = -1; dz <= 1; ++dz)
+            {
+                if (dx == dy && dy == dz && dz == 0)
+                {
+                    continue;
+                }
+
+                i = dx + 1;
+                j = dy + 1;
+                k = dz + 1;
+
+                redReaction = red->diffusionReactions(dx, dy, dz);
+                blueReaction = blue->diffusionReactions(dx, dy, dz);
+                yellowReaction = yellow->diffusionReactions(dx, dy, dz);
+
+
+                if (!redReaction->isAllowed())
+                {
+                    CHECK_EQUAL(Reaction::UNSET_RATE, redReaction->rate());
+                }
+                else if (std::find(blockedPre.begin(), blockedPre.end(), redReaction) == blockedPre.end())
+                {
+                    CHECK_CLOSE(redPre(i, j, k), redReaction->lastUsedEsp() + redPreGreen(i, j, k) - redReaction->getSaddleEnergyContributionFrom(green), 1E-10);
+                }
+                else
+                {
+                    CHECK_CLOSE(redReaction->getSaddleEnergy(), redReaction->lastUsedEsp(), 1E-10);
+                }
+
+                if (!blueReaction->isAllowed())
+                {
+                    CHECK_EQUAL(Reaction::UNSET_RATE, blueReaction->rate());
+                }
+                else if (std::find(blockedPre.begin(), blockedPre.end(), blueReaction) == blockedPre.end())
+                {
+                    CHECK_CLOSE(bluePre(i, j, k), blueReaction->lastUsedEsp() + bluePreGreen(i, j, k) - blueReaction->getSaddleEnergyContributionFrom(green), 1E-10);
+                }
+                else
+                {
+                    CHECK_CLOSE(blueReaction->getSaddleEnergy(), blueReaction->lastUsedEsp(), 1E-10);
+                }
+
+                if (!yellowReaction->isAllowed())
+                {
+                    CHECK_EQUAL(Reaction::UNSET_RATE, yellowReaction->rate());
+                }
+                else if (std::find(blockedPre.begin(), blockedPre.end(), yellowReaction) == blockedPre.end())
+                {
+                    CHECK_CLOSE(yellowPre(i, j, k), yellowReaction->lastUsedEsp() + yellowPreGreen(i, j, k) - yellowReaction->getSaddleEnergyContributionFrom(green), 1E-10);
+                }
+                else
+                {
+                    CHECK_CLOSE(yellowReaction->getSaddleEnergy(), yellowReaction->lastUsedEsp(), 1E-10);
+                }
+            }
+        }
+    }
+
+}
+
+void testBed::testShells()
+{
+    uint nShell;
+
+    int vSumX;
+    int vSumY;
+    int vSumZ;
+
+    std::set<int> dxs;
+    std::set<int> dys;
+    std::set<int> dzs;
+
+    for (uint shellSize = 1; shellSize < 5; ++shellSize)
+    {
+        nShell = 0;
+
+        vSumX = 0;
+        vSumY = 0;
+        vSumZ = 0;
+
+        dxs.clear();
+        dys.clear();
+        dzs.clear();
+
+        Site::forShellDo(NX()/2, NY()/2, NZ()/2, shellSize, [&] (Site *shellSite, int dx, int dy, int dz)
+        {
+            (void) shellSite;
+
+            CHECK_EQUAL(shellSize - 1, Site::getLevel(abs(dx), abs(dy), abs(dz)));
+            dxs.insert(dx);
+            dys.insert(dy);
+            dzs.insert(dz);
+
+            vSumX += dx;
+            vSumY += dy;
+            vSumZ += dz;
+
+            nShell++;
+
+        });
+
+        CHECK_EQUAL(0, vSumX);
+        CHECK_EQUAL(0, vSumY);
+        CHECK_EQUAL(0, vSumZ);
+
+        CHECK_EQUAL(pow(2*shellSize + 1, 3) - pow(2*shellSize - 1, 3), nShell);
+
+        CHECK_EQUAL(2*shellSize + 1, dxs.size());
+        CHECK_EQUAL(2*shellSize + 1, dys.size());
+        CHECK_EQUAL(2*shellSize + 1, dzs.size());
+
+    }
 }
 
 void testBed::testTotalParticleStateCounters()

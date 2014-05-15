@@ -21,6 +21,8 @@ SUITE(Misc)
 
     TESTWRAPPER(BinarySearchChoise)
 
+    TESTWRAPPER(Shells)
+
     TESTWRAPPER(SaddleOverlapBoxes)
 
     TESTWRAPPER(StressedSurface)

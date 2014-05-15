@@ -454,12 +454,12 @@ public:
         Site::forEachNeighborDo_sendIndices(m_x, m_y, m_z, applyFunction);
     }
 
-    void forShellDo(const int shellNumber, function<void(SoluteParticle *)> applyFunction)
+    void forShellDo(const int shellNumber, function<void(Site *, int, int, int)> applyFunction)
     {
         Site::forShellDo(m_x, m_y, m_z, shellNumber, applyFunction);
     }
 
-    void forShellDo(const int shellNumber, function<void(SoluteParticle *)> applyFunction) const
+    void forShellDo(const int shellNumber, function<void(Site *, int, int, int)> applyFunction) const
     {
         Site::forShellDo(m_x, m_y, m_z, shellNumber, applyFunction);
     }

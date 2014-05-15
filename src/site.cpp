@@ -185,7 +185,7 @@ void Site::forEachNeighborDo_sendIndices(const uint x, const uint y, const uint 
     }
 }
 
-void Site::forShellDo(const uint x, const uint y, const uint z, const int shellNumber, function<void (SoluteParticle *)> applyFunction)
+void Site::forShellDo(const uint x, const uint y, const uint z, const int shellNumber, function<void (Site *, int, int, int)> applyFunction)
 {
     int dx;
     int dy;
@@ -209,10 +209,8 @@ void Site::forShellDo(const uint x, const uint y, const uint z, const int shellN
                     continue;
                 }
 
-                if (shellSite->isActive())
-                {
-                    applyFunction(shellSite->associatedParticle());
-                }
+                applyFunction(shellSite, dx, dy, dz);
+
             }
         }
     }
@@ -231,10 +229,8 @@ void Site::forShellDo(const uint x, const uint y, const uint z, const int shellN
                     continue;
                 }
 
-                if (shellSite->isActive())
-                {
-                    applyFunction(shellSite->associatedParticle());
-                }
+                applyFunction(shellSite, dx, dy, dz);
+
             }
         }
     }
@@ -253,10 +249,8 @@ void Site::forShellDo(const uint x, const uint y, const uint z, const int shellN
                     continue;
                 }
 
-                if (shellSite->isActive())
-                {
-                    applyFunction(shellSite->associatedParticle());
-                }
+                applyFunction(shellSite, dx, dy, dz);
+
             }
         }
     }
