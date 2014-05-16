@@ -1163,9 +1163,7 @@ void KMCSolver::setBoxSize(const uint NX, const uint NY, const uint NZ, bool che
         }
     }
 
-    m_mainLattice->setTopology({0, NX,
-                                0, NY,
-                                0, NZ});
+    m_mainLattice->setTopology({0, 0, 0, NX, NY, NZ});
 
     m_lammpswriter->setSystemSize(NX, NY, NZ);
 
@@ -1223,8 +1221,8 @@ void KMCSolver::clearParticles()
 }
 
 
-bool KMCSolver::m_dumpXYZ = true;
-bool KMCSolver::m_dumpLAMMPS = false;
+bool KMCSolver::m_dumpXYZ = false;
+bool KMCSolver::m_dumpLAMMPS = true;
 
 uint KMCSolver::refCounter = 0;
 

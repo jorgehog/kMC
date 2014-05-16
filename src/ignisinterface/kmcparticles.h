@@ -33,6 +33,7 @@ public:
     uint count() const;
 
     uint operator ()(const uint n, const uint d) const;
+    uint &operator ()(const uint n, const uint d);
 };
 
 }

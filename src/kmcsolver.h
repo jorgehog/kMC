@@ -53,12 +53,12 @@ public:
         m_mainLattice->eventLoop();
     }
 
-    void addEvent(KMCEvent &event)
+    void addEvent(Event<uint> &event)
     {
         m_mainLattice->addEvent(event);
     }
 
-    void addEvent(KMCEvent *event)
+    void addEvent(Event<uint> *event)
     {
         m_mainLattice->addEvent(event);
     }

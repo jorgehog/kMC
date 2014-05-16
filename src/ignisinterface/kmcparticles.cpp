@@ -17,3 +17,8 @@ uint KMCParticles::operator ()(const uint n, const uint d) const
 {
     return solver()->particle(n)->r(d);
 }
+
+uint &KMCParticles::operator ()(const uint n, const uint d)
+{
+    return solver()->particle(n)->r(d);
+}

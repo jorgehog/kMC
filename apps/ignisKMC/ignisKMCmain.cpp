@@ -228,8 +228,8 @@ void initialize_ignisKMC(KMCSolver * solver, const Setting & root)
     heating->setOnsetTime(MainLattice::nCycles/2);
 
 
-    solver->addEvent(*cooling);
-    solver->addEvent(*heating);
+//    solver->addEvent(*cooling);
+//    solver->addEvent(*heating);
 
     solver->addEvent(new MeasureTemp());
     solver->addEvent(new AverageNeighbors());
@@ -238,6 +238,12 @@ void initialize_ignisKMC(KMCSolver * solver, const Setting & root)
 //    solver->addEvent(new CPUTime());
 
     solver->initializeSolutionBath();
+
+    lattice *sublattice = new lattice({0, 0, 0, NX/2, NY/2, NZ/2}, "sublattice");
+    sublattice->addEvent(new countAtoms<uint>());
+
+    solver->addSubLattice(sublattice);
+
 
 
 }

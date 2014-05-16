@@ -125,7 +125,27 @@ public:
         return m_z;
     }
 
-    const uint & r(const uint i) const
+    uint r(const uint i) const
+    {
+        switch (i) {
+        case 0:
+            return m_x;
+            break;
+        case 1:
+            return m_y;
+            break;
+        case 2:
+            return m_z;
+            break;
+        default:
+            break;
+        }
+
+        return m_x;
+
+    }
+
+    uint &r(const uint i)
     {
         switch (i) {
         case 0:
