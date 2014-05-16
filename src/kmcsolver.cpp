@@ -244,30 +244,6 @@ void KMCSolver::checkAllRefCounters()
 }
 
 
-void KMCSolver::onAllRatesChanged()
-{
-    //Change if added reactions are not on form ..exp(beta...)
-
-    m_kTot = 0;
-
-    uint i = 0;
-    for (Reaction * r : m_allPossibleReactions)
-    {
-
-        KMCDebugger_Assert(r->rate(), !=, Reaction::UNSET_RATE, "Rates should not be all changed before they are set once.");
-        KMCDebugger_Assert(r->rate(), >, 0, "Rate should be positive.");
-        KMCDebugger_AssertBool(!r->hasVacantStatus(), "Reaction should be enabled.");
-
-        m_kTot += r->rate();
-
-        m_accuAllRates.at(r->address()) = m_kTot;
-
-        i++;
-
-    }
-
-}
-
 void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate)
 {
 
@@ -463,6 +439,10 @@ void KMCSolver::remakeAccuAllRates()
     uint i = 0;
     for (Reaction *r : m_allPossibleReactions)
     {
+        KMCDebugger_Assert(r->rate(), !=, Reaction::UNSET_RATE, "Rates should not be all changed before they are set once.");
+        KMCDebugger_Assert(r->rate(), >, 0, "Rate should be positive.");
+        KMCDebugger_AssertBool(!r->hasVacantStatus(), "Reaction should be enabled.");
+
         m_kTot += r->rate();
         m_accuAllRates[i] = m_kTot;
         ++i;
@@ -1221,8 +1201,7 @@ void KMCSolver::clearParticles()
         delete particle;
     }
 
-    cout << "s: " << accuAllRates().size() << endl;
-    cout << "sum: " << setprecision(10) << std::accumulate(m_accuAllRates.begin(), m_accuAllRates.end(), 0.0) << endl;
+    KMCDebugger_AssertClose(0, std::accumulate(m_accuAllRates.begin(), m_accuAllRates.end(), 0.0), 1E-5);
 
     SoluteParticle::clearAll();
 

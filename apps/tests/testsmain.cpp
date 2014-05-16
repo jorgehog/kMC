@@ -9,7 +9,7 @@
 #include <sys/types.h>
 
 
-#define focusSuite "PeriodicBoundaries"
+//#define focusSuite "PeriodicBoundaries"
 //#define focusTest  "Sequential"
 
 
@@ -84,11 +84,12 @@ TESTWRAPPER(UpdateNeigbors)             \
                                         \
 TESTWRAPPER(EnergyAndNeighborSetup)     \
                                         \
-\
+TESTWRAPPER(OptimizedRateVectors)       \
                                         \
 TESTWRAPPER(Sequential)                 \
-                                        \
-TESTWRAPPER(KnownCase)
+
+//\
+//TESTWRAPPER(KnownCase)
 
 
 SUITE(PeriodicBoundaries)

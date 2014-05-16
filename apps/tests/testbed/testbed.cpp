@@ -2536,7 +2536,7 @@ void testBed::testOptimizedRateVectors()
 
     solver->setRNGSeed(Seed::specific, 1000000);
 
-    Reaction::setLinearRateScale(1000);
+    Reaction::setLinearRateScale(10);
 
     solver->initializeCrystal(0.2);
 

@@ -175,7 +175,7 @@ void Reaction::setBeta(const double beta)
         r->registerBetaChange(beta);
     }
 
-    solver()->onAllRatesChanged();
+    solver()->remakeAccuAllRates();
 
     m_beta = beta;
 
