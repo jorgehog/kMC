@@ -526,9 +526,31 @@ void DiffusionReaction::calcRate()
 
     if (updateFlag() == defaultUpdateFlag)
     {
-        double Esp = getSaddleEnergy();
+        double activationEnergy;
 
-        newRate = linearRateScale()*std::exp(-beta()*(Esp - reactant()->energy()));
+        double Esp = getSaddleEnergy();
+        double E   = reactant()->energy();
+        double Ed = 0;
+
+        Site::forEachNeighborDo_sendIndices(xD(), yD(), zD(), [&Ed, this] (Site *neighbor, uint i, uint j, uint k)
+        {
+            if (neighbor->isActive())
+            {
+                Ed += potential(i, j, k, reactant()->species(), neighbor->associatedParticle()->species());
+            }
+        });
+
+
+        if (Esp > E && Esp > Ed)
+        {
+            activationEnergy = Esp - E;
+        }
+        else
+        {
+            activationEnergy = E - Ed;
+        }
+
+        newRate = linearRateScale()*std::exp(-beta()*(activationEnergy));
 
         m_lastUsedEsp = Esp;
     }
