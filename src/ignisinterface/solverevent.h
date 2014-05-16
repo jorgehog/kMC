@@ -68,7 +68,7 @@ protected:
         m_totalTime += Reaction::linearRateScale()/solver()->kTot();
 
         //To counter buildup of roundoff errors
-        if (nTimesExecuted % 1000 == 0)
+        if (nTimesExecuted % 10000 == 0)
         {
             solver()->remakeAccuAllRates();
         }
