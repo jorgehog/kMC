@@ -9,8 +9,8 @@
 #include <sys/types.h>
 
 
-#define focusSuite "Reactions"
-#define focusTest  "ReactionVectorUpdate"
+#define focusSuite "PeriodicBoundaries"
+//#define focusTest  "Sequential"
 
 
 #include "defines.h"
@@ -84,7 +84,7 @@ TESTWRAPPER(UpdateNeigbors)             \
                                         \
 TESTWRAPPER(EnergyAndNeighborSetup)     \
                                         \
-TESTWRAPPER(OptimizedRateVectors)       \
+\
                                         \
 TESTWRAPPER(Sequential)                 \
                                         \

@@ -67,6 +67,9 @@ protected:
 
         m_totalTime += Reaction::linearRateScale()/solver()->kTot();
 
+        solver()->remakeAccuAllRates();
+
+
     }
 
 private:

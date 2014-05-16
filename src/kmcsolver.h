@@ -229,6 +229,8 @@ public:
 
     void updateAccuAllRateElements(const uint from, const uint to, const double value);
 
+    void remakeAccuAllRates();
+
     double prevAccuAllRatesValue(const uint address) const
     {
         return address == 0 ? 0 : m_accuAllRates.at(address - 1);

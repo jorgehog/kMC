@@ -13,7 +13,9 @@
 
 #include <lammpswriter/lammpswriter.h>
 
+#ifndef KMC_NO_OMP
 #include <omp.h>
+#endif
 
 #include <sys/time.h>
 
@@ -25,6 +27,8 @@
 
 #include <boost/algorithm/string.hpp>
 #include <regex>
+
+#include <numeric>
 
 using namespace arma;
 using namespace std;
@@ -194,7 +198,6 @@ void KMCSolver::finalizeObject()
     checkRefCounter();
 
     clearParticles();
-
 
     Site::finalizeBoundaries();
 
@@ -449,7 +452,20 @@ void KMCSolver::updateAccuAllRateElements(const uint from, const uint to, const 
     {
         m_accuAllRates[i] += value;
 
-        KMCDebugger_Assert(m_accuAllRates.at(i), >=, -minRateThreshold());
+        KMCDebugger_Assert(m_accuAllRates.at(i), >=, -minRateThreshold(), "should be zero", SoluteParticle::nParticles());
+    }
+
+}
+
+void KMCSolver::remakeAccuAllRates()
+{
+    m_kTot = 0;
+    uint i = 0;
+    for (Reaction *r : m_allPossibleReactions)
+    {
+        m_kTot += r->rate();
+        m_accuAllRates[i] = m_kTot;
+        ++i;
     }
 
 }
@@ -1204,6 +1220,9 @@ void KMCSolver::clearParticles()
     {
         delete particle;
     }
+
+    cout << "s: " << accuAllRates().size() << endl;
+    cout << "sum: " << setprecision(10) << std::accumulate(m_accuAllRates.begin(), m_accuAllRates.end(), 0.0) << endl;
 
     SoluteParticle::clearAll();
 

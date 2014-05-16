@@ -1,6 +1,7 @@
 CONFIG -= app_bundle
 CONFIG -= qt
 CONFIG += RNG_ZIG
+CONFIG += NO_OMP
 
 QMAKE_CXX = gcc
 
@@ -38,6 +39,10 @@ LIBS += \
 
 DEFINES += \
     ARMA_MAT_PREALLOC=3
+
+CONFIG(NO_OMP) {
+    DEFINES += KMC_NO_OMP
+}
 
 CONFIG(RNG_ZIG) {
 
