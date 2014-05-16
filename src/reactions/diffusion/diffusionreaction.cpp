@@ -416,6 +416,11 @@ double DiffusionReaction::getSaddleEnergy()
 
                 targetSite = Site::neighborhood(x(), y(), z(), dxn, dyn, dzn);
 
+//                if (abs(dxn) > Site::nNeighborsLimit() || abs(dyn) > Site::nNeighborsLimit() || abs(dzn) > Site::nNeighborsLimit())
+//                {
+//                    continue;
+//                }
+
                 if (targetSite == NULL)
                 {
                     continue;
