@@ -25,6 +25,9 @@ QMAKE_CXXFLAGS_RELEASE += \
     -DARMA_NO_DEBUG \
     -DKMC_NO_DEBUG
 
+QMAKE_LFLAGS_RELEASE -= -O1
+QMAKE_LFLAGS_RELEASE += -O3
+
 INCLUDEPATH += \
     $(HOME)/Dropbox/libs \
     $$PWD/ignis/include
