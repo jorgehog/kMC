@@ -60,8 +60,8 @@ protected:
 void initializeMovingSteppes(KMCSolver *solver, const Setting &root)
 {
 
-    solver->initializeFromXYZ("/home/jorgen/code/build-kMC-Desktop_Qt_5_2_1_GCC_64bit-Release/apps/movingSteppes/outfiles", 1659);
-    return;
+//    solver->initializeFromXYZ("/home/jorgen/code/build-kMC-Desktop_Qt_5_2_1_GCC_64bit-Release/apps/movingSteppes/outfiles", 1659);
+//    return;
 
     const Setting & initCFG = getSetting(root, "Initialization");
 
