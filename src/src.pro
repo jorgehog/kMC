@@ -4,10 +4,7 @@ TEMPLATE = lib
 
 TARGET = ../lib/kMC
 
-
-QMAKE_LFLAGS += -g
-
-QMAKE_CXXFLAGS_RELEASE += -g
+QMAKE_LFLAGS_DEBUG += -g
 
 HEADERS = RNG/kMCRNG.h \
     reactions/reaction.h \
