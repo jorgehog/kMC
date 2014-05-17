@@ -100,6 +100,8 @@ void initializeMovingSteppes(KMCSolver *solver, const Setting &root)
         }
     }
 
+    solver->initializeSolutionBath();
+
 //    solver->addEvent(new MovingSteppesEvent());
 
 }
