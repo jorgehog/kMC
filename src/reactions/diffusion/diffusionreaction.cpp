@@ -545,12 +545,18 @@ void DiffusionReaction::calcRate()
         {
             activationEnergy = Esp - E;
         }
+
         else
         {
             activationEnergy = E - Ed;
         }
 
-        newRate = linearRateScale()*std::exp(-beta()*(activationEnergy));
+
+        double pathLength = std::sqrt(m_path[0]*m_path[0] + m_path[1]*m_path[1] + m_path[2]*m_path[2]);
+
+        newRate = linearRateScale()*std::exp(-beta()*(activationEnergy))/pathLength;
+
+
 
         m_lastUsedEsp = Esp;
     }

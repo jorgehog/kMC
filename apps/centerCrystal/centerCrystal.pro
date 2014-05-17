@@ -1,3 +1,4 @@
+
 include(../app_defaults.pri)
 
 TARGET  = centerCrystal
