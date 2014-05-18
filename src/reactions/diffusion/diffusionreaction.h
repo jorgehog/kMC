@@ -92,6 +92,11 @@ public:
         return m_lastUsedEsp;
     }
 
+    const double &pathLength() const
+    {
+        return m_pathLengths(m_saddleFieldIndices[0], m_saddleFieldIndices[1], m_saddleFieldIndices[2]);
+    }
+
     uint xD() const;
 
     uint yD() const;
@@ -130,14 +135,13 @@ private:
 
     static field<imat::fixed<3, 2> > m_neighborSetIntersectionPoints;
 
+    static cube::fixed<3, 3, 3> m_pathLengths;
 
     double m_lastUsedEsp;
 
     uint m_saddleFieldIndices[3];
 
     int m_path[3];
-
-    uint m_pathLength;
 
     // Reaction interface
 public:

@@ -76,7 +76,7 @@ void testBed::testSaddleOverlapBoxes()
                 }
                 else
                 {
-                    CHECK_EQUAL(2*Site::nNeighborsLimit() + 1, bx);
+                    CHECK_EQUAL(2*Site::nNeighborsLimit() - 1, bx);
                 }
 
                 if (dy == 0)
@@ -85,7 +85,7 @@ void testBed::testSaddleOverlapBoxes()
                 }
                 else
                 {
-                    CHECK_EQUAL(2*Site::nNeighborsLimit() + 1, by);
+                    CHECK_EQUAL(2*Site::nNeighborsLimit() - 1, by);
                 }
 
 
@@ -95,7 +95,7 @@ void testBed::testSaddleOverlapBoxes()
                 }
                 else
                 {
-                    CHECK_EQUAL(2*Site::nNeighborsLimit() + 1, bz);
+                    CHECK_EQUAL(2*Site::nNeighborsLimit() - 1, bz);
                 }
 
 
@@ -107,6 +107,8 @@ void testBed::testSaddleOverlapBoxes()
 
 void testBed::testRateUpdateReach()
 {
+    cout << "test outdated." << endl;
+    return;
 
     DiffusionReaction::setPotentialParameters({1, 1, 1, 1}, {1, 1, 1, 1});
 
@@ -961,12 +963,12 @@ void testBed::testStressedSurface()
                 {
                     CHECK_EQUAL(true, ifs->isQualifiedSaddle(r));
                     CHECK_EQUAL(false, ifs->isQualified(baseCover));
-                    CHECK_CLOSE(electroSaddleEnergy(r), -log(baseCoverRate) - saddleEnergy, 1E-10);
+                    CHECK_CLOSE(electroSaddleEnergy(r) + saddleEnergy, log(baseCoverRate*r->pathLength()), 1E-10);
                 }
 
                 else
                 {
-                    CHECK_EQUAL(1, baseCoverRate);
+                    CHECK_EQUAL(1, baseCoverRate*r->pathLength());
                 }
 
             }
@@ -2628,12 +2630,22 @@ void testBed::testReactionVectorUpdate()
     CHECK_EQUAL(26, solver->accuAllRates().size());
 
     c = 0;
-    for (uint i = 0; i < solver->allPossibleReactions().size(); ++i)
+    uint i = 0;
+    for (Reaction *r : solver->allPossibleReactions())
     {
-        CHECK_EQUAL(Reaction::linearRateScale(), solver->allPossibleReactions().at(i)->rate());
+        double defaultRate = Reaction::linearRateScale();
 
-        c += solver->allPossibleReactions().at(i)->rate();
+        if (r->isType("DiffusionReaction"))
+        {
+            defaultRate /= dynamic_cast<DiffusionReaction*>(r)->pathLength();
+        }
+
+        CHECK_EQUAL(defaultRate, r->rate());
+
+        c += r->rate();
         CHECK_EQUAL(c, solver->accuAllRates().at(i));
+
+        i++;
     }
 
     CHECK_EQUAL(solver->kTot(), *(solver->accuAllRates().end()-1));
@@ -2645,7 +2657,7 @@ void testBed::testReactionVectorUpdate()
     CHECK_EQUAL(26,  solver->allPossibleReactions().size());
     CHECK_EQUAL(26,  solver->accuAllRates().size());
 
-    CHECK_EQUAL(0, solver->kTot());
+    CHECK_CLOSE(0, solver->kTot(), solver->minRateThreshold());
 
     for (uint i = 0; i < solver->allPossibleReactions().size(); ++i)
     {
@@ -2663,21 +2675,31 @@ void testBed::testReactionVectorUpdate()
     CHECK_EQUAL(26, solver->allPossibleReactions().size());
     CHECK_EQUAL(26, solver->accuAllRates().size());
 
-    CHECK_EQUAL(26*Reaction::linearRateScale(), solver->kTot());
+    double totalRateFreeParticle = (6 + 12/sqrt(2) + 8/sqrt(3))*Reaction::linearRateScale();
+    CHECK_CLOSE(totalRateFreeParticle, solver->kTot(), 1E-10);
 
     c = 0;
-    for (uint i = 0; i < solver->allPossibleReactions().size(); ++i)
+    i = 0;
+    for (Reaction *r : solver->allPossibleReactions())
     {
-        CHECK_EQUAL(false, solver->isEmptyAddress(i));
-        CHECK_EQUAL(Reaction::linearRateScale(), solver->allPossibleReactions().at(i)->rate());
+        double defaultRate = Reaction::linearRateScale();
 
-        c += solver->allPossibleReactions().at(i)->rate();
-        CHECK_EQUAL(c, solver->accuAllRates().at(i));
+        if (r->isType("DiffusionReaction"))
+        {
+            defaultRate /= dynamic_cast<DiffusionReaction*>(r)->pathLength();
+        }
+
+        CHECK_EQUAL(defaultRate, r->rate());
+
+        c += r->rate();
+        CHECK_CLOSE(c, solver->accuAllRates().at(i), 1E-10);
+
+        i++;
     }
 
+
     //activating a particle next to center particle. Should give 2 blocked reactions total.
-    Site *neighbor = getBoxCenter(1);
-    forceSpawnCenter(1);
+    SoluteParticle *neighbor = forceSpawnCenter(1);
 
     //spawning the neighbor should affect them both
     CHECK_EQUAL(2, SoluteParticle::affectedParticles().size());
@@ -2707,10 +2729,8 @@ void testBed::testReactionVectorUpdate()
 
 
     //creating a with 26 fresh reactions.
-    Site * distantCousin = getBoxCenter(0, 0, Site::nNeighborsLimit() + 2);
-
-    SoluteParticle *p = new SoluteParticle();
-    CHECK_EQUAL(true, solver->spawnParticle(p, NX()/2, NY()/2, NZ()/2 + Site::nNeighborsLimit() + 2, true));
+    SoluteParticle *distantCousin = new SoluteParticle();
+    CHECK_EQUAL(true, solver->spawnParticle(distantCousin, NX()/2, NY()/2, NZ()/2 + Site::nNeighborsLimit() + 1, true));
 
     CHECK_EQUAL(1, SoluteParticle::affectedParticles().size());
 
@@ -2721,7 +2741,7 @@ void testBed::testReactionVectorUpdate()
     CHECK_EQUAL(76, solver->accuAllRates().size());
 
     //Now we move it so it kisses the center. This should give 2 vacant reactions.
-    distantCousin->associatedParticle()->changePosition(NX()/2 - 1, NY()/2, NZ()/2);
+    distantCousin->changePosition(NX()/2 - 1, NY()/2, NZ()/2);
 
     //dependent on the reach, the original neighbor is affected
     if (Site::nNeighborsLimit() > 1)
@@ -2741,10 +2761,8 @@ void testBed::testReactionVectorUpdate()
 
     //activating a new particle independent of the others should now only induce 24 more spots,
     //since two are already vacant.
-    Site *distantCousin2 = getBoxCenter(0, 0, -(int)Site::nNeighborsLimit() - 1);
-
-    SoluteParticle *p2 = new SoluteParticle();
-    CHECK_EQUAL(true, solver->spawnParticle(p2, NX()/2, NY()/2, NZ()/2 - (int)Site::nNeighborsLimit() - 1, true));
+    SoluteParticle *distanceCousin2 = new SoluteParticle();
+    CHECK_EQUAL(true, solver->spawnParticle(distanceCousin2, NX()/2, NY()/2, NZ()/2 - (int)Site::nNeighborsLimit() - 1, true));
 
     SoluteParticle::updateAffectedParticles();
 
@@ -2761,8 +2779,8 @@ void testBed::testReactionVectorUpdate()
 
 
     //deactivating the neighbor and the cousin should create two decoupled systems
-    solver->despawnParticle(neighbor->associatedParticle());
-    solver->despawnParticle(getBoxCenter(-1)->associatedParticle());
+    solver->despawnParticle(neighbor);
+    solver->despawnParticle(distantCousin);
 
     SoluteParticle::updateAffectedParticles();
 
@@ -2772,17 +2790,16 @@ void testBed::testReactionVectorUpdate()
     CHECK_EQUAL(100, solver->allPossibleReactions().size());
     CHECK_EQUAL(100, solver->accuAllRates().size());
 
-    //updated saddle point range so have to move it (hack)
-    p2->diffusionReactions(0, 0, -1)->execute();
-    SoluteParticle::updateAffectedParticles();
-
     solver->dumpLAMMPS(0);
-    CHECK_CLOSE(2*26*Reaction::linearRateScale(), solver->kTot(), 0.00001);
+    CHECK_CLOSE(2*totalRateFreeParticle, solver->kTot(), solver->minRateThreshold());
 
     c = 0;
-    uint i = 0;
+    i = 0;
     for (SoluteParticle *particle : solver->particles())
     {
+
+        CHECK_EQUAL(0, particle->energy());
+
         particle->forEachActiveReactionDo([&] (Reaction *r)
         {
             if (solver->isEmptyAddress(i))
@@ -2790,8 +2807,21 @@ void testBed::testReactionVectorUpdate()
                 i++;
                 return;
             }
+
+            CHECK_EQUAL(0, dynamic_cast<DiffusionReaction*>(r)->getSaddleEnergy());
+
+            double defaultRate = Reaction::linearRateScale();
+
+            if (r->isType("DiffusionReaction"))
+            {
+                defaultRate /= dynamic_cast<DiffusionReaction*>(r)->pathLength();
+            }
+
+            CHECK_EQUAL(defaultRate, r->rate());
+
             c += r->rate();
-            CHECK_CLOSE(c, solver->accuAllRates().at(i), 0.00001);
+            CHECK_CLOSE(c, solver->accuAllRates().at(i), solver->minRateThreshold());
+
             i++;
 
         });
@@ -2800,7 +2830,7 @@ void testBed::testReactionVectorUpdate()
     //removing both the particles should even out everything to the maximum amount of reactions ever existing at once.
 
     solver->despawnParticle(center->associatedParticle());
-    solver->despawnParticle(p2);
+    solver->despawnParticle(distanceCousin2);
 
     SoluteParticle::updateAffectedParticles();
 

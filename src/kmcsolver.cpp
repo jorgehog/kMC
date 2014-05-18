@@ -1122,16 +1122,6 @@ void KMCSolver::getRateVariables()
 
     reshuffleReactions();
 
-    //    Reaction* r = (*max_element(m_allPossibleReactions.begin(), m_allPossibleReactions.end(), [] (Reaction* r1, Reaction* r2) {return r1->rate() < r2->rate();}));
-
-    //    DiffusionReaction *r2 = (DiffusionReaction*)r;
-    //    cout << r2->info() << endl;
-    //    double E = r2->reactant()->energy();
-    //    cout << E << endl;
-    //    cout << exp(E) << endl;
-
-
-
     KMCDebugger_AssertClose(accuAllRates().at(0), allPossibleReactions().at(0)->rate(), minRateThreshold(), "zeroth accuallrate should be the first rate.");
 
 }

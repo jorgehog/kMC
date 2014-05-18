@@ -146,6 +146,7 @@ void SoluteParticle::disableSite()
         }
     });
 
+
     m_totalParticles(particleState())--;
 
     m_totalEnergy -= m_energy;
@@ -405,36 +406,30 @@ void SoluteParticle::_updateNeighborProps(const int sign,
 
     const uint &level = Site::levelMatrix(i, j, k);
 
-    if (level != Site::nNeighborsLimit())
+
+    m_nNeighbors(level) += sign;
+
+    m_nNeighborsSum += sign;
+
+
+    double dE = sign*potentialBetween(neighbor, i, j, k);
+
+
+    if (level == 0)
     {
+        changeParticleState(detectParticleState());
 
-
-        m_nNeighbors(level) += sign;
-
-        m_nNeighborsSum += sign;
-
-
-
-        double dE = sign*potentialBetween(neighbor, i, j, k);
-
-
-        if (level == 0)
+        //tmp
+        if (ss != NULL)
         {
-            changeParticleState(detectParticleState());
-
-            //tmp
-            if (ss != NULL)
-            {
-                dE += ss->onNeighborChange(this, neighbor, i, j, k, sign);
-            }
-
+            dE += ss->onNeighborChange(this, neighbor, i, j, k, sign);
         }
 
-        m_energy += dE;
-
-        m_totalEnergy += dE;
-
     }
+
+    m_energy += dE;
+
+    m_totalEnergy += dE;
 
 
     forEachActiveReactionDo([&level, &neighbor] (Reaction *reaction)

@@ -9,8 +9,8 @@
 #include <sys/types.h>
 
 
-//#define focusSuite "PeriodicBoundaries"
-//#define focusTest  "Sequential"
+#define focusSuite "Reactions"
+#define focusTest  "ReactionVectorUpdate"
 
 
 #include "defines.h"

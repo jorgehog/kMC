@@ -22,8 +22,6 @@ DiffusionReaction::DiffusionReaction(SoluteParticle *reactant, int dx, int dy, i
     m_path[1] = dy;
     m_path[2] = dz;
 
-    m_pathLength = std::round(std::sqrt(dx*dx + dy*dy + dz*dz));
-
     m_saddleFieldIndices[0] = dx + 1;
     m_saddleFieldIndices[1] = dy + 1;
     m_saddleFieldIndices[2] = dz + 1;
@@ -191,6 +189,8 @@ void DiffusionReaction::setupPotential()
                 i = x + 1;
                 j = y + 1;
                 k = z + 1;
+
+                m_pathLengths(i, j, k) = sqrt(x*x + y*y + z*z);
 
                 m_neighborSetIntersectionPoints(i, j, k) = makeSaddleOverlapMatrix({x, y, z});
             }
@@ -390,6 +390,11 @@ double DiffusionReaction::getSaddleEnergy()
         Esp += SoluteParticle::ss->evaluateSaddleFor(this);
     }
 
+    if (reactant()->nNeighborsSum() == 0)
+    {
+        return Esp;
+    }
+
     Site *targetSite;
     SoluteParticle *neighbor;
 
@@ -516,6 +521,7 @@ void DiffusionReaction::calcRate()
 {
 
     double newRate;
+    const double &E   = reactant()->energy();
 
     KMCDebugger_Assert(updateFlag(), !=, UNSET_UPDATE_FLAG);
 
@@ -523,18 +529,22 @@ void DiffusionReaction::calcRate()
     {
 
         double Esp = getSaddleEnergy();
-        const double &E   = reactant()->energy();
 
-        double pathLength = std::sqrt(m_path[0]*m_path[0] + m_path[1]*m_path[1] + m_path[2]*m_path[2]);
-
-        newRate = linearRateScale()*std::exp(beta()*(E - Esp))/pathLength;
+        newRate = linearRateScale()*std::exp(beta()*(Esp - E))/pathLength();
 
         m_lastUsedEsp = Esp;
     }
 
     else if(updateFlag() == updateKeepSaddle)
     {
-        newRate = rate()*exp(reactant()->energy() - lastUsedEnergy());
+        KMCDebugger_Assert(rate(), !=, UNSET_RATE ,"Saddle can't update when the rate has not been calculated.", getFinalizingDebugMessage());
+        KMCDebugger_Assert(updateFlag(), ==, updateKeepSaddle, "Errorous updateFlag.", getFinalizingDebugMessage());
+        KMCDebugger_Assert(lastUsedEnergy(), !=, UNSET_ENERGY, "energy never calculated before.", getFinalizingDebugMessage());
+
+        newRate = rate()*std::exp(beta()*(lastUsedEnergy() - E));
+
+        KMCDebugger_AssertClose(getSaddleEnergy(), m_lastUsedEsp, 1E-10, "Saddle energy was not conserved as assumed by flag. ", getFinalizingDebugMessage());
+
     }
 
     setRate(newRate);
@@ -622,3 +632,5 @@ DiffusionReaction::m_saddlePotential;
 
 field<imat::fixed<3, 2> >
 DiffusionReaction::m_neighborSetIntersectionPoints;
+
+cube::fixed<3, 3, 3> DiffusionReaction::m_pathLengths;
