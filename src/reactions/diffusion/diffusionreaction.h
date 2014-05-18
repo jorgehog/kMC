@@ -112,6 +112,11 @@ public:
 
     string getFinalizingDebugMessage() const;
 
+    enum
+    {
+        updateKeepSaddle = 1
+    };
+
 private:
 
     static mat m_rPowers;
@@ -131,6 +136,8 @@ private:
     uint m_saddleFieldIndices[3];
 
     int m_path[3];
+
+    uint m_pathLength;
 
     // Reaction interface
 public:

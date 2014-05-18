@@ -239,7 +239,7 @@ public:
     uint nNeighborsSum() const;
 
 
-    double energy() const
+    const double &energy() const
     {
         return m_energy;
     }

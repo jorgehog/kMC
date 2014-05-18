@@ -584,7 +584,7 @@ void KMCSolver::initializeSites()
 
     uint xTrans, yTrans, zTrans, m_NX_full, m_NY_full, m_NZ_full;
 
-    m_boundaryPadding = Site::nNeighborsLimit() + 1;
+    m_boundaryPadding = Site::nNeighborsLimit();
 
     m_NX_full = 2*m_boundaryPadding + m_NX;
     m_NY_full = 2*m_boundaryPadding + m_NY;

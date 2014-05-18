@@ -22,6 +22,8 @@ DiffusionReaction::DiffusionReaction(SoluteParticle *reactant, int dx, int dy, i
     m_path[1] = dy;
     m_path[2] = dz;
 
+    m_pathLength = std::round(std::sqrt(dx*dx + dy*dy + dz*dz));
+
     m_saddleFieldIndices[0] = dx + 1;
     m_saddleFieldIndices[1] = dy + 1;
     m_saddleFieldIndices[2] = dz + 1;
@@ -492,16 +494,16 @@ imat::fixed<3, 2> DiffusionReaction::makeSaddleOverlapMatrix(const ivec & relCoo
         if (relCoor(xyz) == 1)
         {
 
-            overlap(xyz, 0) = -span;
-            overlap(xyz, 1) = span + 1;
+            overlap(xyz, 0) = -span + 1;
+            overlap(xyz, 1) = span;
 
         }
 
         else if (relCoor(xyz) == -1)
         {
 
-            overlap(xyz, 0) = -span - 1;
-            overlap(xyz, 1) = span;
+            overlap(xyz, 0) = -span;
+            overlap(xyz, 1) = span - 1;
         }
 
         else
@@ -520,50 +522,26 @@ imat::fixed<3, 2> DiffusionReaction::makeSaddleOverlapMatrix(const ivec & relCoo
 void DiffusionReaction::calcRate()
 {
 
-    double newRate = 0;
+    double newRate;
 
     KMCDebugger_Assert(updateFlag(), !=, UNSET_UPDATE_FLAG);
 
     if (updateFlag() == defaultUpdateFlag)
     {
-        double activationEnergy;
 
         double Esp = getSaddleEnergy();
-        double E   = reactant()->energy();
-        double Ed = 0;
-
-        Site::forEachNeighborDo_sendIndices(xD(), yD(), zD(), [&Ed, this] (Site *neighbor, uint i, uint j, uint k)
-        {
-            if (neighbor->isActive())
-            {
-                Ed += potential(i, j, k, reactant()->species(), neighbor->associatedParticle()->species());
-            }
-        });
-
-
-        if (Esp > E && Esp > Ed)
-        {
-            activationEnergy = E - Esp;
-        }
-
-        else
-        {
-            activationEnergy = E - Ed;
-        }
-
+        const double &E   = reactant()->energy();
 
         double pathLength = std::sqrt(m_path[0]*m_path[0] + m_path[1]*m_path[1] + m_path[2]*m_path[2]);
 
-        newRate = linearRateScale()*std::exp(-beta()*(activationEnergy))/pathLength;
-
-
+        newRate = linearRateScale()*std::exp(beta()*(E - Esp))/pathLength;
 
         m_lastUsedEsp = Esp;
     }
 
-    else if(updateFlag() == skipUpdateFlag)
+    else if(updateFlag() == updateKeepSaddle)
     {
-        return;
+        newRate = rate()*exp(reactant()->energy() - m_lastUsedEnergy);
     }
 
     setRate(newRate);
