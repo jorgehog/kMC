@@ -543,7 +543,7 @@ void DiffusionReaction::calcRate()
 
         if (Esp > E && Esp > Ed)
         {
-            activationEnergy = Esp - E;
+            activationEnergy = E - Esp;
         }
 
         else
