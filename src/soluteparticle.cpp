@@ -91,8 +91,6 @@ void SoluteParticle::setSite(const uint x, const uint y, const uint z)
         m_totalEnergy += dE;
     }
 
-    informOuterNeighbors();
-
     markAsAffected();
 
     forEachActiveReactionDo([] (Reaction *reaction)
@@ -147,8 +145,6 @@ void SoluteParticle::disableSite()
             neighbor->associatedParticle()->removeNeighbor(this, i, j, k);
         }
     });
-
-    informOuterNeighbors();
 
     m_totalParticles(particleState())--;
 

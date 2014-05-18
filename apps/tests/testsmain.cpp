@@ -87,9 +87,8 @@ TESTWRAPPER(EnergyAndNeighborSetup)     \
 TESTWRAPPER(OptimizedRateVectors)       \
                                         \
 TESTWRAPPER(Sequential)                 \
-
-//\
-//TESTWRAPPER(KnownCase)
+                                        \
+TESTWRAPPER(KnownCase)                  \
 
 
 SUITE(PeriodicBoundaries)

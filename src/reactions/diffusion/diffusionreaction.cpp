@@ -350,7 +350,7 @@ void DiffusionReaction::setDirectUpdateFlags(const SoluteParticle *changedReacta
     else
     {
 
-        if (level < Site::nNeighborsLimit())
+        if (level == 0)
         {
             registerUpdateFlag(defaultUpdateFlag);
         }
@@ -358,25 +358,23 @@ void DiffusionReaction::setDirectUpdateFlags(const SoluteParticle *changedReacta
         else
         {
 
-            uint d_maxDistance = Site::maxDistanceBetween(changedReactant->x(),
-                                                          changedReactant->y(),
-                                                          changedReactant->z(),
-                                                          xD(), yD(), zD());
+            uint d_maxDistance = reactant()->maxDistanceTo(changedReactant);
 
             //if the destination is outsite the interaction cutoff, we can keep the old saddle energy.
-            if (d_maxDistance == Site::nNeighborsLimit())
+            if (d_maxDistance > Site::nNeighborsLimit())
             {
-                KMCDebugger_Assert(level, ==, Site::nNeighborsLimit());
-                registerUpdateFlag(defaultUpdateFlag);
+                KMCDebugger_Assert(Site::nNeighborsLimit() + 1, ==,  d_maxDistance);
+                registerUpdateFlag(updateKeepSaddle);
             }
 
             else
             {
-                registerUpdateFlag(skipUpdateFlag);
+                registerUpdateFlag(defaultUpdateFlag);
             }
         }
 
     }
+
 
 
 }
@@ -417,11 +415,6 @@ double DiffusionReaction::getSaddleEnergy()
                 }
 
                 targetSite = Site::neighborhood(x(), y(), z(), dxn, dyn, dzn);
-
-//                if (abs(dxn) > Site::nNeighborsLimit() || abs(dyn) > Site::nNeighborsLimit() || abs(dzn) > Site::nNeighborsLimit())
-//                {
-//                    continue;
-//                }
 
                 if (targetSite == NULL)
                 {
@@ -541,7 +534,7 @@ void DiffusionReaction::calcRate()
 
     else if(updateFlag() == updateKeepSaddle)
     {
-        newRate = rate()*exp(reactant()->energy() - m_lastUsedEnergy);
+        newRate = rate()*exp(reactant()->energy() - lastUsedEnergy());
     }
 
     setRate(newRate);
