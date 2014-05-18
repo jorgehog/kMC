@@ -2790,7 +2790,6 @@ void testBed::testReactionVectorUpdate()
     CHECK_EQUAL(100, solver->allPossibleReactions().size());
     CHECK_EQUAL(100, solver->accuAllRates().size());
 
-    solver->dumpLAMMPS(2);
     CHECK_CLOSE(2*totalRateFreeParticle, solver->kTot(), solver->minRateThreshold());
 
     CHECK_CLOSE(solver->kTot(), solver->accuAllRates().back(), solver->minRateThreshold());

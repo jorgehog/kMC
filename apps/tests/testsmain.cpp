@@ -9,8 +9,8 @@
 #include <sys/types.h>
 
 
-#define focusSuite "Reactions"
-#define focusTest  "ReactionVectorUpdate"
+#define focusSuite "PeriodicBoundaries"
+#define focusTest  "KnownCase"
 
 
 #include "defines.h"
@@ -124,7 +124,7 @@ int main()
     MainLattice::enableOutput(false);
     MainLattice::enableEventFile(false);
     MainLattice::enableProgressReport(false);
-    KMCSolver::enableDumpXYZ(false);
+    KMCSolver::enableDumpLAMMPS(false);
 
     testBed::makeSolver();
 

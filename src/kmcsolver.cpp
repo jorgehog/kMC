@@ -182,6 +182,8 @@ void KMCSolver::setupMainLattice()
 
     if (m_dumpLAMMPS)
     {
+        m_lammpswriter->setSystemSize(m_NX, m_NY, m_NZ);
+
         m_dumpFileEvent = new DumpLAMMPS();
         m_mainLattice->addEvent(m_dumpFileEvent);
     }
