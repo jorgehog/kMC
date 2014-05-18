@@ -336,13 +336,14 @@ void SoluteParticle::updateReactions()
         {
             reaction->calcRate();
             reaction->setLastUsedEnergy();
-            reaction->resetUpdateFlag();
         }
 
         else
         {
             reaction->disable();
         }
+
+        reaction->resetUpdateFlag();
     }
 }
 

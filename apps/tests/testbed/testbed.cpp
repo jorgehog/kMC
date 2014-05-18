@@ -2790,41 +2790,33 @@ void testBed::testReactionVectorUpdate()
     CHECK_EQUAL(100, solver->allPossibleReactions().size());
     CHECK_EQUAL(100, solver->accuAllRates().size());
 
-    solver->dumpLAMMPS(0);
+    solver->dumpLAMMPS(2);
     CHECK_CLOSE(2*totalRateFreeParticle, solver->kTot(), solver->minRateThreshold());
+
+    CHECK_CLOSE(solver->kTot(), solver->accuAllRates().back(), solver->minRateThreshold());
+
+    vector<Reaction*> allReactions;
+    for (SoluteParticle *particle : solver->particles())
+    {
+        particle->forEachActiveReactionDo([&] (Reaction *r)
+        {
+            allReactions.push_back(r);
+        });
+    }
+
+    std::sort(allReactions.begin(), allReactions.end(), [] (Reaction *r1, Reaction *r2)
+    {
+        return r1->address() < r2->address();
+    });
 
     c = 0;
     i = 0;
-    for (SoluteParticle *particle : solver->particles())
+    for (Reaction *r : allReactions)
     {
+        CHECK_EQUAL(false, solver->isEmptyAddress(r->address()));
 
-        CHECK_EQUAL(0, particle->energy());
-
-        particle->forEachActiveReactionDo([&] (Reaction *r)
-        {
-            if (solver->isEmptyAddress(i))
-            {
-                i++;
-                return;
-            }
-
-            CHECK_EQUAL(0, dynamic_cast<DiffusionReaction*>(r)->getSaddleEnergy());
-
-            double defaultRate = Reaction::linearRateScale();
-
-            if (r->isType("DiffusionReaction"))
-            {
-                defaultRate /= dynamic_cast<DiffusionReaction*>(r)->pathLength();
-            }
-
-            CHECK_EQUAL(defaultRate, r->rate());
-
-            c += r->rate();
-            CHECK_CLOSE(c, solver->accuAllRates().at(i), solver->minRateThreshold());
-
-            i++;
-
-        });
+        c += r->rate();
+        CHECK_CLOSE(c, solver->accuAllRates().at(r->address()), solver->minRateThreshold());
     }
 
     //removing both the particles should even out everything to the maximum amount of reactions ever existing at once.

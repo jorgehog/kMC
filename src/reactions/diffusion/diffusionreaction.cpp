@@ -341,7 +341,6 @@ void DiffusionReaction::setDirectUpdateFlags(const SoluteParticle *changedReacta
 
     KMCDebugger_Assert(changedReactant, !=, reactant());
 
-
     if (rate() == UNSET_RATE)
     {
         registerUpdateFlag(defaultUpdateFlag);
