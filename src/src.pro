@@ -28,7 +28,7 @@ HEADERS = RNG/kMCRNG.h \
     boundary/periodicshifted/periodicshifted.h \
     potential/potential.h \
     potential/stressedsurface/stressedsurface.h \
-    potential/electrostatic/electrostatic.h \
+    potential/inertwall/inertwall.h \
     system.h
 
 SOURCES += \
@@ -47,7 +47,7 @@ SOURCES += \
     ignisinterface/kmcevent.cpp \
     boundary/periodicshifted/periodicshifted.cpp \
     potential/stressedsurface/stressedsurface.cpp \
-    potential/electrostatic/electrostatic.cpp \
+    potential/inertwall/inertwall.cpp \
     system.cpp
 
 

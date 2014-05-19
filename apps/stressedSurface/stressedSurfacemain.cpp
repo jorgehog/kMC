@@ -121,11 +121,8 @@ void initializeStressedSurface(KMCSolver *solver, const Setting &root)
     //initial crystal rim
     solver->initializeLayers(height, nEdgeLayers);
 
-    //strong interaction layer top (source of stress)
-    solver->initializeLayers(nEdgeLayers, NZ - nEdgeLayers, 1, true);
-
     //quick hack, will cleanup when I get time.
-    SoluteParticle::ss = new StressedSurface(Site::boundaries(2, 1), Es, r0, nEdgeLayers);
+    SoluteParticle::ss = new InertWall(Site::boundaries(2, 1), -Es, r0, 1.0, 1.0, 0.0);
 
 //    solver->addEvent(new SpawnParticle(nFreeWalkers));
 

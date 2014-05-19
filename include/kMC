@@ -26,4 +26,4 @@
 
 #include "../src/potential/potential.h"
 #include "../src/potential/stressedsurface/stressedsurface.h"
-#include "../src/potential/electrostatic/electrostatic.h"
+#include "../src/potential/inertwall/inertwall.h"
