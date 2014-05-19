@@ -781,7 +781,7 @@ void testBed::testStressedSurface()
 
                 if (value != 0)
                 {
-                    r_i = std::round(std::log(Es/value)*r0);
+                    r_i = std::round(std::log(-Es/value)*r0);
 
                     if (orientation == 0)
                     {

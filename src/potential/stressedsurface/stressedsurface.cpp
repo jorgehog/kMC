@@ -174,7 +174,7 @@ double StressedSurface::strain(const double r) const
         return 0;
     }
 
-    return m_Es*std::exp(-r/m_r0);
+    return -m_Es*std::exp(-r/m_r0);
 }
 
 bool StressedSurface::hasCorrectOrientation(const uint x, const uint y, const uint z, const Site *phantomSite) const
