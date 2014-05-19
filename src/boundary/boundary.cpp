@@ -74,7 +74,7 @@ void Boundary::getBoundarySite(uint n, uint &x, uint&y, uint &z) const
 
 int Boundary::distanceFrom(const uint xi, bool abs) const
 {
-    int dxi = getDistanceBetween(xi, bound());
+    int dxi = getDistanceBetween(xi, bigbound());
 
     if (abs)
     {

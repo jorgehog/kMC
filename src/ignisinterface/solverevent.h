@@ -4,6 +4,9 @@
 
 #include "../kmcsolver.h"
 
+#include "../soluteparticle.h"
+#include "../potential/potential.h"
+
 using ignis::Event;
 
 namespace kMC
@@ -24,6 +27,11 @@ public:
 
         KMCDebugger_AssertBool(Site::boundariesIsInitialized(), "Boundaries are not initialized.");
         KMCDebugger_Assert(Site::_refCount(), !=, 0, "Sites need to be initialized.");
+
+        if (SoluteParticle::ss != NULL)
+        {
+            SoluteParticle::ss->initialize();
+        }
 
         solver()->getRateVariables();
 

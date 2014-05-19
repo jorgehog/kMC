@@ -79,18 +79,20 @@ public:
 
     bool spawnParticle(SoluteParticle *particle, const uint x, const uint y, const uint z, bool checkIfLegal);
 
-    SoluteParticle *forceSpawnParticle(const uint x, const uint y, const uint z, const uint particleType = 0);
+    SoluteParticle *forceSpawnParticle(const uint x, const uint y, const uint z, const uint species = 0, const bool sticky = false);
 
     void despawnParticle(SoluteParticle *particle);
 
 
-    void initializeCrystal(const double relativeSeedSize);
+    void initializeCrystal(const double relativeSeedSize, const uint species = 0, const bool sticky = false);
 
-    void initializeSolutionBath();
+    void initializeSolutionBath(const uint species = 0, const bool sticky = false);
 
-    void initializeLayers(const uint height, const uint start = 0, const uint particleType = 0);
+    void initializeLayers(const uint height, const uint start = 0, const uint species = 0, const bool sticky = false);
 
     void initializeFromXYZ(string path, uint frame);
+
+    void insertRandomParticle(const uint species = 0, const bool sticky = false);
 
 
     void initializeParticles();

@@ -227,6 +227,7 @@ void DiffusionReaction::setupPotential()
                     }
                 }
             }
+
         }
     }
 
@@ -519,7 +520,7 @@ imat::fixed<3, 2> DiffusionReaction::makeSaddleOverlapMatrix(const ivec & relCoo
 void DiffusionReaction::calcRate()
 {
 
-    double newRate;
+    double newRate = 0;
     const double &E   = reactant()->energy();
 
     KMCDebugger_Assert(updateFlag(), !=, UNSET_UPDATE_FLAG);

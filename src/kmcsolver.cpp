@@ -847,11 +847,11 @@ bool KMCSolver::spawnParticle(SoluteParticle *particle, const uint x, const uint
 
 }
 
-SoluteParticle *KMCSolver::forceSpawnParticle(const uint x, const uint y, const uint z, const uint particleType)
+SoluteParticle *KMCSolver::forceSpawnParticle(const uint x, const uint y, const uint z, const uint species, const bool sticky)
 {
     KMCDebugger_AssertBool(!getSite(x, y, z)->isActive());
 
-    SoluteParticle *particle = new SoluteParticle(particleType);
+    SoluteParticle *particle = new SoluteParticle(species, sticky);
 
     if (!spawnParticle(particle, x, y, z, false))
     {
@@ -881,7 +881,7 @@ void KMCSolver::despawnParticle(SoluteParticle *particle)
 }
 
 
-void KMCSolver::initializeCrystal(const double relativeSeedSize)
+void KMCSolver::initializeCrystal(const double relativeSeedSize, const uint species, const bool sticky)
 {
 
     if (relativeSeedSize >= 1.0)
@@ -922,7 +922,7 @@ void KMCSolver::initializeCrystal(const double relativeSeedSize)
                     {
                         if (k >= crystalStartZ && k < crystalEndZ)
                         {
-                            forceSpawnParticle(i, j, k);
+                            forceSpawnParticle(i, j, k, species, sticky);
                         }
                     }
                 }
@@ -931,24 +931,16 @@ void KMCSolver::initializeCrystal(const double relativeSeedSize)
         }
     }
 
-    initializeSolutionBath();
-
     KMCDebugger_ResetEnabled();
 
 }
 
-void KMCSolver::initializeSolutionBath()
+void KMCSolver::initializeSolutionBath(const uint species, const bool sticky)
 {
-
-    uint x, y, z;
-    bool spawned;
-
-
     const double margin = 1.75;
     uint effectiveVolume = 8; //eV = (difflength + 1)^3
 
     effectiveVolume *= margin;
-
 
     uint NFree = NX()*NY()*NZ() - SoluteParticle::nParticles();
 
@@ -964,29 +956,13 @@ void KMCSolver::initializeSolutionBath()
 
     while (n != N)
     {
-
-        SoluteParticle *particle = new SoluteParticle();
-
-        spawned = false;
-
-        while (!spawned)
-        {
-            x = KMC_RNG_UNIFORM()*NX();
-
-            y = KMC_RNG_UNIFORM()*NY();
-
-            z = KMC_RNG_UNIFORM()*NZ();
-
-            spawned = spawnParticle(particle, x, y, z, true);
-
-        }
-
+        insertRandomParticle(species, sticky);
         n++;
     }
 
 }
 
-void KMCSolver::initializeLayers(const uint height, const uint start, const uint particleType)
+void KMCSolver::initializeLayers(const uint height, const uint start, const uint species, const bool sticky)
 {
     for (uint x = 0; x < m_NX; ++x)
     {
@@ -994,7 +970,7 @@ void KMCSolver::initializeLayers(const uint height, const uint start, const uint
         {
             for (uint h = 0; h < height; ++h)
             {
-                forceSpawnParticle(x, y, start + h, particleType);
+                forceSpawnParticle(x, y, start + h, species, sticky);
             }
         }
     }
@@ -1102,6 +1078,43 @@ void KMCSolver::initializeFromXYZ(string path, uint frame)
         m_dumpFileEvent->setOffset(frame + 1);
     }
 
+}
+
+void KMCSolver::insertRandomParticle(const uint species, const bool sticky)
+{
+    uint x, y, z;
+    bool spawned;
+
+    const double margin = 1.75;
+    uint effectiveVolume = 8; //eV = (difflength + 1)^3
+
+    effectiveVolume *= margin;
+
+    uint NFree = NX()*NY()*NZ() - SoluteParticle::nParticles();
+
+    uint N = NFree*targetConcentration();
+
+    if (N > NFree/effectiveVolume)
+    {
+        cerr << "Not enough space to place " << N << "particles sufficiently apart from eachother with concentration " << m_targetConcentration << " Maximum concentration: " << 1./effectiveVolume << endl;
+        exit();
+    }
+
+    SoluteParticle *particle = new SoluteParticle(species, sticky);
+
+    spawned = false;
+
+    while (!spawned)
+    {
+        x = KMC_RNG_UNIFORM()*NX();
+
+        y = KMC_RNG_UNIFORM()*NY();
+
+        z = KMC_RNG_UNIFORM()*NZ();
+
+        spawned = spawnParticle(particle, x, y, z, true);
+
+    }
 }
 
 

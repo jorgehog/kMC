@@ -166,7 +166,6 @@ bool StressedSurface::isQualifiedSaddle(const DiffusionReaction *currentReaction
 {
     const uint & r = currentReaction->reactant()->r(m_interface->dimension());
 
-    cout << r << endl;
     if (m_interface->distanceFrom(r, true) <= (int)m_nEdgeLayers)
     {
         return false;

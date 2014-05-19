@@ -37,7 +37,7 @@ public:
     //tmp till cleanup
     static Potential *ss;
 
-    SoluteParticle(const uint species = 0);
+    SoluteParticle(const uint species = 0, bool sticky = false);
 
     ~SoluteParticle();
 
@@ -218,6 +218,13 @@ public:
     }
 
 
+
+    const bool & isSticky() const
+    {
+        return m_sticky;
+    }
+
+    void setSticky(const bool sticky);
 
     uint ID() const
     {
@@ -531,6 +538,8 @@ private:
 
 
     const uint m_species;
+
+    bool m_sticky;
 
 
     void initializeDiffusionReactions();

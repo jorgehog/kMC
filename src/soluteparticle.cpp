@@ -13,7 +13,7 @@
 using namespace kMC;
 
 
-SoluteParticle::SoluteParticle(const uint species) :
+SoluteParticle::SoluteParticle(const uint species, bool sticky) :
     m_particleState(ParticleStates::solvant),
     m_site(NULL),
     m_x(UNSET_UINT),
@@ -22,12 +22,16 @@ SoluteParticle::SoluteParticle(const uint species) :
     m_nNeighborsSum(0),
     m_energy(0),
     m_species(species),
+    m_sticky(sticky),
     m_ID(ID_count++)
 {
 
     KMCDebugger_Assert(species, <, m_nSpecies, "invalid species.");
 
-    initializeDiffusionReactions();
+    if (!m_sticky)
+    {
+        initializeDiffusionReactions();
+    }
 
     setVectorSizes();
 
@@ -588,6 +592,28 @@ void SoluteParticle::setZeroTotalEnergy()
     m_totalEnergy = 0;
 
     KMCDebugger_Assert(Site::solver()->particles().size(), ==, 0);
+}
+
+void SoluteParticle::setSticky(const bool sticky)
+{
+    if (m_sticky && !sticky)
+    {
+        initializeDiffusionReactions();
+    }
+    else if (sticky && !m_sticky)
+    {
+        clearAllReactions();
+    }
+    else
+    {
+        return;
+    }
+
+    updateReactions();
+
+    solver()->reshuffleReactions();
+
+    m_sticky = sticky;
 }
 
 uint SoluteParticle::nNeighborsSum() const

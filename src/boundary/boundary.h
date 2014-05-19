@@ -137,7 +137,7 @@ public:
 
     uint bigbound() const
     {
-        return orientation() == 0 ? 0 : span() - 2;
+        return orientation() == 0 ? 0 : span();
     }
 
     uint boundarySize() const
