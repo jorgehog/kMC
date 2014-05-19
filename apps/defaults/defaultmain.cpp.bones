@@ -60,13 +60,13 @@ protected:
 void initialize__cname__(KMCSolver *solver, const Setting &root)
 {
 
-    const Setting & initCFG = getSetting(root, "Initialization");
+    const Setting &initCFG = getSetting(root, "Initialization");
 
-    const uint & NX = solver->NX();
-    const uint & NY = solver->NY();
-    const uint & NZ = solver->NZ();
+    const uint &NX = solver->NX();
+    const uint &NY = solver->NY();
+    const uint &NZ = solver->NZ();
 
-    const uint & someValue = getSetting<uint>(initCFG, "someValue");
+    const uint &someValue = getSetting<uint>(initCFG, "someValue");
 
     (void)NX;
     (void)NY;

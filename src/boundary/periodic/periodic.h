@@ -20,7 +20,7 @@ public:
 
     virtual uint transformCoordinate(const int xi) const;
 
-    virtual int getDistanceBetween(int x1, int x2);
+    virtual int getDistanceBetween(int x1, int x2) const;
 
     void initialize();
 

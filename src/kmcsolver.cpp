@@ -1124,6 +1124,7 @@ void KMCSolver::getRateVariables()
 
     reshuffleReactions();
 
+    KMCDebugger_AssertBool(!allPossibleReactions().empty(), "No available reactions.");
     KMCDebugger_AssertClose(accuAllRates().at(0), allPossibleReactions().at(0)->rate(), minRateThreshold(), "zeroth accuallrate should be the first rate.");
 
 }

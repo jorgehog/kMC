@@ -8,7 +8,8 @@ SUBDIRS += tests \
            ignisKMC \
            layerGrowth \
            movingSteppes \
-           impureSurface
+           impureSurface \
+           stressedSurface
 
 
 OTHER_FILES += defaults/default.pro.bones \

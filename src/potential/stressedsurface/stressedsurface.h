@@ -30,7 +30,7 @@ class StressedSurface : public Potential
 {
 public:
 
-    StressedSurface(const Edge *interface, const double Es, const double r0, const uint nEdgeLayers);
+    StressedSurface(const Boundary *interface, const double Es, const double r0, const uint nEdgeLayers);
 
     ~StressedSurface();
 
@@ -68,7 +68,7 @@ private:
     const double m_r0;
 
 
-    const Edge *m_interface;
+    const Boundary *m_interface;
 
     const uint m_nEdgeLayers;
 

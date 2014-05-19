@@ -20,7 +20,7 @@ uint Periodic::transformCoordinate(const int xi) const
     return (xi + span())%span();
 }
 
-int Periodic::getDistanceBetween(int x1, int x2)
+int Periodic::getDistanceBetween(int x1, int x2) const
 {
     return delta(transformCoordinate(Boundary::getDistanceBetween(x1, x2)));
 }

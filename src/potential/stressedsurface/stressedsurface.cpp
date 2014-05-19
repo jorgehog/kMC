@@ -9,7 +9,7 @@
 
 using namespace kMC;
 
-StressedSurface::StressedSurface(const Edge *interface,
+StressedSurface::StressedSurface(const Boundary *interface,
                                  const double Es,
                                  const double r0,
                                  const uint nEdgeLayers) :
@@ -19,6 +19,11 @@ StressedSurface::StressedSurface(const Edge *interface,
     m_interface(interface),
     m_nEdgeLayers(nEdgeLayers)
 {
+    if (!m_interface->type() == Boundary::Edge)
+    {
+        throw std::runtime_error("Invalid interface boundary type.");
+    }
+
     if (m_nEdgeLayers == 0 || m_nEdgeLayers >= m_interface->span())
     {
         throw std::runtime_error("invalid number of interface layers.");
@@ -159,6 +164,15 @@ bool StressedSurface::isQualified(const SoluteParticle *particle) const
 
 bool StressedSurface::isQualifiedSaddle(const DiffusionReaction *currentReaction) const
 {
+    const uint & r = currentReaction->reactant()->r(m_interface->dimension());
+
+    cout << r << endl;
+    if (m_interface->distanceFrom(r, true) <= (int)m_nEdgeLayers)
+    {
+        return false;
+    }
+
+
     //Passing reaction site as phantom site to the calculations. This results in it being treated as invisible.
     return isQualified(currentReaction->reactant()) || hasCorrectOrientation(currentReaction->xD(),
                                                                              currentReaction->yD(),

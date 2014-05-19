@@ -23,7 +23,7 @@ public:
 
     virtual uint transformCoordinate(const int xi) const;
 
-    virtual int getDistanceBetween(int x1, int x2)
+    virtual int getDistanceBetween(int x1, int x2) const
     {
         return x1 - x2;
     }
@@ -36,7 +36,7 @@ public:
 
     void getBoundarySite(uint n, uint &x, uint &y, uint &z) const;
 
-    int distanceFrom(const uint xi, bool abs = false);
+    int distanceFrom(const uint xi, bool abs = false) const;
 
     const uint &type() const
     {
