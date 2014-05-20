@@ -1111,6 +1111,11 @@ void KMCSolver::initializeFromLAMMPS(string path, uint frame)
                m_lammpswriter->systemSizeY(),
                m_lammpswriter->systemSizeZ());
 
+    if (m_dumpXYZ || m_dumpLAMMPS)
+    {
+        m_dumpFileEvent->setOffset(frame + 1);
+    }
+
 }
 
 void KMCSolver::insertRandomParticle(const uint species, const bool sticky)
