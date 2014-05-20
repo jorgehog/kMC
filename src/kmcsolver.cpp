@@ -543,7 +543,7 @@ void KMCSolver::dumpXYZ(const uint n)
 
 void KMCSolver::dumpLAMMPS(const uint n)
 {
-
+    cout << n << endl;
     m_lammpswriter->initializeNewFile(n, SoluteParticle::nParticles());
 
     for (SoluteParticle *particle : m_particles)
@@ -1087,18 +1087,25 @@ void KMCSolver::initializeFromLAMMPS(string path, uint frame)
     m_lammpswriter->setPath(path);
     m_lammpswriter->loadFile(frame);
 
-    uint type, species, nNeighbors, x, y, z;
+    clearSites();
+    setBoxSize(m_lammpswriter->systemSizeX(),
+               m_lammpswriter->systemSizeY(),
+               m_lammpswriter->systemSizeZ());
+    initializeSites();
+
+
     double ePot;
+    uint type, species, nNeighbors, x, y, z;
 
     for (uint i = 0; i < m_lammpswriter->nParticles(); ++i)
     {
         (*m_lammpswriter) >> type
-                          >> x
-                          >> y
-                          >> z
-                          >> nNeighbors
-                          >> ePot
-                          >> species;
+                >> x
+                >> y
+                >> z
+                >> nNeighbors
+                >> ePot
+                >> species;
 
         forceSpawnParticle(x, y, z, species);
     }
@@ -1106,10 +1113,6 @@ void KMCSolver::initializeFromLAMMPS(string path, uint frame)
     m_lammpswriter->finalize();
 
     m_lammpswriter->setPath(prevPath);
-
-    setBoxSize(m_lammpswriter->systemSizeX(),
-               m_lammpswriter->systemSizeY(),
-               m_lammpswriter->systemSizeZ());
 
     if (m_dumpXYZ || m_dumpLAMMPS)
     {
