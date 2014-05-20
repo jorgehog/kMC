@@ -37,7 +37,7 @@ public:
 
     void initialize();
 
-    double valueAt(const double x, const double y, const double z);
+    double valueAt(const double r, const double a, const double b);
 
     double evaluateFor(SoluteParticle *particle);
 
@@ -74,9 +74,7 @@ private:
 
     const Boundary *m_interface;
 
-    const uint m_distanceFromEdge;
-
-    vector<double> m_potential;
+    const double m_distanceFromEdge;
 
     double evaluateGivenQualified(SoluteParticle *particle);
 

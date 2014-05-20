@@ -37,39 +37,27 @@ InertWall::InertWall(const Boundary *interface,
 InertWall::~InertWall()
 {
     m_trackedParticles.clear();
-    m_potential.clear();
 }
 
 
 void InertWall::initialize()
 {
-    m_potential.clear();
-
-    m_potential.resize(2*m_interface->span() + 1);
-
-
-    //first nEdgeLayer values are zero since there is no water between these sites.
-    uint i = 0;
-    for (double r = 0; r <= m_interface->span(); r += 0.5, ++i)
-    {
-        m_potential.at(i) = strain(r + m_distanceFromEdge);
-    }
-
-    KMCDebugger_Assert(i, ==, m_potential.size());
-
-    if (m_interface->orientation() == 1)
-    {
-        reverse(m_potential.begin(), m_potential.end());
-    }
 
 }
 
 
-double InertWall::valueAt(const double x, const double y, const double z)
+double InertWall::valueAt(const double r, const double a, const double b)
 {
-    const double r = selectXYZ(x, y, z) + m_distanceFromEdge;
+    double rScaled = r;
 
-    return strain(r) + electroStatic(r);
+    if (m_interface->orientation() == 1)
+    {
+        rScaled = m_interface->span() - r - 1;
+    }
+
+    rScaled += m_distanceFromEdge;
+
+    return strain(rScaled) + electroStatic(rScaled);
 }
 
 double InertWall::evaluateFor(SoluteParticle *particle)
@@ -103,7 +91,7 @@ double InertWall::evaluateSaddleFor(const DiffusionReaction *currentReaction)
     KMCDebugger_Assert((int)r + dr, >=, 0,"out of bounds.");
     KMCDebugger_Assert((int)r + dr, <= , (int)m_interface->span(), "out of bounds.");
 
-    return m_potential.at(2*r + dr);
+    return valueAt(r + dr/2, 0, 0);
 }
 
 double InertWall::onNeighborChange(SoluteParticle *particle,
@@ -150,7 +138,7 @@ double InertWall::onNeighborChange(SoluteParticle *particle,
 
 double InertWall::evaluateGivenQualified(SoluteParticle *particle)
 {
-    return m_potential.at(2*particle->r(m_interface->dimension()));
+    return valueAt(particle->r(m_interface->dimension()), 0, 0);
 }
 
 bool InertWall::isTracked(SoluteParticle *particle) const
@@ -187,17 +175,14 @@ bool InertWall::isQualifiedSaddle(const DiffusionReaction *currentReaction) cons
 
 double InertWall::strain(const double r) const
 {
-    //We demand at least one cell separation to induce a pressure
-    if (r < 1)
-    {
-        return 0;
-    }
+    KMCDebugger_Assert(r, >, 0);
 
-    return m_Es*std::exp(-r/m_r0);
+    return m_Es*std::exp(-r/m_r0)/r;
 }
 
 double InertWall::electroStatic(const double r) const
 {
+    KMCDebugger_Assert(r, >, 0);
     return m_E_aw/std::pow(r, m_alpha_aw);
 }
 

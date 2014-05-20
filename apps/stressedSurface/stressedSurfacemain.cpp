@@ -109,7 +109,7 @@ void initializeStressedSurface(KMCSolver *solver, const Setting &root)
     const uint &nEdgeLayers = getSetting<uint>(initCFG, "nEdgeLayers");
 
     const double &initialHeightRatio = getSetting<double>(initCFG, "initialHeightRatio");
-    const uint height = (NZ - 2*nEdgeLayers)*initialHeightRatio;
+    const uint height = (NZ - nEdgeLayers)*initialHeightRatio;
 
 
     const double &Es = getSetting<double>(initCFG, "Es");
@@ -122,7 +122,7 @@ void initializeStressedSurface(KMCSolver *solver, const Setting &root)
     solver->initializeLayers(height, nEdgeLayers);
 
     //quick hack, will cleanup when I get time.
-    SoluteParticle::ss = new InertWall(Site::boundaries(2, 1), -Es, r0, 1.0, 1.0, 0.0);
+    SoluteParticle::ss = new InertWall(Site::boundaries(2, 1), Es, r0, DiffusionReaction::rPower(1, 1), DiffusionReaction::strength(1, 1), 0.1);
 
 //    solver->addEvent(new SpawnParticle(nFreeWalkers));
 

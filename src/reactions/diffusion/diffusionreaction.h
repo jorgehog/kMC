@@ -79,6 +79,16 @@ public:
         return m_neighborSetIntersectionPoints(i, j, k);
     }
 
+    static const double &rPower(const uint i, const uint j)
+    {
+        return m_rPowers(i, j);
+    }
+
+    static const double &strength(const uint i, const uint j)
+    {
+        return m_strengths(i, j);
+    }
+
 
     Site *destinationSite() const;
 
