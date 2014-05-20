@@ -92,6 +92,8 @@ public:
 
     void initializeFromXYZ(string path, uint frame);
 
+    void initializeFromLAMMPS(string path, uint frame);
+
     void insertRandomParticle(const uint species = 0, const bool sticky = false);
 
 

@@ -1080,6 +1080,39 @@ void KMCSolver::initializeFromXYZ(string path, uint frame)
 
 }
 
+void KMCSolver::initializeFromLAMMPS(string path, uint frame)
+{
+    const string &prevPath = m_lammpswriter->path();
+
+    m_lammpswriter->setPath(path);
+    m_lammpswriter->loadFile(frame);
+
+    uint type, species, nNeighbors, x, y, z;
+    double ePot;
+
+    for (uint i = 0; i < m_lammpswriter->nParticles(); ++i)
+    {
+        (*m_lammpswriter) >> type
+                          >> x
+                          >> y
+                          >> z
+                          >> nNeighbors
+                          >> ePot
+                          >> species;
+
+        forceSpawnParticle(x, y, z, species);
+    }
+
+    m_lammpswriter->finalize();
+
+    m_lammpswriter->setPath(prevPath);
+
+    setBoxSize(m_lammpswriter->systemSizeX(),
+               m_lammpswriter->systemSizeY(),
+               m_lammpswriter->systemSizeZ());
+
+}
+
 void KMCSolver::insertRandomParticle(const uint species, const bool sticky)
 {
     uint x, y, z;
