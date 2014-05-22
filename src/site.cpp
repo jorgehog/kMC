@@ -81,8 +81,16 @@ void Site::initializeBoundaries()
 void Site::updateBoundaries()
 {
 
-    for (uint i = 0; i < 3; ++i) {
-        for (uint j = 0; j < 2; ++j) {
+    vector<uint> dims = {0, 1, 2};
+    vector<uint> orie = {0, 1};
+
+    std::random_shuffle(dims.begin(), dims.end(), [] (const double n) {return KMC_RNG_UNIFORM()*n;});
+
+    for (const uint & i : dims) {
+
+        std::random_shuffle(orie.begin(), orie.end(), [] (const double n) {return KMC_RNG_UNIFORM()*n;});
+
+        for (const uint & j : orie) {
             m_boundaries(i, j)->update();
         }
     }

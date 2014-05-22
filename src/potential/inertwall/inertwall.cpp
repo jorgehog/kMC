@@ -48,39 +48,30 @@ void InertWall::initialize()
 
 double InertWall::valueAt(const double r, const double a, const double b)
 {
-    double rScaled = r;
+    (void) a;
+    (void) b;
 
-    if (m_interface->orientation() == 1)
-    {
-        rScaled = m_interface->span() - r - 1;
-    }
-
-    rScaled += m_distanceFromEdge;
-
-    return strain(rScaled) + electroStatic(rScaled);
+    return stressEnergy(r) + electroStatic(r);
 }
 
 double InertWall::evaluateFor(SoluteParticle *particle)
 {
 
+    double rScaled = getDistance(particle->r(m_interface->dimension()));
+
     if (!isQualified(particle))
     {
-        return 0;
+        return electroStatic(rScaled);
     }
 
     //qualified. If already affected the set will not increase.
     m_trackedParticles.insert(particle->ID());
 
-    return evaluateGivenQualified(particle);
+    return valueAt(rScaled);
 }
 
 double InertWall::evaluateSaddleFor(const DiffusionReaction *currentReaction)
 {
-
-    if (!isQualifiedSaddle(currentReaction))
-    {
-        return 0;
-    }
 
     const uint & r = currentReaction->reactant()->r(m_interface->dimension());
 
@@ -88,10 +79,18 @@ double InertWall::evaluateSaddleFor(const DiffusionReaction *currentReaction)
                        currentReaction->path(1),
                        currentReaction->path(2));
 
+    double rScaled = getDistance(r + double(dr)/2.0);
+
+    if (!isQualifiedSaddle(currentReaction))
+    {
+        return electroStatic(rScaled);
+    }
+
     KMCDebugger_Assert((int)r + dr, >=, 0,"out of bounds.");
     KMCDebugger_Assert((int)r + dr, <= , (int)m_interface->span(), "out of bounds.");
 
-    return valueAt(r + dr/2, 0, 0);
+
+    return valueAt(rScaled, 0, 0);
 }
 
 double InertWall::onNeighborChange(SoluteParticle *particle,
@@ -118,7 +117,7 @@ double InertWall::onNeighborChange(SoluteParticle *particle,
             m_trackedParticles.erase(particle->ID());
             KMCDebugger_AssertBool(!isTracked(particle));
 
-            return -evaluateGivenQualified(particle);
+            return -stressEnergy(getDistance(particle->r(m_interface->dimension())));
         }
 
         return 0;
@@ -132,13 +131,23 @@ double InertWall::onNeighborChange(SoluteParticle *particle,
     //qualified. If already affected the set will not increase.
     m_trackedParticles.insert(particle->ID());
 
-    return evaluateGivenQualified(particle);
+    return stressEnergy(getDistance(particle->r(m_interface->dimension())));
 
 }
 
-double InertWall::evaluateGivenQualified(SoluteParticle *particle)
+double InertWall::getDistance(double r)
 {
-    return valueAt(particle->r(m_interface->dimension()), 0, 0);
+    double rScaled = r;
+
+    if (m_interface->orientation() == 1)
+    {
+        rScaled = m_interface->span() - r - 1;
+    }
+
+    rScaled += m_distanceFromEdge;
+
+    return rScaled;
+
 }
 
 bool InertWall::isTracked(SoluteParticle *particle) const
@@ -173,7 +182,7 @@ bool InertWall::isQualifiedSaddle(const DiffusionReaction *currentReaction) cons
                                                                              currentReaction->reactant()->site());
 }
 
-double InertWall::strain(const double r) const
+double InertWall::stressEnergy(const double r) const
 {
     KMCDebugger_Assert(r, >, 0);
 
