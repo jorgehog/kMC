@@ -68,9 +68,11 @@ protected:
 
         uint N = std::round(solver()->targetConcentration()*SoluteParticle::getCurrentSolvantVolume()) + 0.00001;
         uint c = 0;
+        int sign = 0;
 
         if (SoluteParticle::nSolutionParticles() > N)
         {
+            sign = -1;
             while (SoluteParticle::nSolutionParticles() > N && c < m_maxAbsFlux)
             {
 
@@ -90,6 +92,7 @@ protected:
         }
         else if (SoluteParticle::nSolutionParticles() < N)
         {
+            sign = 1;
             while (SoluteParticle::nSolutionParticles() < N && c < m_maxAbsFlux)
             {
                 solver()->insertRandomParticle();
@@ -99,7 +102,7 @@ protected:
             solver()->getRateVariables();
         }
 
-        setValue(double(c)/m_maxAbsFlux);
+        setValue(sign*double(c)/m_maxAbsFlux);
     }
 
 private:

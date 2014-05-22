@@ -37,7 +37,7 @@ public:
 
     void initialize();
 
-    double valueAt(const double r, const double a, const double b);
+    double valueAt(const double r, const double a = 0, const double b = 0);
 
     double evaluateFor(SoluteParticle *particle);
 
@@ -49,6 +49,8 @@ public:
                             const uint dy,
                             const uint dz,
                             int sign);
+
+    double getDistance(double r);
 
     bool isTracked(SoluteParticle *particle) const;
 
@@ -76,10 +78,8 @@ private:
 
     const double m_distanceFromEdge;
 
-    double evaluateGivenQualified(SoluteParticle *particle);
 
-
-    double strain(const double r) const;
+    double stressEnergy(const double r) const;
 
     double electroStatic(const double r) const;
 
