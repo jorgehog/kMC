@@ -46,22 +46,32 @@ class SpawnParticle : public KMCEvent
 {
 public:
 
-    SpawnParticle(uint nFree) :
-        KMCEvent("spawnParticle", "", true, true),
-        m_nFree(nFree)
+    SpawnParticle() :
+        KMCEvent("spawnParticle", "", true, true)
     {
 
+    }
+
+    void initialize()
+    {
+        m_maxAbsFlux = 10;
     }
 
 protected:
 
     void execute()
     {
-        uint n = SoluteParticle::nSolutionParticles();
-
-        if (n > m_nFree)
+        if (nTimesExecuted%100 != 0)
         {
-            while (SoluteParticle::nSolutionParticles() > m_nFree)
+            return;
+        }
+
+        uint N = std::round(solver()->targetConcentration()*SoluteParticle::getCurrentSolvantVolume()) + 0.00001;
+        uint c = 0;
+
+        if (SoluteParticle::nSolutionParticles() > N)
+        {
+            while (SoluteParticle::nSolutionParticles() > N && c < m_maxAbsFlux)
             {
 
                 for (SoluteParticle *particle : solver()->particles())
@@ -69,6 +79,7 @@ protected:
                     if (particle->isSolvant())
                     {
                         solver()->despawnParticle(particle);
+                        c++;
                         break;
                     }
                 }
@@ -77,23 +88,23 @@ protected:
 
             solver()->getRateVariables();
         }
-        else if (n < m_nFree)
+        else if (SoluteParticle::nSolutionParticles() < N)
         {
-            while (SoluteParticle::nSolutionParticles() < m_nFree)
+            while (SoluteParticle::nSolutionParticles() < N && c < m_maxAbsFlux)
             {
                 solver()->insertRandomParticle();
+                c++;
             }
 
             solver()->getRateVariables();
         }
 
-
-        setValue(SoluteParticle::nSolutionParticles());
+        setValue(double(c)/m_maxAbsFlux);
     }
 
 private:
 
-    const uint m_nFree;
+    uint m_maxAbsFlux;
 
 };
 
@@ -104,26 +115,26 @@ void initializeStressedSurface(KMCSolver *solver, const Setting &root)
 
     const uint &NZ = solver->NZ();
 
-    const uint &nFreeWalkers = getSetting<uint>(initCFG, "nFreeWalkers");
-
-    const uint &nEdgeLayers = getSetting<uint>(initCFG, "nEdgeLayers");
-
     const double &initialHeightRatio = getSetting<double>(initCFG, "initialHeightRatio");
-    const uint height = (NZ - nEdgeLayers)*initialHeightRatio;
+    const uint height = (NZ - 1)*initialHeightRatio;
 
 
     const double &Es = getSetting<double>(initCFG, "Es");
     const double &r0 = getSetting<double>(initCFG, "r0");
 
     //strong interaction layer bottom
-    solver->initializeLayers(nEdgeLayers, 0, 1, true);
+    solver->initializeLayers(1, 0, 2, true);
 
     //initial crystal rim
-    solver->initializeLayers(height, nEdgeLayers);
+    solver->initializeLayers(height, 1);
 
     //quick hack, will cleanup when I get time.
-    SoluteParticle::ss = new InertWall(Site::boundaries(2, 1), Es, r0, DiffusionReaction::rPower(1, 1), DiffusionReaction::strength(1, 1), 0.1);
+    SoluteParticle::ss = new InertWall(Site::boundaries(2, 1), Es, r0,
+                                       DiffusionReaction::rPower(1, 1),
+                                       DiffusionReaction::strength(1, 1), 0.1);
 
-//    solver->addEvent(new SpawnParticle(nFreeWalkers));
+    solver->addEvent(new SpawnParticle());
+
+    solver->initializeSolutionBath();
 
 }

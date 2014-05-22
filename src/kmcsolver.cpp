@@ -543,7 +543,7 @@ void KMCSolver::dumpXYZ(const uint n)
 
 void KMCSolver::dumpLAMMPS(const uint n)
 {
-    cout << n << endl;
+
     m_lammpswriter->initializeNewFile(n, SoluteParticle::nParticles());
 
     for (SoluteParticle *particle : m_particles)

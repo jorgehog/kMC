@@ -48,7 +48,7 @@ void InertWall::initialize()
 
 double InertWall::valueAt(const double r, const double a, const double b)
 {
-    double rScaled = r;
+    double rScaled = r + 1;
 
     if (m_interface->orientation() == 1)
     {
