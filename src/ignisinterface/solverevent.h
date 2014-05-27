@@ -73,7 +73,7 @@ protected:
 
         solver()->getRateVariables();
 
-        m_totalTime += Reaction::linearRateScale()/solver()->kTot();
+        m_totalTime -= Reaction::linearRateScale()*std::log(KMC_RNG_UNIFORM())/solver()->kTot();
 
         //To counter buildup of roundoff errors
         if (nTimesExecuted % 10000 == 0)

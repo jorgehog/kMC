@@ -91,6 +91,22 @@ private:
 
 };
 
+
+class TotalTime : public KMCEvent
+{
+public:
+
+    TotalTime() : KMCEvent("Time", "s*", true, true) {}
+
+protected:
+
+    void execute()
+    {
+        setValue(solver()->solverEvent()->totalTime());
+    }
+
+};
+
 class MeasureTemp : public KMCEvent
 {
 public:
@@ -208,14 +224,6 @@ void initialize_ignisKMC(KMCSolver * solver, const Setting & root)
 
     const Setting & initCFG = getSetting(root, "Initialization");
 
-    const uint & NX = solver->NX();
-    const uint & NY = solver->NY();
-    const uint & NZ = solver->NZ();
-
-    (void) NX;
-    (void) NY;
-    (void) NZ;
-
     const uint therm     = getSetting<uint>(initCFG, "therm");
     const double betaCoolMax = getSetting<double>(initCFG, "betaCoolMax");
     const double betaHeatMin = getSetting<double>(initCFG, "betaHeatMin");
@@ -228,22 +236,15 @@ void initialize_ignisKMC(KMCSolver * solver, const Setting & root)
     heating->setOnsetTime(MainLattice::nCycles/2);
 
 
-//    solver->addEvent(*cooling);
-//    solver->addEvent(*heating);
+    solver->addEvent(*cooling);
+    solver->addEvent(*heating);
 
     solver->addEvent(new MeasureTemp());
     solver->addEvent(new AverageNeighbors());
     solver->addEvent(new TotalEnergy());
-//    solver->addEvent(new Sort());
-//    solver->addEvent(new CPUTime());
+    solver->addEvent(new TotalTime());
 
     solver->initializeSolutionBath();
-
-    lattice *sublattice = new lattice({0, 0, 0, NX/2, NY/2, NZ/2}, "sublattice");
-    sublattice->addEvent(new countAtoms<uint>());
-
-    solver->addSubLattice(sublattice);
-
 
 
 }
