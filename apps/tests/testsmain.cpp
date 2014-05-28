@@ -10,7 +10,7 @@
 
 
 //#define focusSuite "PeriodicBoundaries"
-//#define focusTest  "KnownCase"
+//#define focusTest  "EnergyAndNeighborSetup"
 
 
 #include "defines.h"

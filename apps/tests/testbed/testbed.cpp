@@ -1880,9 +1880,8 @@ void testBed::testEnergyAndNeighborSetup()
                             {
                                 nn(Site::getLevel(ldx, ldy, ldz))++;
 
-                                E += DiffusionReaction::potential(Site::nNeighborsLimit() + ldx,
-                                                                  Site::nNeighborsLimit() + ldy,
-                                                                  Site::nNeighborsLimit() + ldz);
+                                double dr = sqrt(ldx*ldx + ldy*ldy + ldz*ldz);
+                                E += 1/dr;
                             }
 
                             C++;
