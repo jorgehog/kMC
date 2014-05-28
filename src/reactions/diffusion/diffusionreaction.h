@@ -49,7 +49,7 @@ public:
         m_neighborSetIntersectionPoints.reset();
     }
 
-    static const double & potential(const uint & x, const uint & y, const uint & z, const uint speciesA = 0, const uint speciesB = 0)
+    static const double & potential(const uint x, const uint y, const uint z, const uint speciesA = 0, const uint speciesB = 0)
     {
         return m_potential(x, y, z)(speciesA, speciesB);
     }
@@ -58,11 +58,11 @@ public:
     double saddlePotential(SoluteParticle *particle);
 
     static double saddlePotential(const uint i,
-                                          const uint j,
-                                          const uint k,
-                                          const int dx,
-                                          const int dy,
-                                          const int dz, const uint speciesA, const uint speciesB);
+                                  const uint j,
+                                  const uint k,
+                                  const int dx,
+                                  const int dy,
+                                  const int dz, const uint speciesA, const uint speciesB);
 
     static const field<mat> & potentialBox()
     {

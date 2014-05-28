@@ -880,6 +880,29 @@ void KMCSolver::despawnParticle(SoluteParticle *particle)
 
 }
 
+const Reaction *KMCSolver::executeRandomReaction()
+{
+    KMCDebugger_AssertEqual(Reaction::nReactions(), m_allPossibleReactions.size() - m_availableReactionSlots.size());
+
+    uint which = KMC_RNG_UNIFORM()*Reaction::nReactions();
+
+    for (const uint & vacancy : m_availableReactionSlots)
+    {
+        if (vacancy <= which)
+        {
+            which++;
+        }
+    }
+
+    KMCDebugger_Assert(which, <=, Reaction::nReactions());
+
+    Reaction *reaction = m_allPossibleReactions.at(which);
+
+    reaction->execute();
+
+    return reaction;
+}
+
 
 void KMCSolver::initializeCrystal(const double relativeSeedSize, const uint species, const bool sticky)
 {
