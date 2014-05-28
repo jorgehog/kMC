@@ -212,7 +212,7 @@ protected:
     void execute()
     {
 
-        if (nTimesExecuted%10 == 0)
+        if (m_nTimesExecuted%10 == 0)
         {
             if (SoluteParticle::nSolutionParticles() == 0)
             {

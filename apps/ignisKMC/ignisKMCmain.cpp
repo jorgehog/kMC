@@ -71,9 +71,9 @@ public:
 
     void execute()
     {
-        if (nTimesExecuted%therm == 0)
+        if (m_nTimesExecuted%therm == 0)
         {
-            DiffusionReaction::setBeta(T0 + dT*(nTimesExecuted/therm));
+            DiffusionReaction::setBeta(T0 + dT*(m_nTimesExecuted/therm));
         }
     }
 
@@ -186,7 +186,7 @@ protected:
 
     void execute()
     {
-        if ((nTimesExecuted+1)%250000 == 0)
+        if ((m_nTimesExecuted+1)%250000 == 0)
         {
             solver()->sortReactionsByRate();
         }

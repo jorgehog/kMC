@@ -1832,7 +1832,16 @@ void testBed::testEnergyAndNeighborSetup()
 
     solver->initializeCrystal(0.3);
 
+    SoluteParticle::updateAffectedParticles();
+
     uvec nn(Site::nNeighborsLimit());
+
+    uint n = 100;
+    for (uint i = 0; i < n; ++i)
+    {
+        solver->executeRandomReaction();
+        SoluteParticle::updateAffectedParticles();
+    }
 
 
     solver->forEachSiteDo([&] (uint x0, uint y0, uint z0, Site * currentSite)
@@ -2302,6 +2311,7 @@ void testBed::testKnownCase()
     ConcentrationWall::setMaxEventsPrCycle(5);
 
     solver->initializeCrystal(getSetting<double>(root, {"Initialization", "RelativeSeedSize"}));
+    solver->initializeSolutionBath();
 
     bool make = false;
 

@@ -50,7 +50,7 @@ void ConcentrationWall::update()
         while (SoluteParticle::nSolutionParticles() != targetN && c != boundarySize() && ce != m_maxEventsPrCycle)
         {
 
-            getBoundarySite(c, x, y, z);
+            getBoundarySite(KMC_RNG_UNIFORM()*boundarySize(), x, y, z);
 
             currentSite = solver()->getSite(x, y, z);
 
@@ -80,7 +80,7 @@ void ConcentrationWall::update()
             while (c != boundarySize() && !spawned)
             {
 
-                getBoundarySite(c, x, y, z);
+                getBoundarySite(KMC_RNG_UNIFORM()*boundarySize(), x, y, z);
                 spawned = solver()->spawnParticle(particle, x, y, z, true);
 
                 if (spawned)

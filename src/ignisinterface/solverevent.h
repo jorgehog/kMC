@@ -76,7 +76,7 @@ protected:
         m_totalTime -= Reaction::linearRateScale()*std::log(KMC_RNG_UNIFORM())/solver()->kTot();
 
         //To counter buildup of roundoff errors
-        if (nTimesExecuted % 10000 == 0)
+        if (m_nTimesExecuted % 10000 == 0)
         {
             solver()->remakeAccuAllRates();
         }
@@ -118,7 +118,7 @@ protected:
 
     void execute()
     {
-        if (nTimesExecuted%MainLattice::nCyclesPerOutput != 0)
+        if (m_nTimesExecuted%MainLattice::nCyclesPerOutput != 0)
         {
             return;
         }

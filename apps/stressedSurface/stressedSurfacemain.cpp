@@ -61,7 +61,7 @@ protected:
 
     void execute()
     {
-        if (nTimesExecuted%100 != 0)
+        if (m_nTimesExecuted%100 != 0)
         {
             return;
         }

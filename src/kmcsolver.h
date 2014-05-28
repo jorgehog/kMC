@@ -83,6 +83,7 @@ public:
 
     void despawnParticle(SoluteParticle *particle);
 
+    const Reaction *executeRandomReaction();
 
     void initializeCrystal(const double relativeSeedSize, const uint species = 0, const bool sticky = false);
 
@@ -166,6 +167,8 @@ public:
     {
         return m_availableReactionSlots;
     }
+
+    const uint & cycle() const;
 
     const double & kTot() const
     {

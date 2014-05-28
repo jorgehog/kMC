@@ -81,17 +81,19 @@ void Site::initializeBoundaries()
 void Site::updateBoundaries()
 {
 
-    vector<uint> dims = {0, 1, 2};
-    vector<uint> orie = {0, 1};
+    uint dim, ori;
 
-    std::random_shuffle(dims.begin(), dims.end(), [] (const double n) {return KMC_RNG_UNIFORM()*n;});
+    for (uint i = 0; i < 3; ++i)
+    {
+        //makes a sequence 0 1 2, 1 2 0, 2 0 1, ... alternate every SECOND cycle levi chevita style
+        dim = (i + (solver()->cycle()%6)/2)%3;
 
-    for (const uint & i : dims) {
+        for (uint j = 0; j < 2; ++j)
+        {
+            //alternate every cycle
+            ori = (j + solver()->cycle()%2)%2;
 
-        std::random_shuffle(orie.begin(), orie.end(), [] (const double n) {return KMC_RNG_UNIFORM()*n;});
-
-        for (const uint & j : orie) {
-            m_boundaries(i, j)->update();
+            m_boundaries(dim, ori)->update();
         }
     }
 }
@@ -160,7 +162,8 @@ void Site::forEachNeighborDo_sendPath(const uint x, const uint y, const uint z, 
     }
 }
 
-void Site::forEachNeighborDo_sendIndices(const uint x, const uint y, const uint z, function<void (Site *, uint, uint, uint)> applyFunction)
+void Site::
+forEachNeighborDo_sendIndices(const uint x, const uint y, const uint z, function<void (Site *, uint, uint, uint)> applyFunction)
 {
 
     Site * neighbor;

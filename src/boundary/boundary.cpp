@@ -47,7 +47,6 @@ uint Boundary::transformCoordinate(const int xi) const
 
 void Boundary::getBoundarySite(uint n, uint &x, uint&y, uint &z) const
 {
-    n = KMC_RNG_UNIFORM()*boundarySize();
     if (dimension() == Z)
     {
         x = n/NY();

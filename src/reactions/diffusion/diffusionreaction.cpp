@@ -197,7 +197,6 @@ void DiffusionReaction::setupPotential()
         }
     }
 
-
     for (uint i = 0; i < Site::neighborhoodLength(); ++i)
     {
         for (uint j = 0; j < Site::neighborhoodLength(); ++j)

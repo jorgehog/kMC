@@ -882,19 +882,20 @@ void KMCSolver::despawnParticle(SoluteParticle *particle)
 
 const Reaction *KMCSolver::executeRandomReaction()
 {
-    KMCDebugger_AssertEqual(Reaction::nReactions(), m_allPossibleReactions.size() - m_availableReactionSlots.size());
 
-    uint which = KMC_RNG_UNIFORM()*Reaction::nReactions();
+    uint which = KMC_RNG_UNIFORM()*m_allPossibleReactions.size();
+
+    std::sort(m_availableReactionSlots.begin(), m_availableReactionSlots.end());
 
     for (const uint & vacancy : m_availableReactionSlots)
     {
-        if (vacancy <= which)
+        if (vacancy == which)
         {
             which++;
         }
     }
 
-    KMCDebugger_Assert(which, <=, Reaction::nReactions());
+    KMCDebugger_Assert(which, <, m_allPossibleReactions.size());
 
     Reaction *reaction = m_allPossibleReactions.at(which);
 
@@ -1204,6 +1205,11 @@ void KMCSolver::getRateVariables()
     KMCDebugger_AssertBool(!allPossibleReactions().empty(), "No available reactions.");
     KMCDebugger_AssertClose(accuAllRates().at(0), allPossibleReactions().at(0)->rate(), minRateThreshold(), "zeroth accuallrate should be the first rate.");
 
+}
+
+const uint &KMCSolver::cycle() const
+{
+    return m_solverEvent->nTimesExecuted();
 }
 
 
