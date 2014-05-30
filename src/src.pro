@@ -29,7 +29,9 @@ HEADERS = RNG/kMCRNG.h \
     potential/potential.h \
     potential/stressedsurface/stressedsurface.h \
     potential/inertwall/inertwall.h \
-    system.h
+    system.h \
+    reactions/diffusion/arrheniusdiffusion.h \
+    reactions/diffusion/tstdiffusion.h
 
 SOURCES += \
     reactions/reaction.cpp \
@@ -48,7 +50,9 @@ SOURCES += \
     boundary/periodicshifted/periodicshifted.cpp \
     potential/stressedsurface/stressedsurface.cpp \
     potential/inertwall/inertwall.cpp \
-    system.cpp
+    system.cpp \
+    reactions/diffusion/arrheniusdiffusion.cpp \
+    reactions/diffusion/tstdiffusion.cpp
 
 
 RNG_ZIG {

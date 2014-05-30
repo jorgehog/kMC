@@ -1,7 +1,7 @@
 #include "site.h"
 #include "kmcsolver.h"
 #include "reactions/reaction.h"
-#include "reactions/diffusion/diffusionreaction.h"
+#include "reactions/diffusion/tstdiffusion.h"
 
 #include "boundary/periodic/periodic.h"
 #include "boundary/edge/edge.h"
@@ -798,6 +798,11 @@ void Site::setInitialNNeighborsLimit(const uint &nNeighborsLimit, bool check)
     }
 
     DiffusionReaction::setupPotential();
+
+    if (solver()->diffusionType() == KMCSolver::DiffusionTypes::TST)
+    {
+        TSTDiffusion::setupSaddlePotential();
+    }
 
 }
 

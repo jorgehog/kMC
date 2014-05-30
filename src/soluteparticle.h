@@ -299,12 +299,22 @@ public:
         return m_reactions;
     }
 
+    template<typename T>
+    T* diffusionReactions_fromIndex(const uint i, const uint j, const uint k) const
+    {
+        return static_cast<T*>(diffusionReactions_fromIndex(i, j, k));
+    }
 
     DiffusionReaction* diffusionReactions_fromIndex(const uint i, const uint j, const uint k) const
     {
         return m_diffusionReactions[i][j][k];
     }
 
+    template<typename T>
+    T* diffusionReactions(const int dx, const int dy, const int dz) const
+    {
+        return static_cast<T*>(diffusionReactions(dx, dy, dz));
+    }
 
     DiffusionReaction* diffusionReactions(const int dx, const int dy, const int dz) const
     {

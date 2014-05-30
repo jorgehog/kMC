@@ -28,14 +28,6 @@ public:
         return "DiffusionReaction";
     }
 
-    double getSaddleEnergy();
-
-    double getSaddleEnergyContributionFrom(const SoluteParticle *particle);
-
-    double getSaddleEnergyContributionFromNeighborAt(const int dxn, const int dyn, const int dzn, const uint s1, const uint s2);
-
-    static imat::fixed<3, 2> makeSaddleOverlapMatrix(const ivec &relCoor);
-
     static void loadConfig(const Setting & setting);
 
     static void setupPotential();
@@ -43,10 +35,6 @@ public:
     static void clearAll()
     {
         m_potential.reset();
-        m_saddlePotential.reset_objects();
-        m_saddlePotential.reset();
-        m_neighborSetIntersectionPoints.reset_objects();
-        m_neighborSetIntersectionPoints.reset();
     }
 
     static const double & potential(const uint x, const uint y, const uint z, const uint speciesA = 0, const uint speciesB = 0)
@@ -54,29 +42,9 @@ public:
         return m_potential(x, y, z)(speciesA, speciesB);
     }
 
-
-    double saddlePotential(SoluteParticle *particle);
-
-    static double saddlePotential(const uint i,
-                                  const uint j,
-                                  const uint k,
-                                  const int dx,
-                                  const int dy,
-                                  const int dz, const uint speciesA, const uint speciesB);
-
     static const field<mat> & potentialBox()
     {
         return m_potential;
-    }
-
-    static const field<mat> & getSaddlePot(const uint i, const uint j, const uint k)
-    {
-        return m_saddlePotential(i, j, k);
-    }
-
-    static const imat::fixed<3, 2> & neighborSetIntersectionPoints(const uint i, const uint j, const uint k)
-    {
-        return m_neighborSetIntersectionPoints(i, j, k);
     }
 
     static const double &rPower(const uint i, const uint j)
@@ -89,7 +57,6 @@ public:
         return m_strengths(i, j);
     }
 
-
     Site *destinationSite() const;
 
     const int &path(const int i) const
@@ -97,14 +64,14 @@ public:
         return m_path[i];
     }
 
-    const double & lastUsedEsp() const
+    const uint &pathIndex(const int i) const
     {
-        return m_lastUsedEsp;
+        return m_pathIndices[i];
     }
 
     const double &pathLength() const
     {
-        return m_pathLengths(m_saddleFieldIndices[0], m_saddleFieldIndices[1], m_saddleFieldIndices[2]);
+        return m_pathLengths(m_pathIndices[0], m_pathIndices[1], m_pathIndices[2]);
     }
 
     uint xD() const;
@@ -121,16 +88,10 @@ public:
     }
 
     static void setPotentialParameters(const vector<double> &rPowers,
-                                       const vector<double> &strenghts,
-                                       bool setup = true);
+                                       const vector<double> &strenghts);
 
 
     string getFinalizingDebugMessage() const;
-
-    enum
-    {
-        updateKeepSaddle = 1
-    };
 
 private:
 
@@ -141,24 +102,15 @@ private:
     static double m_betaChangeScaleFactor;
 
     static field<mat> m_potential;
-    static field<field<mat>> m_saddlePotential;
-
-    static field<imat::fixed<3, 2> > m_neighborSetIntersectionPoints;
 
     static cube::fixed<3, 3, 3> m_pathLengths;
 
-    double m_lastUsedEsp;
-
-    uint m_saddleFieldIndices[3];
-
     int m_path[3];
+
+    uint m_pathIndices[3];
 
     // Reaction interface
 public:
-
-    void setDirectUpdateFlags(const SoluteParticle* changedReactant, const uint level);
-
-    void calcRate();
 
     void execute();
 

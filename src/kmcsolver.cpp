@@ -3,7 +3,8 @@
 #include "soluteparticle.h"
 
 #include "reactions/reaction.h"
-#include "reactions/diffusion/diffusionreaction.h"
+#include "reactions/diffusion/tstdiffusion.h"
+#include "reactions/diffusion/arrheniusdiffusion.h"
 
 #include "boundary/boundary.h"
 
@@ -107,7 +108,18 @@ KMCSolver::~KMCSolver()
 
     Site::clearAll();
 
-    DiffusionReaction::clearAll();
+
+    if (m_diffusionType == DiffusionTypes::TST)
+    {
+        TSTDiffusion::clearAll();
+
+    }
+
+    else if (m_diffusionType == DiffusionTypes::Arrhenius)
+    {
+        ArrheniusDiffusion::clearAll();
+    }
+
 
     Boundary::clearAll();
 
@@ -1118,8 +1130,8 @@ void KMCSolver::initializeFromLAMMPS(string path, uint frame)
     initializeSites();
 
 
-    double ePot;
-    uint type, species, nNeighbors, x, y, z;
+    double ePot = 0;
+    uint type = 0, species = 0, nNeighbors = 0, x = 0, y = 0, z = 0;
 
     for (uint i = 0; i < m_lammpswriter->nParticles(); ++i)
     {
@@ -1145,7 +1157,7 @@ void KMCSolver::initializeFromLAMMPS(string path, uint frame)
 
 }
 
-void KMCSolver::insertRandomParticle(const uint species, const bool sticky)
+void KMCSolver::insertRandomParticle(const uint species, const bool sticky, bool checkIfLegal)
 {
     uint x, y, z;
     bool spawned;
@@ -1177,7 +1189,7 @@ void KMCSolver::insertRandomParticle(const uint species, const bool sticky)
 
         z = KMC_RNG_UNIFORM()*NZ();
 
-        spawned = spawnParticle(particle, x, y, z, true);
+        spawned = spawnParticle(particle, x, y, z, checkIfLegal);
 
     }
 }

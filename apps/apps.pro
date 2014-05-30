@@ -9,7 +9,8 @@ SUBDIRS += tests \
            layerGrowth \
            movingSteppes \
            impureSurface \
-           stressedSurface
+           stressedSurface \
+           WLMC
 
 
 OTHER_FILES += defaults/default.pro.bones \

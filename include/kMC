@@ -7,7 +7,7 @@
 #include "../src/soluteparticle.h"
 
 #include "../src/reactions/reaction.h"
-#include "../src/reactions/diffusion/diffusionreaction.h"
+#include "../src/reactions/diffusion/tstdiffusion.h"
 
 #include "../src/kmcsolver.h"
 

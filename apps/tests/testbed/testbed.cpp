@@ -42,7 +42,7 @@ void testBed::testSaddleOverlapBoxes()
                 j = y + 1;
                 k = z + 1;
 
-                allBoxes(i, j, k) = DiffusionReaction::makeSaddleOverlapMatrix({x, y, z});
+                allBoxes(i, j, k) = TSTDiffusion::makeSaddleOverlapMatrix({x, y, z});
             }
         }
     }
@@ -111,6 +111,8 @@ void testBed::testRateUpdateReach()
     return;
 
     DiffusionReaction::setPotentialParameters({1, 1, 1, 1}, {1, 1, 1, 1});
+    DiffusionReaction::setupPotential();
+    TSTDiffusion::setupSaddlePotential();
 
     SoluteParticle *red    = forceSpawnCenter(0,  0, 0, 1);
     SoluteParticle *green  = forceSpawnCenter(1,  1, 0, 0);
@@ -123,11 +125,11 @@ void testBed::testRateUpdateReach()
     CHECK_EQUAL(0, yellow->energy());
     CHECK_EQUAL(1, yellow->diffusionReactions(1, 0, 0)->rate());
 
-    DiffusionReaction *diffReaction = yellow->diffusionReactions(-1, 0, 0);
+    TSTDiffusion *diffReaction = static_cast<TSTDiffusion*>(yellow->diffusionReactions(-1, 0, 0));
 
     double eSad = diffReaction->getSaddleEnergyContributionFrom(red);
 
-    const auto & leftBox = DiffusionReaction::neighborSetIntersectionPoints(0, 1, 1);
+    const auto & leftBox = TSTDiffusion::neighborSetIntersectionPoints(0, 1, 1);
 
     //check if box of a left-going interaction is ok
     CHECK_EQUAL(-3, leftBox(0, 0));
@@ -142,7 +144,7 @@ void testBed::testRateUpdateReach()
     CHECK_CLOSE(eSad, -log(diffReaction->rate()), 1E-10);
 
     //check if the red right sees all the other particles in saddle.
-    diffReaction = red->diffusionReactions(1, 0, 0);
+    diffReaction = static_cast<TSTDiffusion*>(red->diffusionReactions(1, 0, 0));
 
     double eSadRed = diffReaction->getSaddleEnergyContributionFrom(yellow);
     eSadRed += diffReaction->getSaddleEnergyContributionFrom(green);
@@ -153,7 +155,7 @@ void testBed::testRateUpdateReach()
 
 
     //check if the green diagonal move has all the correct values.
-    diffReaction = green->diffusionReactions(1, -1, 0);
+    diffReaction = static_cast<TSTDiffusion*>(green->diffusionReactions(1, -1, 0));
     double eGreenDiag = diffReaction->lastUsedEsp();
     double eSadGreen = diffReaction->getSaddleEnergyContributionFrom(yellow);
     eSadGreen += diffReaction->getSaddleEnergyContributionFrom(red);
@@ -164,22 +166,22 @@ void testBed::testRateUpdateReach()
 
 
     //Test if moving the yellow out of the cluster removes it's contribution from the saddle energy of green down and red right.
-    double eRedRight = red->diffusionReactions(1, 0, 0)->getSaddleEnergy();
-    double eRedRightYellow = red->diffusionReactions(1, 0, 0)->getSaddleEnergyContributionFrom(yellow);
+    double eRedRight = static_cast<TSTDiffusion*>(red->diffusionReactions(1, 0, 0))->getSaddleEnergy();
+    double eRedRightYellow = static_cast<TSTDiffusion*>(red->diffusionReactions(1, 0, 0))->getSaddleEnergyContributionFrom(yellow);
 
-    double eGreenDown = green->diffusionReactions(0, -1, 0)->getSaddleEnergy();
-    double eGreenDownYellow = green->diffusionReactions(0, -1, 0)->getSaddleEnergyContributionFrom(yellow);
+    double eGreenDown = static_cast<TSTDiffusion*>(green->diffusionReactions(0, -1, 0))->getSaddleEnergy();
+    double eGreenDownYellow = static_cast<TSTDiffusion*>(green->diffusionReactions(0, -1, 0))->getSaddleEnergyContributionFrom(yellow);
 
 
 
     yellow->diffusionReactions(1, 0, 0)->execute();
     solver->getRateVariables();
 
-    double eRedRightNew = red->diffusionReactions(1, 0, 0)->lastUsedEsp();
-    double eGreenDownNew = green->diffusionReactions(0, -1, 0)->lastUsedEsp();
+    double eRedRightNew = static_cast<TSTDiffusion*>(red->diffusionReactions(1, 0, 0))->lastUsedEsp();
+    double eGreenDownNew = static_cast<TSTDiffusion*>(green->diffusionReactions(0, -1, 0))->lastUsedEsp();
 
-    CHECK_EQUAL(red->diffusionReactions(1, 0, 0)->getSaddleEnergy(), eRedRightNew);
-    CHECK_EQUAL(green->diffusionReactions(0, -1, 0)->getSaddleEnergy(), eGreenDownNew);
+    CHECK_EQUAL(static_cast<TSTDiffusion*>(red->diffusionReactions(1, 0, 0))->getSaddleEnergy(), eRedRightNew);
+    CHECK_EQUAL(static_cast<TSTDiffusion*>(green->diffusionReactions(0, -1, 0))->getSaddleEnergy(), eGreenDownNew);
 
     CHECK_CLOSE(eRedRight - eRedRightYellow, eRedRightNew, 1E-10);
     CHECK_CLOSE(eGreenDown - eGreenDownYellow, eGreenDownNew, 1E-10);
@@ -188,20 +190,20 @@ void testBed::testRateUpdateReach()
     CHECK_CLOSE(eGreenDiag, diffReaction->lastUsedEsp() - diffReaction->getSaddleEnergyContributionFrom(yellow) + yellowCont, 1E-10);
 
     //Move yellow up left such that it is saddle seen by red right and blue down and seen by green.
-    double eRedPre = red->diffusionReactions(1, 0, 0)->getSaddleEnergy();
-    double eBluePre = blue->diffusionReactions(0, -1, 0)->getSaddleEnergy();
-    double eGreenPre = green->diffusionReactions(-1, 1, 0)->getSaddleEnergy();
+    double eRedPre = static_cast<TSTDiffusion*>(red->diffusionReactions(1, 0, 0))->getSaddleEnergy();
+    double eBluePre = static_cast<TSTDiffusion*>(blue->diffusionReactions(0, -1, 0))->getSaddleEnergy();
+    double eGreenPre = static_cast<TSTDiffusion*>(green->diffusionReactions(-1, 1, 0))->getSaddleEnergy();
 
     yellow->diffusionReactions(-1, 1, 0)->execute();
     solver->getRateVariables();
 
-    double eRedNew = red->diffusionReactions(1, 0, 0)->lastUsedEsp();
-    double eBlueNew = blue->diffusionReactions(0, -1, 0)->lastUsedEsp();
-    double eGreenNew = green->diffusionReactions(-1, 1, 0)->lastUsedEsp();
+    double eRedNew = static_cast<TSTDiffusion*>(red->diffusionReactions(1, 0, 0))->lastUsedEsp();
+    double eBlueNew = static_cast<TSTDiffusion*>(blue->diffusionReactions(0, -1, 0))->lastUsedEsp();
+    double eGreenNew = static_cast<TSTDiffusion*>(green->diffusionReactions(-1, 1, 0))->lastUsedEsp();
 
-    double eRedY = red->diffusionReactions(1, 0, 0)->getSaddleEnergyContributionFrom(yellow);
-    double eBlueY = blue->diffusionReactions(0, -1, 0)->getSaddleEnergyContributionFrom(yellow);
-    double eGreenY = green->diffusionReactions(-1, 1, 0)->getSaddleEnergyContributionFrom(yellow);
+    double eRedY = static_cast<TSTDiffusion*>(red->diffusionReactions(1, 0, 0))->getSaddleEnergyContributionFrom(yellow);
+    double eBlueY = static_cast<TSTDiffusion*>(blue->diffusionReactions(0, -1, 0))->getSaddleEnergyContributionFrom(yellow);
+    double eGreenY = static_cast<TSTDiffusion*>(green->diffusionReactions(-1, 1, 0))->getSaddleEnergyContributionFrom(yellow);
 
     CHECK_CLOSE(eRedPre, eRedNew - eRedY, 1E-10);
     CHECK_CLOSE(eBluePre, eBlueNew - eBlueY, 1E-10);
@@ -222,9 +224,9 @@ void testBed::testRateUpdateReach()
 
     uint i, j, k;
 
-    DiffusionReaction *redReaction;
-    DiffusionReaction *yellowReaction;
-    DiffusionReaction *blueReaction;
+    TSTDiffusion *redReaction;
+    TSTDiffusion *yellowReaction;
+    TSTDiffusion *blueReaction;
 
     vector<DiffusionReaction*> blockedPre;
 
@@ -243,9 +245,9 @@ void testBed::testRateUpdateReach()
                 j = dy + 1;
                 k = dz + 1;
 
-                redReaction = red->diffusionReactions(dx, dy, dz);
-                blueReaction = blue->diffusionReactions(dx, dy, dz);
-                yellowReaction = yellow->diffusionReactions(dx, dy, dz);
+                redReaction = static_cast<TSTDiffusion*>(red->diffusionReactions(dx, dy, dz));
+                blueReaction = static_cast<TSTDiffusion*>(blue->diffusionReactions(dx, dy, dz));
+                yellowReaction = static_cast<TSTDiffusion*>(yellow->diffusionReactions(dx, dy, dz));
 
 
                 if (redReaction->isAllowed())
@@ -301,9 +303,9 @@ void testBed::testRateUpdateReach()
                 j = dy + 1;
                 k = dz + 1;
 
-                redReaction = red->diffusionReactions(dx, dy, dz);
-                blueReaction = blue->diffusionReactions(dx, dy, dz);
-                yellowReaction = yellow->diffusionReactions(dx, dy, dz);
+                redReaction = static_cast<TSTDiffusion*>(red->diffusionReactions(dx, dy, dz));
+                blueReaction = static_cast<TSTDiffusion*>(blue->diffusionReactions(dx, dy, dz));
+                yellowReaction = static_cast<TSTDiffusion*>(yellow->diffusionReactions(dx, dy, dz));
 
 
                 if (!redReaction->isAllowed())
@@ -855,7 +857,7 @@ void testBed::testStressedSurface()
     {
         Potential *pOld = SoluteParticle::ss;
         SoluteParticle::ss = NULL;
-        double Esp = r->getSaddleEnergy();
+        double Esp = static_cast<TSTDiffusion*>(r)->getSaddleEnergy();
         SoluteParticle::ss = pOld;
         return Esp;
     };
@@ -939,7 +941,7 @@ void testBed::testStressedSurface()
     double saddleEnergy = ifs->evaluateSaddleFor(baseCover->diffusionReactions(0, 0, 1));
     double electroSaddle = electroSaddleEnergy(baseCover->diffusionReactions(0, 0, 1));
     baseCover->diffusionReactions(0, 0, 1)->execute();
-    CHECK_CLOSE(saddleEnergy, baseCover->diffusionReactions(0, 0, 1)->lastUsedEsp() - electroSaddle, 1E-10);
+    CHECK_CLOSE(saddleEnergy, static_cast<TSTDiffusion*>(baseCover->diffusionReactions(0, 0, 1))->lastUsedEsp() - electroSaddle, 1E-10);
     CHECK_EQUAL(0, baseCover->energy()); //free from the surface, basecover should have zero energy (with 1 int len)
 
     solver->getRateVariables();
@@ -1343,7 +1345,7 @@ void testBed::testParticleMixing()
 {
 
     SoluteParticle *A, *B;
-    DiffusionReaction *rA_toCenter, *rB_toCenter, *rA_fromCenter, *rB_fromCenter;
+    TSTDiffusion *rA_toCenter, *rB_toCenter, *rA_fromCenter, *rB_fromCenter;
     uint n_rA, n_rB;
 
     forceNewBoundaries(Boundary::Edge); //Not periodic
@@ -1353,7 +1355,11 @@ void testBed::testParticleMixing()
     vector<double> strengths = {1.0, 10.0, 100.0};
     vector<double> powers = {1.0, 2.0, 3.0};
 
+
     DiffusionReaction::setPotentialParameters(powers, strengths);
+    DiffusionReaction::setupPotential();
+    TSTDiffusion::setupSaddlePotential();
+
 
     CHECK_EQUAL(SoluteParticle::nSpecies(), strengths.size());
 
@@ -1394,12 +1400,12 @@ void testBed::testParticleMixing()
 
 
             //pick out reactions pointing to the center.
-            rA_toCenter = A->diffusionReactions( 1, 0, 0); //left-going reaction
-            rB_toCenter = B->diffusionReactions(-1, 0, 0); //right->going reaction
+            rA_toCenter = A->diffusionReactions<TSTDiffusion>( 1, 0, 0); //left-going reaction
+            rB_toCenter = B->diffusionReactions<TSTDiffusion>(-1, 0, 0); //right->going reaction
 
             //and from the center
-            rA_fromCenter = A->diffusionReactions(-1 , 0, 0); //right-going reaction
-            rB_fromCenter = B->diffusionReactions( 1, 0, 0); //left->going reaction
+            rA_fromCenter = A->diffusionReactions<TSTDiffusion>(-1, 0, 0); //right-going reaction
+            rB_fromCenter = B->diffusionReactions<TSTDiffusion>( 1, 0, 0); //left->going reaction
 
             CHECK_EQUAL(true, rA_toCenter->isAllowed());
             CHECK_EQUAL(true, rB_toCenter->isAllowed());
@@ -1789,7 +1795,7 @@ void testBed::testRateCalculation()
 
     solver->getRateVariables();
 
-    DiffusionReaction *r;
+    TSTDiffusion *r;
 
     for (SoluteParticle *particle : solver->particles())
     {
@@ -1801,7 +1807,7 @@ void testBed::testRateCalculation()
                 return;
             }
 
-            r = (DiffusionReaction*)_r;
+            r = static_cast<TSTDiffusion*>(_r);
 
             E = r->lastUsedEnergy();
 
@@ -2157,7 +2163,7 @@ void testBed::initSimpleSystemParameters(bool clean)
 
     Reaction::setBeta(1.0);
 
-    DiffusionReaction::setPotentialParameters({1.0}, {1.0}, false);
+    DiffusionReaction::setPotentialParameters({1.0}, {1.0});
 
 
     solver->setBoxSize({15, 15, 15}, false);

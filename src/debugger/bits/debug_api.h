@@ -46,7 +46,7 @@
     : KMCDebugger_Assert(B - A, <=, lim, ##__VA_ARGS__))
 
 #define KMCDebugger_AssertBool(expr, ...) \
-    KMCDebugger_Assert(expr, ==, true, ##__VA_ARGS__)
+    KMCDebugger_Assert((expr), ==, true, ##__VA_ARGS__)
 
 #define KMCDebugger_AssertBreak(...) \
     KMCDebugger_AssertBool(false, ##__VA_ARGS__)

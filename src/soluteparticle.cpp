@@ -6,7 +6,9 @@
 
 #include "debugger/debugger.h"
 
-#include "reactions/diffusion/diffusionreaction.h"
+#include "reactions/diffusion/tstdiffusion.h"
+
+#include "reactions/diffusion/arrheniusdiffusion.h"
 
 #include "potential/stressedsurface/stressedsurface.h"
 
@@ -164,6 +166,8 @@ void SoluteParticle::disableSite()
 
 void SoluteParticle::changePosition(const uint x, const uint y, const uint z)
 {
+    KMCDebugger_AssertBool(x != m_x || y != m_y || z != m_z, "changing to the same site.");
+
     disableSite();
 
     setSite(x, y, z);
@@ -511,6 +515,10 @@ void SoluteParticle::forEachActiveReactionDo_sendIndex(function<void (Reaction *
 void SoluteParticle::initializeDiffusionReactions()
 {
 
+    if (solver()->diffusionType() == KMCSolver::DiffusionTypes::None)
+    {
+        return;
+    }
 
     KMCDebugger_Assert(m_reactions.size(), ==, 0, "Sitereactions are already set", info());
 
@@ -527,7 +535,20 @@ void SoluteParticle::initializeDiffusionReactions()
                     continue;
                 }
 
-                DiffusionReaction* diffusionReaction = new DiffusionReaction(this, dx, dy, dz);
+
+                DiffusionReaction* diffusionReaction;
+
+
+                if (solver()->diffusionType() == KMCSolver::DiffusionTypes::TST)
+                {
+                    diffusionReaction = new TSTDiffusion(this, dx, dy, dz);
+                }
+
+                else if (solver()->diffusionType() == KMCSolver::DiffusionTypes::Arrhenius)
+                {
+                    diffusionReaction = new ArrheniusDiffusion(this, dx, dy, dz);
+                }
+
 
                 addReaction(diffusionReaction);
 

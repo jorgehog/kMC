@@ -39,10 +39,17 @@ public:
         m_linearRateScale = linearRateScale;
     }
 
-    virtual void setDirectUpdateFlags(const SoluteParticle *changedReactant, const uint level) = 0;
+    virtual void setDirectUpdateFlags(const SoluteParticle *changedReactant, const uint level)
+    {
 
-    virtual bool
-    isAllowed() const = 0;
+        (void) changedReactant;
+        (void) level;
+
+        registerUpdateFlag(defaultUpdateFlag);
+
+    }
+
+    virtual bool isAllowed() const = 0;
 
     virtual void calcRate() = 0;
 
@@ -65,7 +72,6 @@ public:
             m_updateFlag = flag;
         }
     }
-
 
     void setLastUsedEnergy();
 

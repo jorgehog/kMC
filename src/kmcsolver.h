@@ -95,7 +95,12 @@ public:
 
     void initializeFromLAMMPS(string path, uint frame);
 
-    void insertRandomParticle(const uint species = 0, const bool sticky = false);
+    void insertRandomParticle(const uint species = 0, const bool sticky = false, bool checkIfLegal = false);
+
+    void sortParticles(function<bool(SoluteParticle*, SoluteParticle*)> comp)
+    {
+        std::sort(m_particles.begin(), m_particles.end(), comp);
+    }
 
 
     void initializeParticles();
@@ -115,6 +120,11 @@ public:
     Site* getSite(const int i, const int j, const int k) const
     {
         return sites[i + m_boundaryPadding][j + m_boundaryPadding][k + m_boundaryPadding];
+    }
+
+    MainLattice *mainLattice() const
+    {
+        return m_mainLattice;
     }
 
     const vector<SoluteParticle*> & particles() const
@@ -151,6 +161,11 @@ public:
     const uvec3 NVec() const
     {
         return m_N;
+    }
+
+    const uint &volume() const
+    {
+        return mainLattice()->volume;
     }
 
     const vector<double> & accuAllRates() const
@@ -298,8 +313,39 @@ public:
         m_filepath = filepath.empty() ? filepath : filepath + "/";
     }
 
+    const string & filePath() const
+    {
+        return m_filepath;
+    }
+
+    enum class DiffusionTypes
+    {
+        None,
+        TST,
+        Arrhenius
+    };
+
+    const DiffusionTypes &diffusionType() const
+    {
+        return m_diffusionType;
+    }
+
+    void setDiffusionType(const DiffusionTypes type)
+    {
+        if (m_diffusionType == type)
+        {
+            return;
+        }
+
+        KMCDebugger_AssertEqual(m_particles.size(), 0);
+
+        m_diffusionType = type;
+
+    }
 
 private:
+
+    DiffusionTypes m_diffusionType = DiffusionTypes::TST;
 
     double m_targetConcentration;
 

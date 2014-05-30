@@ -12,11 +12,14 @@ using ignis::Event;
 namespace kMC
 {
 
+
+
+
 class SolverEvent : public KMCEvent
 {
 public:
 
-    SolverEvent() : KMCEvent("kmC::SolverEvent")
+    SolverEvent() : KMCEvent("kMC::SolverEvent")
     {
 
     }
