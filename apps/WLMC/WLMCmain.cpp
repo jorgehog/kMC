@@ -86,24 +86,21 @@ protected:
         cout << "N=" << SoluteParticle::nParticles() << " " << count << endl;
         double flatness = estimateFlatness();
 
-        if (flatness > 0.85)
+        output(flatness);
+
+        if (flatness >= hCrit)
         {
-            f = sqrt(f);
+            f = fReducer(f);
             visitCounts.zeros();
 
-            if (f < 1.000001)
+            if (f < fCrit)
             {
                 prepNextOccupancyLevel();
+                exit(1);
             }
         }
 
-        setValue(flatness);
-
-        stringstream file;
-        file << solver()->filePath() << "/stateDensity" << SoluteParticle::nParticles() << ".arma";
-        vec E = linspace<vec>(minEnergy(count), maxEnergy(count), nbins);
-        join_rows(join_rows(E(span(nbins/6, (nbins*5)/6)), DOS(span(nbins/6, (nbins*5)/6))), visitCounts(span(nbins/6, (nbins*5)/6))).eval().save(file.str());
-
+        DOS = normalise(DOS);
 
     }
 
@@ -116,29 +113,46 @@ private:
     double energySpan;
 
     double f;
+    double f0 = 1.1;
+    double fCrit = 1.000001;
+    double hCrit = 0.85;
+
+    function<double(double)> fReducer = [] (double fPrev) {return pow(fPrev, 0.75);};
 
     uint count;
+
 
     vec visitCounts;
     vec DOS;
 
-    const uint nSkipped = 5;
+    const uint nSkipped = 1;
     const uint nStart = 10;
 
 
+    void output(double flatness)
+    {
+        setValue(flatness);
+
+        stringstream file;
+        file << solver()->filePath() << "/stateDensity" << SoluteParticle::nParticles() << ".arma";
+        vec E = linspace<vec>(minEnergy(count), maxEnergy(count), nbins);
+        join_rows(join_rows(E, DOS), visitCounts).eval().save(file.str());
+
+    }
+
     double estimateFlatness()
     {
-        vec visitSpan = visitCounts(span(nbins/3, (nbins*2)/3));
+        double M = max(abs(visitCounts  - mean(visitCounts)));
 
-        double M = max(abs(visitSpan - mean(visitSpan)));
-
-        double std = stddev(visitSpan);
+        double std = stddev(visitCounts);
 
         double flatness = std/M;
 
-        cout << std << " " << M << " " << flatness << endl;
+        cout << std << " " << M << " " << flatness << " " << f << endl;
 
-        return flatness;
+        uint n = 50000;
+
+        return (nTimesExecuted()%n)/double(n-1)*0.85;
     }
 
     void initializeNewCycle()
@@ -146,7 +160,7 @@ private:
         visitCounts.zeros();
 
         DOS.ones();
-        f = datum::e;
+        f = f0;
 
         energySpan = maxEnergy(count) - minEnergy(count);
 
