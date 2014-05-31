@@ -61,21 +61,17 @@ public:
     void initialize()
     {
 
-        minEnergy.set_size(solver()->volume() - 3);
-        maxEnergy.set_size(solver()->volume() - 3);
+        minEnergy.set_size(solver()->volume());
+        maxEnergy.set_size(solver()->volume());
 
         findAllExtrema();
 
-        count = 0;
+        count = nStart;
 
         visitCounts.set_size(nbins);
         DOS.set_size(nbins);
 
-        resetHistograms();
-
-        uint bin;
-        double prevDOS, newDOS;
-        updateHistograms(SoluteParticle::totalEnergy(), prevDOS, newDOS, bin);
+        initializeNewCycle();
 
 
     }
@@ -87,6 +83,7 @@ protected:
 
         moveParticle();
 
+        cout << "N=" << SoluteParticle::nParticles() << " " << count << endl;
         double flatness = estimateFlatness();
 
         if (flatness > 0.85)
@@ -102,12 +99,17 @@ protected:
 
         setValue(flatness);
 
+        stringstream file;
+        file << solver()->filePath() << "/stateDensity" << SoluteParticle::nParticles() << ".arma";
+        vec E = linspace<vec>(minEnergy(count), maxEnergy(count), nbins);
+        join_rows(join_rows(E(span(nbins/6, (nbins*5)/6)), DOS(span(nbins/6, (nbins*5)/6))), visitCounts(span(nbins/6, (nbins*5)/6))).eval().save(file.str());
+
+
     }
 
 private:
 
     const uint nbins;
-    const uint nCyclesPerPopulation = 100000;
 
     vec maxEnergy;
     vec minEnergy;
@@ -120,44 +122,35 @@ private:
     vec visitCounts;
     vec DOS;
 
+    const uint nSkipped = 5;
+    const uint nStart = 10;
+
 
     double estimateFlatness()
     {
-        double m = mean(visitCounts);
+        vec visitSpan = visitCounts(span(nbins/3, (nbins*2)/3));
 
-        return max(abs(visitCounts - m))/max(visitCounts);
+        double M = max(abs(visitSpan - mean(visitSpan)));
+
+        double std = stddev(visitSpan);
+
+        double flatness = std/M;
+
+        cout << std << " " << M << " " << flatness << endl;
+
+        return flatness;
     }
 
-    void resetHistograms()
+    void initializeNewCycle()
     {
         visitCounts.zeros();
-        DOS.ones();
 
+        DOS.ones();
         f = datum::e;
 
         energySpan = maxEnergy(count) - minEnergy(count);
 
         KMCDebugger_Assert(energySpan, !=, 0);
-    }
-
-    void updateHistograms(const double energy, double &prevDOS, double &newDOS, uint &bin)
-    {
-        bin = (nbins - 1)*(energy - minEnergy(count))/energySpan;
-
-        visitCounts(bin)++;
-
-        prevDOS = DOS(bin);
-
-        DOS(bin) *= f;
-
-        newDOS = DOS(bin);
-
-    }
-
-    void undoHistogram(const double prev, const uint bin)
-    {
-        DOS(bin) = prev;
-        visitCounts(bin)--;
     }
 
     void moveParticle()
@@ -211,34 +204,36 @@ private:
 
         double eNew = SoluteParticle::totalEnergy() + getEnergyDifference(particle, xd, yd, zd);
 
-        double prevDOS, newDOS;
-        uint bin;
+        uint prevBin = getBin(SoluteParticle::totalEnergy());
+        uint newBin = getBin(eNew);
 
-        updateHistograms(eNew, prevDOS, newDOS, bin);
-
+        double prevDOS = DOS(prevBin);
+        double newDOS = DOS(newBin);
 
         if (KMC_RNG_UNIFORM() < prevDOS/newDOS)
         {
             particle->changePosition(xd, yd, zd);
+
+            DOS(newBin) *= f;
+            visitCounts(newBin)++;
         }
 
         else
         {
-            undoHistogram(prevDOS, bin);
-
-            updateHistograms(SoluteParticle::totalEnergy(), prevDOS, newDOS, bin);
+            DOS(prevBin) *= f;
+            visitCounts(prevBin)++;
         }
 
     }
 
+    uint getBin(double energy)
+    {
+        return (nbins - 1)*(energy - minEnergy(count))/energySpan;
+    }
 
     void prepNextOccupancyLevel()
     {
-        stringstream file;
-        file << solver()->filePath() << "/stateDensity" << SoluteParticle::nParticles() << ".arma";
-        join_rows(DOS, visitCounts).eval().save(file.str());
-
-        if (SoluteParticle::nParticles() == NX()*NY()*NZ() - 1)
+        if (SoluteParticle::nParticles() == NX()*NY()*NZ() - nSkipped + 2)
         {
             solver()->exit();
         }
@@ -255,7 +250,7 @@ private:
 
         count++;
 
-        resetHistograms();
+        initializeNewCycle();
 
     }
 
@@ -346,22 +341,22 @@ private:
 
     void findAllExtrema()
     {
-        uint c;
+        uint n;
 
         solver()->forceSpawnParticle(0, 0, 0);
         solver()->forceSpawnParticle(NX() - 1, NY() - 1, NZ() - 1);
 
-        c = 0;
+        n = 2;
         do
         {
             parseForExtrema(-1);
-            minEnergy(c) = SoluteParticle::totalEnergy();
+            minEnergy(n) = SoluteParticle::totalEnergy();
 
-            c++;
+            n++;
 
             solver()->insertRandomParticle(0, false, false);
 
-        } while (c < minEnergy.n_elem);
+        } while (n < minEnergy.n_elem);
 
         solver()->clearParticles();
 
@@ -370,23 +365,24 @@ private:
         solver()->forceSpawnParticle(NX()/2, NY()/2, NZ()/2);
         solver()->forceSpawnParticle(NX()/2, NY()/2, NZ()/2 + 1);
 
-        c = 0;
+        n = 2;
         do
         {
             parseForExtrema(+1);
-            maxEnergy(c) = SoluteParticle::totalEnergy();
+            maxEnergy(n) = SoluteParticle::totalEnergy();
 
-            c++;
+            n++;
 
             solver()->insertRandomParticle(0, false, false);
 
-        } while (c < maxEnergy.n_elem);
+        } while (n < maxEnergy.n_elem);
 
         solver()->clearParticles();
 
-
-        solver()->insertRandomParticle();
-        solver()->insertRandomParticle();
+        for (uint c = 0; c < nStart; ++c)
+        {
+            solver()->insertRandomParticle();
+        }
     }
 
 
