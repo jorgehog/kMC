@@ -101,6 +101,7 @@ protected:
         }
 
         DOS = normalise(DOS);
+        visitCounts -= visitCounts.min();
 
     }
 
@@ -113,11 +114,11 @@ private:
     double energySpan;
 
     double f;
-    double f0 = 1.1;
+    double f0 = datum::e;
     double fCrit = 1.000001;
     double hCrit = 0.85;
 
-    function<double(double)> fReducer = [] (double fPrev) {return pow(fPrev, 0.75);};
+    function<double(double)> fReducer = [] (double fPrev) {return sqrt(fPrev);};
 
     uint count;
 
@@ -126,7 +127,7 @@ private:
     vec DOS;
 
     const uint nSkipped = 1;
-    const uint nStart = 10;
+    const uint nStart = 5;
 
 
     void output(double flatness)
@@ -150,7 +151,7 @@ private:
 
         cout << std << " " << M << " " << flatness << " " << f << endl;
 
-        uint n = 50000;
+        uint n = 100000;
 
         return (nTimesExecuted()%n)/double(n-1)*0.85;
     }
