@@ -549,6 +549,11 @@ void SoluteParticle::initializeDiffusionReactions()
                     diffusionReaction = new ArrheniusDiffusion(this, dx, dy, dz);
                 }
 
+                else
+                {
+                    solver()->exit("Unknown diffusion type.");
+                }
+
 
                 addReaction(diffusionReaction);
 

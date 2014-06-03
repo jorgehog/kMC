@@ -51,9 +51,12 @@ class WLMCEvent : public KMCEvent
 {
 public:
 
-    WLMCEvent(const uint nbins) :
+    WLMCEvent(const uint nbins, const double f0 = datum::e, const double fCrit=1.000001, const double hCrit = 0.85) :
         KMCEvent("kMC::WLMC", "", true),
-        nbins(nbins)
+        nbins(nbins),
+        f0(f0),
+        fCrit(fCrit),
+        hCrit(hCrit)
     {
 
     }
@@ -83,7 +86,8 @@ protected:
 
         moveParticle();
 
-        cout << "N=" << SoluteParticle::nParticles() << " " << count << endl;
+        DOS = normalise(DOS);
+
         double flatness = estimateFlatness();
 
         output(flatness);
@@ -100,8 +104,7 @@ protected:
             }
         }
 
-        DOS = normalise(DOS);
-        visitCounts -= visitCounts.min();
+        cout << min(visitCounts)/mean(visitCounts) << endl;
 
     }
 
@@ -114,9 +117,9 @@ private:
     double energySpan;
 
     double f;
-    double f0 = datum::e;
-    double fCrit = 1.000001;
-    double hCrit = 0.85;
+    double f0;
+    double fCrit;
+    double hCrit;
 
     function<double(double)> fReducer = [] (double fPrev) {return sqrt(fPrev);};
 
@@ -143,17 +146,31 @@ private:
 
     double estimateFlatness()
     {
-        double M = max(abs(visitCounts  - mean(visitCounts)));
+        double MAX = max(visitCounts);
+        double MIN = min(visitCounts);
 
-        double std = stddev(visitCounts);
+        double span = MAX - MIN;
 
-        double flatness = std/M;
+        double m = mean(visitCounts);
 
-        cout << std << " " << M << " " << flatness << " " << f << endl;
 
-        uint n = 100000;
 
-        return (nTimesExecuted()%n)/double(n-1)*0.85;
+        double flatness = 1 - span/m;
+
+
+
+        cout << m << " " << span << " " << flatness << " " << f << endl;
+        cout << visitCounts.t() << endl;
+
+        if (flatness < 0)
+        {
+            return 0;
+        }
+//        uint n = 100000;
+
+//        return (nTimesExecuted()%n)/double(n-1)*0.85;
+
+        return flatness;
     }
 
     void initializeNewCycle()
@@ -243,7 +260,12 @@ private:
 
     uint getBin(double energy)
     {
-        return (nbins - 1)*(energy - minEnergy(count))/energySpan;
+        if (energy == maxEnergy(count))
+        {
+            return nbins - 1;
+        }
+
+        return nbins*(energy - minEnergy(count))/energySpan;
     }
 
     void prepNextOccupancyLevel()
@@ -413,8 +435,12 @@ void initializeWLMC(KMCSolver *solver, const Setting &root)
 
     const uint &nbins = getSetting<uint>(initCFG, "nbins");
 
+    const double &f0 = getSetting<double>(initCFG, "f0");
+    const double &fCrit = getSetting<double>(initCFG, "fCrit");
+    const double &hCrit = getSetting<double>(initCFG, "hCrit");
 
-    KMCEvent *wlmc = new WLMCEvent(nbins);
+
+    KMCEvent *wlmc = new WLMCEvent(nbins, f0, fCrit, hCrit);
     wlmc->setManualPriority(0);
 
     solver->addEvent(wlmc);
