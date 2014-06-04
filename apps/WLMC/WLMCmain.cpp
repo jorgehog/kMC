@@ -95,7 +95,7 @@ protected:
         if (flatness >= hCrit)
         {
             f = fReducer(f);
-            visitCounts.zeros();
+            resetCounts();
 
             if (f < fCrit)
             {
@@ -104,7 +104,7 @@ protected:
             }
         }
 
-        cout << min(visitCounts)/mean(visitCounts) << endl;
+        cout << min(visitCounts) << "  " << mean(visitCounts) << endl;
 
     }
 
@@ -126,8 +126,10 @@ private:
     uint count;
 
 
-    vec visitCounts;
+    uvec visitCounts;
     vec DOS;
+
+    static constexpr uint unsetCount = std::numeric_limits<uint>::max();
 
     const uint nSkipped = 1;
     const uint nStart = 5;
@@ -140,14 +142,38 @@ private:
         stringstream file;
         file << solver()->filePath() << "/stateDensity" << SoluteParticle::nParticles() << ".arma";
         vec E = linspace<vec>(minEnergy(count), maxEnergy(count), nbins);
-        join_rows(join_rows(E, DOS), visitCounts).eval().save(file.str());
+
+        vec vc = conv_to<vec>::from(visitCounts);
+
+        double mean = 0;
+        uint c = 0;
+        for (uint i = 0; i < vc.n_elem; ++i)
+        {
+            if (vc(i) != unsetCount)
+            {
+                mean += vc(i);
+                c++;
+            }
+        }
+
+        mean /= c;
+
+        for (uint i = 0; i < vc.n_elem; ++i)
+        {
+            if (vc(i) == unsetCount)
+            {
+                vc(i) = mean;
+            }
+        }
+
+        join_rows(join_rows(E, DOS), vc).eval().save(file.str());
 
     }
 
     double estimateFlatness()
     {
-        double MAX = max(visitCounts);
-        double MIN = min(visitCounts);
+        uint MAX = max(visitCounts);
+        uint MIN = min(visitCounts);
 
         double span = MAX - MIN;
 
@@ -157,25 +183,27 @@ private:
 
         double flatness = 1 - span/m;
 
-
-
-        cout << m << " " << span << " " << flatness << " " << f << endl;
-        cout << visitCounts.t() << endl;
+        cout << uvec(find(visitCounts == unsetCount)).t() << endl;
 
         if (flatness < 0)
         {
             return 0;
         }
-//        uint n = 100000;
+        uint n = 100000;
 
-//        return (nTimesExecuted()%n)/double(n-1)*0.85;
+        return (nTimesExecuted()%n)/double(n-1)*0.85;
 
         return flatness;
     }
 
+    void resetCounts()
+    {
+        visitCounts.fill(unsetCount);
+    }
+
     void initializeNewCycle()
     {
-        visitCounts.zeros();
+        resetCounts();
 
         DOS.ones();
         f = f0;
@@ -239,28 +267,51 @@ private:
         uint prevBin = getBin(SoluteParticle::totalEnergy());
         uint newBin = getBin(eNew);
 
+        cout << SoluteParticle::totalEnergy() << endl;
+        cout << maxEnergy(count) << endl;
+
         double prevDOS = DOS(prevBin);
         double newDOS = DOS(newBin);
 
-        if (KMC_RNG_UNIFORM() < prevDOS/newDOS)
+        bool accepted = true;
+
+        if (prevDOS < newDOS)
+        {
+            accepted = KMC_RNG_UNIFORM() < prevDOS/newDOS;
+        }
+
+        if (accepted)
         {
             particle->changePosition(xd, yd, zd);
 
-            DOS(newBin) *= f;
-            visitCounts(newBin)++;
+            registerVisit(newBin);
+
         }
 
         else
         {
-            DOS(prevBin) *= f;
-            visitCounts(prevBin)++;
+            registerVisit(prevBin);
         }
 
     }
 
+    void registerVisit(const uint bin)
+    {
+        if (visitCounts(bin) == unsetCount)
+        {
+            visitCounts(bin) = 1;
+        }
+        else
+        {
+            visitCounts(bin)++;
+        }
+
+        DOS(bin) *= f;
+    }
+
     uint getBin(double energy)
     {
-        if (energy == maxEnergy(count))
+        if (fabs(energy - maxEnergy(count)) < 1E-10)
         {
             return nbins - 1;
         }
