@@ -88,6 +88,13 @@ protected:
 
         DOS = normalise(DOS);
 
+        if (nTimesExecuted() % 1000 != 0)
+        {
+            return;
+        }
+
+        cout << "N = " << SoluteParticle::nParticles() << " f=" << f << "  " << f/fCrit << endl;
+
         double flatness = estimateFlatness();
 
         output(flatness);
@@ -100,12 +107,8 @@ protected:
             if (f < fCrit)
             {
                 prepNextOccupancyLevel();
-                exit(1);
             }
         }
-
-        cout << min(visitCounts) << "  " << mean(visitCounts) << endl;
-
     }
 
 private:
@@ -115,6 +118,9 @@ private:
     vec maxEnergy;
     vec minEnergy;
     double energySpan;
+
+    double meanFlatness;
+    uint flatnessCounter;
 
     double f;
     double f0;
@@ -172,33 +178,40 @@ private:
 
     double estimateFlatness()
     {
-        uint MAX = max(visitCounts);
-        uint MIN = min(visitCounts);
+        uvec visitCounts_test = visitCounts(span(0, 4*nbins/5));
 
-        double span = MAX - MIN;
+        uint min = arma::min(visitCounts_test);
 
-        double m = mean(visitCounts);
-
-
-
-        double flatness = 1 - span/m;
-
-        cout << uvec(find(visitCounts == unsetCount)).t() << endl;
-
-        if (flatness < 0)
+        double mean = 0;
+        uint c = 0;
+        for (const uint &vc : visitCounts_test)
         {
-            return 0;
+            if (vc != unsetCount)
+            {
+                mean += vc;
+                c++;
+            }
         }
-        uint n = 100000;
 
-        return (nTimesExecuted()%n)/double(n-1)*0.85;
+        mean /= c;
 
-        return flatness;
+        double flatness = min/mean;
+
+//        uint n = 100000;
+
+//        return (nTimesExecuted()%n)/double(n-1)*0.85;
+
+        meanFlatness += flatness;
+        flatnessCounter++;
+
+        return meanFlatness/flatnessCounter;
     }
 
     void resetCounts()
     {
         visitCounts.fill(unsetCount);
+        meanFlatness = 0;
+        flatnessCounter = 0;
     }
 
     void initializeNewCycle()
@@ -209,6 +222,15 @@ private:
         f = f0;
 
         energySpan = maxEnergy(count) - minEnergy(count);
+
+        solver()->clearParticles();
+
+        for (uint c = 0; c < count; ++c)
+        {
+            solver()->insertRandomParticle(0, false, false);
+        }
+
+        solver()->dumpLAMMPS(1337);
 
         KMCDebugger_Assert(energySpan, !=, 0);
     }
@@ -266,9 +288,6 @@ private:
 
         uint prevBin = getBin(SoluteParticle::totalEnergy());
         uint newBin = getBin(eNew);
-
-        cout << SoluteParticle::totalEnergy() << endl;
-        cout << maxEnergy(count) << endl;
 
         double prevDOS = DOS(prevBin);
         double newDOS = DOS(newBin);
@@ -451,7 +470,7 @@ private:
 
 
         solver()->forceSpawnParticle(NX()/2, NY()/2, NZ()/2);
-        solver()->forceSpawnParticle(NX()/2, NY()/2, NZ()/2 + 1);
+        solver()->forceSpawnParticle(NX()/2 + 1, NY()/2, NZ()/2);
 
         n = 2;
         do
@@ -465,12 +484,6 @@ private:
 
         } while (n < maxEnergy.n_elem);
 
-        solver()->clearParticles();
-
-        for (uint c = 0; c < nStart; ++c)
-        {
-            solver()->insertRandomParticle();
-        }
     }
 
 
@@ -487,7 +500,7 @@ void initializeWLMC(KMCSolver *solver, const Setting &root)
     const uint &nbins = getSetting<uint>(initCFG, "nbins");
 
     const double &f0 = getSetting<double>(initCFG, "f0");
-    const double &fCrit = getSetting<double>(initCFG, "fCrit");
+    const double &fCrit = 1 + getSetting<double>(initCFG, "fCrit");
     const double &hCrit = getSetting<double>(initCFG, "hCrit");
 
 
