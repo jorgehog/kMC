@@ -186,6 +186,7 @@ void KMCSolver::setupMainLattice()
     MainLattice::setCurrentParticles(new KMCParticles(this));
 
     m_mainLattice = new MainLattice();
+    m_mainLattice->setOutputPath(filePath());
 
     m_solverEvent = new SolverEvent();
     m_mainLattice->addEvent(m_solverEvent);
