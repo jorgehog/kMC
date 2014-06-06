@@ -88,7 +88,7 @@ protected:
 
         DOS = normalise(DOS);
 
-        if (nTimesExecuted() % 1000 != 0)
+        if (nTimesExecuted() % 1000 != 0 || nTimesExecuted() == 0)
         {
             return;
         }
@@ -121,7 +121,6 @@ private:
 
     double meanFlatness;
     uint flatnessCounter;
-
     double f;
     double f0;
     double fCrit;
@@ -138,7 +137,7 @@ private:
     static constexpr uint unsetCount = std::numeric_limits<uint>::max();
 
     const uint nSkipped = 1;
-    const uint nStart = 5;
+    const uint nStart = 14;
 
 
     void output(double flatness)
@@ -178,13 +177,12 @@ private:
 
     double estimateFlatness()
     {
-        uvec visitCounts_test = visitCounts(span(0, 4*nbins/5));
 
-        uint min = arma::min(visitCounts_test);
+        uint min = arma::min(visitCounts);
 
         double mean = 0;
         uint c = 0;
-        for (const uint &vc : visitCounts_test)
+        for (const uint &vc : visitCounts)
         {
             if (vc != unsetCount)
             {
@@ -238,7 +236,7 @@ private:
     void moveParticle()
     {
         uint which = KMC_RNG_UNIFORM()*SoluteParticle::nParticles();
-        uint where = KMC_RNG_UNIFORM()*(solver()->volume() - SoluteParticle::nParticles() - 1);
+        uint where = KMC_RNG_UNIFORM()*(solver()->volume() - SoluteParticle::nParticles());
 
         SoluteParticle* particle = solver()->particle(which);
 
@@ -302,6 +300,8 @@ private:
         if (accepted)
         {
             particle->changePosition(xd, yd, zd);
+
+            KMCDebugger_AssertClose(SoluteParticle::totalEnergy(), eNew, 1E-3);
 
             registerVisit(newBin);
 
@@ -442,7 +442,7 @@ private:
             }
         });
 
-        return eNew - particle->energy();
+        return 2*(eNew - particle->energy());
     }
 
 
