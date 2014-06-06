@@ -171,7 +171,10 @@ private:
             }
         }
 
-        join_rows(join_rows(E, DOS), vc).eval().save(file.str());
+        if (join_rows(join_rows(E, DOS), vc).eval().save(file.str()))
+        {
+            cout << "storing " << file.str() << endl;
+        }
 
     }
 
@@ -187,20 +190,25 @@ private:
             if (vc != unsetCount)
             {
                 mean += vc;
+
                 c++;
             }
+        }
+
+        if (c == 0)
+        {
+            cout << "no visited bins." << endl;
+            return 0;
         }
 
         mean /= c;
 
         double flatness = min/mean;
 
-//        uint n = 100000;
-
-//        return (nTimesExecuted()%n)/double(n-1)*0.85;
 
         meanFlatness += flatness;
         flatnessCounter++;
+
 
         return meanFlatness/flatnessCounter;
     }
@@ -244,9 +252,15 @@ private:
         uint yd = 0;
         uint zd = 0;
 
+        if (min(visitCounts) == unsetCount) cout << *particle << " " << endl;
+
         findAvailableSite(where, xd, yd, zd);
 
+        if (min(visitCounts) == unsetCount) cout << xd << " " << yd << " " << zd << endl;
+
         performTrialMove(particle, xd, yd, zd);
+
+        if (min(visitCounts) == unsetCount) cout << *particle << " " << where << " " << which << endl;
 
     }
 
@@ -304,7 +318,6 @@ private:
             KMCDebugger_AssertClose(SoluteParticle::totalEnergy(), eNew, 1E-3);
 
             registerVisit(newBin);
-
         }
 
         else
@@ -326,6 +339,9 @@ private:
         }
 
         DOS(bin) *= f;
+
+
+        KMCDebugger_Assert(visitCounts(bin), !=, unsetCount);
     }
 
     uint getBin(double energy)
