@@ -1,9 +1,12 @@
 #include <kMC>
 #include <libconfig_utils/libconfig_utils.h>
 
+#include <vector>
+
 using namespace libconfig;
 using namespace kMC;
 
+using std::vector;
 
 void initializeWLMC(KMCSolver * solver, const Setting & root);
 
@@ -76,6 +79,8 @@ public:
 
         initializeNewCycle();
 
+        cout << Seed::initialSeed << endl;
+
 
     }
 
@@ -84,11 +89,11 @@ protected:
     void execute()
     {
 
-        moveParticle();
+        moveParticles();
 
         DOS = normalise(DOS);
 
-        if (nTimesExecuted() % 1000 != 0)
+        if (nTimesExecuted() % 1000 != 0 || nTimesExecuted() == 0)
         {
             return;
         }
@@ -138,7 +143,7 @@ private:
     static constexpr uint unsetCount = std::numeric_limits<uint>::max();
 
     const uint nSkipped = 1;
-    const uint nStart = 5;
+    const uint nStart = 14;
 
 
     void output(double flatness)
@@ -172,13 +177,17 @@ private:
             }
         }
 
-        join_rows(join_rows(E, DOS), vc).eval().save(file.str());
+        bool success = join_rows(join_rows(E, DOS), vc).eval().save(file.str());
+        if (!success)
+        {
+            cout << "failed to dump data to file " << endl;
+        }
 
     }
 
     double estimateFlatness()
     {
-        uvec visitCounts_test = visitCounts(span(0, 4*nbins/5));
+        uvec visitCounts_test = visitCounts;
 
         uint min = arma::min(visitCounts_test);
 
@@ -197,9 +206,9 @@ private:
 
         double flatness = min/mean;
 
-//        uint n = 100000;
+        //        uint n = 100000;
 
-//        return (nTimesExecuted()%n)/double(n-1)*0.85;
+        //        return (nTimesExecuted()%n)/double(n-1)*0.85;
 
         meanFlatness += flatness;
         flatnessCounter++;
@@ -235,26 +244,116 @@ private:
         KMCDebugger_Assert(energySpan, !=, 0);
     }
 
-    void moveParticle()
+    double nMovesDist() const
     {
-        uint which = KMC_RNG_UNIFORM()*SoluteParticle::nParticles();
-        uint where = KMC_RNG_UNIFORM()*(solver()->volume() - SoluteParticle::nParticles() - 1);
+//        return 1 + SoluteParticle::nParticles()*KMC_RNG_UNIFORM();
+//        return SoluteParticle::nParticles() - (SoluteParticle::nParticles()*(1 - std::sqrt(1-KMC_RNG_UNIFORM())) + 1);
+//         return SoluteParticle::nParticles()*(1 - std::sqrt(1-KMC_RNG_UNIFORM())) + 1;
+//        return SoluteParticle::nParticles()/2;
+        return 1;
+    }
 
-        SoluteParticle* particle = solver()->particle(which);
+    template<typename T>
+    bool is_in(const vector<T> &_vec, const T &_val) const
+    {
+        return std::find(_vec.begin(), _vec.end(), _val) != _vec.end();
+    }
+
+
+    void moveParticles()
+    {
+        SoluteParticle* particle;
+
+        uint which, where;
 
         uint xd = 0;
         uint yd = 0;
         uint zd = 0;
 
-        findAvailableSite(where, xd, yd, zd);
+        uint nMoves = nMovesDist();
 
-        performTrialMove(particle, xd, yd, zd);
+        vector<SoluteParticle*> selectedParticles;
+        umat origPos(nMoves, 3);
+
+        double E0 = SoluteParticle::totalEnergy();
+
+        for (uint n = 0; n < nMoves; ++n)
+        {
+            which = KMC_RNG_UNIFORM()*(SoluteParticle::nParticles() - n);
+
+            for (uint p = 0; p < which; ++p)
+            {
+                if (is_in(selectedParticles, solver()->particle(p)))
+                {
+                    which++;
+                }
+            }
+
+            particle = solver()->particle(which);
+
+            selectedParticles.push_back(particle);
+
+            origPos(n, 0) = particle->x();
+            origPos(n, 1) = particle->y();
+            origPos(n, 2) = particle->z();
+
+
+            where = (solver()->volume() - SoluteParticle::nParticles())*KMC_RNG_UNIFORM();
+
+            findAvailableSite(where, xd, yd, zd);
+
+            particle->changePosition(xd, yd, zd);
+
+        }
+
+        double E1 = SoluteParticle::totalEnergy();
+
+        uint prevBin = getBin(E0);
+        uint newBin = getBin(E1);
+
+        double prevDOS = DOS(prevBin);
+        double newDOS = DOS(newBin);
+
+        bool accepted = true;
+
+        if (prevDOS < newDOS)
+        {
+            accepted = KMC_RNG_UNIFORM() < prevDOS/newDOS;
+        }
+
+        if (accepted)
+        {
+            registerVisit(newBin);
+        }
+
+        else
+        {
+            registerVisit(prevBin);
+
+            for (uint n = 0; n < nMoves; ++n)
+            {
+                uint nr = nMoves - n - 1;
+
+                xd = origPos(nr, 0);
+                yd = origPos(nr, 1);
+                zd = origPos(nr, 2);
+
+                selectedParticles.at(nr)->changePosition(xd, yd, zd);
+
+            }
+
+            KMCDebugger_AssertClose(E0, SoluteParticle::totalEnergy(), 1E-3, "reset failed.", SoluteParticle::totalEnergy());
+
+        }
 
     }
 
-    void findAvailableSite(uint where, uint &xd, uint &yd, uint &zd)
+
+    void findAvailableSite(const uint where, uint &xd, uint &yd, uint &zd)
     {
         uint search = 0;
+
+        Site* site;
 
         for (uint x = 0; x < NX(); ++x)
         {
@@ -262,8 +361,11 @@ private:
             {
                 for (uint z = 0; z < NZ(); ++z)
                 {
-                    if (!solver()->getSite(x, y, z)->isActive())
+                    site = solver()->getSite(x, y, z);
+
+                    if (!site->isActive())
                     {
+
                         if (search == where)
                         {
                             xd = x;
@@ -275,6 +377,7 @@ private:
 
                         search++;
                     }
+
                 }
             }
         }
