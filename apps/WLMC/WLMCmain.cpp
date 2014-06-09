@@ -86,13 +86,13 @@ protected:
 
         moveParticle();
 
-        DOS = normalise(DOS);
 
-        if (nTimesExecuted() % 1000 != 0 || nTimesExecuted() == 0)
+        if (nTimesExecuted() % 10000 != 0 || nTimesExecuted() == 0)
         {
             return;
         }
 
+        DOS = normalise(DOS);
         cout << "N = " << SoluteParticle::nParticles() << " f=" << f << "  " << f/fCrit << endl;
 
         double flatness = estimateFlatness();
@@ -119,8 +119,6 @@ private:
     vec minEnergy;
     double energySpan;
 
-    double meanFlatness;
-    uint flatnessCounter;
     double f;
     double f0;
     double fCrit;
@@ -136,8 +134,8 @@ private:
 
     static constexpr uint unsetCount = std::numeric_limits<uint>::max();
 
-    const uint nSkipped = 1;
-    const uint nStart = 14;
+    const uint nSkipped = 2;
+    const uint nStart = 4;
 
 
     void output(double flatness)
@@ -149,6 +147,8 @@ private:
         vec E = linspace<vec>(minEnergy(count), maxEnergy(count), nbins);
 
         vec vc = conv_to<vec>::from(visitCounts);
+
+        cout << find(vc == unsetCount).t() << endl;
 
         double mean = 0;
         uint c = 0;
@@ -205,19 +205,12 @@ private:
 
         double flatness = min/mean;
 
-
-        meanFlatness += flatness;
-        flatnessCounter++;
-
-
-        return meanFlatness/flatnessCounter;
+        return flatness;
     }
 
     void resetCounts()
     {
-        visitCounts.fill(unsetCount);
-        meanFlatness = 0;
-        flatnessCounter = 0;
+        visitCounts.fill(unsetCount);    
     }
 
     void initializeNewCycle()
@@ -346,12 +339,18 @@ private:
 
     uint getBin(double energy)
     {
-        if (fabs(energy - maxEnergy(count)) < 1E-10)
+        uint bin = nbins*(energy - minEnergy(count))/energySpan;
+
+        if (bin == nbins)
         {
             return nbins - 1;
         }
+        else if (bin > nbins)
+        {
+            solver()->exit("illegal bin");
+        }
 
-        return nbins*(energy - minEnergy(count))/energySpan;
+        return bin;
     }
 
     void prepNextOccupancyLevel()
