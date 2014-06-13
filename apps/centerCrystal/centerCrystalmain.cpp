@@ -121,7 +121,10 @@ void initialize_centerCrystal(KMCSolver * solver, const Setting & root)
 {
 
     solver->initializeCrystal(getSetting<double>(root, {"Initialization", "RelativeSeedSize"}));
-    solver->initializeSolutionBath();
+    solver->rotateSystem(45, 0, 0);
+    solver->dumpLAMMPS(1337);
+
+    //    solver->initializeSolutionBath();
 //    solver->initializeFromXYZ("/home/jorgen/code/build-kMC-Desktop_Qt_5_2_1_GCC_64bit-Release/apps/centerCrystal/outfiles", 37229);
 
     solver->addEvent(new Sphericity());

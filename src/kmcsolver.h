@@ -97,6 +97,10 @@ public:
 
     void insertRandomParticle(const uint species = 0, const bool sticky = false, bool checkIfLegal = false);
 
+    void forceRandomPosition(SoluteParticle *particle, bool checkIfLegal = false);
+
+    void rotateSystem(const double yaw, const double pitch, const double roll);
+
     void sortParticles(function<bool(SoluteParticle*, SoluteParticle*)> comp)
     {
         std::sort(m_particles.begin(), m_particles.end(), comp);

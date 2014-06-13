@@ -136,6 +136,7 @@ void SoluteParticle::resetSite()
 
 void SoluteParticle::disableSite()
 {
+    KMCDebugger_Assert(m_site, !=, NULL, "disabeling disabled site. You need to call KMCSolver::despawnParticle to clean up particles.");
     KMCDebugger_AssertBool(m_site->isActive(), "particle not present at site.", info());
     KMCDebugger_Assert(m_site->associatedParticle(), ==, this, "mismatch in site and particle.");
 
@@ -143,6 +144,7 @@ void SoluteParticle::disableSite()
     KMCDebugger_PushImplication(this, "disabled");
 
     m_site->desociate();
+    m_site = NULL;
 
     forEachNeighborSiteDo_sendIndices([this] (Site *neighbor, uint i, uint j, uint k)
     {

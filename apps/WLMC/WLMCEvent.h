@@ -36,7 +36,7 @@ private:
     const double m_fEnd;
     const double m_flatnessCriteria;
 
-    const function<double(double)> m_fIteratorFunction = [] (double fPrev) {return sqrt(fPrev);};
+    const function<double(double)> m_fIteratorFunction = [] (double fPrev) {return pow(fPrev, 0.75);};
 
 
     vec m_maxEnergies;
@@ -50,6 +50,9 @@ private:
     double m_energySpan;
 
     uint m_nCount;
+
+    uint m_maxBin;
+    uint m_minBin;
 
 
 
@@ -84,9 +87,13 @@ private:
 
     void findAllExtrema();
 
+    void findNewEnergyExtrema();
+
+    bool isLegalBin(const uint bin);
+
 
     const uint m_nSkipped = 2;
-    const uint m_nStart = 6;
+    const uint m_nStart = 32;
 
     static constexpr uint m_unsetCount = std::numeric_limits<uint>::max();
 };

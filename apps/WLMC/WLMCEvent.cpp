@@ -19,7 +19,6 @@ void WLMCEvent::initialize()
 
     initializeNewCycle();
 
-
 }
 
 void WLMCEvent::execute()
@@ -46,7 +45,7 @@ void WLMCEvent::execute()
         m_f = m_fIteratorFunction(m_f);
         resetCounts();
 
-        initRandomConfiguration();
+        findNewEnergyExtrema();
 
         if (m_f < m_fEnd)
         {
@@ -189,6 +188,12 @@ void WLMCEvent::performTrialMove(SoluteParticle *particle, const uint xd, const 
     double prevDOS = m_DOS(prevBin);
     double newDOS = m_DOS(newBin);
 
+    if (!isLegalBin(newBin) || !isLegalBin(prevBin))
+    {
+        particle->changePosition(xd, yd, zd);
+        return;
+    }
+
     bool accepted = true;
 
     if (prevDOS < newDOS)
@@ -214,6 +219,7 @@ void WLMCEvent::performTrialMove(SoluteParticle *particle, const uint xd, const 
 
 void WLMCEvent::registerVisit(const uint bin)
 {
+
     if (m_visitCounts(bin) == m_unsetCount)
     {
         m_visitCounts(bin) = 1;
@@ -392,6 +398,38 @@ void WLMCEvent::findAllExtrema()
 
     solver()->clearParticles();
 
+
+    m_minBin = m_nbins/10;
+    m_maxBin = m_nbins - 1 - m_minBin;
+
+}
+
+void WLMCEvent::findNewEnergyExtrema()
+{
+    double treshold = 1E-10;
+
+    m_minBin = 0;
+    while (m_DOS(m_minBin) < treshold)
+    {
+        m_minBin++;
+
+        KMCDebugger_Assert(m_minBin, <, m_nbins);
+    }
+
+    m_maxBin = m_nbins - 1;
+    while(m_DOS(m_maxBin) < treshold)
+    {
+        m_maxBin--;
+
+        KMCDebugger_Assert(m_maxBin, >, 0);
+    }
+
+    cout << m_minBin << " " << m_maxBin << endl;
+}
+
+bool WLMCEvent::isLegalBin(const uint bin)
+{
+    return bin >= m_minBin && bin <= m_maxBin;
 }
 
 

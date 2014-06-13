@@ -879,6 +879,7 @@ SoluteParticle *KMCSolver::forceSpawnParticle(const uint x, const uint y, const 
 void KMCSolver::despawnParticle(SoluteParticle *particle)
 {
     KMCDebugger_Assert(particle, !=, NULL, "particle does not exist.");
+    KMCDebugger_Assert(particle->site(), !=, NULL, "despawning particle that was never initialized. (Despawning inside particle loop?)");
     KMCDebugger_AssertBool(particle->site()->isActive(), "this should never happen.");
 
     SoluteParticle::popAffectedParticle(particle);
@@ -1137,12 +1138,12 @@ void KMCSolver::initializeFromLAMMPS(string path, uint frame)
     for (uint i = 0; i < m_lammpswriter->nParticles(); ++i)
     {
         (*m_lammpswriter) >> type
-                >> x
-                >> y
-                >> z
-                >> nNeighbors
-                >> ePot
-                >> species;
+                          >> x
+                          >> y
+                          >> z
+                          >> nNeighbors
+                          >> ePot
+                          >> species;
 
         forceSpawnParticle(x, y, z, species);
     }
@@ -1160,8 +1161,6 @@ void KMCSolver::initializeFromLAMMPS(string path, uint frame)
 
 void KMCSolver::insertRandomParticle(const uint species, const bool sticky, bool checkIfLegal)
 {
-    uint x, y, z;
-    bool spawned;
 
     const double margin = 1.75;
     uint effectiveVolume = 8; //eV = (difflength + 1)^3
@@ -1180,8 +1179,19 @@ void KMCSolver::insertRandomParticle(const uint species, const bool sticky, bool
 
     SoluteParticle *particle = new SoluteParticle(species, sticky);
 
-    spawned = false;
+    forceRandomPosition(particle, checkIfLegal);
 
+}
+
+void KMCSolver::forceRandomPosition(SoluteParticle *particle, bool checkIfLegal)
+{
+
+    uint N = 100000;
+
+    uint x, y, z;
+    bool spawned = false;
+
+    uint c = 0;
     while (!spawned)
     {
         x = KMC_RNG_UNIFORM()*NX();
@@ -1192,7 +1202,141 @@ void KMCSolver::insertRandomParticle(const uint species, const bool sticky, bool
 
         spawned = spawnParticle(particle, x, y, z, checkIfLegal);
 
+        c++;
+
+        if (c == N)
+        {
+            exit("Unable to place particle.");
+        }
+
     }
+
+}
+
+void KMCSolver::rotateSystem(const double yaw, const double pitch, const double roll)
+{
+
+    using std::sin;
+    using std::cos;
+
+    //Convert to radians
+    const double y = yaw/180.0*datum::pi;
+    const double p = pitch/180.0*datum::pi;
+    const double r = roll/180.0*datum::pi;
+
+    //Geometric values
+    const double sy = sin(y);
+    const double sp = sin(p);
+    const double sr = sin(r);
+
+    const double cy = cos(y);
+    const double cp = cos(p);
+    const double cr = cos(r);
+
+
+    //Rotational matrices
+    mat Y(3, 3, fill::eye);
+    mat P(3, 3, fill::eye);
+    mat R(3, 3, fill::eye);
+
+    Y(1, 1) =  cy; Y(1, 2) = sy;
+    Y(2, 1) = -sy; Y(2, 2) = cy;
+
+    P(0, 0) =  cp; P(0, 2) = sp;
+    P(2, 0) = -sp; P(2, 2) = cp;
+
+    R(0, 0) =  cr; R(0, 1) = sr;
+    R(1, 0) = -sr; R(1, 1) = cr;
+
+    cout << Y << P << R << endl;
+
+
+    //Total transformation matrix
+    mat RotMat = Y*P*R;
+
+    cout << RotMat << endl;
+
+    mat transformedPositions(3, SoluteParticle::nParticles());
+
+    uint c = 0;
+    for (SoluteParticle *particle : m_particles)
+    {
+        ivec3 centerReferencePos = {(int)particle->x() - (int)NX()/2,
+                                    (int)particle->y() - (int)NY()/2,
+                                    (int)particle->z() - (int)NZ()/2};
+
+        cout << centerReferencePos.t() << endl;
+
+        vec3 transPos = RotMat*centerReferencePos;
+
+        cout << transPos.t() << "\n--------------" << endl;
+
+        particle->disableSite();
+
+        transformedPositions.col(c) = transPos;
+
+        c++;
+    }
+
+    cout << "---" << endl;
+
+    vector<ivec3> collisions;
+    vector<SoluteParticle*> colliders;
+
+    c = 0;
+    for (SoluteParticle *particle : m_particles)
+    {
+        int tx = std::round(transformedPositions(0, c) + NX()/2);
+        int ty = std::round(transformedPositions(1, c) + NY()/2);
+        int tz = std::round(transformedPositions(2, c) + NZ()/2);
+
+        cout << transformedPositions.col(c).t();
+        cout << tx << " " << ty << " " << tz;
+
+        if (getSite(tx, ty, tz)->isActive())
+        {
+            cout << " " << "collided.";
+            collisions.push_back({tx, ty, tz});
+            colliders.push_back(particle);
+        }
+
+        else
+        {
+            particle->setSite(tx, ty, tz);
+        }
+
+        cout << endl;
+
+        c++;
+    }
+
+    for (uint i = 0; i < colliders.size(); ++i)
+    {
+        int tx = collisions.at(i)(0);
+        int ty = collisions.at(i)(1);
+        int tz = collisions.at(i)(2);
+
+        bool set = false;
+
+        Site::forShellDo(tx, ty, tz, 1, [&] (Site *site, int dx, int dy, int dz)
+        {
+            if (site->isActive() || set)
+            {
+                return;
+            }
+
+            int x = Boundary::currentBoundaries(0)->transformCoordinate(tx + dx);
+            int y = Boundary::currentBoundaries(1)->transformCoordinate(ty + dy);
+            int z = Boundary::currentBoundaries(2)->transformCoordinate(tz + dz);
+
+            colliders.at(i)->setSite(x, y, z);
+
+            set = true;
+        });
+    }
+
+
+
 }
 
 
