@@ -1186,7 +1186,7 @@ void KMCSolver::insertRandomParticle(const uint species, const bool sticky, bool
 void KMCSolver::forceRandomPosition(SoluteParticle *particle, bool checkIfLegal)
 {
 
-    uint N = 100000;
+    uint N = 10000;
 
     uint x, y, z;
     bool spawned = false;
@@ -1307,20 +1307,24 @@ void KMCSolver::rotateSystem(const double yaw, const double pitch, const double 
 
         cout << endl;
 
+        dumpLAMMPS(1337 + c + 1);
+
         c++;
     }
 
+    int xd, yd, zd;
     for (uint i = 0; i < colliders.size(); ++i)
     {
         int tx = collisions.at(i)(0);
         int ty = collisions.at(i)(1);
         int tz = collisions.at(i)(2);
 
-        bool set = false;
+
+        double min = numeric_limits<double>::max();
 
         Site::forShellDo(tx, ty, tz, 1, [&] (Site *site, int dx, int dy, int dz)
         {
-            if (site->isActive() || set)
+            if (site->isActive())
             {
                 return;
             }
@@ -1329,10 +1333,22 @@ void KMCSolver::rotateSystem(const double yaw, const double pitch, const double 
             int y = Boundary::currentBoundaries(1)->transformCoordinate(ty + dy);
             int z = Boundary::currentBoundaries(2)->transformCoordinate(tz + dz);
 
-            colliders.at(i)->setSite(x, y, z);
+            double dr2 = (tx - x)*(tx - x) + (ty - y)*(ty - y) + (tz - z)*(tz - z);
 
-            set = true;
+            if (dr2 < min)
+            {
+                min = dr2;
+
+                xd = x;
+                yd = y;
+                zd = z;
+
+            }
+
         });
+
+        colliders.at(i)->setSite(0, 0, i);
+
     }
 
 
