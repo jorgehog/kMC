@@ -17,8 +17,7 @@ public:
 
 private:
 
-    vector<uvec3> m_interface;
-    vector<Site*> m_sitesBehindBoundary;
+    umat m_interface;
 
 };
 

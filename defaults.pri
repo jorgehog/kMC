@@ -1,7 +1,6 @@
 CONFIG -= app_bundle
 CONFIG -= qt
 CONFIG += RNG_ZIG
-CONFIG += NO_OMP
 
 QMAKE_CXX = gcc
 

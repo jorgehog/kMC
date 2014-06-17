@@ -180,7 +180,46 @@ protected:
 
     static vector<const Boundary*> m_currentBoundaries;
 
+    template<typename T, typename F>
+    auto applyBoundaryTransform(T &&x, T &&y, T &&z, F &&f) -> decltype(f(x, y, z))
+    {
+        if (dimension() == X)
+        {
+            return f(forward<T>(x), forward<T>(y), forward<T>(z));
+        }
+        else if (dimension() == Y)
+        {
+            return f(forward<T>(y), forward<T>(x), forward<T>(z));
+        }
+        else
+        {
+            return f(forward<T>(z), forward<T>(x), forward<T>(y));
+        }
 
+    }
+
+    template<typename T, typename F>
+    auto applyInverseBoundaryTransform(T &&s, T &&l, T &&w, F &&f) -> decltype(f(s, l, w))
+    {
+        if (dimension() == X)
+        {
+            return f(forward<T>(s), forward<T>(l), forward<T>(w));
+        }
+        else if (dimension() == Y)
+        {
+            return f(forward<T>(l), forward<T>(s), forward<T>(w));
+        }
+        else
+        {
+            return f(forward<T>(l), forward<T>(w), forward<T>(s));
+        }
+
+    }
+
+    int orientationAsSign() const
+    {
+        return -1 + 2*m_orientation;
+    }
 
     enum Orientations
     {
