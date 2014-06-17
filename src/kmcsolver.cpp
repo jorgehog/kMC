@@ -1401,7 +1401,7 @@ void KMCSolver::setBoxSize(const uint NX, const uint NY, const uint NZ, bool che
     {
         for (uint i = 0; i < 3; ++i)
         {
-            if (Site::boundaries(i, 0)->type() == Boundary::Periodic)
+            if (Site::boundaries(i, 0)->type() == Boundary::BoundaryTypes::Periodic)
             {
                 if (Site::nNeighborsLimit() >= m_N(i)/2)
                 {

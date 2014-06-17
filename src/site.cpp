@@ -5,6 +5,7 @@
 
 #include "boundary/periodic/periodic.h"
 #include "boundary/edge/edge.h"
+#include "boundary/edge/sphericalEdge.h"
 #include "boundary/concentrationwall/concentrationwall.h"
 
 #include "soluteparticle.h"
@@ -837,6 +838,11 @@ void Site::setInitialBoundaries(const umat &boundaryMatrix)
 
             case Boundary::ConcentrationWall:
                 m_boundaries(XYZ, orientation) = new ConcentrationWall(XYZ, orientation);
+
+                break;
+
+            case Boundary::SphericalEdge:
+                m_boundaries(XYZ, orientation) = new SphericalEdge(XYZ, orientation);
 
                 break;
 

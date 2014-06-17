@@ -94,6 +94,7 @@ void Boundary::setMainSolver(KMCSolver *solver)
 bool Boundary::isCompatible(const int type1, const int type2, bool reverse)
 {
     bool compatible = !(type1 == Periodic && type2 != Periodic);
+    compatible = compatible && !(type1 == SphericalEdge && type2 != SphericalEdge);
 
     if (reverse)
     {

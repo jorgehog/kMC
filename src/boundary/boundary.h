@@ -92,6 +92,7 @@ public:
         Periodic,
         Edge,
         ConcentrationWall,
+        SphericalEdge,
         PeriodicShifted
     };
 

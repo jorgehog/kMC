@@ -31,7 +31,8 @@ HEADERS = RNG/kMCRNG.h \
     potential/inertwall/inertwall.h \
     system.h \
     reactions/diffusion/arrheniusdiffusion.h \
-    reactions/diffusion/tstdiffusion.h
+    reactions/diffusion/tstdiffusion.h \
+    boundary/edge/sphericalEdge.h
 
 SOURCES += \
     reactions/reaction.cpp \
@@ -52,7 +53,8 @@ SOURCES += \
     potential/inertwall/inertwall.cpp \
     system.cpp \
     reactions/diffusion/arrheniusdiffusion.cpp \
-    reactions/diffusion/tstdiffusion.cpp
+    reactions/diffusion/tstdiffusion.cpp \
+    boundary/edge/sphericalEdge.cpp
 
 
 RNG_ZIG {
