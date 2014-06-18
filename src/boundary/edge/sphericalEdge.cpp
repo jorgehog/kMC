@@ -46,13 +46,6 @@ void SphericalEdge::initialize()
                 uint w = dw + W2;
 
                 m_interface(l, w) = h;
-                //                    if (solver()->getSite(x, y, z)->isActive())
-                //                    {
-                //                        return;
-                //                    }
-
-                //                    solver()->forceSpawnParticle(x, y, z);
-
 
             }
         }
