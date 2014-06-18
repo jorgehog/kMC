@@ -87,9 +87,10 @@ KMCSolver::KMCSolver(const Setting & root)
 
     setBoxSize(boxSize);
 
+    Site::initializeBoundaries();
+
     initializeSites();
 
-    Site::initializeBoundaries();
 
 }
 
@@ -584,7 +585,6 @@ void KMCSolver::forEachSiteDo(function<void (uint x, uint y, uint z, Site *)> ap
         {
             for (uint z = 0; z < m_NZ; ++z)
             {
-                KMCDebugger_Assert(getSite(x, y, z), !=, NULL);
                 applyFunction(x, y, z, getSite(x, y, z));
             }
         }
@@ -669,6 +669,36 @@ void KMCSolver::initializeSites()
 
 
                 }
+            }
+        }
+    }
+
+    //Whatever fancy geometry is set up by boundaries (spheres etc.)
+    uint x, y, z;
+    for (uint d = 0; d < 3; ++d)
+    {
+        for (uint o = 0; o < 2; ++o)
+        {
+            const Boundary *boundary = Site::boundaries(d, o);
+
+            for (uint n = 0; n < boundary->boundarySize(); ++n)
+            {
+                boundary->getBoundarySite(n, x, y, z);
+
+                boundary->applyBoundaryTransform(x, y, z, [this, boundary] (uint h, uint l, uint w)
+                {
+                   uint outsideBoundary = h;
+
+                   while (outsideBoundary != boundary->bigbound())
+                   {
+                       outsideBoundary += boundary->orientationAsSign();
+
+                       boundary->applyInverseBoundaryTransform(outsideBoundary, l, w, [this] (uint x, uint y, uint z)
+                       {
+                           sites[x + m_boundaryPadding][y + m_boundaryPadding][z + m_boundaryPadding] = NULL;
+                       });
+                   }
+                });
             }
         }
     }
@@ -829,6 +859,13 @@ bool KMCSolver::spawnParticle(SoluteParticle *particle, const uint x, const uint
 {
 
     particle->trySite(x, y, z);
+
+    if (particle->site() == NULL)
+    {
+        particle->resetSite();
+
+        return false;
+    }
 
     if (particle->site()->isActive())
     {

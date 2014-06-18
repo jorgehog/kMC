@@ -58,6 +58,17 @@ public:
         m_initialized = false;
     }
 
+    static void setMaxEventsPrCycle(uint val)
+    {
+        m_maxEventsPrCycle = val;
+    }
+
+    static void setCooldown(uint val)
+    {
+        m_coolDown = val;
+    }
+
+
     static bool isBlocked(const uint xi)
     {
         return (xi == BLOCKED_COORDINATE);
@@ -154,6 +165,50 @@ public:
         Z
     };
 
+
+    template<typename T, typename F>
+    auto applyBoundaryTransform(T &&x, T &&y, T &&z, F &&f) const -> decltype(f(x, y, z))
+    {
+        if (dimension() == X)
+        {
+            return f(forward<T>(x), forward<T>(y), forward<T>(z));
+        }
+        else if (dimension() == Y)
+        {
+            return f(forward<T>(y), forward<T>(x), forward<T>(z));
+        }
+        else
+        {
+            return f(forward<T>(z), forward<T>(x), forward<T>(y));
+        }
+
+    }
+
+    template<typename T, typename F>
+    auto applyInverseBoundaryTransform(T &&s, T &&l, T &&w, F &&f) const -> decltype(f(s, l, w))
+    {
+        if (dimension() == X)
+        {
+            return f(forward<T>(s), forward<T>(l), forward<T>(w));
+        }
+        else if (dimension() == Y)
+        {
+            return f(forward<T>(l), forward<T>(s), forward<T>(w));
+        }
+        else
+        {
+            return f(forward<T>(l), forward<T>(w), forward<T>(s));
+        }
+
+    }
+
+    int orientationAsSign() const
+    {
+        return -1 + 2*m_orientation;
+    }
+
+
+
 private:
 
     const uint m_type;
@@ -180,45 +235,12 @@ protected:
 
     static vector<const Boundary*> m_currentBoundaries;
 
-    template<typename T, typename F>
-    auto applyBoundaryTransform(T &&x, T &&y, T &&z, F &&f) -> decltype(f(x, y, z))
+    virtual uint interfaceValue(const uint w, const uint l) const
     {
-        if (dimension() == X)
-        {
-            return f(forward<T>(x), forward<T>(y), forward<T>(z));
-        }
-        else if (dimension() == Y)
-        {
-            return f(forward<T>(y), forward<T>(x), forward<T>(z));
-        }
-        else
-        {
-            return f(forward<T>(z), forward<T>(x), forward<T>(y));
-        }
+        (void) w;
+        (void) l;
 
-    }
-
-    template<typename T, typename F>
-    auto applyInverseBoundaryTransform(T &&s, T &&l, T &&w, F &&f) -> decltype(f(s, l, w))
-    {
-        if (dimension() == X)
-        {
-            return f(forward<T>(s), forward<T>(l), forward<T>(w));
-        }
-        else if (dimension() == Y)
-        {
-            return f(forward<T>(l), forward<T>(s), forward<T>(w));
-        }
-        else
-        {
-            return f(forward<T>(l), forward<T>(w), forward<T>(s));
-        }
-
-    }
-
-    int orientationAsSign() const
-    {
-        return -1 + 2*m_orientation;
+        return bound();
     }
 
     enum Orientations
@@ -227,6 +249,13 @@ protected:
         Far
     };
 
+
+    void performConcentrationBoundaryConditionStep();
+
+    //TMP
+    static uint m_maxEventsPrCycle;
+    static uint m_coolDown;
+    static uint counter;
 
 };
 

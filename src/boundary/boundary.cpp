@@ -2,6 +2,7 @@
 
 #include "../kmcsolver.h"
 #include "../site.h"
+#include "../soluteparticle.h"
 
 #include "../debugger/debugger.h"
 
@@ -51,22 +52,22 @@ void Boundary::getBoundarySite(uint n, uint &x, uint&y, uint &z) const
     {
         x = n/NY();
         y = n - x*NY();
-        z = bound();
+        z = interfaceValue(x, y);
 
     }
     else if (dimension() == Y)
     {
         x = n/NZ();
-        y = bound();
         z = n - x*NZ();
+        y = interfaceValue(x, z);
     }
     else
     {
         KMCDebugger_Assert(dimension(), ==, X);
 
-        x = bound();
         y = n/NZ();
         z = n - y*NZ();
+        x = interfaceValue(y, z);
     }
 
 }
@@ -116,6 +117,93 @@ uint Boundary::getLocation(const uint xi, const uint dim, const uint shift)
 
 }
 
+void Boundary::performConcentrationBoundaryConditionStep()
+{
+    counter++;
+    if (counter%m_coolDown != 0)
+    {
+        return;
+    }
+
+    KMCDebugger_Assert(m_maxEventsPrCycle, <=, boundarySize(), "Max events pr cycle cannot exceed the number of boundary sites.");
+
+
+    Site * currentSite;
+
+    uint x, y, z;
+    uint c = 0;
+    uint ce = 0;
+
+    uint targetN = solver()->targetConcentration()*SoluteParticle::getCurrentSolvantVolume();
+
+    if (targetN == 0)
+    {
+        targetN = 1;
+    }
+
+    if (SoluteParticle::nSolutionParticles() > targetN)
+    {
+
+        while (SoluteParticle::nSolutionParticles() != targetN && c != boundarySize() && ce != m_maxEventsPrCycle)
+        {
+
+            getBoundarySite(KMC_RNG_UNIFORM()*boundarySize(), x, y, z);
+
+            currentSite = solver()->getSite(x, y, z);
+
+            if (currentSite != NULL)
+            {
+                if (currentSite->isActive())
+                {
+                    solver()->despawnParticle(currentSite->associatedParticle());
+                    ce++;
+                }
+            }
+
+            c++; //*giggle*
+        }
+
+    }
+
+    else
+    {
+
+        bool spawned;
+
+        while (SoluteParticle::nSolutionParticles() != targetN && ce != m_maxEventsPrCycle)
+        {
+
+            spawned = false;
+
+            SoluteParticle *particle = new SoluteParticle();
+
+            while (c != boundarySize() && !spawned)
+            {
+
+                getBoundarySite(KMC_RNG_UNIFORM()*boundarySize(), x, y, z);
+                spawned = solver()->spawnParticle(particle, x, y, z, true);
+
+                if (spawned)
+                {
+                    ce++;
+                }
+
+                c++; //*giggle*
+            }
+
+            if (!spawned)
+            {
+                particle->resetSite();
+                delete particle;
+                break;
+            }
+
+        }
+    }
+
+}
+
+
 
 const uint & Boundary::NX()
 {
@@ -156,3 +244,8 @@ KMCSolver* Boundary::m_solver;
 
 
 vector<const Boundary*> Boundary::m_currentBoundaries;
+
+
+uint Boundary::m_maxEventsPrCycle = 1;
+uint Boundary::m_coolDown = 1u;
+uint Boundary::counter = 0;

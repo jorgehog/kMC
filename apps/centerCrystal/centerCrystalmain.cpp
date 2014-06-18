@@ -122,38 +122,6 @@ void initialize_centerCrystal(KMCSolver * solver, const Setting & root)
 
     solver->initializeCrystal(getSetting<double>(root, {"Initialization", "RelativeSeedSize"}));
 
-//    const uint &NX = solver->NX();
-//    const uint &NY = solver->NY();
-//    const uint &NZ = solver->NZ();
-
-//    uint x, y, z1, z2;
-
-//    vec thetas = linspace(0, datum::pi/2, 500);
-//    vec phis   = linspace(0, 2*datum::pi, 500);
-
-//    for (const double &theta : thetas)
-//    {
-//        for (const double &phi : phis)
-//        {
-//            x  = (NX - 1.0)/2.0 + round(NX*sin(theta)*cos(phi)/2.0);
-//            y  = (NY - 1.0)/2.0 + round(NY*sin(theta)*sin(phi)/2.0);
-//            z1 = (NZ - 1.0)/2.0 + round(NZ*cos(theta)         /2.0);
-//            z2 = (NZ - 1.0)/2.0 - round(NZ*cos(theta)         /2.0);
-
-//            if (!solver->getSite(x, y, z1)->isActive())
-//            {
-//                solver->forceSpawnParticle(x, y, z1);
-//            }
-
-//            if (!solver->getSite(x, y, z2)->isActive())
-//            {
-//                solver->forceSpawnParticle(x, y, z2);
-//            }
-
-//        }
-//    }
-
-//    solver->dumpLAMMPS(1337);
-
+    solver->initializeSolutionBath();
 
 }

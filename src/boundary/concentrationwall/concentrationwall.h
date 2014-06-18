@@ -14,16 +14,6 @@ public:
 
     ~ConcentrationWall();
 
-    static void setMaxEventsPrCycle(uint val)
-    {
-        m_maxEventsPrCycle = val;
-    }
-
-    static void setCooldown(uint val)
-    {
-        m_coolDown = val;
-    }
-
     // Boundary interface
 public:
     void update();
@@ -31,10 +21,6 @@ public:
 
 private:
 
-    //TMP
-    static uint m_maxEventsPrCycle;
-    static uint m_coolDown;
-    static uint counter;
 
 };
 

@@ -64,7 +64,6 @@ void Site::loadConfig(const Setting &setting)
 
 void Site::initializeBoundaries()
 {
-    KMCDebugger_Assert(Site::_refCount(), !=, 0, "Sites needs to be enabled to initialize boundaries.");
     KMCDebugger_AssertBool(!Site::boundariesIsInitialized(), "Boundaries needs to be finalized before they can be initialized.");
 
     KMCDebugger_SetEnabledTo(false);

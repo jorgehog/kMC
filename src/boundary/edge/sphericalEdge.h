@@ -10,14 +10,19 @@ public:
 
     SphericalEdge(const uint dimension, const uint orientation);
 
-    // Boundary interface
-public:
     void update();
     void initialize();
+
+    uint interfaceValue(const uint w, const uint l) const
+    {
+        return m_interface(w, l);
+    }
 
 private:
 
     umat m_interface;
+
+    void removeOutsiders();
 
 };
 
