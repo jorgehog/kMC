@@ -47,12 +47,12 @@ public:
         return m_potential;
     }
 
-    static const double &rPower(const uint i, const uint j)
+    static const double &rPower(const uint i = 0, const uint j = 0)
     {
         return m_rPowers(i, j);
     }
 
-    static const double &strength(const uint i, const uint j)
+    static const double &strength(const uint i = 0, const uint j = 0)
     {
         return m_strengths(i, j);
     }
