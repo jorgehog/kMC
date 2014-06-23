@@ -9,15 +9,18 @@ if len(argv) < 5:
 ssh_id = argv[1]
 fromPath = argv[2]
 toPath = argv[3]
-ranges = " ".join(argv[4:])
 
-subranges = ranges.split()
+for subrange in argv[4:]:
+    
+    splits = subrange.split(":")
 
-for subrange in subranges:
+    if len(splits) == 2:
+        bottom, top = [int(x) for x in splits]
+        step = 1
+    else:
+        bottom, top, step = [int(x) for x in splits]
 
-    bottom, top = [int(x) for x in subrange.split(":")]
-
-    for n in range(bottom, top + 1):
+    for n in range(bottom, top + 1, step):
         call = "scp %s:%s/kMC%d.lmp %s" % (ssh_id, fromPath, n, toPath)
         
         system(call)
