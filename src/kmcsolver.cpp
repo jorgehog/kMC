@@ -1036,7 +1036,7 @@ void KMCSolver::initializeSolutionBath(const uint species, const bool sticky)
 
     while (n != N)
     {
-        insertRandomParticle(species, sticky);
+        insertRandomParticle(species, sticky, true);
         n++;
     }
 
