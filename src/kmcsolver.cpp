@@ -681,6 +681,11 @@ void KMCSolver::initializeSites()
         {
             const Boundary *boundary = Site::boundaries(d, o);
 
+            if (boundary->type() != Boundary::SphericalEdge)
+            {
+                continue;
+            }
+
             for (uint n = 0; n < boundary->boundarySize(); ++n)
             {
                 boundary->getBoundarySite(n, x, y, z);

@@ -9,8 +9,8 @@
 #include <sys/types.h>
 
 
-//#define focusSuite "PeriodicBoundaries"
-//#define focusTest  "EnergyAndNeighborSetup"
+#define focusSuite "PeriodicBoundaries"
+#define focusTest  "KnownCase"
 
 
 #include "defines.h"
