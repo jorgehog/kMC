@@ -62,12 +62,7 @@ void initializeWLMC(KMCSolver *solver, const Setting &root)
 
 
     KMCEvent *wlmc = new WLMCEvent(nbins, f0, fCrit, hCrit);
-    wlmc->setManualPriority(0);
 
-    solver->addEvent(wlmc);
-
-    uint solverEventAddress = solver->solverEvent()->getAddress();
-
-    solver->mainLattice()->removeEvent(solverEventAddress);
+    solver->swapMainSolverEventWith(wlmc);
 
 }

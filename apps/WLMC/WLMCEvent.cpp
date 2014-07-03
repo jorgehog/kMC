@@ -34,11 +34,25 @@ void WLMCEvent::execute()
     m_DOS = normalise(m_DOS);
     cout << "N = " << SoluteParticle::nParticles() << " f=" << m_f << endl;
 
-    double flatness = estimateFlatness();
+    double flatness = estimateFlatness(m_visitCounts);
 
     setValue(flatness);
 
     output();
+
+
+    uint l, u;
+    uvec origin = find(m_DOS == m_DOS.max());
+    findFlatWindow(m_visitCounts, l, u, origin(0));
+
+    double f = estimateFlatness(m_visitCounts(span(l, u)));
+    cout << "DOS is flattest on [" << l << ", " << u << "] f = " << f << endl;
+
+    if (f >= m_flatnessCriteria)
+    {
+        cout << "should divide now." << endl;
+        exit(1);
+    }
 
     if (flatness >= m_flatnessCriteria)
     {
@@ -63,8 +77,6 @@ void WLMCEvent::output() const
     uvec indices = find(m_visitCounts != m_unsetCount);
     uvec vc = m_visitCounts(indices);
 
-    cout << find(m_visitCounts == m_unsetCount).t() << endl;
-
     vec dos = m_DOS(indices);
     vec e = E(indices);
     vec idx = conv_to<vec>::from(indices);
@@ -77,14 +89,14 @@ void WLMCEvent::output() const
 
 }
 
-double WLMCEvent::estimateFlatness() const
+double WLMCEvent::estimateFlatness(const uvec &visitCounts) const
 {
 
-    uint min = arma::min(m_visitCounts);
+    uint min = arma::min(visitCounts);
 
     double mean = 0;
     uint c = 0;
-    for (const uint &vc : m_visitCounts)
+    for (const uint &vc : visitCounts)
     {
         if (vc != m_unsetCount)
         {
@@ -96,7 +108,6 @@ double WLMCEvent::estimateFlatness() const
 
     if (c == 0)
     {
-        cout << "no visited bins." << endl;
         return 0;
     }
 
@@ -106,6 +117,67 @@ double WLMCEvent::estimateFlatness() const
 
     return flatness;
 }
+
+bool WLMCEvent::isFlat(const uvec &visitCounts) const
+{
+    return estimateFlatness(visitCounts) > m_flatnessCriteria;
+}
+
+void WLMCEvent::findFlatWindow(const uvec &visitCounts, uint &lowerLimit, uint &upperLimit, const uint origin) const
+{
+    uint top = visitCounts.n_elem - 1;
+    uint bottom = 0;
+
+    if (origin > top - m_minWindow/2)
+    {
+        upperLimit = top;
+        lowerLimit = origin - m_minWindow;
+    }
+
+    else if (origin < bottom + m_minWindow/2)
+    {
+        lowerLimit = bottom;
+        upperLimit = bottom + m_minWindow;
+    }
+
+    else
+    {
+        upperLimit = origin + m_minWindow/2;
+        lowerLimit = origin - m_minWindow/2;
+    }
+
+
+    //right propagation
+    while (isFlat(visitCounts(span(lowerLimit, topIncrement(upperLimit, top)))))
+    {
+
+        KMCDebugger_Assert(lowerLimit, <, upperLimit);
+
+        if (upperLimit == top)
+        {
+            break;
+        }
+
+        upperLimit = topIncrement(upperLimit, top);
+
+    }
+
+    //left propagation
+    while (isFlat(visitCounts(span(bottomIncrement(lowerLimit, bottom), upperLimit))))
+    {
+
+        KMCDebugger_Assert(lowerLimit, <, upperLimit);
+
+        if (lowerLimit == bottom)
+        {
+            break;
+        }
+
+        lowerLimit = bottomIncrement(lowerLimit, bottom);
+    }
+
+}
+
 
 void WLMCEvent::initializeNewCycle()
 {

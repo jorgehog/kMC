@@ -858,6 +858,14 @@ uint KMCSolver::binarySearchForInterval(const double target, const vector<double
 
 }
 
+void KMCSolver::swapMainSolverEventWith(KMCEvent *event)
+{
+    m_mainLattice->removeEvent(m_solverEvent->getAddress());
+
+    event->setManualPriority(0);
+    addEvent(event);
+}
+
 
 
 bool KMCSolver::spawnParticle(SoluteParticle *particle, const uint x, const uint y, const uint z, bool checkIfLegal)

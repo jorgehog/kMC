@@ -347,6 +347,8 @@ public:
 
     }
 
+    void swapMainSolverEventWith(KMCEvent *event);
+
 private:
 
     DiffusionTypes m_diffusionType = DiffusionTypes::TST;
