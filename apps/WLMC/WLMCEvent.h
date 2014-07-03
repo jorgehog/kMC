@@ -17,6 +17,7 @@ public:
         m_nbins(nbins),
         m_minWindow(nbins/10),
         m_windowIncrementSize(5),
+        m_movesPerWindowCheck(10000),
         m_fBegin(fBegin),
         m_fEnd(fEnd),
         m_flatnessCriteria(flatnessCritera)
@@ -37,6 +38,8 @@ private:
     const uint m_minWindow;
 
     const uint m_windowIncrementSize;
+
+    const uint m_movesPerWindowCheck;
 
     const double m_fBegin;
     const double m_fEnd;
@@ -60,7 +63,13 @@ private:
     uint m_maxBin;
     uint m_minBin;
 
+    uint m_windowMaxBin;
+    uint m_windowMinBin;
 
+
+    void calculateWindow(const uint startBin, const uint endBin);
+
+    uint pointClosestToMean() const;
 
     void output() const;
 

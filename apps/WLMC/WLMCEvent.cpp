@@ -7,6 +7,9 @@ using namespace kMC;
 void WLMCEvent::initialize()
 {
 
+    m_minBin = 0;
+    m_maxBin = m_nbins - 1;
+
     m_minEnergies.set_size(solver()->volume());
     m_maxEnergies.set_size(solver()->volume());
 
@@ -24,48 +27,94 @@ void WLMCEvent::initialize()
 void WLMCEvent::execute()
 {
 
-    moveParticle();
-
-    if (nTimesExecuted() % 1000 != 0 || nTimesExecuted() == 0)
+    while (m_f > m_fEnd)
     {
-        return;
+        calculateWindow(m_minBin, m_maxBin);
+        prepNextOccupancyLevel();
     }
 
-    m_DOS = normalise(m_DOS);
-    cout << "N = " << SoluteParticle::nParticles() << " f=" << m_f << endl;
+}
 
-    double flatness = estimateFlatness(m_visitCounts);
+void WLMCEvent::calculateWindow(const uint startBin, const uint endBin)
+{
+    m_windowMinBin = startBin;
+    m_windowMaxBin = endBin;
 
-    setValue(flatness);
+    bool flat = false;
 
-    output();
+    uint counter = 0;
 
+    uint flatSubwindowStart;
+    uint flatSubwindowEnd;
 
-    uint l, u;
-    uvec origin = find(m_DOS == m_DOS.max());
-    findFlatWindow(m_visitCounts, l, u, origin(0));
-
-    double f = estimateFlatness(m_visitCounts(span(l, u)));
-    cout << "DOS is flattest on [" << l << ", " << u << "] f = " << f << endl;
-
-    if (f >= m_flatnessCriteria)
+    while (!flat)
     {
-        cout << "should divide now." << endl;
-        exit(1);
-    }
+        counter++;
 
-    if (flatness >= m_flatnessCriteria)
-    {
-        m_f = m_fIteratorFunction(m_f);
-        resetCounts();
+        moveParticle();
+        setValue(estimateFlatness(m_visitCounts));
 
-        findNewEnergyExtrema();
-
-        if (m_f < m_fEnd)
+        if (counter % m_movesPerWindowCheck != 0)
         {
-            prepNextOccupancyLevel();
+            continue;
         }
+
+
+        m_DOS = normalise(m_DOS);
+
+        findFlatWindow(m_visitCounts(span(m_windowMinBin, m_windowMaxBin)), flatSubwindowStart, flatSubwindowEnd, pointClosestToMean());
+
+        flat = (m_minWindow == flatSubwindowStart) && (m_windowMaxBin == flatSubwindowEnd);
+
+        cout << flatSubwindowStart << " " << flatSubwindowEnd << " " << estimateFlatness(m_visitCounts(span(flatSubwindowStart, flatSubwindowEnd))) << endl;
+
+        ofstream f;
+        f.open(solver()->filePath() + "/flatness.txt");
+        f << flatSubwindowStart << "\n" << flatSubwindowEnd << endl;
+        f.close();
+
+        output();
     }
+}
+
+uint WLMCEvent::pointClosestToMean() const
+{
+    double mean = 0;
+    uint count = 0;
+
+    for (uint i = m_windowMinBin; i <= m_windowMaxBin; ++i)
+    {
+        if (m_visitCounts(i) == m_unsetCount)
+        {
+            continue;
+        }
+
+        mean += m_visitCounts(i);
+        count++;
+
+    }
+
+    uint point = 0;
+    double min = numeric_limits<double>::max();
+
+    for (uint i = m_windowMinBin; i <= m_windowMaxBin; ++i)
+    {
+        if (m_visitCounts(i) == m_unsetCount)
+        {
+            continue;
+        }
+
+        double div = (m_visitCounts(i) - mean)*(m_visitCounts(i) - mean);
+
+        if (div < min)
+        {
+            min = div;
+            point = i;
+        }
+
+    }
+
+    return point;
 }
 
 void WLMCEvent::output() const
@@ -146,34 +195,60 @@ void WLMCEvent::findFlatWindow(const uvec &visitCounts, uint &lowerLimit, uint &
         lowerLimit = origin - m_minWindow/2;
     }
 
+    cout << origin << " " << lowerLimit << " " << upperLimit << endl;
+
+    cout << "- " << endl;
+
+    bool upperSet = false;
+    bool lowerSet = false;
 
     //right propagation
-    while (isFlat(visitCounts(span(lowerLimit, topIncrement(upperLimit, top)))))
+    while (!(upperSet && lowerSet))
     {
 
         KMCDebugger_Assert(lowerLimit, <, upperLimit);
 
-        if (upperLimit == top)
+        if (!upperSet)
         {
-            break;
+
+            if (upperLimit == top)
+            {
+                upperSet = true;
+            }
+
+            if (!isFlat(visitCounts(span(lowerLimit, topIncrement(upperLimit, top)))))
+            {
+                upperSet = true;
+            }
+            else
+            {
+                upperLimit = topIncrement(upperLimit, top);
+            }
+
         }
 
-        upperLimit = topIncrement(upperLimit, top);
-
-    }
-
-    //left propagation
-    while (isFlat(visitCounts(span(bottomIncrement(lowerLimit, bottom), upperLimit))))
-    {
-
-        KMCDebugger_Assert(lowerLimit, <, upperLimit);
-
-        if (lowerLimit == bottom)
+        if (!lowerSet)
         {
-            break;
+
+            if (lowerLimit == bottom)
+            {
+                lowerSet = true;
+            }
+
+            if (!isFlat(visitCounts(span(bottomIncrement(lowerLimit, bottom), upperLimit))))
+            {
+                lowerSet = true;
+            }
+            else
+            {
+                lowerLimit = bottomIncrement(lowerLimit, bottom);
+            }
+
         }
 
-        lowerLimit = bottomIncrement(lowerLimit, bottom);
+        cout << lowerLimit << " " << upperLimit << endl;
+
+
     }
 
 }
@@ -327,10 +402,10 @@ uint WLMCEvent::getBin(const double energy)
 
 void WLMCEvent::prepNextOccupancyLevel()
 {
-    if (SoluteParticle::nParticles() == NX()*NY()*NZ() - m_nSkipped + 2)
-    {
-        solver()->exit();
-    }
+
+    m_f = m_fIteratorFunction(m_f);
+
+    findNewEnergyExtrema();
 
     bool spawned = false;
     solver()->forEachSiteDo([&spawned, this] (uint x, uint y, uint z, Site *site)
@@ -469,11 +544,6 @@ void WLMCEvent::findAllExtrema()
     } while (n < m_maxEnergies.n_elem);
 
     solver()->clearParticles();
-
-
-    m_minBin = m_nbins/10;
-    m_maxBin = m_nbins - 1 - m_minBin;
-
 }
 
 void WLMCEvent::findNewEnergyExtrema()
@@ -496,12 +566,11 @@ void WLMCEvent::findNewEnergyExtrema()
         KMCDebugger_Assert(m_maxBin, >, 0);
     }
 
-    cout << m_minBin << " " << m_maxBin << endl;
 }
 
 bool WLMCEvent::isLegalBin(const uint bin)
 {
-    return bin >= m_minBin && bin <= m_maxBin;
+    return bin >= m_windowMinBin && bin <= m_windowMaxBin;
 }
 
 
