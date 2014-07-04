@@ -15,9 +15,10 @@ public:
               const double flatnessCritera = 0.85) :
         KMCEvent("kMC::WLMC", "", true),
         m_nbins(nbins),
-        m_minWindow(nbins/10),
-        m_windowIncrementSize(5),
         m_movesPerWindowCheck(10000),
+        m_minWindow(nbins/10),
+        m_windowOverlap(nbins/10),
+        m_windowIncrementSize(5),
         m_fBegin(fBegin),
         m_fEnd(fEnd),
         m_flatnessCriteria(flatnessCritera)
@@ -34,19 +35,17 @@ protected:
 private:
 
     const uint m_nbins;
+    const uint m_movesPerWindowCheck;
 
     const uint m_minWindow;
-
+    const uint m_windowOverlap;
     const uint m_windowIncrementSize;
-
-    const uint m_movesPerWindowCheck;
 
     const double m_fBegin;
     const double m_fEnd;
     const double m_flatnessCriteria;
 
     const function<double(double)> m_fIteratorFunction = [] (double fPrev) {return sqrt(fPrev);};
-
 
     vec m_maxEnergies;
     vec m_minEnergies;

@@ -64,9 +64,7 @@ void WLMCEvent::calculateWindow(const uint startBin, const uint endBin)
 
         findFlatWindow(m_visitCounts(span(m_windowMinBin, m_windowMaxBin)), flatSubwindowStart, flatSubwindowEnd, pointClosestToMean());
 
-        flat = (m_minWindow == flatSubwindowStart) && (m_windowMaxBin == flatSubwindowEnd);
-
-        cout << flatSubwindowStart << " " << flatSubwindowEnd << " " << estimateFlatness(m_visitCounts(span(flatSubwindowStart, flatSubwindowEnd))) << endl;
+        flat = flatSubwindowEnd - flatSubwindowStart >= m_minWindow && false;
 
         ofstream f;
         f.open(solver()->filePath() + "/flatness.txt");
@@ -75,6 +73,9 @@ void WLMCEvent::calculateWindow(const uint startBin, const uint endBin)
 
         output();
     }
+
+
+
 }
 
 uint WLMCEvent::pointClosestToMean() const
