@@ -31,16 +31,6 @@ double KMCWLMCSystem::getTotalValue() const
     return SoluteParticle::totalEnergy();
 }
 
-void KMCWLMCSystem::clearParticles()
-{
-    m_solver->clearParticles();
-}
-
-void KMCWLMCSystem::addParticle(const uint x, const uint y, const uint z)
-{
-    m_solver->forceSpawnParticle(x, y, z);
-}
-
 double KMCWLMCSystem::getValueDifference(const uint particleIndex, const uint xd, const uint yd, const uint zd) const
 {
     double eNew = 0;

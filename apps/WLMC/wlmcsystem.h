@@ -26,11 +26,6 @@ public:
 
     virtual double getTotalValue() const = 0;
 
-
-    virtual void clearParticles() = 0;
-
-    virtual void addParticle(const uint x, const uint y, const uint z) = 0;
-
     virtual void changePosition(const uint particleIndex, const uint xd, const uint yd, const uint zd) = 0;
 
 

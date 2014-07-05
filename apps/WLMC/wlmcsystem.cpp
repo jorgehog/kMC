@@ -180,7 +180,6 @@ double WLMCSystem::getGlobalExtremum(const WLMCSystem::extrema type)
 
     double localExtrema, valueDifference;
     uint xd, yd, zd, particleIndex;
-    bool done;
 
     //vector representing particles = 0, 1, ..., nParticles - 1
     vector<uint> particleIndices(m_nParticles);

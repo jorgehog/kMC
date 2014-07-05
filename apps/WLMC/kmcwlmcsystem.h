@@ -22,10 +22,6 @@ public:
 
     double getTotalValue() const;
 
-    void clearParticles();
-
-    void addParticle(const uint x, const uint y, const uint z);
-
     void changePosition(const uint particleIndex, const uint xd, const uint yd, const uint zd);
 
 private:
