@@ -15,13 +15,23 @@ class WLMCSystem;
 class WLMCWindow
 {
 public:
-    WLMCWindow(const vec &DOS,
+    WLMCWindow(WLMCSystem *system,
+               const vec &DOS,
                const uint lowerLimit,
                const uint upperLimit,
+               const double *f,
                const double minValue,
                const double maxValue);
 
-    void calculateWindow(double f);
+    WLMCWindow(WLMCSystem *system,
+               const uint nBins,
+               const double *f,
+               const double minValue,
+               const double maxValue);
+
+    virtual ~WLMCWindow();
+
+    void calculateWindow();
 
     double estimateFlatness() const;
 
@@ -30,6 +40,8 @@ public:
     void registerVisit(const uint bin);
 
     uint getBin(double value) const;
+
+    void reset();
 
     bool isLegal(const uint bin) const
     {
@@ -50,7 +62,9 @@ public:
 
 private:
 
-    WLMCSystem *system;
+    WLMCSystem *m_system;
+
+    const double* m_f;
 
     const uint m_lowerLimit;
     const uint m_upperLimit;
@@ -66,9 +80,11 @@ private:
     WLMCWindow *m_lowerNeighbor;
     WLMCWindow *m_upperNeighbor;
 
-    double m_f;
 
-    void performMove();
+    const double &f() const
+    {
+        return *m_f;
+    }
 
     void setNeighbors(WLMCWindow *lowerNeighbor, WLMCWindow *upperNeighbor)
     {

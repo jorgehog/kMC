@@ -1,7 +1,10 @@
 #include "WLMCEvent.h"
 
-using namespace kMC;
+#include "wlmcwindow.h"
+#include "kmcwlmcsystem.h"
 
+using namespace kMC;
+using namespace WLMC;
 
 
 void WLMCEvent::initialize()
@@ -26,6 +29,34 @@ void WLMCEvent::initialize()
 
 void WLMCEvent::execute()
 {
+    double f = m_fBegin;
+
+    KMCWLMCSystem system(solver());
+
+    double max, min;
+    system.locateGlobalExtremaValues(min, max, solver());
+
+    cout << min << " " << m_minEnergies(m_nCount) << endl;
+    cout << max << " " << m_maxEnergies(m_nCount) << endl;
+
+    exit(1);
+
+    WLMCWindow mainWindow(&system,
+                          m_nbins,
+                          &f,
+                          m_minEnergies(m_nCount),
+                          m_maxEnergies(m_nCount));
+
+    while (f >= m_fEnd)
+    {
+        mainWindow.calculateWindow();
+
+        f = m_fIteratorFunction(f);
+
+        mainWindow.reset();
+    }
+
+    exit(0);
 
     while (m_f > m_fEnd)
     {

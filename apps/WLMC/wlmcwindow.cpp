@@ -3,11 +3,14 @@
 
 using namespace WLMC;
 
-WLMCWindow::WLMCWindow(const vec &DOS,
+WLMCWindow::WLMCWindow(WLMCSystem *system, const vec &DOS,
                        const uint lowerLimit,
                        const uint upperLimit,
+                       const double *f,
                        const double minValue,
                        const double maxValue) :
+    m_system(system),
+    m_f(f),
     m_lowerLimit(lowerLimit),
     m_upperLimit(upperLimit),
     m_nbins(upperLimit - lowerLimit),
@@ -20,11 +23,26 @@ WLMCWindow::WLMCWindow(const vec &DOS,
     m_visitCounts.fill(m_unsetCount);
 }
 
-void WLMCWindow::calculateWindow(double f)
+WLMCWindow::WLMCWindow(WLMCSystem *system, const uint nBins,
+                       const double *f,
+                       const double minValue,
+                       const double maxValue) :
+    WLMCWindow(system, ones(nBins), 0, nBins, f, minValue, maxValue)
 {
-    m_f = f;
 
+}
 
+WLMCWindow::~WLMCWindow()
+{
+    m_DOS.clear();
+    m_visitCounts.clear();
+    m_f = NULL;
+    m_system = NULL;
+}
+
+void WLMCWindow::calculateWindow()
+{
+    cout << f() << endl;
 }
 
 double WLMCWindow::estimateFlatness() const
@@ -79,7 +97,7 @@ void WLMCWindow::registerVisit(const uint bin)
         m_visitCounts(bin)++;
     }
 
-    m_DOS(bin) *= m_f;
+    m_DOS(bin) *= f();
 }
 
 uint WLMCWindow::getBin(double value) const
@@ -94,9 +112,9 @@ uint WLMCWindow::getBin(double value) const
     return bin;
 }
 
-void WLMCWindow::performMove()
+void WLMCWindow::reset()
 {
-
+    m_visitCounts.fill(m_unsetCount);
 }
 
 void WLMCWindow::mergeWith(WLMCWindow *other)
