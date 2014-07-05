@@ -7,6 +7,12 @@ WLMCSystem::WLMCSystem(const uint nParticles,
                        const uint NX,
                        const uint NY,
                        const uint NZ,
+                       const uint movesPerSampling,
+                       const double flatnessCriterion,
+                       const uint overlap,
+                       const uint minWindowSize,
+                       const uint windowIncrementSize,
+                       const double *f,
                        function<double()> URNG) :
     m_nParticles(nParticles),
     m_NX(NX),
@@ -14,12 +20,31 @@ WLMCSystem::WLMCSystem(const uint nParticles,
     m_NZ(NZ),
     m_volume(m_NX*m_NY*m_NZ),
     m_freeVolume(m_volume - nParticles),
+    m_movesPerSampling(movesPerSampling),
+    m_flatnessCriterion(flatnessCriterion),
+    m_overlap(overlap),
+    m_minWindowSize(minWindowSize),
+    m_windowIncrementSize(windowIncrementSize),
+    m_f(f),
     m_URNG(URNG)
 {
-
+    
 }
 
-void WLMCSystem::performMove(WLMCWindow *window)
+void WLMCSystem::sampleWindow(WLMCWindow *window)
+{
+    uint nMoves = 0;
+    
+    while (nMoves < m_movesPerSampling)
+    {
+        if (doSingleMove(window))
+        {
+            nMoves++;
+        }
+    }
+}
+
+bool WLMCSystem::doSingleMove(WLMCWindow *window)
 {
     uint particleIndex, xd, yd, zd;
 
@@ -35,7 +60,8 @@ void WLMCSystem::performMove(WLMCWindow *window)
     if (!window->isLegal(oldBin) || !window->isLegal(newBin))
     {
         changePosition(particleIndex, xd, yd, zd);
-        return;
+
+        return false;
     }
 
 
@@ -61,8 +87,7 @@ void WLMCSystem::performMove(WLMCWindow *window)
         window->registerVisit(oldBin);
     }
 
-
-
+    return true;
 
 }
 
@@ -97,7 +122,7 @@ void WLMCSystem::findDestination(const uint destination, uint &xd, uint &yd, uin
 
 void WLMCSystem::locateGlobalExtremaValues(double &min, double &max, kMC::KMCSolver *solver)
 {
-    uint nSweeps = 100;
+    uint nSweeps = 1;
     uint sweep = 0;
 
     double localMax, localMin;
@@ -137,6 +162,7 @@ void WLMCSystem::locateGlobalExtremaValues(double &min, double &max, kMC::KMCSol
         sweep++;
     }
 
+    nSweeps = 100;
     sweep = 0;
 
     while (sweep < nSweeps)

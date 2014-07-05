@@ -12,7 +12,13 @@ class KMCSolver;
 class KMCWLMCSystem : public WLMCSystem
 {
 public:
-    KMCWLMCSystem(kMC::KMCSolver *solver);
+    KMCWLMCSystem(kMC::KMCSolver *solver,
+                  const uint movesPerSampling,
+                  const double flatnessCriterion,
+                  const uint overlap,
+                  const uint minWindowSize,
+                  const uint windowIncrementSize,
+                  const double *f);
 
     bool isOccupiedLoction(const uint x, const uint y, const uint z) const;
 

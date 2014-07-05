@@ -31,25 +31,29 @@ void WLMCEvent::execute()
 {
     double f = m_fBegin;
 
-    KMCWLMCSystem system(solver());
+    KMCWLMCSystem system(solver(),
+                         m_movesPerWindowCheck,
+                         m_flatnessCriteria,
+                         m_windowOverlap,
+                         m_minWindow,
+                         m_windowIncrementSize,
+                         &f);
 
     double max, min;
-    system.locateGlobalExtremaValues(min, max, solver());
+    system.locateGlobalExtremaValues(min, max, solver()); //TMP solver
 
     cout << min << " " << m_minEnergies(m_nCount) << endl;
     cout << max << " " << m_maxEnergies(m_nCount) << endl;
 
-    exit(1);
 
-    WLMCWindow mainWindow(&system,
-                          m_nbins,
-                          &f,
-                          m_minEnergies(m_nCount),
-                          m_maxEnergies(m_nCount));
+    WLMCWindow mainWindow(&system, m_nbins, min, max);
 
     while (f >= m_fEnd)
     {
-        mainWindow.calculateWindow();
+        while (!mainWindow.isFlat())
+        {
+            mainWindow.calculateWindow(solver()); //TMP solver
+        }
 
         f = m_fIteratorFunction(f);
 

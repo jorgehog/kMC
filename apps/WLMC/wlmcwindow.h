@@ -3,6 +3,8 @@
 #include <armadillo>
 #include <vector>
 
+#include <kMC> //TMP
+
 using std::vector;
 
 using namespace arma;
@@ -19,23 +21,23 @@ public:
                const vec &DOS,
                const uint lowerLimit,
                const uint upperLimit,
-               const double *f,
                const double minValue,
                const double maxValue);
 
     WLMCWindow(WLMCSystem *system,
                const uint nBins,
-               const double *f,
                const double minValue,
                const double maxValue);
 
     virtual ~WLMCWindow();
 
-    void calculateWindow();
+    void calculateWindow(kMC::KMCSolver *solver);
 
-    double estimateFlatness() const;
+    double estimateFlatness(const uvec &visitCounts) const;
 
     void findFlatAreas(vector<uvec2> &flatAreas) const;
+
+    void findFlatArea(uint &upperLimit, uint &lowerLimit, const uint origin) const;
 
     void registerVisit(const uint bin);
 
@@ -58,13 +60,18 @@ public:
         return m_visitCounts(i) == m_unsetCount;
     }
 
+    bool isFlat(const uvec& visitCounts) const;
+
+    bool isFlat() const
+    {
+        return isFlat(m_visitCounts);
+    }
+
     static constexpr uint m_unsetCount = std::numeric_limits<uint>::max();
 
 private:
 
     WLMCSystem *m_system;
-
-    const double* m_f;
 
     const uint m_lowerLimit;
     const uint m_upperLimit;
@@ -80,12 +87,6 @@ private:
     WLMCWindow *m_lowerNeighbor;
     WLMCWindow *m_upperNeighbor;
 
-
-    const double &f() const
-    {
-        return *m_f;
-    }
-
     void setNeighbors(WLMCWindow *lowerNeighbor, WLMCWindow *upperNeighbor)
     {
         m_lowerNeighbor = lowerNeighbor;
@@ -93,6 +94,12 @@ private:
     }
 
     void mergeWith(WLMCWindow *other);
+
+    uint topIncrement(const uint upperLimit) const;
+
+    uint bottomIncrement(const uint lowerLimit) const;
+
+    void tmp_output(kMC::KMCSolver *solver, const vector<uvec2> &flatAreas) const; //TMP
 
 };
 

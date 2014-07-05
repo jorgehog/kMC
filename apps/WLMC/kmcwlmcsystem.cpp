@@ -5,11 +5,23 @@
 using namespace kMC;
 
 
-KMCWLMCSystem::KMCWLMCSystem(KMCSolver *solver) :
+KMCWLMCSystem::KMCWLMCSystem(KMCSolver *solver,
+                             const uint movesPerSampling,
+                             const double flatnessCriterion,
+                             const uint overlap,
+                             const uint minWindowSize,
+                             const uint windowIncrementSize,
+                             const double *f) :
     WLMCSystem(SoluteParticle::nParticles(),
                solver->NX(),
                solver->NY(),
                solver->NZ(),
+               movesPerSampling,
+               flatnessCriterion,
+               overlap,
+               minWindowSize,
+               windowIncrementSize,
+               f,
                [] () {return KMC_RNG_UNIFORM();}),
     m_solver(solver)
 {
