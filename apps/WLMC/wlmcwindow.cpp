@@ -170,6 +170,7 @@ void WLMCWindow::findComplementaryRoughAreas(const vector<uvec2> &flatAreas, vec
     if (flatAreas.empty())
     {
         roughAreas.push_back({lowerLimit, upperLimit});
+        return;
     }
 
     uint prev = lowerLimit;
