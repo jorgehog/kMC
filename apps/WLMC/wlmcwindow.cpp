@@ -43,13 +43,16 @@ void WLMCWindow::calculateWindow(kMC::KMCSolver *solver)
     m_DOS = normalise(m_DOS);
 
     vector<uvec2> flatAreas;
-    findFlatAreas(flatAreas);
+    vector<uvec2> roughAreas;
+
+    findFlatAreas(flatAreas, m_lowerLimit, m_upperLimit);
+    findComplementaryRoughAreas(flatAreas, roughAreas, m_lowerLimit, m_upperLimit);
 
     //todo: smarter way to generate flat areas. Start where it is flattest.
     //todo: debug singleWindow version.
     //todo: locate flat areas and initialize subwindows.
 
-    tmp_output(solver, flatAreas);
+    tmp_output(solver, flatAreas, roughAreas);
     
 }
 
@@ -88,27 +91,106 @@ double WLMCWindow::estimateFlatness(const uvec &visitCounts) const
 
 }
 
-void WLMCWindow::findFlatAreas(vector<uvec2> &flatAreas) const
+void WLMCWindow::findFlatAreas(vector<uvec2> &flatAreas, const uint lowerLimit, const uint upperLimit) const
 {
-    uint upperLimit, lowerLimit, origin;
+    uint upperLimitFlat, lowerLimitFlat, origin;
 
-    origin = 0;
-    while (origin < m_nbins)
+    origin = findFlattestOrigin(lowerLimit, upperLimit);
+
+    findFlatArea(upperLimitFlat, lowerLimitFlat, origin);
+
+    if (isFlat(m_visitCounts(span(lowerLimitFlat, upperLimitFlat - 1))))
     {
-        findFlatArea(upperLimit, lowerLimit, origin);
+        flatAreas.push_back(uvec2({lowerLimitFlat, upperLimitFlat}));
 
-        if (!isFlat(m_visitCounts(span(lowerLimit, upperLimit - 1))))
-        {
-            origin += m_system->windowIncrementSize();
-        }
+        vector<uvec2> complementaryRoughAreas;
+        findComplementaryRoughAreas(flatAreas, complementaryRoughAreas, lowerLimit, upperLimit);
 
-        else
+        for (const uvec2 &complementaryRoughArea : complementaryRoughAreas)
         {
-            flatAreas.push_back(uvec2({lowerLimit, upperLimit}));
-            origin = upperLimit;
+            findFlatAreas(flatAreas, complementaryRoughArea(0), complementaryRoughArea(1));
         }
 
     }
+}
+
+uint WLMCWindow::findFlattestOrigin(const uint lowerLimit, const uint upperLimit) const
+{
+
+    double mean = getMeanFlatness(lowerLimit, upperLimit);
+
+    uint flattest;
+    double minError = std::numeric_limits<double>::max();
+
+    for (uint i = lowerLimit; i < upperLimit; ++i)
+    {
+        uint vc = m_visitCounts(i);
+
+        if (!(vc == m_unsetCount))
+        {
+
+            double error = (vc - mean)*(vc - mean);
+
+            if (error < minError)
+            {
+                minError = error;
+                flattest = i;
+            }
+
+        }
+    }
+
+    return flattest;
+
+}
+
+double WLMCWindow::getMeanFlatness(const uint lowerLimit, const uint upperLimit) const
+{
+    double mean = 0;
+
+    uint nSetCounts = 0;
+
+    for (uint i = lowerLimit; i < upperLimit; ++i)
+    {
+        uint vc = m_visitCounts(i);
+
+        if (!(vc == m_unsetCount))
+        {
+            mean += vc;
+
+            nSetCounts++;
+        }
+    }
+
+    return mean/nSetCounts;
+}
+
+void WLMCWindow::findComplementaryRoughAreas(const vector<uvec2> &flatAreas, vector<uvec2> &roughAreas, const uint lowerLimit, const uint upperLimit) const
+{
+    if (flatAreas.empty())
+    {
+        roughAreas.push_back({lowerLimit, upperLimit});
+    }
+
+    uint prev = lowerLimit;
+
+    for (const uvec2 &flatArea : flatAreas)
+    {
+        if (prev != flatArea(0))
+        {
+            roughAreas.push_back({prev, flatArea(0)});
+        }
+
+        prev = flatArea(1);
+    }
+
+    uint endLastFlat = flatAreas.back()(1);
+
+    if (endLastFlat != upperLimit)
+    {
+        roughAreas.push_back({endLastFlat, upperLimit});
+    }
+
 }
 
 void WLMCWindow::findFlatArea(uint &upperLimit, uint &lowerLimit, const uint origin) const
@@ -251,18 +333,29 @@ uint WLMCWindow::bottomIncrement(const uint lowerLimit) const
 
 }
 
-void WLMCWindow::tmp_output(kMC::KMCSolver *solver, const vector<uvec2> &flatAreas) const
+void WLMCWindow::tmp_output(kMC::KMCSolver *solver, const vector<uvec2> &flatAreas, const vector<uvec2> &roughAreas) const
 {
 
-    ofstream f;
-    f.open(solver->filePath() + "/flatness.txt");
+    ofstream fFlat;
+    fFlat.open(solver->filePath() + "/flatness.txt");
     for (const uvec2 & flatArea : flatAreas)
     {
         cout << estimateFlatness(m_visitCounts(span(flatArea(0), flatArea(1) - 1))) << " flat on " << flatArea.t();
 
-        f << flatArea(0) << " " << flatArea(1) << endl;
+        fFlat << flatArea(0) << " " << flatArea(1) << endl;
     }
-    f.close();
+    fFlat.close();
+
+    ofstream fRough;
+    fRough.open(solver->filePath() + "/roughness.txt");
+    for (const uvec2 & roughArea : roughAreas)
+    {
+        cout << estimateFlatness(m_visitCounts(span(roughArea(0), roughArea(1) - 1))) << " rough on " << roughArea.t();
+
+        fRough << roughArea(0) << " " << roughArea(1) << endl;
+    }
+    fRough.close();
+
 
     stringstream file;
     file << solver->filePath() << "/stateDensity" << m_system->nParticles() << ".arma";
