@@ -48,9 +48,10 @@ void WLMCWindow::calculateWindow(kMC::KMCSolver *solver)
     findFlatAreas(flatAreas, m_lowerLimit, m_upperLimit);
     findComplementaryRoughAreas(flatAreas, roughAreas, m_lowerLimit, m_upperLimit);
 
-    //todo: smarter way to generate flat areas. Start where it is flattest.
+    //todo: definine flatness minimum window size by the size of the parent window. i.e. must be flat on atleast 50%.
     //todo: debug singleWindow version.
-    //todo: locate flat areas and initialize subwindows.
+    //todo: initialize subwindows.
+    //todo: merge
 
     tmp_output(solver, flatAreas, roughAreas);
     

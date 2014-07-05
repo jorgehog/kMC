@@ -41,7 +41,7 @@ public:
 
     double getMeanFlatness(const uint lowerLimit, const uint upperLimit) const;
 
-    void findComplementaryRoughAreas(const vector<uvec2> &flatAreas, vector<uvec2> &roughAreas, const uint lowerLimit, const uint upperLimit) const;
+    void findComplementaryRoughAreas(const vector<uvec2> &flatAreas, vector<uvec2> &roughAreas, const uint lowerLimit, const uint _upperLimit) const;
 
     void findFlatArea(uint &upperLimit, uint &lowerLimit, const uint origin) const;
 
