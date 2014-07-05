@@ -10,15 +10,19 @@ class WLMCEvent : public KMCEvent
 public:
 
     WLMCEvent(const uint nbins,
-              const double fBegin = datum::e,
-              const double fEnd=1.000001,
-              const double flatnessCritera = 0.85) :
+              const uint movesPerSampling,
+              const double flatnessCritera,
+              const uint overlap,
+              const uint minWindowSize,
+              const uint windowIncrementSize,
+              const double fBegin,
+              const double fEnd) :
         KMCEvent("kMC::WLMC", "", true),
         m_nbins(nbins),
-        m_movesPerWindowCheck(10000),
-        m_minWindow(nbins/10),
-        m_windowOverlap(nbins/10),
-        m_windowIncrementSize(5),
+        m_movesPerWindowCheck(movesPerSampling),
+        m_minWindow(minWindowSize),
+        m_windowOverlap(overlap),
+        m_windowIncrementSize(windowIncrementSize),
         m_fBegin(fBegin),
         m_fEnd(fEnd),
         m_flatnessCriteria(flatnessCritera)

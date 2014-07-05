@@ -45,6 +45,7 @@ void WLMCWindow::calculateWindow(kMC::KMCSolver *solver)
     vector<uvec2> flatAreas;
     findFlatAreas(flatAreas);
 
+    //todo: smarter way to generate flat areas. Start where it is flattest.
     //todo: debug singleWindow version.
     //todo: locate flat areas and initialize subwindows.
 
@@ -60,18 +61,17 @@ double WLMCWindow::estimateFlatness(const uvec &visitCounts) const
 
     uint nSetCounts = 0;
 
-    for (const uint i : visitCounts)
+    for (const uint &vc : visitCounts)
     {
-        if (!isUnsetCount(i))
+        if (!(vc == m_unsetCount))
         {
-            uint count = visitCounts(i);
 
-            if (count < min)
+            if (vc < min)
             {
-                count = min;
+                min = vc;
             }
 
-            mean += count;
+            mean += vc;
 
             nSetCounts++;
         }
@@ -177,9 +177,6 @@ void WLMCWindow::findFlatArea(uint &upperLimit, uint &lowerLimit, const uint ori
 
         }
 
-        cout << lowerLimit << " " << upperLimit << endl;
-
-
     }
 }
 
@@ -261,9 +258,9 @@ void WLMCWindow::tmp_output(kMC::KMCSolver *solver, const vector<uvec2> &flatAre
     f.open(solver->filePath() + "/flatness.txt");
     for (const uvec2 & flatArea : flatAreas)
     {
-        cout << "flat on " << flatArea.t();
+        cout << estimateFlatness(m_visitCounts(span(flatArea(0), flatArea(1) - 1))) << " flat on " << flatArea.t();
 
-        f << flatArea(0) << "\n" << flatArea(1) << endl;
+        f << flatArea(0) << " " << flatArea(1) << endl;
     }
     f.close();
 

@@ -56,12 +56,32 @@ void initializeWLMC(KMCSolver *solver, const Setting &root)
 
     const uint &nbins = getSetting<uint>(initCFG, "nbins");
 
-    const double &f0 = getSetting<double>(initCFG, "f0");
-    const double &fCrit = 1 + getSetting<double>(initCFG, "fCrit");
-    const double &hCrit = getSetting<double>(initCFG, "hCrit");
+    const uint &movesPerSampling = getSetting<uint>(initCFG, "movesPerSampling");
+
+    const double &flatnessCriterion = getSetting<double>(initCFG, "flatnessCriterion");
+
+    const uint &nbinsOverOverlap = getSetting<uint>(initCFG, "nbinsOverOverlap");
+    const uint overlap = nbins/nbinsOverOverlap;
+
+    const uint &nbinsOverMinWindowSize = getSetting<uint>(initCFG, "nbinsOverMinWindowSize");
+    const uint minWindowSize = nbins/nbinsOverMinWindowSize;
+
+    const uint &windowIncrementSize = getSetting<uint>(initCFG, "windowIncrementSize");
+
+    const double &fStart = getSetting<double>(initCFG, "fStart");
+
+    const double &fFinalMinusOne = getSetting<double>(initCFG, "fFinalMinusOne");
+    const double fFinal = fFinalMinusOne + 1;
 
 
-    KMCEvent *wlmc = new WLMCEvent(nbins, f0, fCrit, hCrit);
+    KMCEvent *wlmc = new WLMCEvent(nbins,
+                                   movesPerSampling,
+                                   flatnessCriterion,
+                                   overlap,
+                                   minWindowSize,
+                                   windowIncrementSize,
+                                   fStart,
+                                   fFinal);
 
     solver->swapMainSolverEventWith(wlmc);
 
