@@ -113,9 +113,11 @@ void WLMCWindow::calculateWindow(kMC::KMCSolver *solver)
 
     }
 
-    //todo: check if the overlap is more than X% of the original flat area. If so then discard subwindowing.
-    //todo: initialize subwindows.
-    //todo: merge
+    //todo: work out subwindows issues
+    //todo: debug subwindows
+    //todo: optimize and set transparent parameters for subwindows
+    //todo: debug subwindows
+
 }
 
 double WLMCWindow::estimateFlatness(const uint lowerLimit, const uint upperLimit) const
