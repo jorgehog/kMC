@@ -60,28 +60,25 @@ void WLMCWindow::calculateWindow(kMC::KMCSolver *solver)
 
         m_DOS = normalise(m_DOS);
 
-        findFlatArea(lowerLimitFlat, upperLimitFlat);
-        findComplementaryRoughAreas(lowerLimitFlat, upperLimitFlat, roughAreas);
+        //NO WINDOWS
+//        findFlatArea(lowerLimitFlat, upperLimitFlat);
+//        findComplementaryRoughAreas(lowerLimitFlat, upperLimitFlat, roughAreas);
 
-        tmp_output(solver, lowerLimitFlat, upperLimitFlat, roughAreas);
+//        tmp_output(solver, lowerLimitFlat, upperLimitFlat, roughAreas);
 
-        roughAreas.clear();
+//        roughAreas.clear();
 
-//        findSubWindows(solver);
+        //WINDOWS
+        findSubWindows(solver);
 
-//        for (WLMCWindow *subWindow : m_subWindows)
-//        {
-//            subWindow->calculateWindow(solver);
-//            mergeWith(subWindow);
-//        }
+        for (WLMCWindow *subWindow : m_subWindows)
+        {
+            subWindow->calculateWindow(solver);
+            mergeWith(subWindow);
+        }
 
     }
 
-    //todo: new improved robust scanning flat area algorithm.
-    //      1. iterate over n windows of size W and make F(n)
-    //      2. pick limits which maximizes F(n)
-    //      3. find longest interval [n - dn_l, n + dn_u] which is flat
-    //todo: debug singleWindow version.
     //todo: initialize subwindows.
     //todo: merge
 }
@@ -130,35 +127,32 @@ double WLMCWindow::estimateFlatness(const uint lowerLimit, const uint upperLimit
 
 void WLMCWindow::findSubWindows(kMC::KMCSolver *solver)
 {
-    uint lowerLimitNewWindow, upperLimitNewWindow, upperLimitFlat, lowerLimitFlat;
-    OVERLAPTYPES overlapType;
+    uint upperLimitFlat, lowerLimitFlat;
 
     findFlatArea(lowerLimitFlat, upperLimitFlat);
 
+
+    if (upperLimitFlat - lowerLimitFlat < m_nbins/2)
+    {
+        return;
+    }
+
     cout << "interval " << m_lowerLimitOnParent << " " << m_upperLimitOnParent << " flat on " << lowerLimitFlat << " " << upperLimitFlat << " ? "  << isFlat(lowerLimitFlat, upperLimitFlat) << endl;
+
+    uint lowerLimitNewWindow, upperLimitNewWindow;
 
     if (isFlat(lowerLimitFlat, upperLimitFlat))
     {
         vector<uvec2> roughAreas;
-        findComplementaryRoughAreas(lowerLimitFlat, upperLimitFlat, roughAreas);
+        vector<WLMCWindow::OVERLAPTYPES> overlaps;
+        findComplementaryRoughAreas(lowerLimitFlat, upperLimitFlat, roughAreas, overlaps);
 
         tmp_output(solver, lowerLimitFlat, upperLimitFlat, roughAreas);
 
-        for (const uvec2 roughArea : roughAreas)
+        for (uint i = 0; i < roughAreas.size(); ++i)
         {
-            if (roughArea(1) == m_lowerLimitOnParent)
-            {
-                overlapType = OVERLAPTYPES::UPPER;
-            }
-            else if (roughArea(0) == m_upperLimitOnParent)
-            {
-                overlapType = OVERLAPTYPES::LOWER;
-            }
-            else
-            {
-                cout << "error" << endl;
-                exit(1);
-            }
+            uvec2 roughArea = roughAreas.at(i);
+            WLMCWindow::OVERLAPTYPES overlapType = overlaps.at(i);
 
             getSubWindowLimits(overlapType, roughArea(0), roughArea(1), lowerLimitNewWindow, upperLimitNewWindow);
             m_subWindows.push_back(new WLMCWindow(m_system, m_DOS, m_energies, lowerLimitNewWindow, upperLimitNewWindow, overlapType));
@@ -223,17 +217,19 @@ double WLMCWindow::getMeanFlatness(const uint lowerLimit, const uint upperLimit)
     return mean/nSetCounts;
 }
 
-void WLMCWindow::findComplementaryRoughAreas(const uint lowerLimitFlat, const uint upperLimitFlat, vector<uvec2> &roughAreas) const
+void WLMCWindow::findComplementaryRoughAreas(const uint lowerLimitFlat, const uint upperLimitFlat, vector<uvec2> &roughAreas, vector<WLMCWindow::OVERLAPTYPES> &overlaps) const
 {
 
     if (lowerLimitFlat != 0)
     {
         roughAreas.push_back({0, lowerLimitFlat});
+        overlaps.push_back(WLMCWindow::OVERLAPTYPES::UPPER);
     }
 
     if (upperLimitFlat != m_nbins)
     {
         roughAreas.push_back({upperLimitFlat, m_nbins});
+        overlaps.push_back(WLMCWindow::OVERLAPTYPES::LOWER);
     }
 
 }
@@ -386,25 +382,25 @@ void WLMCWindow::expandFlattestArea(uint &lowerLimit, uint &upperLimit) const
 void WLMCWindow::getSubWindowLimits(OVERLAPTYPES overlapType, const uint lowerLimitRough, const uint upperLimitRough, uint &lowerLimit, uint &upperLimit) const
 {
 
+    cout << "getting subwindowlimits on " << lowerLimitRough << " " << upperLimitRough << endl;
 
     //If the desired area is lower than the minimum window, we need to increase it.
     if (upperLimitRough - lowerLimitRough < m_system->minWindowSize())
     {
-
         uint halfWindow = m_system->minWindowSize()/2;
 
         //if expansion on lower side is blocked.
-        if (lowerLimitRough < m_lowerLimitOnParent + halfWindow)
+        if (lowerLimitRough < halfWindow)
         {
-            lowerLimit = m_lowerLimitOnParent;
-            upperLimit = m_lowerLimitOnParent + m_system->minWindowSize();
+            lowerLimit = 0;
+            upperLimit = m_system->minWindowSize();
         }
 
         //and the same goes for the upper limit
-        else if (upperLimitRough > m_upperLimitOnParent - halfWindow)
+        else if (upperLimitRough > m_nbins - halfWindow)
         {
-            upperLimit = m_upperLimitOnParent;
-            lowerLimit = m_upperLimitOnParent - m_system->minWindowSize();
+            upperLimit = m_nbins;
+            lowerLimit = m_nbins - m_system->minWindowSize();
         }
 
         //if it is not blocked, we simply expand.
@@ -420,6 +416,14 @@ void WLMCWindow::getSubWindowLimits(OVERLAPTYPES overlapType, const uint lowerLi
 
         }
 
+        cout << "adjusted window." << endl;
+
+    }
+
+    else
+    {
+        lowerLimit = lowerLimitRough;
+        upperLimit = upperLimitRough;
     }
 
     //We are not guaranteed a window of size at least minWindow.
@@ -429,7 +433,7 @@ void WLMCWindow::getSubWindowLimits(OVERLAPTYPES overlapType, const uint lowerLi
     {
         if (lowerLimit < m_system->overlap())
         {
-            cout << "ERROR IN OVERLAP" << lowerLimit << endl;
+            cout << "ERROR IN LOWER OVERLAP " << lowerLimitRough << " " << upperLimitRough << " " << lowerLimit << endl;
             exit(1);
         }
 
@@ -439,7 +443,7 @@ void WLMCWindow::getSubWindowLimits(OVERLAPTYPES overlapType, const uint lowerLi
     {
         if (upperLimit > m_nbins - m_system->overlap())
         {
-            cout << "ERROR IN OVERLAP" << upperLimit << endl;
+            cout << "ERROR IN UPPER OVERLAP " << lowerLimitRough << " " << upperLimitRough << " " << upperLimit << endl;
             exit(1);
         }
 
