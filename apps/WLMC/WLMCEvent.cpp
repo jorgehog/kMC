@@ -37,7 +37,8 @@ void WLMCEvent::execute()
                          m_movesPerWindowCheck,
                          m_flatnessCriteria,
                          m_windowOverlap,
-                         m_minWindow,
+                         m_nbinsOverMinWindowSizeFlat,
+                         m_minWindowSizeRough,
                          m_windowIncrementSize,
                          &f);
 
@@ -52,11 +53,12 @@ void WLMCEvent::execute()
 
 
     WLMCWindow mainWindow(&system, m_nbins, min, max);
+
     WLMCWindow cheatWindow(&system,
                            mainWindow.DOS(),
                            mainWindow.energies(),
-                           m_nbins/10,
-                           m_nbins - m_nbins/10,
+                           m_nbins/6,
+                           m_nbins - m_nbins/6,
                            WLMCWindow::OVERLAPTYPES::NONE);
 
     while (f >= m_fEnd)
@@ -107,7 +109,7 @@ void WLMCEvent::calculateWindow(const uint startBin, const uint endBin)
 
         findFlatWindow(m_visitCounts(span(m_windowMinBin, m_windowMaxBin)), flatSubwindowStart, flatSubwindowEnd, pointClosestToMean());
 
-        flat = flatSubwindowEnd - flatSubwindowStart >= m_minWindow && false;
+        flat = flatSubwindowEnd - flatSubwindowStart >= m_nbins/m_nbinsOverMinWindowSizeFlat && false;
 
         ofstream f;
         f.open(solver()->filePath() + "/flatness.txt");
@@ -221,22 +223,22 @@ void WLMCEvent::findFlatWindow(const uvec &visitCounts, uint &lowerLimit, uint &
     uint top = visitCounts.n_elem - 1;
     uint bottom = 0;
 
-    if (origin > top - m_minWindow/2)
+    if (origin > top - (m_nbins/m_nbinsOverMinWindowSizeFlat)/2)
     {
         upperLimit = top;
-        lowerLimit = origin - m_minWindow;
+        lowerLimit = origin - m_nbinsOverMinWindowSizeFlat;
     }
 
-    else if (origin < bottom + m_minWindow/2)
+    else if (origin < bottom + (m_nbins/m_nbinsOverMinWindowSizeFlat)/2)
     {
         lowerLimit = bottom;
-        upperLimit = bottom + m_minWindow;
+        upperLimit = bottom + (m_nbins/m_nbinsOverMinWindowSizeFlat);
     }
 
     else
     {
-        upperLimit = origin + m_minWindow/2;
-        lowerLimit = origin - m_minWindow/2;
+        upperLimit = origin + (m_nbins/m_nbinsOverMinWindowSizeFlat)/2;
+        lowerLimit = origin - (m_nbins/m_nbinsOverMinWindowSizeFlat)/2;
     }
 
     cout << origin << " " << lowerLimit << " " << upperLimit << endl;

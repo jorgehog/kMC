@@ -16,7 +16,8 @@ public:
                   const uint movesPerSampling,
                   const double flatnessCriterion,
                   const uint overlap,
-                  const uint minWindowSize,
+                  const uint nbinsOverMinWindowSizeFlat,
+                  const uint minWindowSizeRough,
                   const uint windowIncrementSize,
                   const double *f);
 

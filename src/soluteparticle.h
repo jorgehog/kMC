@@ -251,6 +251,8 @@ public:
         return m_energy;
     }
 
+    double getBruteForceEnergy() const;
+
 
     string particleStateName() const
     {

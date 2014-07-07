@@ -13,14 +13,16 @@ public:
               const uint movesPerSampling,
               const double flatnessCritera,
               const uint overlap,
-              const uint minWindowSize,
+              const uint nbinsOverMinWindowSizeFlat,
+              const uint minWindowSizeRough,
               const uint windowIncrementSize,
               const double fBegin,
               const double fEnd) :
         KMCEvent("kMC::WLMC", "", true),
         m_nbins(nbins),
         m_movesPerWindowCheck(movesPerSampling),
-        m_minWindow(minWindowSize),
+        m_nbinsOverMinWindowSizeFlat(nbinsOverMinWindowSizeFlat),
+        m_minWindowSizeRough(minWindowSizeRough),
         m_windowOverlap(overlap),
         m_windowIncrementSize(windowIncrementSize),
         m_fBegin(fBegin),
@@ -41,7 +43,8 @@ private:
     const uint m_nbins;
     const uint m_movesPerWindowCheck;
 
-    const uint m_minWindow;
+    const uint m_nbinsOverMinWindowSizeFlat;
+    const uint m_minWindowSizeRough;
     const uint m_windowOverlap;
     const uint m_windowIncrementSize;
 

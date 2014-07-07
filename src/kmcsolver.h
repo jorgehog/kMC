@@ -349,6 +349,8 @@ public:
 
     void swapMainSolverEventWith(KMCEvent *event);
 
+    double getBruteForceTotalEnergy() const;
+
 private:
 
     DiffusionTypes m_diffusionType = DiffusionTypes::TST;

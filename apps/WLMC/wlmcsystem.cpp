@@ -10,7 +10,8 @@ WLMCSystem::WLMCSystem(const uint nParticles,
                        const uint movesPerSampling,
                        const double flatnessCriterion,
                        const uint overlap,
-                       const uint minWindowSize,
+                       const uint nbinsOverMinWindowSizeFlat,
+                       const uint minWindowSizeRough,
                        const uint windowIncrementSize,
                        const double *f,
                        function<double()> URNG) :
@@ -23,12 +24,13 @@ WLMCSystem::WLMCSystem(const uint nParticles,
     m_movesPerSampling(movesPerSampling),
     m_flatnessCriterion(flatnessCriterion),
     m_overlap(overlap),
-    m_minWindowSize(minWindowSize),
+    m_nbinsOverMinWindowSizeFlat(nbinsOverMinWindowSizeFlat),
+    m_minWindowSizeRough(minWindowSizeRough),
     m_windowIncrementSize(windowIncrementSize),
     m_f(f),
     m_URNG(URNG)
 {
-    
+
 }
 
 void WLMCSystem::sampleWindow(WLMCWindow *window)
@@ -205,6 +207,8 @@ double WLMCSystem::getGlobalExtremum(const WLMCSystem::extrema type)
     double localExtrema, valueDifference;
     uint xd, yd, zd, particleIndex;
 
+    xd = yd = zd = 0;
+
     //vector representing particles = 0, 1, ..., nParticles - 1
     vector<uint> particleIndices(m_nParticles);
     for (uint particleIndex = 0; particleIndex < m_nParticles; ++particleIndex)
@@ -297,6 +301,8 @@ void WLMCSystem::getRandomParticleAndDestination(uint &particleIndex, uint &xd, 
 void WLMCSystem::randomizeParticlePositions()
 {
     uint xd, yd, zd, destination;
+
+    xd = yd = zd = 0;
 
     uint nSweeps = 5;
     uint sweep = 0;

@@ -650,6 +650,22 @@ uint SoluteParticle::nNeighborsSum() const
     return m_nNeighborsSum;
 }
 
+double SoluteParticle::getBruteForceEnergy() const
+{
+    double energy = 0;
+
+    forEachNeighborSiteDo_sendIndices([this, &energy] (Site *neighbor, uint i, uint j, uint k)
+    {
+        if (neighbor->isActive())
+        {
+            energy += potentialBetween(neighbor->associatedParticle(), i, j, k);
+        }
+
+    });
+
+    return energy;
+}
+
 void SoluteParticle::clearAll()
 {
     KMCDebugger_Assert(refCounter, ==, 0, "cannot clear static members with object alive.");

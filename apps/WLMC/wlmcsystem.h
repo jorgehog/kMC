@@ -23,7 +23,8 @@ public:
                const uint movesPerSampling,
                const double flatnessCriterion,
                const uint overlap,
-               const uint minWindowSize,
+               const uint nbinsOverMinWindowSizeFlat,
+               const uint minWindowSizeRough,
                const uint windowIncrementSize,
                const double *f,
                function<double()> URNG);
@@ -67,9 +68,14 @@ public:
         return m_overlap;
     }
 
-    const uint &minWindowSize() const
+    uint minWindowSizeFlat(const uint nbins) const
     {
-        return m_minWindowSize;
+        return nbins/m_nbinsOverMinWindowSizeFlat;
+    }
+
+    uint minWindowSizeRough() const
+    {
+        return m_minWindowSizeRough;
     }
 
     const uint &windowIncrementSize() const
@@ -103,7 +109,8 @@ private:
 
     const double m_flatnessCriterion;
     const uint m_overlap;
-    const uint m_minWindowSize;
+    const uint m_nbinsOverMinWindowSizeFlat;
+    const uint m_minWindowSizeRough;
     const uint m_windowIncrementSize;
 
     const double *m_f;

@@ -63,8 +63,10 @@ void initializeWLMC(KMCSolver *solver, const Setting &root)
     const uint &nbinsOverOverlap = getSetting<uint>(initCFG, "nbinsOverOverlap");
     const uint overlap = nbins/nbinsOverOverlap;
 
-    const uint &nbinsOverMinWindowSize = getSetting<uint>(initCFG, "nbinsOverMinWindowSize");
-    const uint minWindowSize = nbins/nbinsOverMinWindowSize;
+    const uint &nbinsOverMinWindowSizeFlat = getSetting<uint>(initCFG, "nbinsOverMinWindowSizeFlat");
+
+    const uint &nbinsOverMinWindowSizeRough = getSetting<uint>(initCFG, "nbinsOverMinWindowSizeRough");
+    const uint minWindowSizeRough = nbins/nbinsOverMinWindowSizeRough;
 
     const uint &windowIncrementSize = getSetting<uint>(initCFG, "windowIncrementSize");
 
@@ -78,7 +80,8 @@ void initializeWLMC(KMCSolver *solver, const Setting &root)
                                    movesPerSampling,
                                    flatnessCriterion,
                                    overlap,
-                                   minWindowSize,
+                                   nbinsOverMinWindowSizeFlat,
+                                   minWindowSizeRough,
                                    windowIncrementSize,
                                    fStart,
                                    fFinal);

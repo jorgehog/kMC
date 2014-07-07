@@ -866,6 +866,18 @@ void KMCSolver::swapMainSolverEventWith(KMCEvent *event)
     addEvent(event);
 }
 
+double KMCSolver::getBruteForceTotalEnergy() const
+{
+    double eTot = 0;
+
+    for (SoluteParticle *particle : m_particles)
+    {
+        eTot += particle->getBruteForceEnergy();
+    }
+
+    return eTot;
+}
+
 
 
 bool KMCSolver::spawnParticle(SoluteParticle *particle, const uint x, const uint y, const uint z, bool checkIfLegal)

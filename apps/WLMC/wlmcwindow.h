@@ -43,11 +43,14 @@ public:
 
     double estimateFlatness(const uint lowerLimit, const uint upperLimit) const;
 
-    void findSubWindows(kMC::KMCSolver *solver);
-
-    uint findFlattestOrigin(const uint lowerLimit, const uint upperLimit) const;
+    double findSubWindows(kMC::KMCSolver *solver);
 
     double getMeanFlatness(const uint lowerLimit, const uint upperLimit) const;
+
+    double getMeanFlatness() const
+    {
+        return getMeanFlatness(0, m_nbins);
+    }
 
     void findComplementaryRoughAreas(const uint lowerLimitFlat, const uint upperLimitFlat, vector<uvec2> &roughAreas, vector<OVERLAPTYPES> &overlaps) const;
 
@@ -70,12 +73,12 @@ public:
         return value >= m_minValue && value <= m_maxValue;
     }
 
-    const uint &lowerLimit() const
+    const uint &lowerLimitOnParent() const
     {
         return m_lowerLimitOnParent;
     }
 
-    const uint &upperLimit() const
+    const uint &upperLimitOnParent() const
     {
         return m_upperLimitOnParent;
     }
@@ -98,6 +101,16 @@ public:
     const uvec &visitCounts() const
     {
         return m_visitCounts;
+    }
+
+    const uint &visitCounts(const uint i) const
+    {
+        return m_visitCounts(i);
+    }
+
+    const uint &nbins() const
+    {
+        return m_nbins;
     }
 
     bool isUnsetCount(const uint i) const
@@ -139,16 +152,9 @@ private:
     const vec m_energies;
     uvec m_visitCounts;
 
-    WLMCWindow *m_lowerNeighbor;
-    WLMCWindow *m_upperNeighbor;
+    void adjustLimits(uint &start, uint &end);
 
-    void setNeighbors(WLMCWindow *lowerNeighbor, WLMCWindow *upperNeighbor)
-    {
-        m_lowerNeighbor = lowerNeighbor;
-        m_upperNeighbor = upperNeighbor;
-    }
-
-    void mergeWith(WLMCWindow *other);
+    void mergeWith(WLMCWindow *other, double meanVisitAtFlatArea);
 
     uint topIncrement(const uint upperLimit) const;
 
