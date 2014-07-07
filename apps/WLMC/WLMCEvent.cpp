@@ -16,19 +16,21 @@ void WLMCEvent::initialize()
     m_minEnergies.set_size(solver()->volume());
     m_maxEnergies.set_size(solver()->volume());
 
-    findAllExtrema();
+//    findAllExtrema();
 
     m_nCount = m_nStart;
 
     m_visitCounts.set_size(m_nbins);
     m_DOS.set_size(m_nbins);
 
-    initializeNewCycle();
+//    initializeNewCycle();
 
 }
 
 void WLMCEvent::execute()
 {
+    initRandomConfiguration();
+
     double f = m_fBegin;
 
     KMCWLMCSystem system(solver(),
@@ -40,24 +42,30 @@ void WLMCEvent::execute()
                          &f);
 
     double max, min;
-    system.locateGlobalExtremaValues(min, max, solver()); //TMP solver
+//    system.locateGlobalExtremaValues(min, max, solver()); //TMP solver
 
-    cout << min << " " << m_minEnergies(m_nCount) << endl;
-    cout << max << " " << m_maxEnergies(m_nCount) << endl;
+//    cout << min << " " << m_minEnergies(m_nCount) << endl;
+//    cout << max << " " << m_maxEnergies(m_nCount) << endl;
+
+    min = 377.383;
+    max = 547.847;
 
 
     WLMCWindow mainWindow(&system, m_nbins, min, max);
+    WLMCWindow cheatWindow(&system,
+                           mainWindow.DOS(),
+                           mainWindow.energies(),
+                           m_nbins/10,
+                           m_nbins - m_nbins/10,
+                           WLMCWindow::OVERLAPTYPES::NONE);
 
     while (f >= m_fEnd)
     {
-        while (!mainWindow.isFlat())
-        {
-            mainWindow.calculateWindow(solver()); //TMP solver
-        }
+        cheatWindow.calculateWindow(solver()); //TMP solver
 
         f = m_fIteratorFunction(f);
 
-        mainWindow.reset();
+        cheatWindow.reset();
     }
 
     exit(0);

@@ -53,17 +53,15 @@ bool WLMCSystem::doSingleMove(WLMCWindow *window)
     double oldValue = getTotalValue();
     double newValue = oldValue + getValueDifference(particleIndex, xd, yd, zd);
 
-    uint oldBin = window->getBin(oldValue);
-    uint newBin = window->getBin(newValue);
-
-
-    if (!window->isLegal(oldBin) || !window->isLegal(newBin))
+    if (!window->isLegal(oldValue) || !window->isLegal(newValue))
     {
         changePosition(particleIndex, xd, yd, zd);
 
         return false;
     }
 
+    uint oldBin = window->getBin(oldValue);
+    uint newBin = window->getBin(newValue);
 
     double oldDOS = window->DOS(oldBin);
     double newDOS = window->DOS(newBin);
