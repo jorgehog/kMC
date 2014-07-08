@@ -65,7 +65,7 @@ void WLMCEvent::execute()
                            upperClip,
                            WLMCWindow::OVERLAPTYPES::NONE);
 
-    system.setupPresetWindowConfigurations(cheatWindow.minValue(), cheatWindow.maxValue(), 10);
+//    system.setupPresetWindowConfigurations(cheatWindow.minValue(), cheatWindow.maxValue(), 10);
 
     while (f >= m_fEnd)
     {

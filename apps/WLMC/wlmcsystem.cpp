@@ -312,9 +312,6 @@ void WLMCSystem::loadConfigurationClosestToValue(const double value)
         }
     }
 
-    cout << "loaded configuration with energy " << getTotalValue() << " when asked for " << value << endl;
-    sleep(2);
-
 }
 
 uint WLMCSystem::getPresetBinFromValue(const double value) const
@@ -331,7 +328,18 @@ uint WLMCSystem::getPresetBinFromValue(const double value) const
 void WLMCSystem::clipWindow(uint &lowerLimit, uint &upperLimit, WLMCWindow &window) const
 {
 
-    vec hist = window.getHistogram(10*m_movesPerSampling);
+    uint histSamples;
+
+    if (m_movesPerSampling > 10000)
+    {
+        histSamples = 10000;
+    }
+    else
+    {
+        histSamples = m_movesPerSampling;
+    }
+
+    vec hist = window.getHistogram(histSamples);
 
     double m = arma::max(hist);
 

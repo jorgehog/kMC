@@ -138,7 +138,7 @@ void WLMCWindow::calculateWindow()
 
         for (WLMCWindow *subWindow : m_subWindows)
         {
-            m_system->loadConfigurationClosestToValue((subWindow->maxValue() + subWindow->minValue())/2);
+//            m_system->loadConfigurationClosestToValue((subWindow->maxValue() + subWindow->minValue())/2);
             subWindow->calculateWindow();
             mergeWith(subWindow, mean);
 
@@ -594,9 +594,9 @@ void WLMCWindow::tmp_output(const uint lowerLimitFlat, const uint upperLimitFlat
     vec idx = conv_to<vec>::from(indices);
     vec vcd = conv_to<vec>::from(vc);
 
-    if (!join_rows(join_rows(join_rows(e, dos), vcd), idx).eval().save(file.str()))
+    if (join_rows(join_rows(join_rows(e, dos), vcd), idx).eval().save(file.str()))
     {
-        cout << "failed at storing " << file.str() << endl;
+        cout << "storing " << file.str() << endl;
     }
 }
 
