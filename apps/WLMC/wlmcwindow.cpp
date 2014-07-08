@@ -17,13 +17,19 @@ WLMCWindow::WLMCWindow(WLMCSystem *system,
     m_upperLimitOnParent(upperLimit),
     m_nbins(upperLimit - lowerLimit),
     m_minValue(parentEnergies(lowerLimit)),
-    m_maxValue(parentEnergies(m_nbins - 1)),
+    m_maxValue(parentEnergies(upperLimit - 1)),
     m_valueSpan(m_maxValue - m_minValue),
     m_DOS(parentDOS(span(lowerLimit, upperLimit - 1))),
     m_energies(parentEnergies(span(lowerLimit, upperLimit - 1))),
     m_visitCounts(uvec(m_nbins))
 {
     m_visitCounts.fill(m_unsetCount);
+
+    if (upperLimit < lowerLimit)
+    {
+        cout << lowerLimit << " " << upperLimit << endl;
+        throw std::runtime_error("illegal window.");
+    }
 }
 
 WLMCWindow::WLMCWindow(WLMCSystem *system, const uint nBins,
@@ -132,6 +138,7 @@ void WLMCWindow::calculateWindow()
 
         for (WLMCWindow *subWindow : m_subWindows)
         {
+            m_system->loadConfigurationClosestToValue((subWindow->maxValue() + subWindow->minValue())/2);
             subWindow->calculateWindow();
             mergeWith(subWindow, mean);
 

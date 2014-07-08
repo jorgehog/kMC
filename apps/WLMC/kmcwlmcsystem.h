@@ -31,6 +31,8 @@ public:
 
     void changePosition(const uint particleIndex, const uint xd, const uint yd, const uint zd);
 
+    void getPosition(const uint particleIndex, uint &x, uint &y, uint &z) const;
+
 private:
 
     KMCSolver *m_solver;

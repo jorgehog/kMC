@@ -69,3 +69,10 @@ void KMCWLMCSystem::changePosition(const uint particleIndex, const uint xd, cons
 {
     m_solver->particle(particleIndex)->changePosition(xd, yd, zd);
 }
+
+void KMCWLMCSystem::getPosition(const uint particleIndex, uint &x, uint &y, uint &z) const
+{
+    x = m_solver->particle(particleIndex)->x();
+    y = m_solver->particle(particleIndex)->y();
+    z = m_solver->particle(particleIndex)->z();
+}

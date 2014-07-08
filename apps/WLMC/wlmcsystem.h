@@ -1,9 +1,10 @@
 #pragma once
 
-#include <sys/types.h>
+#include <armadillo>
 
 #include <functional>
 
+using namespace arma;
 using namespace std;
 
 namespace WLMC
@@ -37,6 +38,8 @@ public:
 
     virtual void changePosition(const uint particleIndex, const uint xd, const uint yd, const uint zd) = 0;
 
+    virtual void getPosition(const uint particleIndex, uint &x, uint &y, uint &z) const = 0;
+
 
     void sampleWindow(WLMCWindow *window);
 
@@ -47,6 +50,12 @@ public:
     void findDestination(const uint destination, uint &xd, uint &yd, uint &zd);
 
     void locateGlobalExtremaValues(double &min, double &max);
+
+    void setupPresetWindowConfigurations(const double min, const double max, const uint n);
+
+    void loadConfigurationClosestToValue(const double value);
+
+    uint getPresetBinFromValue(const double value) const;
 
     const uint &nParticles() const
     {
@@ -117,6 +126,8 @@ private:
 
     const function<double()> m_URNG;
 
+    ucube m_presetWindowConfigurations;
+    vec m_presetWindowValues;
 
     double getGlobalExtremum(const extrema type);
 

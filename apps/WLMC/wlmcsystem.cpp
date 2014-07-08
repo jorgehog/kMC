@@ -57,9 +57,19 @@ bool WLMCSystem::doWLMCMove(WLMCWindow *window)
     double oldValue = getTotalValue();
     double newValue = oldValue + getValueDifference(particleIndex, xd, yd, zd);
 
-    if (!window->isLegal(oldValue) || !window->isLegal(newValue))
+    bool oldLegal = window->isLegal(oldValue);
+    bool newLegal = window->isLegal(newValue);
+
+    if (!oldLegal || !newLegal)
     {
+        //Problem is that we jump from lowest range to highest range. Store configurations on various windows?
+
         changePosition(particleIndex, xd, yd, zd);
+
+        if (window->lowerLimitOnParent() > 400)
+        {
+            cout << "ignored " << oldValue << " " << newValue << " on " << window->minValue() << " " << window->maxValue() << endl;
+        }
 
         return false;
     }
@@ -86,7 +96,10 @@ bool WLMCSystem::doWLMCMove(WLMCWindow *window)
 
     else
     {
-        window->registerVisit(oldBin);
+        if (window->isLegal(oldValue))
+        {
+            window->registerVisit(oldBin);
+        }
     }
 
     return true;
@@ -206,6 +219,109 @@ void WLMCSystem::locateGlobalExtremaValues(double &min, double &max)
 
     cout << "found " << allExtrema.size() << " extrema." << endl;
 
+}
+
+void WLMCSystem::setupPresetWindowConfigurations(const double min, const double max, const uint n)
+{
+    m_presetWindowConfigurations.set_size(n, m_nParticles, 3);
+    m_presetWindowValues = linspace(min, max, n + 1);
+    double value;
+
+    uvec binSet = zeros<uvec>(n);
+    uint bin;
+
+
+    uint nSet = 0;
+
+    uint x, y, z;
+
+    while (nSet != n)
+    {
+        doRandomMove();
+
+        value = getTotalValue();
+
+        if (value < min || value > max)
+        {
+            continue;
+        }
+
+        bin = getPresetBinFromValue(value);
+
+        if (binSet(bin) != 0)
+        {
+            continue;
+        }
+
+        binSet(bin) = 1;
+
+        for (uint particleIndex = 0; particleIndex < m_nParticles; ++particleIndex)
+        {
+            getPosition(particleIndex, x, y, z);
+
+            m_presetWindowConfigurations(bin, particleIndex, 0) = x;
+            m_presetWindowConfigurations(bin, particleIndex, 1) = y;
+            m_presetWindowConfigurations(bin, particleIndex, 2) = z;
+        }
+
+        nSet++;
+    }
+}
+
+void WLMCSystem::loadConfigurationClosestToValue(const double value)
+{
+    uint bin = getPresetBinFromValue(value);
+
+    uint xPreset, yPreset, zPreset, x, y, z, xAvailable, yAvailable, zAvailable, particleIndexConfig;
+
+    bool isAlreadyOccupied;
+
+    for (uint particleIndex = 0; particleIndex < m_nParticles; ++particleIndex)
+    {
+        getPosition(particleIndex, x, y, z);
+
+        isAlreadyOccupied = false;
+        for (particleIndexConfig = 0; particleIndexConfig < m_nParticles; ++particleIndexConfig)
+        {
+            xPreset = m_presetWindowConfigurations(bin, particleIndexConfig, 0);
+            yPreset = m_presetWindowConfigurations(bin, particleIndexConfig, 1);
+            zPreset = m_presetWindowConfigurations(bin, particleIndexConfig, 2);
+
+            if (xPreset == x && yPreset == y && zPreset == z)
+            {
+                isAlreadyOccupied = true;
+                break;
+            }
+
+            else if (!isOccupiedLoction(xPreset, yPreset, zPreset))
+            {
+                xAvailable = xPreset;
+                yAvailable = yPreset;
+                zAvailable = zPreset;
+            }
+        }
+
+
+        if (!isAlreadyOccupied)
+        {
+            changePosition(particleIndex, xAvailable, yAvailable, zAvailable);
+        }
+    }
+
+    cout << "loaded configuration with energy " << getTotalValue() << " when asked for " << value << endl;
+    sleep(2);
+
+}
+
+uint WLMCSystem::getPresetBinFromValue(const double value) const
+{
+    uint bin = 0;
+    while (!(value >= m_presetWindowValues(bin) && value <= m_presetWindowValues(bin + 1)))
+    {
+        bin++;
+    }
+
+    return bin;
 }
 
 double WLMCSystem::getGlobalExtremum(const WLMCSystem::extrema type)

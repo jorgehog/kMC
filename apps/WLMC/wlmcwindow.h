@@ -73,6 +73,21 @@ public:
         return value >= m_minValue && value <= m_maxValue;
     }
 
+    const double &minValue() const
+    {
+        return m_minValue;
+    }
+
+    const double &maxValue() const
+    {
+        return m_maxValue;
+    }
+
+    const double &valueSpan() const
+    {
+        return m_valueSpan;
+    }
+
     const uint &lowerLimitOnParent() const
     {
         return m_lowerLimitOnParent;
