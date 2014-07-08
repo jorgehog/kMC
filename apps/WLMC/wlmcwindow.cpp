@@ -1,6 +1,8 @@
 #include "wlmcwindow.h"
 #include "wlmcsystem.h"
 
+#include <kMC>
+
 using namespace WLMC;
 
 WLMCWindow::WLMCWindow(WLMCSystem *system,
@@ -46,7 +48,34 @@ WLMCWindow::~WLMCWindow()
     m_system = NULL;
 }
 
-void WLMCWindow::calculateWindow(kMC::KMCSolver *solver)
+vec WLMCWindow::getHistogram(const uint nmoves)
+{
+    double value = 0;
+
+    vec histogram(m_nbins, fill::zeros);
+
+    uint move = 0;
+    while (move < nmoves)
+    {
+        m_system->doRandomMove();
+
+        value = m_system->getTotalValue();
+
+        if (isLegal(value))
+        {
+            uint bin = getBin(m_system->getTotalValue());
+
+            histogram(bin)++;
+        }
+
+        move++;
+    }
+
+    return normalise(histogram);
+
+}
+
+void WLMCWindow::calculateWindow()
 {
 
     cout << "sampling on " << m_lowerLimitOnParent << " " << m_upperLimitOnParent << " f = " << m_system->f() << endl;
@@ -95,24 +124,29 @@ void WLMCWindow::calculateWindow(kMC::KMCSolver *solver)
         if (m_system->minWindowSizeRough() > m_system->minWindowSizeFlat(m_nbins))
         {
             cout << "rough window " << m_system->minWindowSizeRough() << " too small for flat window " << m_system->minWindowSizeFlat(m_nbins) << " bins = " << m_nbins << endl;
-            tmp_output(solver, 0, 0, {{0, m_nbins}});
+            tmp_output(0, 0, {{0, m_nbins}});
             continue;
         }
 
-        double mean = findSubWindows(solver);
+        double mean = findSubWindows();
 
         for (WLMCWindow *subWindow : m_subWindows)
         {
-            subWindow->calculateWindow(solver);
+            subWindow->calculateWindow();
             mergeWith(subWindow, mean);
 
             findFlatArea(start, end);
             findComplementaryRoughAreas(start, end, roughAreas, _o);
-            tmp_output(solver, start, end, roughAreas);
+            tmp_output(start, end, roughAreas);
+
         }
 
     }
 
+    if (m_subWindows.size() != 0)
+    {
+
+    }
     //todo: work out subwindows issues
     //todo: debug subwindows
     //todo: optimize and set transparent parameters for subwindows
@@ -162,7 +196,7 @@ double WLMCWindow::estimateFlatness(const uint lowerLimit, const uint upperLimit
 
 }
 
-double WLMCWindow::findSubWindows(kMC::KMCSolver *solver)
+double WLMCWindow::findSubWindows()
 {
 
     uint upperLimitFlat = 0;
@@ -191,7 +225,7 @@ double WLMCWindow::findSubWindows(kMC::KMCSolver *solver)
             _roughAreas.at(i) = {lowerLimitNewWindow, upperLimitNewWindow};
         }
 
-        tmp_output(solver, lowerLimitFlat, upperLimitFlat, _roughAreas);
+        tmp_output(lowerLimitFlat, upperLimitFlat, _roughAreas);
 
 
         for (uint i = 0; i < roughAreas.size(); ++i)
@@ -211,7 +245,7 @@ double WLMCWindow::findSubWindows(kMC::KMCSolver *solver)
     }
     else
     {
-        tmp_output(solver, 0, 0, {{0, m_nbins}});
+        tmp_output(0, 0, {{0, m_nbins}});
         return 0;
     }
 
@@ -447,33 +481,36 @@ bool WLMCWindow::isFlat(const uint lowerLimit, const uint upperLimit) const
 void WLMCWindow::mergeWith(WLMCWindow *other, double meanVisitAtFlatArea)
 {
 
-    double shiftLowHigh = 0;
-    double shiftHighLow = 0;
+    double shiftOldNew = 0;
     double shiftVisit = 0;
+
+    vec oldDOS;
+    vec newDOS;
+
+    span overlap;
+    span subwindowOverlap;
 
     if (other->overlapType() == WLMCWindow::OVERLAPTYPES::LOWER)
     {
-
-        shiftLowHigh = mean(m_DOS(span(m_nbins - m_system->overlap(), m_nbins - 1))/other->DOS()(span(0, m_system->overlap() - 1)));
-        shiftHighLow = mean(other->DOS()(span(0, m_system->overlap() - 1))/m_DOS(span(m_nbins - m_system->overlap(), m_nbins - 1)));
-
-        m_DOS(span(m_nbins - m_system->overlap(), m_nbins - 1)) = (other->DOS()(span(0 , m_system->overlap() - 1))*shiftLowHigh + m_DOS(span(m_nbins - m_system->overlap(), m_nbins - 1))*shiftHighLow)/2;
-
-        cout << "merged " << other->lowerLimitOnParent() << " " << other->upperLimitOnParent() << " lower end with shift on " << shiftLowHigh << " " << shiftHighLow << endl;
-
+        overlap = span(other->lowerLimitOnParent(), other->lowerLimitOnParent() + m_system->overlap() - 1);
+        subwindowOverlap = span(0, m_system->overlap() - 1);
     }
 
     else
     {
-        shiftLowHigh = mean(m_DOS(span(0, m_system->overlap() - 1))/other->DOS()(span(other->nbins() - m_system->overlap(), other->nbins() - 1)));
-        shiftHighLow = mean(other->DOS()(span(other->nbins() - m_system->overlap(), other->nbins() - 1))/m_DOS(span(0, m_system->overlap() - 1)));
-
-        m_DOS(span(0, m_system->overlap() - 1)) = (other->DOS()(span(other->nbins() - m_system->overlap(), other->nbins() - 1))*shiftHighLow + m_DOS(span(0, m_system->overlap() - 1))*shiftLowHigh)/2;
-
-
-        cout << "merged " << other->lowerLimitOnParent() << " " << other->upperLimitOnParent() << " upper end with shift on " << shiftLowHigh << " " << shiftHighLow << endl;
-
+        overlap = span(other->upperLimitOnParent() - m_system->overlap(), other->upperLimitOnParent() - 1);
+        subwindowOverlap = span(other->nbins() - m_system->overlap(), other->nbins() - 1);
     }
+
+    oldDOS = m_DOS(overlap);
+    newDOS = other->DOS()(subwindowOverlap);
+
+    shiftOldNew = mean(oldDOS/newDOS);
+
+    m_DOS(overlap) = (oldDOS + newDOS*shiftOldNew)/2;
+
+    cout << "merged " << other->lowerLimitOnParent() << " " << other->upperLimitOnParent() << " with shift on " << shiftOldNew << endl;
+
 
     shiftVisit = meanVisitAtFlatArea/other->getMeanFlatness();
     cout << shiftVisit << " " << meanVisitAtFlatArea << " " << other->getMeanFlatness() << endl;
@@ -519,18 +556,18 @@ uint WLMCWindow::bottomIncrement(const uint lowerLimit) const
 
 }
 
-void WLMCWindow::tmp_output(kMC::KMCSolver *solver, const uint lowerLimitFlat, const uint upperLimitFlat, const vector<uvec2> &roughAreas) const
+void WLMCWindow::tmp_output(const uint lowerLimitFlat, const uint upperLimitFlat, const vector<uvec2> &roughAreas) const
 {
 
     ofstream fFlat;
-    fFlat.open(solver->filePath() + "/flatness.txt");
+    fFlat.open(kMC::KMCSolver::instance()->filePath() + "/flatness.txt");
 
     fFlat << lowerLimitFlat << " " << upperLimitFlat << endl;
 
     fFlat.close();
 
     ofstream fRough;
-    fRough.open(solver->filePath() + "/roughness.txt");
+    fRough.open(kMC::KMCSolver::instance()->filePath() + "/roughness.txt");
     for (const uvec2 & roughArea : roughAreas)
     {
         fRough << roughArea(0) << " " << roughArea(1) << endl;
@@ -539,7 +576,7 @@ void WLMCWindow::tmp_output(kMC::KMCSolver *solver, const uint lowerLimitFlat, c
 
 
     stringstream file;
-    file << solver->filePath() << "/stateDensity" << m_system->nParticles() << ".arma";
+    file << kMC::KMCSolver::instance()->filePath() << "/stateDensity" << m_system->nParticles() << ".arma";
     vec E = linspace<vec>(m_minValue, m_maxValue, m_nbins);
 
     uvec indices = find(m_visitCounts != m_unsetCount);

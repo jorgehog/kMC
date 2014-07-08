@@ -3,8 +3,6 @@
 #include <armadillo>
 #include <vector>
 
-#include <kMC> //TMP
-
 using std::vector;
 
 using namespace arma;
@@ -39,11 +37,13 @@ public:
 
     virtual ~WLMCWindow();
 
-    void calculateWindow(kMC::KMCSolver *solver);
+    vec getHistogram(const uint nmoves);
+
+    void calculateWindow();
 
     double estimateFlatness(const uint lowerLimit, const uint upperLimit) const;
 
-    double findSubWindows(kMC::KMCSolver *solver);
+    double findSubWindows();
 
     double getMeanFlatness(const uint lowerLimit, const uint upperLimit) const;
 
@@ -91,6 +91,11 @@ public:
     const double &DOS(const uint i) const
     {
         return m_DOS(i);
+    }
+
+    void DOS(const vec newDOS)
+    {
+        m_DOS = newDOS;
     }
 
     const vec &energies() const
@@ -160,7 +165,7 @@ private:
 
     uint bottomIncrement(const uint lowerLimit) const;
 
-    void tmp_output(kMC::KMCSolver *solver, const uint lowerLimitFlat, const uint upperLimitFlat, const vector<uvec2> &roughAreas) const; //TMP
+    void tmp_output(const uint lowerLimitFlat, const uint upperLimitFlat, const vector<uvec2> &roughAreas) const;
 
 };
 

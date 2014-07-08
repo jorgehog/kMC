@@ -44,9 +44,17 @@ public:
 
     ~KMCSolver();
 
+    static KMCSolver *instance()
+    {
+        return m_instance;
+    }
+
+    static bool instanceActive()
+    {
+        return refCounter != 0;
+    }
+
     void reset();
-
-
 
     void mainloop()
     {
@@ -352,6 +360,8 @@ public:
     double getBruteForceTotalEnergy() const;
 
 private:
+
+    static KMCSolver *m_instance;
 
     DiffusionTypes m_diffusionType = DiffusionTypes::TST;
 

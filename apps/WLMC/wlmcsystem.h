@@ -4,8 +4,6 @@
 
 #include <functional>
 
-#include <kMC> //TMP
-
 using namespace std;
 
 namespace WLMC
@@ -42,11 +40,13 @@ public:
 
     void sampleWindow(WLMCWindow *window);
 
-    bool doSingleMove(WLMCWindow *window);
+    bool doWLMCMove(WLMCWindow *window);
+
+    void doRandomMove();
 
     void findDestination(const uint destination, uint &xd, uint &yd, uint &zd);
 
-    void locateGlobalExtremaValues(double &min, double &max, kMC::KMCSolver *solver);
+    void locateGlobalExtremaValues(double &min, double &max);
 
     const uint &nParticles() const
     {

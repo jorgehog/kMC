@@ -1,6 +1,8 @@
 #include "wlmcsystem.h"
 #include "wlmcwindow.h"
 
+#include <kMC>
+
 using namespace WLMC;
 
 WLMCSystem::WLMCSystem(const uint nParticles,
@@ -39,14 +41,14 @@ void WLMCSystem::sampleWindow(WLMCWindow *window)
     
     while (nMoves < m_movesPerSampling)
     {
-        if (doSingleMove(window))
+        if (doWLMCMove(window))
         {
             nMoves++;
         }
     }
 }
 
-bool WLMCSystem::doSingleMove(WLMCWindow *window)
+bool WLMCSystem::doWLMCMove(WLMCWindow *window)
 {
     uint particleIndex, xd, yd, zd;
 
@@ -91,6 +93,14 @@ bool WLMCSystem::doSingleMove(WLMCWindow *window)
 
 }
 
+void WLMCSystem::doRandomMove()
+{
+    uint particleIndex, xd, yd, zd;
+
+    getRandomParticleAndDestination(particleIndex, xd, yd, zd);
+    changePosition(particleIndex, xd, yd, zd);
+}
+
 void WLMCSystem::findDestination(const uint destination, uint &xd, uint &yd, uint &zd)
 {
     uint search = 0;
@@ -120,7 +130,7 @@ void WLMCSystem::findDestination(const uint destination, uint &xd, uint &yd, uin
 
 }
 
-void WLMCSystem::locateGlobalExtremaValues(double &min, double &max, kMC::KMCSolver *solver)
+void WLMCSystem::locateGlobalExtremaValues(double &min, double &max)
 {
     uint nSweeps = 1;
     uint sweep = 0;
@@ -151,7 +161,7 @@ void WLMCSystem::locateGlobalExtremaValues(double &min, double &max, kMC::KMCSol
         if (!isIn)
         {
             allExtrema.push_back(localMin);
-            solver->dumpLAMMPS(allExtrema.size());
+            kMC::KMCSolver::instance()->dumpLAMMPS(allExtrema.size());
         }
 
         if (localMin < min)
@@ -183,7 +193,7 @@ void WLMCSystem::locateGlobalExtremaValues(double &min, double &max, kMC::KMCSol
         if (!isIn)
         {
             allExtrema.push_back(localMax);
-            solver->dumpLAMMPS(allExtrema.size());
+            kMC::KMCSolver::instance()->dumpLAMMPS(allExtrema.size());
         }
 
         if (localMax > max)

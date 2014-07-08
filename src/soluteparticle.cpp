@@ -654,11 +654,15 @@ double SoluteParticle::getBruteForceEnergy() const
 {
     double energy = 0;
 
-    forEachNeighborSiteDo_sendIndices([this, &energy] (Site *neighbor, uint i, uint j, uint k)
+    forEachNeighborSiteDo([this, &energy] (Site *neighbor)
     {
         if (neighbor->isActive())
         {
-            energy += potentialBetween(neighbor->associatedParticle(), i, j, k);
+            uint s = neighbor->associatedParticle()->species();
+            int dx, dy, dz;
+            distanceTo(neighbor->associatedParticle(),dx, dy, dz);
+            double r = sqrt(dx*dx + dy*dy + dz*dz);
+            energy += DiffusionReaction::strength(m_species, s)/pow(r, DiffusionReaction::rPower(m_species, s));
         }
 
     });

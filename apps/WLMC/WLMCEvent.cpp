@@ -3,6 +3,7 @@
 #include "wlmcwindow.h"
 #include "kmcwlmcsystem.h"
 
+
 using namespace kMC;
 using namespace WLMC;
 
@@ -54,16 +55,27 @@ void WLMCEvent::execute()
 
     WLMCWindow mainWindow(&system, m_nbins, min, max);
 
+    vec hist = mainWindow.getHistogram(10*system.movesPerWindowCheck());
+    double m = arma::max(hist);
+    umat idx = find(hist > 1E-6*m);
+
+    uint l = idx(0);
+    uint u = idx(idx.n_elem - 1);
+
+    cout << "should calc from " << l << " to " << u << " ? " << endl;
+
+    hist.save("/tmp/hist.arma");
+
     WLMCWindow cheatWindow(&system,
                            mainWindow.DOS(),
                            mainWindow.energies(),
-                           m_nbins/6,
-                           m_nbins - m_nbins/6,
+                           l,
+                           u,
                            WLMCWindow::OVERLAPTYPES::NONE);
 
     while (f >= m_fEnd)
     {
-        cheatWindow.calculateWindow(solver()); //TMP solver
+        cheatWindow.calculateWindow();
 
         f = m_fIteratorFunction(f);
 

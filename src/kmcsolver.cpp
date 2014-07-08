@@ -130,8 +130,6 @@ KMCSolver::~KMCSolver()
 
     delete m_lammpswriter;
 
-
-
     refCounter--;
 
 }
@@ -156,6 +154,13 @@ void KMCSolver::reset()
 
 void KMCSolver::onConstruct()
 {
+    if (refCounter != 0)
+    {
+        exit("Instance already active.");
+    }
+
+    m_instance = this;
+
 
     m_NX = UNSET_UINT;
     m_NY = UNSET_UINT;
@@ -1531,9 +1536,11 @@ void KMCSolver::clearParticles()
 
 }
 
+KMCSolver *KMCSolver::m_instance = NULL;
 
 bool KMCSolver::m_dumpXYZ = false;
 bool KMCSolver::m_dumpLAMMPS = true;
 
 uint KMCSolver::refCounter = 0;
+
 
