@@ -110,6 +110,8 @@ void WLMCSystem::doRandomMove()
 {
     uint particleIndex, xd, yd, zd;
 
+    xd = yd = zd = 0;
+
     getRandomParticleAndDestination(particleIndex, xd, yd, zd);
     changePosition(particleIndex, xd, yd, zd);
 }
@@ -274,6 +276,8 @@ void WLMCSystem::loadConfigurationClosestToValue(const double value)
 
     uint xPreset, yPreset, zPreset, x, y, z, xAvailable, yAvailable, zAvailable, particleIndexConfig;
 
+    xAvailable = yAvailable = zAvailable = 0;
+
     bool isAlreadyOccupied;
 
     for (uint particleIndex = 0; particleIndex < m_nParticles; ++particleIndex)
@@ -304,7 +308,7 @@ void WLMCSystem::loadConfigurationClosestToValue(const double value)
 
         if (!isAlreadyOccupied)
         {
-            !changePosition(particleIndex, xAvailable, yAvailable, zAvailable);
+            changePosition(particleIndex, xAvailable, yAvailable, zAvailable);
         }
     }
 
