@@ -512,9 +512,9 @@ void WLMCWindow::mergeWith(WLMCWindow *other, double meanVisitAtFlatArea)
     oldDOS = m_DOS(overlap);
     newDOS = other->DOS()(subwindowOverlap);
 
-    shiftOldNew = mean(oldDOS/newDOS);
+    shiftOldNew = mean(oldDOS)/mean(newDOS);
 
-    m_DOS(overlap) = (oldDOS + newDOS*shiftOldNew)/2;
+    m_DOS(overlap) = newDOS*shiftOldNew;
 
     cout << "merged " << other->lowerLimitOnParent() << " " << other->upperLimitOnParent() << " with shift on " << shiftOldNew << endl;
 

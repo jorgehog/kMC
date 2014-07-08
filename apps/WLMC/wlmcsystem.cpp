@@ -304,7 +304,7 @@ void WLMCSystem::loadConfigurationClosestToValue(const double value)
 
         if (!isAlreadyOccupied)
         {
-            changePosition(particleIndex, xAvailable, yAvailable, zAvailable);
+            !changePosition(particleIndex, xAvailable, yAvailable, zAvailable);
         }
     }
 
@@ -322,6 +322,44 @@ uint WLMCSystem::getPresetBinFromValue(const double value) const
     }
 
     return bin;
+}
+
+void WLMCSystem::clipWindow(uint &lowerLimit, uint &upperLimit, WLMCWindow &window) const
+{
+
+    vec hist = window.getHistogram(10*m_movesPerSampling);
+
+    double m = arma::max(hist);
+
+    uint clipSize = 10;
+    double thresh = 1E-3;
+
+    uint upperLimitClip = window.nbins();
+    uint lowerLimitClip = window.nbins() - clipSize;
+
+    while (mean(hist(span(lowerLimitClip, upperLimitClip - 1))) < thresh*m)
+    {
+        upperLimitClip -= clipSize;
+        lowerLimitClip -= clipSize;
+    }
+
+    upperLimit = (lowerLimitClip + upperLimitClip)/2;
+
+    lowerLimitClip = 0;
+    upperLimitClip = clipSize;
+
+    while (mean(hist(span(lowerLimitClip, upperLimitClip - 1))) < thresh*m)
+    {
+        upperLimitClip += clipSize;
+        lowerLimitClip += clipSize;
+    }
+
+    lowerLimit = (lowerLimitClip + upperLimitClip)/2;
+
+    cout << "should calc from " << lowerLimit << " to " << upperLimit << " ? " << endl;
+
+    hist.save("/tmp/hist.arma");
+
 }
 
 double WLMCSystem::getGlobalExtremum(const WLMCSystem::extrema type)

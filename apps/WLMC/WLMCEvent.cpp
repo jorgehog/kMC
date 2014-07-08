@@ -44,33 +44,25 @@ void WLMCEvent::execute()
                          &f);
 
     double max, min;
-//    system.locateGlobalExtremaValues(min, max, solver()); //TMP solver
+    system.locateGlobalExtremaValues(min, max);
 
 //    cout << min << " " << m_minEnergies(m_nCount) << endl;
 //    cout << max << " " << m_maxEnergies(m_nCount) << endl;
 
-    min = 377.383;
-    max = 547.847;
+//    min = 377.383;
+//    max = 547.847;
 
 
     WLMCWindow mainWindow(&system, m_nbins, min, max);
 
-    vec hist = mainWindow.getHistogram(10*system.movesPerWindowCheck());
-    double m = arma::max(hist);
-    umat idx = find(hist > 1E-6*m);
-
-    uint l = idx(0);
-    uint u = idx(idx.n_elem - 1);
-
-    cout << "should calc from " << l << " to " << u << " ? " << endl;
-
-    hist.save("/tmp/hist.arma");
+    uint lowerClip, upperClip;
+    system.clipWindow(lowerClip, upperClip, mainWindow);
 
     WLMCWindow cheatWindow(&system,
                            mainWindow.DOS(),
                            mainWindow.energies(),
-                           l,
-                           u,
+                           lowerClip,
+                           upperClip,
                            WLMCWindow::OVERLAPTYPES::NONE);
 
     system.setupPresetWindowConfigurations(cheatWindow.minValue(), cheatWindow.maxValue(), 10);
