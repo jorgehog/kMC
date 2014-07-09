@@ -57,7 +57,7 @@ public:
 
     uint getPresetBinFromValue(const double value) const;
 
-    void clipWindow(uint &lowerLimit, uint &upperLimit, WLMCWindow &window) const;
+    void clipWindow(WLMCWindow &window) const;
 
     const uint &nParticles() const
     {

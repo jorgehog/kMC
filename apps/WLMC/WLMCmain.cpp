@@ -54,6 +54,8 @@ void initializeWLMC(KMCSolver *solver, const Setting &root)
 
     const Setting &initCFG = getSetting(root, "Initialization");
 
+    const uint &adaptiveWindows = getSetting<uint>(initCFG, "adaptiveWindows");
+
     const uint &nbins = getSetting<uint>(initCFG, "nbins");
 
     const uint &movesPerSampling = getSetting<uint>(initCFG, "movesPerSampling");
@@ -76,7 +78,8 @@ void initializeWLMC(KMCSolver *solver, const Setting &root)
     const double fFinal = fFinalMinusOne + 1;
 
 
-    KMCEvent *wlmc = new WLMCEvent(nbins,
+    KMCEvent *wlmc = new WLMCEvent(adaptiveWindows,
+                                   nbins,
                                    movesPerSampling,
                                    flatnessCriterion,
                                    overlap,

@@ -34,9 +34,12 @@ public:
     WLMCWindow(WLMCSystem *system,
                const uint nBins,
                const double minValue,
-               const double maxValue);
+               const double maxValue,
+               bool allowSubWindowing = true);
 
     virtual ~WLMCWindow();
+
+    void adapt(const uint lowerLimit, const uint upperLimit);
 
     vec getHistogram(const uint nmoves);
 
@@ -163,16 +166,16 @@ private:
 
     const WLMCWindow::OVERLAPTYPES m_overlapType;
 
-    const uint m_lowerLimitOnParent;
-    const uint m_upperLimitOnParent;
-    const uint m_nbins;
+    uint m_lowerLimitOnParent;
+    uint m_upperLimitOnParent;
+    uint m_nbins;
 
-    const double m_minValue;
-    const double m_maxValue;
-    const double m_valueSpan;
+    double m_minValue;
+    double m_maxValue;
+    double m_valueSpan;
 
     vec m_DOS;
-    const vec m_energies;
+    vec m_energies;
     uvec m_visitCounts;
 
     void adjustLimits(uint &start, uint &end);

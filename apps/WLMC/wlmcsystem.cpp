@@ -327,10 +327,10 @@ uint WLMCSystem::getPresetBinFromValue(const double value) const
     return bin;
 }
 
-void WLMCSystem::clipWindow(uint &lowerLimit, uint &upperLimit, WLMCWindow &window) const
+void WLMCSystem::clipWindow(WLMCWindow &window) const
 {
 
-    uint histSamples;
+    uint histSamples, upperLimit, lowerLimit;
 
     if (m_movesPerSampling > 10000)
     {
@@ -373,6 +373,8 @@ void WLMCSystem::clipWindow(uint &lowerLimit, uint &upperLimit, WLMCWindow &wind
     cout << "should calc from " << lowerLimit << " to " << upperLimit << " ? " << endl;
 
     hist.save("/tmp/hist.arma");
+
+    window.adapt(lowerLimit, upperLimit);
 
 }
 

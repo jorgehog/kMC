@@ -36,8 +36,15 @@ WLMCWindow::WLMCWindow(WLMCSystem *system,
 
 WLMCWindow::WLMCWindow(WLMCSystem *system, const uint nBins,
                        const double minValue,
-                       const double maxValue) :
-    WLMCWindow(system, ones(nBins), linspace(minValue, maxValue, nBins), 0, nBins, WLMCWindow::OVERLAPTYPES::NONE)
+                       const double maxValue,
+                       bool allowSubWindowing) :
+    WLMCWindow(system,
+               ones(nBins),
+               linspace(minValue, maxValue, nBins),
+               0,
+               nBins,
+               WLMCWindow::OVERLAPTYPES::NONE,
+               allowSubWindowing)
 {
 
 }
@@ -54,6 +61,23 @@ WLMCWindow::~WLMCWindow()
     m_DOS.clear();
     m_visitCounts.clear();
     m_system = NULL;
+}
+
+void WLMCWindow::adapt(const uint lowerLimit, const uint upperLimit)
+{
+    m_DOS = m_DOS(span(lowerLimit, upperLimit - 1));
+    m_energies = m_energies(span(lowerLimit, upperLimit - 1));
+    m_visitCounts = m_visitCounts(span(lowerLimit, upperLimit - 1));
+
+    m_nbins = upperLimit - lowerLimit;
+
+    m_minValue = m_energies(0);
+    m_maxValue = m_energies(m_nbins - 1);
+
+    m_valueSpan = m_maxValue - m_minValue;
+
+    m_lowerLimitOnParent += lowerLimit;
+    m_upperLimitOnParent -= m_upperLimitOnParent - upperLimit;
 }
 
 vec WLMCWindow::getHistogram(const uint nmoves)
@@ -88,12 +112,8 @@ void WLMCWindow::calculateWindow()
 
     cout << "sampling on " << m_lowerLimitOnParent << " " << m_upperLimitOnParent << " f = " << m_system->f() << endl;
 
-    uint lowerLimitFlat = 0;
-    uint upperLimitFlat = 0;
-
     vector<uvec2> roughAreas;
     vector<WLMCWindow::OVERLAPTYPES> _o;
-
 
     uint start, end;
     while (!isFlat())
@@ -103,30 +123,6 @@ void WLMCWindow::calculateWindow()
 
         m_DOS = normalise(m_DOS);
 
-        //NO WINDOWS
-        //        findFlatArea(lowerLimitFlat, upperLimitFlat);
-
-        //        if (!isFlat(lowerLimitFlat, upperLimitFlat))
-        //        {
-        //            tmp_output(solver, 0, 0, {{0, m_nbins}});
-        //            continue;
-        //        }
-
-        //        findComplementaryRoughAreas(lowerLimitFlat, upperLimitFlat, roughAreas, _o);
-
-        //        for (uint i = 0; i < roughAreas.size(); ++i)
-        //        {
-        //            getSubWindowLimits(_o.at(i), roughAreas.at(i)(0), roughAreas.at(i)(1), start, end);
-
-        //            roughAreas.at(i) = {start, end};
-        //        }
-
-        //        tmp_output(solver, lowerLimitFlat, upperLimitFlat, roughAreas);
-
-        //        roughAreas.clear();
-        //        _o.clear();
-
-        //WINDOWS
 
         if (!m_allowSubWindowing)
         {
@@ -305,6 +301,8 @@ void WLMCWindow::findComplementaryRoughAreas(const uint lowerLimitFlat, const ui
 
 void WLMCWindow::findFlatArea(uint &lowerLimit, uint &upperLimit) const
 {
+    lowerLimit = upperLimit = 0;
+
     scanForFlattestArea(lowerLimit, upperLimit);
 
     expandFlattestArea(lowerLimit, upperLimit);
@@ -497,6 +495,9 @@ bool WLMCWindow::isFlat(const uint lowerLimit, const uint upperLimit) const
 void WLMCWindow::mergeWith(WLMCWindow *other, double meanVisitAtFlatArea)
 {
 
+
+    cout << "############### MERGED SUB WINDOW ###################### " <<  other->lowerLimitOnParent() << " " << other->upperLimitOnParent() << endl;
+
     double shiftOldNew = 0;
     double shiftVisit = 0;
 
@@ -527,10 +528,7 @@ void WLMCWindow::mergeWith(WLMCWindow *other, double meanVisitAtFlatArea)
 
     cout << "merged " << other->lowerLimitOnParent() << " " << other->upperLimitOnParent() << " with shift on " << shiftOldNew << endl;
 
-
     shiftVisit = meanVisitAtFlatArea/other->getMeanFlatness();
-    cout << shiftVisit << " " << meanVisitAtFlatArea << " " << other->getMeanFlatness() << endl;
-    cout << "shift visit = " << shiftVisit << endl;
 
     for (uint i = 0; i < other->nbins(); ++i)
     {
@@ -603,16 +601,9 @@ void WLMCWindow::tmp_output(const uint lowerLimitFlat, const uint upperLimitFlat
     vec idx = conv_to<vec>::from(indices);
     vec vcd = conv_to<vec>::from(vc);
 
-    if (join_rows(join_rows(join_rows(e, dos), vcd), idx).eval().save(file.str()))
+    if (!join_rows(join_rows(join_rows(e, dos), vcd), idx).eval().save(file.str()))
     {
-        cout << "storing " << file.str() << endl;
-    }
-
-
-    if (roughAreas.size() > 2)
-    {
-        cout << "madness.." << endl;
-        exit(1);
+        cout << "failed at storing " << file.str() << endl;
     }
 }
 

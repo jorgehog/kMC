@@ -9,7 +9,8 @@ class WLMCEvent : public KMCEvent
 {
 public:
 
-    WLMCEvent(const uint nbins,
+    WLMCEvent(const uint adaptiveWindows,
+              const uint nbins,
               const uint movesPerSampling,
               const double flatnessCritera,
               const uint overlap,
@@ -19,6 +20,7 @@ public:
               const double fBegin,
               const double fEnd) :
         KMCEvent("kMC::WLMC", "", true),
+        m_adaptiveWindows(adaptiveWindows),
         m_nbins(nbins),
         m_movesPerWindowCheck(movesPerSampling),
         m_nbinsOverMinWindowSizeFlat(nbinsOverMinWindowSizeFlat),
@@ -39,6 +41,8 @@ protected:
     void execute();
 
 private:
+
+    const uint m_adaptiveWindows;
 
     const uint m_nbins;
     const uint m_movesPerWindowCheck;

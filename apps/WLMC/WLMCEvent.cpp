@@ -53,27 +53,19 @@ void WLMCEvent::execute()
 //    max = 547.847;
 
 
-    WLMCWindow mainWindow(&system, m_nbins, min, max);
+    WLMCWindow mainWindow(&system, m_nbins, min, max, m_adaptiveWindows == 1);
 
-    uint lowerClip, upperClip;
-    system.clipWindow(lowerClip, upperClip, mainWindow);
-
-    WLMCWindow cheatWindow(&system,
-                           mainWindow.DOS(),
-                           mainWindow.energies(),
-                           lowerClip,
-                           upperClip,
-                           WLMCWindow::OVERLAPTYPES::NONE);
+    system.clipWindow(mainWindow);
 
 //    system.setupPresetWindowConfigurations(cheatWindow.minValue(), cheatWindow.maxValue(), 10);
 
     while (f >= m_fEnd)
     {
-        cheatWindow.calculateWindow();
+        mainWindow.calculateWindow();
 
         f = m_fIteratorFunction(f);
 
-        cheatWindow.reset();
+        mainWindow.reset();
     }
 
     return;
