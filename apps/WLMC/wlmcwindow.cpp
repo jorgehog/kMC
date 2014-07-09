@@ -507,7 +507,7 @@ void WLMCWindow::mergeWith(WLMCWindow *other, double meanVisitAtFlatArea)
     span overlap;
     span subwindowOverlap;
 
-    if (other->overlapType() == WLMCWindow::OVERLAPTYPES::LOWER)
+    if (other->overlapType() != WLMCWindow::OVERLAPTYPES::LOWER)
     {
         overlap = span(other->lowerLimitOnParent(), other->lowerLimitOnParent() + m_system->overlap() - 1);
         subwindowOverlap = span(0, m_system->overlap() - 1);
