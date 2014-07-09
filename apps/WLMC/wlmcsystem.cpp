@@ -120,6 +120,8 @@ void WLMCSystem::findDestination(const uint destination, uint &xd, uint &yd, uin
 {
     uint search = 0;
 
+    xd = yd = zd = 0;
+
     for (uint x = 0; x < m_NX; ++x)
     {
         for (uint y = 0; y < m_NY; ++y)
@@ -344,7 +346,7 @@ void WLMCSystem::clipWindow(uint &lowerLimit, uint &upperLimit, WLMCWindow &wind
     double m = arma::max(hist);
 
     uint clipSize = 10;
-    double thresh = 1E-3;
+    double thresh = 1E-2;
 
     uint upperLimitClip = window.nbins();
     uint lowerLimitClip = window.nbins() - clipSize;

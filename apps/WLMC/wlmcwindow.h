@@ -28,7 +28,8 @@ public:
                const vec &parentEnergies,
                const uint lowerLimit,
                const uint upperLimit,
-               WLMCWindow::OVERLAPTYPES overlapType);
+               WLMCWindow::OVERLAPTYPES overlapType,
+               bool allowSubWindowing = true);
 
     WLMCWindow(WLMCSystem *system,
                const uint nBins,
@@ -60,7 +61,7 @@ public:
 
     void expandFlattestArea(uint &lowerLimit, uint &upperLimit) const;
 
-    void getSubWindowLimits(WLMCWindow::OVERLAPTYPES overlapType, const uint lowerLimitRough, const uint upperLimitRough, uint &lowerLimit, uint &upperLimit) const;
+    void getSubWindowLimits(WLMCWindow::OVERLAPTYPES overlapType, const uint lowerLimitRough, const uint upperLimitRough, uint &lowerLimit, uint &upperLimit, bool &allowSubWindowing) const;
 
     void registerVisit(const uint bin);
 
@@ -157,6 +158,8 @@ private:
     WLMCSystem *m_system;
 
     vector<WLMCWindow*> m_subWindows;
+
+    bool m_allowSubWindowing;
 
     const WLMCWindow::OVERLAPTYPES m_overlapType;
 
