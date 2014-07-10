@@ -55,26 +55,16 @@ bool WLMCSystem::doWLMCMove(WLMCWindow *window)
     getRandomParticleAndDestination(particleIndex, xd, yd, zd);
 
     double oldValue = getTotalValue();
+    uint oldBin = window->getBin(oldValue);
+
     double newValue = oldValue + getValueDifference(particleIndex, xd, yd, zd);
 
-    bool oldLegal = window->isLegal(oldValue);
-    bool newLegal = window->isLegal(newValue);
-
-    if (!oldLegal || !newLegal)
+    if (!window->isLegal(newValue))
     {
-        //Problem is that we jump from lowest range to highest range. Store configurations on various windows?
-
-        changePosition(particleIndex, xd, yd, zd);
-
-        if (window->lowerLimitOnParent() > 400)
-        {
-            cout << "ignored " << oldValue << " " << newValue << " on " << window->minValue() << " " << window->maxValue() << endl;
-        }
-
+        window->registerVisit(oldBin);
         return false;
     }
 
-    uint oldBin = window->getBin(oldValue);
     uint newBin = window->getBin(newValue);
 
     double oldDOS = window->DOS(oldBin);

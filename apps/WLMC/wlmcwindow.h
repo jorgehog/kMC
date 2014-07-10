@@ -43,6 +43,8 @@ public:
 
     vec getHistogram(const uint nmoves);
 
+    void loadInitialConfig();
+
     void calculateWindow();
 
     double estimateFlatness(const uint lowerLimit, const uint upperLimit) const;

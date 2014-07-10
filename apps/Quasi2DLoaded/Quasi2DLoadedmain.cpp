@@ -95,7 +95,7 @@ void initializeQuasi2DLoaded(KMCSolver *solver, const Setting &root)
         particle->addReaction(new LeftHop(particle, heighmap));
         particle->addReaction(new RightHop(particle, heighmap));
         particle->addReaction(new Adsorbtion(particle, heighmap));
-        particle->addReaction(new Desorbtion(particle, heighmap));
+//        particle->addReaction(new Desorbtion(particle, heighmap));
 
     }
 

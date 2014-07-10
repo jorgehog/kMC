@@ -57,7 +57,7 @@ void WLMCEvent::execute()
 
     system.clipWindow(mainWindow);
 
-//    system.setupPresetWindowConfigurations(cheatWindow.minValue(), cheatWindow.maxValue(), 10);
+    system.setupPresetWindowConfigurations(mainWindow.minValue(), mainWindow.maxValue(), 100);
 
     while (f >= m_fEnd)
     {

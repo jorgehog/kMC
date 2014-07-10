@@ -107,6 +107,11 @@ vec WLMCWindow::getHistogram(const uint nmoves)
 
 }
 
+void WLMCWindow::loadInitialConfig()
+{
+    m_system->loadConfigurationClosestToValue((m_maxValue + m_minValue)/2);
+}
+
 void WLMCWindow::calculateWindow()
 {
 
@@ -142,6 +147,7 @@ void WLMCWindow::calculateWindow()
 
         for (WLMCWindow *subWindow : m_subWindows)
         {
+            subWindow->loadInitialConfig();
             subWindow->calculateWindow();
             mergeWith(subWindow, mean);
 
@@ -230,6 +236,12 @@ double WLMCWindow::findSubWindows()
             uvec2 roughArea = roughAreas.at(i);
             WLMCWindow::OVERLAPTYPES overlapType = overlaps.at(i);
 
+            if (roughArea(1) - roughArea(0) < m_system->minWindowSizeRough())
+            {
+                cout << "too low rought area" << endl;
+                return 0;
+            }
+
             getSubWindowLimits(overlapType, roughArea(0), roughArea(1), lowerLimitNewWindow, upperLimitNewWindow, allowSubWindowing);
 
             _roughAreas.at(i) = {lowerLimitNewWindow, upperLimitNewWindow};
@@ -241,6 +253,7 @@ double WLMCWindow::findSubWindows()
         {
             uvec2 roughArea = roughAreas.at(i);
             WLMCWindow::OVERLAPTYPES overlapType = overlaps.at(i);
+
 
             getSubWindowLimits(overlapType, roughArea(0), roughArea(1), lowerLimitNewWindow, upperLimitNewWindow, allowSubWindowing);
 
@@ -380,39 +393,13 @@ void WLMCWindow::expandFlattestArea(uint &lowerLimit, uint &upperLimit) const
 
 void WLMCWindow::getSubWindowLimits(OVERLAPTYPES overlapType, const uint lowerLimitRough, const uint upperLimitRough, uint &lowerLimit, uint &upperLimit, bool &allowSubWindowing) const
 {
+    uint newSize = upperLimitRough - lowerLimitRough + m_system->overlap();
+
     //If the desired area is lower than the minimum window, we need to increase it.
-    if (upperLimitRough - lowerLimitRough < m_system->minWindowSizeRough())
+    if (upperLimitRough - lowerLimitRough < m_system->minWindowSizeRough() || newSize < m_system->minWindowSizeFlat(newSize))
     {
-        uint halfWindow = m_system->minWindowSizeRough()/2;
-
-        //if expansion on lower side is blocked.
-        if (lowerLimitRough < halfWindow)
-        {
-            lowerLimit = 0;
-            upperLimit = m_system->minWindowSizeRough();
-        }
-
-        //and the same goes for the upper limit
-        else if (upperLimitRough > m_nbins - halfWindow)
-        {
-            upperLimit = m_nbins;
-            lowerLimit = m_nbins - m_system->minWindowSizeRough();
-        }
-
-        //if it is not blocked, we simply expand.
-        else
-        {
-
-            //to account for integer division.
-            uint extra = 2*halfWindow - m_system->minWindowSizeRough();
-            uint centerPoint = (upperLimitRough + lowerLimitRough)/2;
-
-            upperLimit = centerPoint + halfWindow + extra;
-            lowerLimit = centerPoint - halfWindow;
-
-        }
-
         allowSubWindowing = false;
+        return;
     }
 
     else
@@ -431,7 +418,7 @@ void WLMCWindow::getSubWindowLimits(OVERLAPTYPES overlapType, const uint lowerLi
         if (lowerLimit < m_system->overlap())
         {
             cout << "ERROR IN LOWER OVERLAP " << lowerLimitRough << " " << upperLimitRough << " " << lowerLimit << endl;
-            exit(1);
+            throw std::runtime_error("asds");
         }
 
         lowerLimit -= m_system->overlap();
@@ -441,7 +428,7 @@ void WLMCWindow::getSubWindowLimits(OVERLAPTYPES overlapType, const uint lowerLi
         if (upperLimit > m_nbins - m_system->overlap())
         {
             cout << "ERROR IN UPPER OVERLAP " << lowerLimitRough << " " << upperLimitRough << " " << upperLimit << endl;
-            exit(1);
+            throw std::runtime_error("asds");
         }
 
         upperLimit += m_system->overlap();
@@ -498,46 +485,36 @@ void WLMCWindow::mergeWith(WLMCWindow *other, double meanVisitAtFlatArea)
 
     cout << "############### MERGED SUB WINDOW ###################### " <<  other->lowerLimitOnParent() << " " << other->upperLimitOnParent() << endl;
 
-    double shiftSubSup = 0;
-    double shiftVisit = 0;
+    uint pointSub;
+    uint pointSup;
 
-    span sup_subOverlap;
-    span sub_subOverlap;
+    uint repl_l;
+    uint repl_u;
 
-    span sup_subNonOverlap;
-    span sub_subNonOverlap;
-
-
-
-    if (other->overlapType() != WLMCWindow::OVERLAPTYPES::LOWER)
+    if (other->overlapType() == WLMCWindow::OVERLAPTYPES::LOWER)
     {
-        sup_subOverlap = span(other->lowerLimitOnParent(), other->lowerLimitOnParent() + m_system->overlap() - 1);
-        sub_subOverlap = span(0, m_system->overlap() - 1);
-
-        sup_subNonOverlap = span(other->lowerLimitOnParent() + m_system->overlap(), other->upperLimitOnParent() - 1);
-        sub_subNonOverlap = span(m_system->overlap(), other->nbins());
+        pointSub = m_system->overlap();
+        repl_l = other->lowerLimitOnParent() + m_system->overlap();
+        repl_u = other->upperLimitOnParent();
     }
 
     else
     {
-        sup_subOverlap = span(other->upperLimitOnParent() - m_system->overlap(), other->upperLimitOnParent() - 1);
-        sub_subOverlap = span(other->nbins() - m_system->overlap(), other->nbins() - 1);
-
-        sup_subNonOverlap = span(other->lowerLimitOnParent(), other->upperLimitOnParent() - m_system->overlap());
-        sub_subNonOverlap = span(0, other->nbins() - m_system->overlap() - 1);
+        pointSub = other->nbins() - m_system->overlap();
+        repl_l = other->lowerLimitOnParent();
+        repl_u = other->upperLimitOnParent() - m_system->overlap();
     }
 
-    vec supDOS = m_DOS(sup_subOverlap);
-    vec subDOS = other->DOS()(sub_subOverlap);
+    pointSup = other->lowerLimitOnParent() + pointSub;
 
-    shiftSubSup = mean(subDOS/supDOS);
+    double shiftSubSup = m_DOS(pointSup)/other->DOS(pointSub);
 
-    m_DOS(sup_subOverlap) = (m_DOS(sup_subOverlap) + subDOS*shiftSubSup)/2;
-    m_DOS(sup_subNonOverlap) = shiftSubSup*other->DOS()(sub_subNonOverlap);
+    m_DOS(span(repl_l, repl_u - 1)) = shiftSubSup*other->DOS()(span(repl_l - other->lowerLimitOnParent(), repl_u - other->lowerLimitOnParent() - 1));
+
 
     cout << "merged " << other->lowerLimitOnParent() << " " << other->upperLimitOnParent() << " with shift on " << shiftSubSup << endl;
 
-    shiftVisit = meanVisitAtFlatArea/other->getMeanFlatness();
+    double shiftVisit = meanVisitAtFlatArea/other->getMeanFlatness();
 
     for (uint i = 0; i < other->nbins(); ++i)
     {
