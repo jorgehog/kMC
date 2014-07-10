@@ -498,35 +498,44 @@ void WLMCWindow::mergeWith(WLMCWindow *other, double meanVisitAtFlatArea)
 
     cout << "############### MERGED SUB WINDOW ###################### " <<  other->lowerLimitOnParent() << " " << other->upperLimitOnParent() << endl;
 
-    double shiftOldNew = 0;
+    double shiftSubSup = 0;
     double shiftVisit = 0;
 
-    vec oldDOS;
-    vec newDOS;
+    span sup_subOverlap;
+    span sub_subOverlap;
 
-    span overlap;
-    span subwindowOverlap;
+    span sup_subNonOverlap;
+    span sub_subNonOverlap;
+
+
 
     if (other->overlapType() != WLMCWindow::OVERLAPTYPES::LOWER)
     {
-        overlap = span(other->lowerLimitOnParent(), other->lowerLimitOnParent() + m_system->overlap() - 1);
-        subwindowOverlap = span(0, m_system->overlap() - 1);
+        sup_subOverlap = span(other->lowerLimitOnParent(), other->lowerLimitOnParent() + m_system->overlap() - 1);
+        sub_subOverlap = span(0, m_system->overlap() - 1);
+
+        sup_subNonOverlap = span(other->lowerLimitOnParent() + m_system->overlap(), other->upperLimitOnParent() - 1);
+        sub_subNonOverlap = span(m_system->overlap(), other->nbins());
     }
 
     else
     {
-        overlap = span(other->upperLimitOnParent() - m_system->overlap(), other->upperLimitOnParent() - 1);
-        subwindowOverlap = span(other->nbins() - m_system->overlap(), other->nbins() - 1);
+        sup_subOverlap = span(other->upperLimitOnParent() - m_system->overlap(), other->upperLimitOnParent() - 1);
+        sub_subOverlap = span(other->nbins() - m_system->overlap(), other->nbins() - 1);
+
+        sup_subNonOverlap = span(other->lowerLimitOnParent(), other->upperLimitOnParent() - m_system->overlap());
+        sub_subNonOverlap = span(0, other->nbins() - m_system->overlap() - 1);
     }
 
-    oldDOS = m_DOS(overlap);
-    newDOS = other->DOS()(subwindowOverlap);
+    vec supDOS = m_DOS(sup_subOverlap);
+    vec subDOS = other->DOS()(sub_subOverlap);
 
-    shiftOldNew = mean(oldDOS)/mean(newDOS);
+    shiftSubSup = mean(subDOS/supDOS);
 
-    m_DOS(overlap) = newDOS*shiftOldNew;
+    m_DOS(sup_subOverlap) = (m_DOS(sup_subOverlap) + subDOS*shiftSubSup)/2;
+    m_DOS(sup_subNonOverlap) = shiftSubSup*other->DOS()(sub_subNonOverlap);
 
-    cout << "merged " << other->lowerLimitOnParent() << " " << other->upperLimitOnParent() << " with shift on " << shiftOldNew << endl;
+    cout << "merged " << other->lowerLimitOnParent() << " " << other->upperLimitOnParent() << " with shift on " << shiftSubSup << endl;
 
     shiftVisit = meanVisitAtFlatArea/other->getMeanFlatness();
 
