@@ -40,6 +40,7 @@ public:
 
     virtual void getPosition(const uint particleIndex, uint &x, uint &y, uint &z) const = 0;
 
+    bool consitencyCheckParameters() const;
 
     void sampleWindow(WLMCWindow *window);
 

@@ -35,6 +35,11 @@ WLMCSystem::WLMCSystem(const uint nParticles,
 
 }
 
+bool WLMCSystem::consitencyCheckParameters() const
+{
+
+}
+
 void WLMCSystem::sampleWindow(WLMCWindow *window)
 {
     uint nMoves = 0;

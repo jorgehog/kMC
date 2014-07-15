@@ -2,6 +2,7 @@
 #include "wlmcsystem.h"
 
 #include <kMC>
+#include <BADAss/badass.h>
 
 using namespace WLMC;
 
@@ -27,11 +28,7 @@ WLMCWindow::WLMCWindow(WLMCSystem *system,
 {
     m_visitCounts.fill(m_unsetCount);
 
-    if (upperLimit < lowerLimit)
-    {
-        cout << lowerLimit << " " << upperLimit << endl;
-        throw std::runtime_error("illegal window.");
-    }
+    BADAss(upperLimit, >, lowerLimit, "illegal window.");
 }
 
 WLMCWindow::WLMCWindow(WLMCSystem *system, const uint nBins,
