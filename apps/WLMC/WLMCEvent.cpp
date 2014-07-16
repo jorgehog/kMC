@@ -53,7 +53,7 @@ void WLMCEvent::execute()
 //    max = 547.847;
 
 
-    Window mainWindow(&system, m_nbins, min, max);
+    Window mainWindow(&system, m_nbins, min, max, m_adaptiveWindows == 1);
 
     system.clipWindow(mainWindow);
 

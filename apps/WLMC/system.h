@@ -46,7 +46,7 @@ public:
 
     void doRandomMove();
 
-    void findDestination(const uint destination, uint &xd, uint &yd, uint &zd);
+    void findDestination(const uint destination, uint &xd, uint &yd, uint &zd) const;
 
     void locateGlobalExtremaValues(double &min, double &max);
 
@@ -132,7 +132,7 @@ private:
 
     double getGlobalExtremum(const extrema type);
 
-    void getRandomParticleAndDestination(uint &particleIndex, uint &xd, uint &yd, uint &zd);
+    void getRandomParticleAndDestination(uint &particleIndex, uint &xd, uint &yd, uint &zd) const;
 
     void randomizeParticlePositions();
 

@@ -26,16 +26,19 @@ public:
     };
 
     Window(System *system,
-               const vec &parentDOS,
-               const vec &parentEnergies,
-               const uint lowerLimit,
-               const uint upperLimit,
-               Window::OverlapTypes overlapType);
+           const vec &parentDOS,
+           const vec &parentEnergies,
+           const uint lowerLimit,
+           const uint upperLimit,
+           const uint overlapPoint,
+           Window::OverlapTypes overlapType, bool allowSubwindowing);
 
     Window(System *system,
-               const uint nBins,
-               const double minValue,
-               const double maxValue);
+           const uint nBins,
+           const double minValue,
+           const double maxValue, bool allowSubwindowing);
+
+    Window(const Window &parentWindow, const WindowParams &windowParams);
 
     virtual ~Window();
 
@@ -69,7 +72,7 @@ public:
     bool flatProfileIsContinousOnParent() const;
 
 
-    void getSubWindowLimits(Window::OverlapTypes overlapType, const uint lowerLimitRough, const uint upperLimitRough, uint &lowerLimit, uint &upperLimit, bool &allowSubWindowing) const;
+    void getSubWindowLimits(WindowParams &windowParams) const;
 
     void registerVisit(const uint bin);
 
@@ -111,6 +114,11 @@ public:
     const uint &upperLimitOnParent() const
     {
         return m_upperLimitOnParent;
+    }
+
+    System *system() const
+    {
+        return m_system;
     }
 
     const vec &DOS() const
@@ -174,6 +182,7 @@ private:
     vector<Window*> m_subWindows;
     bool m_allowsSubwindowing;
 
+    const uint m_overlapPoint;
     const Window::OverlapTypes m_overlapType;
 
     uint m_lowerLimitOnParent;
@@ -191,7 +200,7 @@ private:
     uint m_flatAreaLower;
     uint m_flatAreaUpper;
 
-    void mergeWith(Window *other, double meanVisitAtFlatArea);
+    void mergeWith(Window *other);
 
     uint topIncrement(const uint upperLimit) const;
 

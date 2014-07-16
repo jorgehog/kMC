@@ -113,7 +113,7 @@ void System::doRandomMove()
     changePosition(particleIndex, xd, yd, zd);
 }
 
-void System::findDestination(const uint destination, uint &xd, uint &yd, uint &zd)
+void System::findDestination(const uint destination, uint &xd, uint &yd, uint &zd) const
 {
     uint search = 0;
 
@@ -467,7 +467,7 @@ double System::getGlobalExtremum(const System::extrema type)
 
 }
 
-void System::getRandomParticleAndDestination(uint &particleIndex, uint &xd, uint &yd, uint &zd)
+void System::getRandomParticleAndDestination(uint &particleIndex, uint &xd, uint &yd, uint &zd) const
 {
     particleIndex = m_URNG()*m_nParticles;
     uint destination = m_URNG()*m_freeVolume;

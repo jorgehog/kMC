@@ -12,10 +12,13 @@ Window::Window(System *system,
                const vec &parentEnergies,
                const uint lowerLimit,
                const uint upperLimit,
-               OverlapTypes overlapType) :
+               const uint overlapPoint,
+               OverlapTypes overlapType,
+               bool allowSubwindowing) :
     m_system(system),
+    m_allowsSubwindowing(allowSubwindowing),
+    m_overlapPoint(overlapPoint),
     m_overlapType(overlapType),
-    m_allowsSubwindowing(true),
     m_lowerLimitOnParent(lowerLimit),
     m_upperLimitOnParent(upperLimit),
     m_nbins(upperLimit - lowerLimit),
@@ -33,13 +36,29 @@ Window::Window(System *system,
 
 Window::Window(System *system, const uint nBins,
                const double minValue,
-               const double maxValue) :
+               const double maxValue,
+               bool allowSubwindowing) :
     Window(system,
            ones(nBins),
            linspace(minValue, maxValue, nBins),
            0,
            nBins,
-           Window::OverlapTypes::None)
+           0,
+           Window::OverlapTypes::None,
+           allowSubwindowing)
+{
+
+}
+
+Window::Window(const Window &parentWindow, const WindowParams &windowParams) :
+    Window(parentWindow.system(),
+           parentWindow.DOS(),
+           parentWindow.energies(),
+           windowParams.m_lowerLimit,
+           windowParams.m_upperLimit,
+           windowParams.m_overlapPoint,
+           windowParams.m_overlapType,
+           windowParams.m_allowSubwindowing)
 {
 
 }
@@ -121,45 +140,19 @@ void Window::calculateWindow()
 
         m_DOS = normalise(m_DOS);
 
-
-        if (!allowsSubwindowing())
-        {
-            tmp_output(0, 0, {});
-            continue;
-        }
-
-
-        if (m_system->minWindowSize() > m_system->minWindowSizeFlat(m_nbins))
-        {
-            cout << "rough window " << m_system->minWindowSize() << " too small for flat window " << m_system->minWindowSizeFlat(m_nbins) << " bins = " << m_nbins << endl;
-            tmp_output(0, 0, {});
-            continue;
-        }
-
         findSubWindows();
-        double mean = 0;
 
         for (Window *subWindow : m_subWindows)
         {
             subWindow->loadInitialConfig();
             subWindow->calculateWindow();
-            mergeWith(subWindow, mean);
-
-            findFlatArea();
-            findComplementaryRoughAreas(roughWindowParams);
-            tmp_output(m_flatAreaLower, m_flatAreaUpper, roughWindowParams);
-            roughWindowParams.clear();
+            mergeWith(subWindow);
         }
 
-        if (!m_subWindows.empty())
-        {
-            return;
-        }
+
+        BADAssBool(!m_subWindows.empty() && isFlat(), "subwindows were not merged properly.");
+
     }
-
-    //todo: fix overlap issues.
-    //todo: optimize and set transparent parameters for subwindows
-    //todo: debug subwindows
 
 }
 
@@ -206,43 +199,47 @@ double Window::estimateFlatness(const uint lowerLimit, const uint upperLimit) co
 
 void Window::findSubWindows()
 {
-    BADAssBool(allowsSubwindowing(), "subwindowing requested for illegal window.");
-
-
-    if (!findFlatArea())
+    if (!allowsSubwindowing())
     {
         return;
     }
 
-    if (!flatProfileIsContinousOnParent())
+    else if (!findFlatArea())
     {
         return;
     }
 
-    if (flatAreaIsDominant())
+    else if (!flatProfileIsContinousOnParent())
+    {
+        return;
+    }
+
+    else if (flatAreaIsDominant())
     {
         m_allowsSubwindowing = false;
         return;
     }
 
-    if (flatAreaIsInsufficient())
+    else if (flatAreaIsInsufficient())
     {
         return;
     }
 
-
-
-    vector<WindowParams> roughWindowParams;
-    findComplementaryRoughAreas(roughWindowParams);
-
-
-    for (WindowParams &windowParam : roughWindowParams)
+    else
     {
 
+        vector<WindowParams> roughWindowParams;
+        findComplementaryRoughAreas(roughWindowParams);
+
+        for (WindowParams &windowParam : roughWindowParams)
+        {
+            getSubWindowLimits(windowParam);
+
+            m_subWindows.push_back(new Window(*this, windowParam));
+
+        }
+
     }
-
-
-
 
 
 
@@ -469,48 +466,57 @@ bool Window::flatProfileIsContinousOnParent() const
     }
 }
 
-void Window::getSubWindowLimits(OverlapTypes overlapType, const uint lowerLimitRough, const uint upperLimitRough, uint &lowerLimit, uint &upperLimit, bool &allowSubWindowing) const
+void Window::getSubWindowLimits(WindowParams &windowParams) const
 {
-    uint newSize = upperLimitRough - lowerLimitRough + m_system->overlap();
 
-    //If the desired area is lower than the minimum window, we need to increase it.
-    if (upperLimitRough - lowerLimitRough < m_system->minWindowSize() || newSize < m_system->minWindowSizeFlat(newSize))
-    {
-        allowSubWindowing = false;
-        return;
-    }
 
-    else
-    {
-        lowerLimit = lowerLimitRough;
-        upperLimit = upperLimitRough;
 
-        allowSubWindowing = true;
-    }
 
-    //We are not guaranteed a window of size at least minWindow.
-    //Now we add the overlap.
 
-    if (overlapType == Window::OverlapTypes::Lower)
-    {
-        if (lowerLimit < m_system->overlap())
-        {
-            cout << "ERROR IN LOWER OVERLAP " << lowerLimitRough << " " << upperLimitRough << " " << lowerLimit << endl;
-            throw std::runtime_error("asds");
-        }
 
-        lowerLimit -= m_system->overlap();
-    }
-    else
-    {
-        if (upperLimit > m_nbins - m_system->overlap())
-        {
-            cout << "ERROR IN UPPER OVERLAP " << lowerLimitRough << " " << upperLimitRough << " " << upperLimit << endl;
-            throw std::runtime_error("asds");
-        }
 
-        upperLimit += m_system->overlap();
-    }
+
+
+//    uint newSize = upperLimitRough - lowerLimitRough + m_system->overlap();
+
+//    //If the desired area is lower than the minimum window, we need to increase it.
+//    if (upperLimitRough - lowerLimitRough < m_system->minWindowSize() || newSize < m_system->minWindowSizeFlat(newSize))
+//    {
+//        allowSubWindowing = false;
+//        return;
+//    }
+
+//    else
+//    {
+//        lowerLimit = lowerLimitRough;
+//        upperLimit = upperLimitRough;
+
+//        allowSubWindowing = true;
+//    }
+
+//    //We are not guaranteed a window of size at least minWindow.
+//    //Now we add the overlap.
+
+//    if (overlapType == Window::OverlapTypes::Lower)
+//    {
+//        if (lowerLimit < m_system->overlap())
+//        {
+//            cout << "ERROR IN LOWER OVERLAP " << lowerLimitRough << " " << upperLimitRough << " " << lowerLimit << endl;
+//            throw std::runtime_error("asds");
+//        }
+
+//        lowerLimit -= m_system->overlap();
+//    }
+//    else
+//    {
+//        if (upperLimit > m_nbins - m_system->overlap())
+//        {
+//            cout << "ERROR IN UPPER OVERLAP " << lowerLimitRough << " " << upperLimitRough << " " << upperLimit << endl;
+//            throw std::runtime_error("asds");
+//        }
+
+//        upperLimit += m_system->overlap();
+//    }
 
 }
 
@@ -574,17 +580,7 @@ bool Window::flatAreaIsInsufficient() const
 
 bool Window::flatAreaIsDominant() const
 {
-    uint N = 0;
-    if (m_overlapType == OverlapTypes::None)
-    {
-        N = 2;
-    }
-    else
-    {
-        N = 1;
-    }
-
-    return (m_nbins - (m_flatAreaUpper - m_flatAreaLower)) < N*m_system->minWindowSize();
+    return (m_nbins - (m_flatAreaUpper - m_flatAreaLower)) < m_system->minWindowSize();
 }
 
 bool Window::isFlat(const uint lowerLimit, const uint upperLimit) const
@@ -592,9 +588,10 @@ bool Window::isFlat(const uint lowerLimit, const uint upperLimit) const
     return estimateFlatness(lowerLimit, upperLimit) >= m_system->flatnessCriterion();
 }
 
-void Window::mergeWith(Window *other, double meanVisitAtFlatArea)
+void Window::mergeWith(Window *other)
 {
 
+    double meanVisitAtFlatArea = getMeanFlatness(m_flatAreaLower, m_flatAreaUpper);
 
     cout << "############### MERGED SUB WINDOW ###################### " <<  other->lowerLimitOnParent() << " " << other->upperLimitOnParent() << endl;
 
