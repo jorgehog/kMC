@@ -1,11 +1,12 @@
-#include "wlmcsystem.h"
-#include "wlmcwindow.h"
+#include "system.h"
+#include "window.h"
 
 #include <kMC>
+#include <BADAss/badass.h>
 
 using namespace WLMC;
 
-WLMCSystem::WLMCSystem(const uint nParticles,
+System::System(const uint nParticles,
                        const uint NX,
                        const uint NY,
                        const uint NZ,
@@ -27,20 +28,21 @@ WLMCSystem::WLMCSystem(const uint nParticles,
     m_flatnessCriterion(flatnessCriterion),
     m_overlap(overlap),
     m_nbinsOverMinWindowSizeFlat(nbinsOverMinWindowSizeFlat),
-    m_minWindowSizeRough(minWindowSizeRough),
+    m_minWindowSize(minWindowSizeRough),
     m_windowIncrementSize(windowIncrementSize),
     m_f(f),
     m_URNG(URNG)
 {
-
+    BADAss(nbinsOverMinWindowSizeFlat, >, 2*overlap/minWindowSizeRough,
+           "Rough windows will overlap at these parameters.",
+           [&] (const badass::BADAssException &exc)
+    {
+        (void) exc;
+        cout << nbinsOverMinWindowSizeFlat << " " << overlap << " " << minWindowSizeRough << endl;
+    });
 }
 
-bool WLMCSystem::consitencyCheckParameters() const
-{
-
-}
-
-void WLMCSystem::sampleWindow(WLMCWindow *window)
+void System::sampleWindow(Window *window)
 {
     uint nMoves = 0;
     
@@ -53,7 +55,7 @@ void WLMCSystem::sampleWindow(WLMCWindow *window)
     }
 }
 
-bool WLMCSystem::doWLMCMove(WLMCWindow *window)
+bool System::doWLMCMove(Window *window)
 {
     uint particleIndex, xd, yd, zd;
 
@@ -101,7 +103,7 @@ bool WLMCSystem::doWLMCMove(WLMCWindow *window)
 
 }
 
-void WLMCSystem::doRandomMove()
+void System::doRandomMove()
 {
     uint particleIndex, xd, yd, zd;
 
@@ -111,7 +113,7 @@ void WLMCSystem::doRandomMove()
     changePosition(particleIndex, xd, yd, zd);
 }
 
-void WLMCSystem::findDestination(const uint destination, uint &xd, uint &yd, uint &zd)
+void System::findDestination(const uint destination, uint &xd, uint &yd, uint &zd)
 {
     uint search = 0;
 
@@ -142,7 +144,7 @@ void WLMCSystem::findDestination(const uint destination, uint &xd, uint &yd, uin
 
 }
 
-void WLMCSystem::locateGlobalExtremaValues(double &min, double &max)
+void System::locateGlobalExtremaValues(double &min, double &max)
 {
     uint nSweeps = 1;
     uint sweep = 0;
@@ -159,7 +161,7 @@ void WLMCSystem::locateGlobalExtremaValues(double &min, double &max)
     {
         randomizeParticlePositions();
 
-        localMin = getGlobalExtremum(WLMCSystem::extrema::minimum);
+        localMin = getGlobalExtremum(System::extrema::minimum);
 
         isIn = false;
         for (double extrema : allExtrema)
@@ -191,7 +193,7 @@ void WLMCSystem::locateGlobalExtremaValues(double &min, double &max)
     {
         randomizeParticlePositions();
 
-        localMax = getGlobalExtremum(WLMCSystem::extrema::maximum);
+        localMax = getGlobalExtremum(System::extrema::maximum);
 
         isIn = false;
         for (double extrema : allExtrema)
@@ -220,7 +222,7 @@ void WLMCSystem::locateGlobalExtremaValues(double &min, double &max)
 
 }
 
-void WLMCSystem::setupPresetWindowConfigurations(const double min, const double max, const uint n)
+void System::setupPresetWindowConfigurations(const double min, const double max, const uint n)
 {
     m_presetWindowConfigurations.set_size(n, m_nParticles, 3);
     m_presetWindowValues = linspace(min, max, n + 1);
@@ -267,7 +269,7 @@ void WLMCSystem::setupPresetWindowConfigurations(const double min, const double 
     }
 }
 
-void WLMCSystem::loadConfigurationClosestToValue(const double value)
+void System::loadConfigurationClosestToValue(const double value)
 {
     uint bin = getPresetBinFromValue(value);
 
@@ -311,7 +313,7 @@ void WLMCSystem::loadConfigurationClosestToValue(const double value)
 
 }
 
-uint WLMCSystem::getPresetBinFromValue(const double value) const
+uint System::getPresetBinFromValue(const double value) const
 {
     uint bin = 0;
     while (!(value >= m_presetWindowValues(bin) && value <= m_presetWindowValues(bin + 1)))
@@ -322,7 +324,7 @@ uint WLMCSystem::getPresetBinFromValue(const double value) const
     return bin;
 }
 
-void WLMCSystem::clipWindow(WLMCWindow &window) const
+void System::clipWindow(Window &window) const
 {
 
     uint histSamples, upperLimit, lowerLimit;
@@ -373,7 +375,7 @@ void WLMCSystem::clipWindow(WLMCWindow &window) const
 
 }
 
-double WLMCSystem::getGlobalExtremum(const WLMCSystem::extrema type)
+double System::getGlobalExtremum(const System::extrema type)
 {
     using std::min_element;
     typedef std::function<bool(const double &, const double &)> compFuncType;
@@ -397,7 +399,7 @@ double WLMCSystem::getGlobalExtremum(const WLMCSystem::extrema type)
     compFuncType arrangeSortCompare;
     compFuncType extremumCheckCompare;
 
-    if (type == WLMCSystem::extrema::maximum)
+    if (type == System::extrema::maximum)
     {
         extremumCheckCompare = greaterThan;
         arrangeSortCompare = lessThan;
@@ -465,7 +467,7 @@ double WLMCSystem::getGlobalExtremum(const WLMCSystem::extrema type)
 
 }
 
-void WLMCSystem::getRandomParticleAndDestination(uint &particleIndex, uint &xd, uint &yd, uint &zd)
+void System::getRandomParticleAndDestination(uint &particleIndex, uint &xd, uint &yd, uint &zd)
 {
     particleIndex = m_URNG()*m_nParticles;
     uint destination = m_URNG()*m_freeVolume;
@@ -473,7 +475,7 @@ void WLMCSystem::getRandomParticleAndDestination(uint &particleIndex, uint &xd, 
     findDestination(destination, xd, yd, zd);
 }
 
-void WLMCSystem::randomizeParticlePositions()
+void System::randomizeParticlePositions()
 {
     uint xd, yd, zd, destination;
 

@@ -10,34 +10,34 @@ using namespace arma;
 namespace WLMC
 {
 
-class WLMCSystem;
+class System;
 
-class WLMCWindow
+struct WindowParams;
+
+class Window
 {
 public:
 
-    enum class OVERLAPTYPES
+    enum class OverlapTypes
     {
-        LOWER,
-        UPPER,
-        NONE
+        Lower,
+        Upper,
+        None
     };
 
-    WLMCWindow(WLMCSystem *system,
+    Window(System *system,
                const vec &parentDOS,
                const vec &parentEnergies,
                const uint lowerLimit,
                const uint upperLimit,
-               WLMCWindow::OVERLAPTYPES overlapType,
-               bool allowSubWindowing = true);
+               Window::OverlapTypes overlapType);
 
-    WLMCWindow(WLMCSystem *system,
+    Window(System *system,
                const uint nBins,
                const double minValue,
-               const double maxValue,
-               bool allowSubWindowing = true);
+               const double maxValue);
 
-    virtual ~WLMCWindow();
+    virtual ~Window();
 
     void adapt(const uint lowerLimit, const uint upperLimit);
 
@@ -49,7 +49,7 @@ public:
 
     double estimateFlatness(const uint lowerLimit, const uint upperLimit) const;
 
-    double findSubWindows();
+    void findSubWindows();
 
     double getMeanFlatness(const uint lowerLimit, const uint upperLimit) const;
 
@@ -58,21 +58,30 @@ public:
         return getMeanFlatness(0, m_nbins);
     }
 
-    void findComplementaryRoughAreas(const uint lowerLimitFlat, const uint upperLimitFlat, vector<uvec2> &roughAreas, vector<OVERLAPTYPES> &overlaps) const;
+    void findComplementaryRoughAreas(vector<WindowParams> &roughWindowParams) const;
 
-    void findFlatArea(uint &lowerLimit, uint &upperLimit) const;
+    bool findFlatArea();
 
-    void scanForFlattestArea(uint &lowerLimit, uint &upperLimit) const;
+    bool scanForFlattestArea();
 
-    void expandFlattestArea(uint &lowerLimit, uint &upperLimit) const;
+    void expandFlattestArea();
 
-    void getSubWindowLimits(WLMCWindow::OVERLAPTYPES overlapType, const uint lowerLimitRough, const uint upperLimitRough, uint &lowerLimit, uint &upperLimit, bool &allowSubWindowing) const;
+    bool flatProfileIsContinousOnParent() const;
+
+
+    void getSubWindowLimits(Window::OverlapTypes overlapType, const uint lowerLimitRough, const uint upperLimitRough, uint &lowerLimit, uint &upperLimit, bool &allowSubWindowing) const;
 
     void registerVisit(const uint bin);
 
     uint getBin(double value) const;
 
     void reset();
+
+    bool allowsSubwindowing() const;
+
+    bool flatAreaIsInsufficient() const;
+
+    bool flatAreaIsDominant() const;
 
     bool isLegal(const double value) const
     {
@@ -151,7 +160,7 @@ public:
         return isFlat(0, m_nbins);
     }
 
-    const WLMCWindow::OVERLAPTYPES &overlapType()
+    const Window::OverlapTypes &overlapType()
     {
         return m_overlapType;
     }
@@ -160,13 +169,12 @@ public:
 
 private:
 
-    WLMCSystem *m_system;
+    System *m_system;
 
-    vector<WLMCWindow*> m_subWindows;
+    vector<Window*> m_subWindows;
+    bool m_allowsSubwindowing;
 
-    bool m_allowSubWindowing;
-
-    const WLMCWindow::OVERLAPTYPES m_overlapType;
+    const Window::OverlapTypes m_overlapType;
 
     uint m_lowerLimitOnParent;
     uint m_upperLimitOnParent;
@@ -180,15 +188,16 @@ private:
     vec m_energies;
     uvec m_visitCounts;
 
-    void adjustLimits(uint &start, uint &end);
+    uint m_flatAreaLower;
+    uint m_flatAreaUpper;
 
-    void mergeWith(WLMCWindow *other, double meanVisitAtFlatArea);
+    void mergeWith(Window *other, double meanVisitAtFlatArea);
 
     uint topIncrement(const uint upperLimit) const;
 
     uint bottomIncrement(const uint lowerLimit) const;
 
-    void tmp_output(const uint lowerLimitFlat, const uint upperLimitFlat, const vector<uvec2> &roughAreas) const;
+    void tmp_output(const uint lowerLimitFlat, const uint upperLimitFlat, const vector<WindowParams> &roughAreas) const;
 
 };
 

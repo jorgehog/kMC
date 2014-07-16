@@ -62,7 +62,8 @@ void initializeWLMC(KMCSolver *solver, const Setting &root)
 
     const double &flatnessCriterion = getSetting<double>(initCFG, "flatnessCriterion");
 
-    const uint overlap = getSetting<uint>(initCFG, "overlap");
+    const uint &nbinsOverOverlap = getSetting<uint>(initCFG, "nbinsOverOverlap");
+    const uint overlap = nbins/nbinsOverOverlap;
 
     const uint &nbinsOverMinWindowSizeFlat = getSetting<uint>(initCFG, "nbinsOverMinWindowSizeFlat");
 

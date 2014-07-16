@@ -10,12 +10,12 @@ using namespace std;
 namespace WLMC
 {
 
-class WLMCWindow;
+class Window;
 
-class WLMCSystem
+class System
 {
 public:
-    WLMCSystem(const uint nParticles,
+    System(const uint nParticles,
                const uint NX,
                const uint NY,
                const uint NZ,
@@ -23,7 +23,7 @@ public:
                const double flatnessCriterion,
                const uint overlap,
                const uint nbinsOverMinWindowSizeFlat,
-               const uint minWindowSizeRough,
+               const uint minWindowSize,
                const uint windowIncrementSize,
                const double *f,
                function<double()> URNG);
@@ -40,11 +40,9 @@ public:
 
     virtual void getPosition(const uint particleIndex, uint &x, uint &y, uint &z) const = 0;
 
-    bool consitencyCheckParameters() const;
+    void sampleWindow(Window *window);
 
-    void sampleWindow(WLMCWindow *window);
-
-    bool doWLMCMove(WLMCWindow *window);
+    bool doWLMCMove(Window *window);
 
     void doRandomMove();
 
@@ -58,7 +56,7 @@ public:
 
     uint getPresetBinFromValue(const double value) const;
 
-    void clipWindow(WLMCWindow &window) const;
+    void clipWindow(Window &window) const;
 
     const uint &nParticles() const
     {
@@ -85,9 +83,9 @@ public:
         return nbins/m_nbinsOverMinWindowSizeFlat;
     }
 
-    uint minWindowSizeRough() const
+    uint minWindowSize() const
     {
-        return m_minWindowSizeRough;
+        return m_minWindowSize;
     }
 
     const uint &windowIncrementSize() const
@@ -122,7 +120,7 @@ private:
     const double m_flatnessCriterion;
     const uint m_overlap;
     const uint m_nbinsOverMinWindowSizeFlat;
-    const uint m_minWindowSizeRough;
+    const uint m_minWindowSize;
     const uint m_windowIncrementSize;
 
     const double *m_f;

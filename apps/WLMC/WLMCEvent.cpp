@@ -1,6 +1,6 @@
 #include "WLMCEvent.h"
 
-#include "wlmcwindow.h"
+#include "window.h"
 #include "kmcwlmcsystem.h"
 
 
@@ -53,7 +53,7 @@ void WLMCEvent::execute()
 //    max = 547.847;
 
 
-    WLMCWindow mainWindow(&system, m_nbins, min, max, m_adaptiveWindows == 1);
+    Window mainWindow(&system, m_nbins, min, max);
 
     system.clipWindow(mainWindow);
 
@@ -68,13 +68,13 @@ void WLMCEvent::execute()
         mainWindow.reset();
     }
 
-    return;
+//    return;
 
-    while (m_f > m_fEnd)
-    {
-        calculateWindow(m_minBin, m_maxBin);
-        prepNextOccupancyLevel();
-    }
+//    while (m_f > m_fEnd)
+//    {
+//        calculateWindow(m_minBin, m_maxBin);
+//        prepNextOccupancyLevel();
+//    }
 
 }
 

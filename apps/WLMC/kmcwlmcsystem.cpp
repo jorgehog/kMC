@@ -13,7 +13,7 @@ KMCWLMCSystem::KMCWLMCSystem(KMCSolver *solver,
                              const uint minWindowSizeRough,
                              const uint windowIncrementSize,
                              const double *f) :
-    WLMCSystem(SoluteParticle::nParticles(),
+    System(SoluteParticle::nParticles(),
                solver->NX(),
                solver->NY(),
                solver->NZ(),

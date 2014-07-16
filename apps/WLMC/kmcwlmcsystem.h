@@ -1,15 +1,13 @@
 #pragma once
 
-#include "wlmcsystem.h"
-
-using namespace WLMC;
+#include "system.h"
 
 namespace kMC
 {
 
 class KMCSolver;
 
-class KMCWLMCSystem : public WLMCSystem
+class KMCWLMCSystem : public WLMC::System
 {
 public:
     KMCWLMCSystem(kMC::KMCSolver *solver,
@@ -17,7 +15,7 @@ public:
                   const double flatnessCriterion,
                   const uint overlap,
                   const uint nbinsOverMinWindowSizeFlat,
-                  const uint minWindowSizeRough,
+                  const uint minWindowSize,
                   const uint windowIncrementSize,
                   const double *f);
 

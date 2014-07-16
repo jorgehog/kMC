@@ -4,15 +4,16 @@ TARGET  = WLMC
 
 SOURCES = WLMCmain.cpp \
     WLMCEvent.cpp \
-    wlmcwindow.cpp \
-    wlmcsystem.cpp \
-    kmcwlmcsystem.cpp
+    kmcwlmcsystem.cpp \
+    system.cpp \
+    window.cpp
 
 
 OTHER_FILES += infiles/WLMC.cfg
 
 HEADERS += \
     WLMCEvent.h \
-    wlmcwindow.h \
-    wlmcsystem.h \
-    kmcwlmcsystem.h
+    kmcwlmcsystem.h \
+    window.h \
+    system.h \
+    windowparams.h
