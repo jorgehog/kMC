@@ -10,8 +10,8 @@ SUBDIRS += tests \
            movingSteppes \
            impureSurface \
            stressedSurface \
-           WLMC \
-           Quasi2DLoaded
+           WLMC
+#           Quasi2DLoaded
 
 
 OTHER_FILES += defaults/default.pro.bones \

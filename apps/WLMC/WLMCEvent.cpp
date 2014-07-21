@@ -46,18 +46,11 @@ void WLMCEvent::execute()
     double max, min;
     system.locateGlobalExtremaValues(min, max);
 
-//    cout << min << " " << m_minEnergies(m_nCount) << endl;
-//    cout << max << " " << m_maxEnergies(m_nCount) << endl;
-
-//    min = 377.383;
-//    max = 547.847;
-
-
     Window mainWindow(&system, m_nbins, min, max, m_adaptiveWindows == 1);
 
-    system.clipWindow(mainWindow);
+//    system.clipWindow(mainWindow);
 
-    system.setupPresetWindowConfigurations(mainWindow.minValue(), mainWindow.maxValue(), 100);
+    system.setupPresetWindowConfigurations(mainWindow);
 
     while (f >= m_fEnd)
     {

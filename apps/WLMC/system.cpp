@@ -222,8 +222,13 @@ void System::locateGlobalExtremaValues(double &min, double &max)
 
 }
 
-void System::setupPresetWindowConfigurations(const double min, const double max, const uint n)
+void System::setupPresetWindowConfigurations(const Window &mainWindow)
 {
+    double max = mainWindow.maxValue();
+    double min = mainWindow.minValue();
+
+    uint n = mainWindow.nbins()/(m_minWindowSize + m_overlap);
+
     m_presetWindowConfigurations.set_size(n, m_nParticles, 3);
     m_presetWindowValues = linspace(min, max, n + 1);
     double value;

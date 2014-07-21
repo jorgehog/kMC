@@ -50,7 +50,7 @@ public:
 
     void locateGlobalExtremaValues(double &min, double &max);
 
-    void setupPresetWindowConfigurations(const double min, const double max, const uint n);
+    void setupPresetWindowConfigurations(const Window &mainWindow);
 
     void loadConfigurationClosestToValue(const double value);
 

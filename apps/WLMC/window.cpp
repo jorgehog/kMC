@@ -32,6 +32,15 @@ Window::Window(System *system,
     m_visitCounts.fill(m_unsetCount);
 
     BADAss(upperLimit, >, lowerLimit, "illegal window.");
+
+    //If the window is too small to perform statistics, it is not allowed to spawn subwindows.
+    if (m_allowsSubwindowing)
+    {
+        if (m_system->minWindowSizeFlat(m_nbins) < m_system->minWindowSize())
+        {
+            m_allowsSubwindowing = false;
+        }
+    }
 }
 
 Window::Window(System *system, const uint nBins,
@@ -149,8 +158,16 @@ void Window::calculateWindow()
             mergeWith(subWindow);
         }
 
+        tmp_output();
 
-        BADAssBool(!m_subWindows.empty() && isFlat(), "subwindows were not merged properly.");
+        BADAssBool(m_subWindows.empty() || isFlat(),
+                   "subwindows were not merged properly.",
+                   [&] (const badass::BADAssException &exc)
+        {
+            (void)exc;
+            cout << "flatness: " << estimateFlatness() << endl;
+            cout << "nWindows: " << m_subWindows.size() << endl;
+        });
 
     }
 
@@ -159,7 +176,7 @@ void Window::calculateWindow()
 double Window::estimateFlatness(const uint lowerLimit, const uint upperLimit) const
 {
 
-    BADAss(upperLimit - lowerLimit, <, m_system->minWindowSize(),
+    BADAss(upperLimit - lowerLimit, >=, m_system->minWindowSize(),
            "Flatness requested on window lower than minimum limit of rough areas.");
 
     uint min = std::numeric_limits<uint>::max();
@@ -364,15 +381,18 @@ void Window::findComplementaryRoughAreas(vector<WindowParams> &roughWindowParams
 
 bool Window::findFlatArea()
 {
-    m_flatAreaLower = m_flatAreaUpper = 0;
-
     if (scanForFlattestArea())
     {
         expandFlattestArea();
         return true;
     }
 
-    return false;
+    else
+    {
+        m_flatAreaLower = m_flatAreaUpper = 0;
+        return false;
+    }
+
 }
 
 bool Window::scanForFlattestArea()
@@ -406,7 +426,7 @@ bool Window::scanForFlattestArea()
         upperLimitScan += m_system->windowIncrementSize();
     }
 
-    return maxFn < m_system->flatnessCriterion();
+    return maxFn >= m_system->flatnessCriterion();
 
 }
 
@@ -469,54 +489,44 @@ bool Window::flatProfileIsContinousOnParent() const
 void Window::getSubWindowLimits(WindowParams &windowParams) const
 {
 
+    uint span = windowParams.m_upperLimit - windowParams.m_lowerLimit;
+
+    //Expand upper or lower limits that are too small. This disables the new window from having children.
+    if (span < m_system->minWindowSize())
+    {
+        windowParams.m_allowSubwindowing = false;
+
+        if (windowParams.m_overlapType == Window::OverlapTypes::Lower)
+        {
+            BADAss(windowParams.m_upperLimit, >=, m_system->minWindowSize());
+
+            windowParams.m_lowerLimit = windowParams.m_upperLimit - m_system->minWindowSize();
+        }
+
+        else if (windowParams.m_overlapType == Window::OverlapTypes::Upper)
+        {
+            windowParams.m_upperLimit = windowParams.m_lowerLimit + m_system->minWindowSize();
+
+            BADAss(windowParams.m_upperLimit, <=, m_nbins);
+        }
+
+    }
 
 
+    //Add the overlap
+    if (windowParams.m_overlapType == Window::OverlapTypes::Lower)
+    {
+        BADAss(windowParams.m_lowerLimit, >=, m_system->overlap());
 
+        windowParams.m_lowerLimit -= m_system->overlap();
+    }
 
+    else if (windowParams.m_overlapType == Window::OverlapTypes::Upper)
+    {
+        BADAss(m_nbins - windowParams.m_upperLimit, >=, m_system->overlap());
 
-
-
-
-//    uint newSize = upperLimitRough - lowerLimitRough + m_system->overlap();
-
-//    //If the desired area is lower than the minimum window, we need to increase it.
-//    if (upperLimitRough - lowerLimitRough < m_system->minWindowSize() || newSize < m_system->minWindowSizeFlat(newSize))
-//    {
-//        allowSubWindowing = false;
-//        return;
-//    }
-
-//    else
-//    {
-//        lowerLimit = lowerLimitRough;
-//        upperLimit = upperLimitRough;
-
-//        allowSubWindowing = true;
-//    }
-
-//    //We are not guaranteed a window of size at least minWindow.
-//    //Now we add the overlap.
-
-//    if (overlapType == Window::OverlapTypes::Lower)
-//    {
-//        if (lowerLimit < m_system->overlap())
-//        {
-//            cout << "ERROR IN LOWER OVERLAP " << lowerLimitRough << " " << upperLimitRough << " " << lowerLimit << endl;
-//            throw std::runtime_error("asds");
-//        }
-
-//        lowerLimit -= m_system->overlap();
-//    }
-//    else
-//    {
-//        if (upperLimit > m_nbins - m_system->overlap())
-//        {
-//            cout << "ERROR IN UPPER OVERLAP " << lowerLimitRough << " " << upperLimitRough << " " << upperLimit << endl;
-//            throw std::runtime_error("asds");
-//        }
-
-//        upperLimit += m_system->overlap();
-//    }
+        windowParams.m_upperLimit += m_system->overlap();
+    }
 
 }
 
@@ -666,21 +676,21 @@ uint Window::bottomIncrement(const uint lowerLimit) const
 
 }
 
-void Window::tmp_output(const uint lowerLimitFlat, const uint upperLimitFlat, const vector<WindowParams> &roughAreas) const
+void Window::tmp_output() const
 {
 
     ofstream fFlat;
     fFlat.open(kMC::KMCSolver::instance()->filePath() + "/flatness.txt");
 
-    fFlat << lowerLimitFlat << " " << upperLimitFlat << endl;
+    fFlat << m_flatAreaLower << " " << m_flatAreaUpper << endl;
 
     fFlat.close();
 
     ofstream fRough;
     fRough.open(kMC::KMCSolver::instance()->filePath() + "/roughness.txt");
-    for (const WindowParams & roughArea : roughAreas)
+    for (const Window *subWindow: m_subWindows)
     {
-        fRough << roughArea.m_lowerLimit << " " << roughArea.m_upperLimit << endl;
+        fRough << subWindow->lowerLimitOnParent() << " " << subWindow->upperLimitOnParent() << endl;
     }
     fRough.close();
 

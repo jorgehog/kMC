@@ -52,6 +52,11 @@ public:
 
     double estimateFlatness(const uint lowerLimit, const uint upperLimit) const;
 
+    double estimateFlatness() const
+    {
+        return estimateFlatness(0, m_nbins);
+    }
+
     void findSubWindows();
 
     double getMeanFlatness(const uint lowerLimit, const uint upperLimit) const;
@@ -206,7 +211,7 @@ private:
 
     uint bottomIncrement(const uint lowerLimit) const;
 
-    void tmp_output(const uint lowerLimitFlat, const uint upperLimitFlat, const vector<WindowParams> &roughAreas) const;
+    void tmp_output() const;
 
 };
 
