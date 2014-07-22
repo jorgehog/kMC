@@ -1,7 +1,7 @@
 #include <kMC>
 #include <libconfig_utils/libconfig_utils.h>
 
-#include "WLMCEvent.h"
+#include "kmcwlmcsystem.h"
 
 using namespace libconfig;
 using namespace kMC;
@@ -33,15 +33,6 @@ int main()
 
     initializeWLMC(solver, root);
 
-
-    t.tic();
-
-    solver->mainloop();
-
-    cout << "Simulation ended after " << t.toc() << " seconds" << endl;
-
-
-
     KMCDebugger_DumpFullTrace();
 
     return 0;
@@ -56,39 +47,34 @@ void initializeWLMC(KMCSolver *solver, const Setting &root)
 
     const uint &adaptiveWindows = getSetting<uint>(initCFG, "adaptiveWindows");
 
-    const uint &nbins = getSetting<uint>(initCFG, "nbins");
+    const uint &nParticles = getSetting<uint>(initCFG, "nParticles");
 
     const uint &movesPerSampling = getSetting<uint>(initCFG, "movesPerSampling");
 
-    const double &flatnessCriterion = getSetting<double>(initCFG, "flatnessCriterion");
+    const uint &nbins = getSetting<uint>(initCFG, "nbins");
 
     const uint &nbinsOverOverlap = getSetting<uint>(initCFG, "nbinsOverOverlap");
     const uint overlap = nbins/nbinsOverOverlap;
 
-    const uint &nbinsOverMinWindowSizeFlat = getSetting<uint>(initCFG, "nbinsOverMinWindowSizeFlat");
+    const uint &nbinsOverMinWindowSize = getSetting<uint>(initCFG, "nbinsOverMinWindowSize");
+    const uint minWindowSize = nbins/nbinsOverMinWindowSize;
 
-    const uint &nbinsOverMinWindowSizeRough = getSetting<uint>(initCFG, "nbinsOverMinWindowSizeRough");
-    const uint minWindowSizeRough = nbins/nbinsOverMinWindowSizeRough;
 
-    const uint &windowIncrementSize = getSetting<uint>(initCFG, "windowIncrementSize");
+    const double &flatnessCriterion = getSetting<double>(initCFG, "flatnessCriterion");
 
     const double &fStart = getSetting<double>(initCFG, "fStart");
 
     const double &fFinalMinusOne = getSetting<double>(initCFG, "fFinalMinusOne");
     const double fFinal = fFinalMinusOne + 1;
 
+    solver->insertRandomParticles(nParticles);
 
-    KMCEvent *wlmc = new WLMCEvent(adaptiveWindows,
-                                   nbins,
-                                   movesPerSampling,
-                                   flatnessCriterion,
-                                   overlap,
-                                   nbinsOverMinWindowSizeFlat,
-                                   minWindowSizeRough,
-                                   windowIncrementSize,
-                                   fStart,
-                                   fFinal);
+    KMCWLMCSystem system(solver,
+                         movesPerSampling,
+                         flatnessCriterion,
+                         overlap,
+                         minWindowSize);
 
-    solver->swapMainSolverEventWith(wlmc);
+    system.execute(nbins, adaptiveWindows, fStart, fFinal);
 
 }

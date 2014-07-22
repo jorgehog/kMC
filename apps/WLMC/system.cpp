@@ -1,5 +1,6 @@
 #include "system.h"
 #include "window.h"
+#include "windowparams.h"
 
 #include <kMC>
 #include <BADAss/badass.h>
@@ -13,10 +14,7 @@ System::System(const uint nParticles,
                        const uint movesPerSampling,
                        const double flatnessCriterion,
                        const uint overlap,
-                       const uint nbinsOverMinWindowSizeFlat,
                        const uint minWindowSizeRough,
-                       const uint windowIncrementSize,
-                       const double *f,
                        function<double()> URNG) :
     m_nParticles(nParticles),
     m_NX(NX),
@@ -27,19 +25,42 @@ System::System(const uint nParticles,
     m_movesPerSampling(movesPerSampling),
     m_flatnessCriterion(flatnessCriterion),
     m_overlap(overlap),
-    m_nbinsOverMinWindowSizeFlat(nbinsOverMinWindowSizeFlat),
     m_minWindowSize(minWindowSizeRough),
-    m_windowIncrementSize(windowIncrementSize),
-    m_f(f),
     m_URNG(URNG)
 {
-    BADAss(nbinsOverMinWindowSizeFlat, >, 2*overlap/minWindowSizeRough,
-           "Rough windows will overlap at these parameters.",
-           [&] (const badass::BADAssException &exc)
+
+    BADAss(nParticles, >=, 2, "Number of particles.");
+    BADAss(nParticles, <, m_volume, "Incorrect number of particles.");
+
+}
+
+void System::execute(const uint nbins, const double adaptive, const double fStart, const double fEnd, function<double(double)> reduceFunction)
+{
+
+    double max, min;
+    locateGlobalExtremaValues(min, max);
+
+    Window mainWindow(this, nbins, min, max, adaptive);
+
+//    clipWindow(mainWindow);
+
+    setupPresetWindowConfigurations(mainWindow);
+
+//    Window subWindow(mainWindow, WindowParams(0, 150, Window::OverlapTypes::Upper));
+
+//    subWindow.loadInitialConfig();
+//    return;
+
+    m_f = fStart;
+    while (m_f >= fEnd)
     {
-        (void) exc;
-        cout << nbinsOverMinWindowSizeFlat << " " << overlap << " " << minWindowSizeRough << endl;
-    });
+        mainWindow.calculateWindow();
+
+        m_f = reduceFunction(m_f);
+
+        mainWindow.reset();
+    }
+
 }
 
 void System::sampleWindow(Window *window)
@@ -227,7 +248,7 @@ void System::setupPresetWindowConfigurations(const Window &mainWindow)
     double max = mainWindow.maxValue();
     double min = mainWindow.minValue();
 
-    uint n = mainWindow.nbins()/(m_minWindowSize + m_overlap);
+    uint n = ceil(mainWindow.nbins()/double(m_minWindowSize + m_overlap));
 
     m_presetWindowConfigurations.set_size(n, m_nParticles, 3);
     m_presetWindowValues = linspace(min, max, n + 1);
@@ -243,6 +264,7 @@ void System::setupPresetWindowConfigurations(const Window &mainWindow)
 
     while (nSet != n)
     {
+        //Optimize this..
         doRandomMove();
 
         value = getTotalValue();
@@ -270,19 +292,37 @@ void System::setupPresetWindowConfigurations(const Window &mainWindow)
             m_presetWindowConfigurations(bin, particleIndex, 2) = z;
         }
 
+        cout << "set energy for value " << value << " in bin " << bin << " with energyspan " << m_presetWindowValues(bin) << " - " << m_presetWindowValues(bin + 1) << endl;
+
         nSet++;
     }
 }
 
-void System::loadConfigurationClosestToValue(const double value)
+void System::loadConfigurationForWindow(const Window *window)
 {
+
+    double value = (window->minValue() + window->maxValue())/2;
+
     uint bin = getPresetBinFromValue(value);
+
+    cout << "value " << value << " belongs in bin " << bin << " between " << m_presetWindowValues(bin) << " - " << m_presetWindowValues(bin + 1) << endl;
 
     uint xPreset, yPreset, zPreset, x, y, z, xAvailable, yAvailable, zAvailable, particleIndexConfig;
 
     xAvailable = yAvailable = zAvailable = 0;
 
     bool isAlreadyOccupied;
+
+    kMC::KMCSolver::instance()->clearParticles();
+
+    for (uint particleIndex = 0; particleIndex < m_nParticles; ++particleIndex)
+    {
+        kMC::KMCSolver::instance()->forceSpawnParticle(m_presetWindowConfigurations(bin, particleIndex, 0),
+                                                       m_presetWindowConfigurations(bin, particleIndex, 1),
+                                                       m_presetWindowConfigurations(bin, particleIndex, 2));
+    }
+    return;
+
 
     for (uint particleIndex = 0; particleIndex < m_nParticles; ++particleIndex)
     {
@@ -321,12 +361,16 @@ void System::loadConfigurationClosestToValue(const double value)
 uint System::getPresetBinFromValue(const double value) const
 {
     uint bin = 0;
-    while (!(value >= m_presetWindowValues(bin) && value <= m_presetWindowValues(bin + 1)))
+    while (true)
     {
+        if (value >= m_presetWindowValues(bin) && value <= m_presetWindowValues(bin + 1))
+        {
+            return bin;
+        }
+
         bin++;
     }
 
-    return bin;
 }
 
 void System::clipWindow(Window &window) const

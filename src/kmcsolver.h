@@ -103,6 +103,8 @@ public:
 
     void initializeFromLAMMPS(string path, uint frame);
 
+    void insertRandomParticles(const uint N, const uint species = 0, const bool sticky = false, bool checkIfLegal = false);
+
     void insertRandomParticle(const uint species = 0, const bool sticky = false, bool checkIfLegal = false);
 
     void forceRandomPosition(SoluteParticle *particle, bool checkIfLegal = false);

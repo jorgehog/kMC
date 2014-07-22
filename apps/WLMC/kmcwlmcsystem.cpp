@@ -9,10 +9,7 @@ KMCWLMCSystem::KMCWLMCSystem(KMCSolver *solver,
                              const uint movesPerSampling,
                              const double flatnessCriterion,
                              const uint overlap,
-                             const uint nbinsOverMinWindowSizeFlat,
-                             const uint minWindowSizeRough,
-                             const uint windowIncrementSize,
-                             const double *f) :
+                             const uint minWindowSize) :
     System(SoluteParticle::nParticles(),
                solver->NX(),
                solver->NY(),
@@ -20,10 +17,7 @@ KMCWLMCSystem::KMCWLMCSystem(KMCSolver *solver,
                movesPerSampling,
                flatnessCriterion,
                overlap,
-               nbinsOverMinWindowSizeFlat,
-               minWindowSizeRough,
-               windowIncrementSize,
-               f,
+               minWindowSize,
                [] () {return KMC_RNG_UNIFORM();}),
     m_solver(solver)
 {

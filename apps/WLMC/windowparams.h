@@ -10,8 +10,6 @@ struct WindowParams
     uint m_lowerLimit;
     uint m_upperLimit;
 
-    uint m_overlapPoint;
-
     Window::OverlapTypes m_overlapType;
 
     bool m_allowSubwindowing;

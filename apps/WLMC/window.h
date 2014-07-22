@@ -28,15 +28,16 @@ public:
     Window(System *system,
            const vec &parentDOS,
            const vec &parentEnergies,
-           const uint lowerLimit,
-           const uint upperLimit,
-           const uint overlapPoint,
-           Window::OverlapTypes overlapType, bool allowSubwindowing);
+           const uint lowerLimitOnParent,
+           const uint upperLimitOnParent,
+           Window::OverlapTypes overlapType,
+           bool allowSubwindowing);
 
     Window(System *system,
            const uint nBins,
            const double minValue,
-           const double maxValue, bool allowSubwindowing);
+           const double maxValue,
+           bool allowSubwindowing);
 
     Window(const Window &parentWindow, const WindowParams &windowParams);
 
@@ -85,11 +86,11 @@ public:
 
     void reset();
 
+    void resetDOS();
+
     bool allowsSubwindowing() const;
 
-    bool flatAreaIsInsufficient() const;
-
-    bool flatAreaIsDominant() const;
+    bool flatspanGradientConverged() const;
 
     bool isLegal(const double value) const
     {
@@ -187,7 +188,6 @@ private:
     vector<Window*> m_subWindows;
     bool m_allowsSubwindowing;
 
-    const uint m_overlapPoint;
     const Window::OverlapTypes m_overlapType;
 
     uint m_lowerLimitOnParent;
@@ -205,11 +205,23 @@ private:
     uint m_flatAreaLower;
     uint m_flatAreaUpper;
 
+    uint m_gradientSampleCounter = 0;
+
+    double m_spanSum;
+    vec4 m_spanSums;
+    double m_spanLaplace;
+
+    double m_centerSum;
+    vec4 m_centerSums;
+    double m_centerGradient;
+
+
+    void normaliseDOS()
+    {
+        m_DOS = m_DOS/m_DOS.min();
+    }
+
     void mergeWith(Window *other);
-
-    uint topIncrement(const uint upperLimit) const;
-
-    uint bottomIncrement(const uint lowerLimit) const;
 
     void tmp_output() const;
 

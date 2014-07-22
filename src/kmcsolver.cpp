@@ -1057,13 +1057,8 @@ void KMCSolver::initializeSolutionBath(const uint species, const bool sticky)
         exit();
     }
 
-    uint n = 0;
 
-    while (n != N)
-    {
-        insertRandomParticle(species, sticky, true);
-        n++;
-    }
+    insertRandomParticles(N, species, sticky, true);
 
 }
 
@@ -1224,6 +1219,16 @@ void KMCSolver::initializeFromLAMMPS(string path, uint frame)
         m_dumpFileEvent->setOffset(frame + 1);
     }
 
+}
+
+void KMCSolver::insertRandomParticles(const uint N, const uint species, const bool sticky, bool checkIfLegal)
+{
+    uint n = 0;
+    while (n != N)
+    {
+        insertRandomParticle(species, sticky, checkIfLegal);
+        n++;
+    }
 }
 
 void KMCSolver::insertRandomParticle(const uint species, const bool sticky, bool checkIfLegal)
