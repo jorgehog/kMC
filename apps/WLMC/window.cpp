@@ -185,7 +185,6 @@ void Window::calculateWindow()
             mergeWith(subWindow);
         }
 
-        tmp_output();
     }
 
     cout << "Window done: " << m_lowerLimitOnParent << " " << m_upperLimitOnParent << endl;
@@ -276,7 +275,6 @@ void Window::findSubWindows()
     {
 
         cout << "found flat area " << m_flatAreaLower << " " << m_flatAreaUpper << " " << estimateFlatness(m_flatAreaLower, m_flatAreaUpper) << endl;
-        tmp_output();
 
         vector<WindowParams> roughWindowParams;
         findComplementaryRoughAreas(roughWindowParams);
