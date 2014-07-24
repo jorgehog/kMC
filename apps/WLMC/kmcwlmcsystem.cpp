@@ -18,6 +18,7 @@ KMCWLMCSystem::KMCWLMCSystem(KMCSolver *solver,
                flatnessCriterion,
                overlap,
                minWindowSize,
+               solver->filePath(),
                [] () {return KMC_RNG_UNIFORM();}),
     m_solver(solver)
 {

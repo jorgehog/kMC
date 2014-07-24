@@ -1,6 +1,6 @@
 #pragma once
 
-#include "system.h"
+#include <WLMC.h>
 
 namespace kMC
 {
