@@ -73,6 +73,8 @@ public:
 
     bool scanForFlattestArea();
 
+    double sparsity(const uint lowerLimit, const uint upperLimit) const;
+
     void expandFlattestArea();
 
     bool flatProfileIsContinousOnParent() const;

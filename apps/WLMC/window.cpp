@@ -138,12 +138,12 @@ void Window::loadInitialConfig()
     BADAssBool(isLegal(m_system->getTotalValue()),
                "Loaded configuration is outside the windowed values.",
                badass::quickie([this] ()
-                    {
-                        cout << m_minValue << " " << m_maxValue << endl;
-                        cout << m_system->getTotalValue() << endl;
-                    }
-                )
-    );
+    {
+        cout << m_minValue << " " << m_maxValue << endl;
+        cout << m_system->getTotalValue() << endl;
+    }
+    )
+               );
 }
 
 void Window::calculateWindow()
@@ -379,16 +379,23 @@ bool Window::scanForFlattestArea()
 
     double maxFn = unsetFn;
 
+    double maximalSparsity = 0.5;
+
     while (upperLimitScan < m_nbins)
     {
         Fn = estimateFlatness(lowerLimitScan, upperLimitScan);
 
         if (Fn > maxFn)
         {
-            maxFn = Fn;
+            if (sparsity(lowerLimitScan, upperLimitScan) < maximalSparsity)
+            {
 
-            m_flatAreaLower = lowerLimitScan;
-            m_flatAreaUpper = upperLimitScan;
+                maxFn = Fn;
+
+                m_flatAreaLower = lowerLimitScan;
+                m_flatAreaUpper = upperLimitScan;
+
+            }
 
         }
 
@@ -398,6 +405,21 @@ bool Window::scanForFlattestArea()
 
     return maxFn >= m_system->flatnessCriterion();
 
+}
+
+double Window::sparsity(const uint lowerLimit, const uint upperLimit) const
+{
+    double sparsity = 0;
+
+    for (uint bin = lowerLimit; bin < upperLimit; ++bin)
+    {
+        if (isDeflatedBin(bin) || isUnsetCount(bin))
+        {
+            sparsity++;
+        }
+    }
+
+    return sparsity/(upperLimit - lowerLimit);
 }
 
 void Window::expandFlattestArea()
