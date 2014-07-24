@@ -241,6 +241,9 @@ private:
     double m_centerGradient;
 
     vector<bool> m_deflatedBins;
+
+    uint m_outputLevel;
+
     void deflateDOS();
 
     void normaliseDOS()

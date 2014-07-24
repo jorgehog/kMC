@@ -30,7 +30,8 @@ Window::Window(System *system,
     m_gradientSampleCounter(0),
     m_spanSum(0),
     m_centerSum(0),
-    m_deflatedBins(vector<bool>(m_nbins))
+    m_deflatedBins(vector<bool>(m_nbins)),
+    m_outputLevel(0)
 {
     for (uint i = 0; i < m_nbins; ++i)
     {
@@ -185,7 +186,6 @@ void Window::calculateWindow()
         }
 
         tmp_output();
-        cout << estimateFlatness() << " " << isFlat() << " " << isFlatOnParent() << endl;
     }
 
     cout << "Window done: " << m_lowerLimitOnParent << " " << m_upperLimitOnParent << endl;
@@ -235,27 +235,40 @@ double Window::estimateFlatness(const uint lowerLimit, const uint upperLimit) co
 
 void Window::findSubWindows()
 {
+
     if (!allowsSubwindowing())
     {
-        cout << "continuing: subwindowing illegal." << endl;
+        if (m_outputLevel != 1) cout << "subwindowing: subwindowing illegal." << endl;
+
+        m_outputLevel = 1;
+
         return;
     }
 
     else if (!findFlatArea())
     {
-        cout << "continuing: no flat area found." << endl;
+        if (m_outputLevel != 2) cout << "subwindowing: no flat area found." << endl;
+
+        m_outputLevel = 2;
+
         return;
     }
 
     else if (!flatProfileIsContinousOnParent())
     {
-        cout << "continuing: flat area not contonous on parent." << endl;
+        if (m_outputLevel != 3) cout << "subwindowing: flat area not contonous on parent." << endl;
+
+        m_outputLevel = 3;
+
         return;
     }
 
     else if (!flatspanGradientConverged())
     {
-        cout << "continuing: flat area has not converged." << endl;
+        if (m_outputLevel != 4) cout << "subwindowing: flat area has not converged." << endl;
+
+        m_outputLevel = 4;
+
         return;
     }
 
@@ -473,13 +486,11 @@ bool Window::flatProfileIsContinousOnParent() const
 {
     if (overlapsAtBottom())
     {
-        cout << m_flatAreaLower << " < " << m_system->overlap() << " ? " << endl;
         return m_flatAreaLower <= m_system->overlap();
     }
 
     else if (overlapsAtTop())
     {
-        cout << m_flatAreaUpper << " > " << m_nbins - m_system->overlap() << " ? " << endl;
         return m_flatAreaUpper >= m_nbins - m_system->overlap();
     }
 
@@ -579,6 +590,8 @@ void Window::reset()
     m_subWindows.clear();
 
     m_visitCounts.fill(m_unsetCount);
+
+    m_outputLevel = 0;
 }
 
 void Window::deflateDOS()
@@ -620,9 +633,9 @@ bool Window::flatspanGradientConverged() const
 
     const double lim = 0.1;
 
-    cout << "CG " << m_centerGradient << endl;
-    cout << "SG " << m_spanGradient << endl;
-    cout << "SL " << m_spanLaplace << endl;
+//    cout << "CG " << m_centerGradient << endl;
+//    cout << "SG " << m_spanGradient << endl;
+//    cout << "SL " << m_spanLaplace << endl;
 
     return m_spanLaplace <= 0  && fabs(m_spanGradient) < lim && fabs(m_centerGradient) < lim;
 }
@@ -650,7 +663,7 @@ bool Window::isFlatOnParent() const
 
 void Window::mergeWith(Window *other)
 {
-    cout << m_lowerLimitOnParent << " " << m_upperLimitOnParent << " ############### MERGED SUB WINDOW ###################### " <<  other->lowerLimitOnParent() << " " << other->upperLimitOnParent() << endl;
+    cout << "Merged subwindow " <<  other->lowerLimitOnParent() << " " << other->upperLimitOnParent() << " on " << m_lowerLimitOnParent << " " << m_upperLimitOnParent << endl;
 
     span spanOnParent, _span;
     uint overlapPointOnParent, overlapPoint;
