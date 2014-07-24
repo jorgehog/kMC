@@ -185,6 +185,7 @@ void Window::calculateWindow()
         }
 
         tmp_output();
+        cout << estimateFlatness() << " " << isFlat() << " " << isFlatOnParent() << endl;
     }
 
     cout << "Window done: " << m_lowerLimitOnParent << " " << m_upperLimitOnParent << endl;
@@ -221,7 +222,7 @@ double Window::estimateFlatness(const uint lowerLimit, const uint upperLimit) co
         }
     }
 
-    if (nSetCounts <= 2)
+    if (nSetCounts == 0)
     {
         return 0;
     }
@@ -612,18 +613,18 @@ bool Window::allowsSubwindowing() const
 
 bool Window::flatspanGradientConverged() const
 {
-    if (m_gradientSampleCounter < 4)
+    if (m_gradientSampleCounter < m_centerSums.n_elem)
     {
         return false;
     }
 
-    uint lim = 1;
+    const double lim = 0.1;
 
     cout << "CG " << m_centerGradient << endl;
     cout << "SG " << m_spanGradient << endl;
     cout << "SL " << m_spanLaplace << endl;
 
-    return m_spanLaplace < 0 && fabs(m_spanGradient) < lim && fabs(m_centerGradient) < lim;
+    return m_spanLaplace <= 0  && fabs(m_spanGradient) < lim && fabs(m_centerGradient) < lim;
 }
 
 bool Window::isFlat(const uint lowerLimit, const uint upperLimit) const
