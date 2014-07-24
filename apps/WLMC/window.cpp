@@ -28,6 +28,8 @@ Window::Window(System *system,
     m_energies(parentEnergies(span(lowerLimitOnParent, upperLimitOnParent - 1))),
     m_visitCounts(uvec(m_nbins)),
     m_gradientSampleCounter(0),
+    m_spanSum(0),
+    m_centerSum(0),
     m_deflatedBins(vector<bool>(m_nbins))
 {
     for (uint i = 0; i < m_nbins; ++i)
@@ -263,8 +265,6 @@ void Window::findSubWindows()
         cout << "found flat area " << m_flatAreaLower << " " << m_flatAreaUpper << " " << estimateFlatness(m_flatAreaLower, m_flatAreaUpper) << endl;
         tmp_output();
 
-        sleep(5);
-
         vector<WindowParams> roughWindowParams;
         findComplementaryRoughAreas(roughWindowParams);
 
@@ -410,7 +410,7 @@ void Window::expandFlattestArea()
 
     uint maxSpan = m_flatAreaUpper - m_flatAreaLower;
 
-    while (expandingLowerLimit > 0)
+    while (expandingLowerLimit >= 0)
     {
         uint expandingUpperLimit = upperLimitStart;
 
@@ -442,11 +442,13 @@ bool Window::flatProfileIsContinousOnParent() const
 {
     if (m_overlapType == Window::OverlapTypes::Lower)
     {
+        cout << m_flatAreaLower << " == " << 0 << " ? " << endl;
         return m_flatAreaLower == 0;
     }
 
     else if (m_overlapType == Window::OverlapTypes::Upper)
     {
+        cout << m_flatAreaUpper << " == " << m_nbins << " ? " << endl;
         return m_flatAreaUpper == m_nbins;
     }
 
@@ -539,10 +541,9 @@ void Window::reset()
 
 
     m_gradientSampleCounter = 0;
+
     m_spanSum = 0;
-    m_spanLaplace = 0;
     m_centerSum = 0;
-    m_centerGradient = 0;
 
     m_subWindows.clear();
 
@@ -562,14 +563,9 @@ void Window::deflateDOS()
 
         else if (m_DOS(bin) < eps)
         {
-            cout << "DEFLATED BIN " << bin << endl;
-            cout << m_DOS.t() << endl;
-
             m_visitCounts(bin) = m_unsetCount;
             m_DOS(bin) = 0;
             m_deflatedBins.at(bin) = true;
-
-            cout << m_DOS.t() << endl;
         }
     }
 }
@@ -615,24 +611,25 @@ void Window::mergeWith(Window *other)
     other->normaliseDOS();
     normaliseDOS();
 
+
+    overlapPointOnParent = getOverlapPoint(other);
+    if (overlapPointOnParent == m_unsetCount)
+    {
+        return;
+    }
+
+    overlapPoint = overlapPointOnParent - other->lowerLimitOnParent();
+
     if (other->overlapType() == Window::OverlapTypes::Lower)
     {
-        overlapPointOnParent = (m_flatAreaUpper + other->lowerLimitOnParent())/2;
-        overlapPoint = overlapPointOnParent - other->lowerLimitOnParent();
-
         _span = span(overlapPoint, other->nbins() - 1);
         spanOnParent = span(overlapPointOnParent, other->upperLimitOnParent() - 1);
-
     }
 
     else
     {
-        overlapPointOnParent = (m_flatAreaLower + other->upperLimitOnParent())/2;
-        overlapPoint = overlapPointOnParent - other->lowerLimitOnParent();
-
         _span = span(0, overlapPoint - 1);
         spanOnParent = span(other->lowerLimitOnParent(), overlapPointOnParent - 1);
-
     }
 
     double shiftDOS = m_DOS(overlapPointOnParent)/other->DOS(overlapPoint);
@@ -640,6 +637,57 @@ void Window::mergeWith(Window *other)
     m_DOS(spanOnParent) = shiftDOS*other->DOS()(_span);
 
     normaliseDOS();
+
+}
+
+uint Window::getOverlapPoint(const Window *other)
+{
+    uint init;
+    int bin;
+
+    if (other->overlapType() == OverlapTypes::Lower)
+    {
+        init = (m_flatAreaUpper + other->lowerLimitOnParent())/2;
+    }
+
+    else
+    {
+        init = (m_flatAreaLower + other->upperLimitOnParent())/2;
+    }
+
+    bin = init;
+
+    while (isDeflatedBin(bin) || other->isDeflatedBin(bin - other->lowerLimitOnParent()))
+    {
+
+        if (other->overlapType() == OverlapTypes::Lower)
+        {
+
+            bin++;
+
+            if (bin >= signed(other->upperLimitOnParent()))
+            {
+                m_DOS(span(init, other->upperLimitOnParent() - 1)).zeros();
+                return m_unsetCount;
+            }
+
+        }
+
+        else
+        {
+            bin--;
+
+            if (bin < signed(other->lowerLimitOnParent()))
+            {
+                m_DOS(span(other->lowerLimitOnParent(), init - 1)).zeros();
+                return m_unsetCount;
+            }
+
+        }
+
+    }
+
+    return bin;
 
 }
 

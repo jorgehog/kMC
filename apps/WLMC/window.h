@@ -184,7 +184,7 @@ public:
         return isFlat(0, m_nbins);
     }
 
-    const Window::OverlapTypes &overlapType()
+    const Window::OverlapTypes &overlapType() const
     {
         return m_overlapType;
     }
@@ -237,6 +237,8 @@ private:
     }
 
     void mergeWith(Window *other);
+
+    uint getOverlapPoint(const Window *other);
 
     void tmp_output() const;
 
