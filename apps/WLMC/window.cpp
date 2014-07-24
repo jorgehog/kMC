@@ -584,7 +584,6 @@ bool Window::allowsSubwindowing() const
     return m_allowsSubwindowing;
 }
 
-
 bool Window::flatspanGradientConverged() const
 {
     if (m_gradientSampleCounter < 4)
