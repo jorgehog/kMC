@@ -219,7 +219,8 @@ private:
 
     double m_spanSum;
     vec4 m_spanSums;
-    double m_spanLaplace;
+    double m_spanGradient;
+    double m_spanLaplace;    
 
     double m_centerSum;
     vec4 m_centerSums;

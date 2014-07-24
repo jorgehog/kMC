@@ -182,6 +182,7 @@ void Window::calculateWindow()
         }
 
         tmp_output();
+        cout << isFlat() << " " << estimateFlatness() << endl;
 
     }
 
@@ -219,7 +220,7 @@ double Window::estimateFlatness(const uint lowerLimit, const uint upperLimit) co
         }
     }
 
-    if (nSetCounts <= m_system->minWindowSize()/2)
+    if (nSetCounts <= 2)
     {
         return 0;
     }
@@ -343,11 +344,13 @@ bool Window::findFlatArea()
         vec weightsSingle = {0, 1.5, -3.0, 1.5};
 
         m_centerGradient = 0;
+        m_spanGradient = 0;
         m_spanLaplace = 0;
 
         for (uint i = 0; i < 4; ++i)
         {
             m_centerGradient += weightsSingle(i)*m_centerSums(i);
+            m_spanGradient += weightsSingle(i)*m_spanSums(i);
             m_spanLaplace += weightsDouble(i)*m_spanSums(i);
         }
 
@@ -591,10 +594,11 @@ bool Window::flatspanGradientConverged() const
 
     uint lim = 1;
 
-    cout << "S " << m_spanLaplace << endl;
-    cout << "C " << m_centerGradient << endl;
+    cout << "CG " << m_centerGradient << endl;
+    cout << "SG " << m_spanGradient << endl;
+    cout << "SL " << m_spanLaplace << endl;
 
-    return m_spanLaplace < 0 && fabs(m_centerGradient) < lim;
+    return m_spanLaplace < 0 && fabs(m_spanGradient) < lim && fabs(m_centerGradient) < lim;
 }
 
 bool Window::isFlat(const uint lowerLimit, const uint upperLimit) const
