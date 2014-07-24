@@ -155,6 +155,7 @@ void Window::calculateWindow()
 
     cout << "sampling on " << m_lowerLimitOnParent << " " << m_upperLimitOnParent << " f = " << m_system->f() << endl;
 
+    //Need a method for saying that you are flat if flat on the area below overlap. Same goes for continuity.
     while (m_subWindows.empty() && !isFlat())
     {
 
@@ -379,7 +380,7 @@ bool Window::scanForFlattestArea()
 
     double maxFn = unsetFn;
 
-    double maximalSparsity = 0.5;
+    const double maximalSparsity = 0.5;
 
     while (upperLimitScan < m_nbins)
     {
