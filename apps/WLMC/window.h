@@ -186,9 +186,21 @@ public:
         return isFlat(0, m_nbins);
     }
 
+    bool isFlatOnParent() const;
+
     const Window::OverlapTypes &overlapType() const
     {
         return m_overlapType;
+    }
+
+    bool overlapsAtTop() const
+    {
+        return m_overlapType == OverlapTypes::Upper;
+    }
+
+    bool overlapsAtBottom() const
+    {
+        return m_overlapType == OverlapTypes::Lower;
     }
 
     static constexpr uint m_unsetCount = std::numeric_limits<uint>::max();

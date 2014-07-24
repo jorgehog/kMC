@@ -156,7 +156,7 @@ void Window::calculateWindow()
     cout << "sampling on " << m_lowerLimitOnParent << " " << m_upperLimitOnParent << " f = " << m_system->f() << endl;
 
     //Need a method for saying that you are flat if flat on the area below overlap. Same goes for continuity.
-    while (m_subWindows.empty() && !isFlat())
+    while (m_subWindows.empty() && !isFlatOnParent())
     {
 
         m_system->sampleWindow(this);
@@ -185,8 +185,6 @@ void Window::calculateWindow()
         }
 
         tmp_output();
-        cout << isFlat() << " " << estimateFlatness() << endl;
-
     }
 
     cout << "Window done: " << m_lowerLimitOnParent << " " << m_upperLimitOnParent << endl;
@@ -305,15 +303,24 @@ double Window::getMeanFlatness(const uint lowerLimit, const uint upperLimit) con
 
 void Window::findComplementaryRoughAreas(vector<WindowParams> &roughWindowParams) const
 {
-
-    if (m_flatAreaLower != 0)
+    if (!overlapsAtBottom())
     {
-        roughWindowParams.push_back(WindowParams(0, m_flatAreaLower, Window::OverlapTypes::Upper));
+
+        if (m_flatAreaLower != 0)
+        {
+            roughWindowParams.push_back(WindowParams(0, m_flatAreaLower, Window::OverlapTypes::Upper));
+        }
+
     }
 
-    if (m_flatAreaUpper != m_nbins)
+    else if (!overlapsAtTop())
     {
-        roughWindowParams.push_back(WindowParams(m_flatAreaUpper, m_nbins, Window::OverlapTypes::Lower));
+
+        if (m_flatAreaUpper != m_nbins)
+        {
+            roughWindowParams.push_back(WindowParams(m_flatAreaUpper, m_nbins, Window::OverlapTypes::Lower));
+        }
+
     }
 
 }
@@ -463,16 +470,16 @@ void Window::expandFlattestArea()
 
 bool Window::flatProfileIsContinousOnParent() const
 {
-    if (m_overlapType == Window::OverlapTypes::Lower)
+    if (overlapsAtBottom())
     {
-        cout << m_flatAreaLower << " == " << 0 << " ? " << endl;
-        return m_flatAreaLower == 0;
+        cout << m_flatAreaLower << " < " << m_system->overlap() << " ? " << endl;
+        return m_flatAreaLower <= m_system->overlap();
     }
 
-    else if (m_overlapType == Window::OverlapTypes::Upper)
+    else if (overlapsAtTop())
     {
-        cout << m_flatAreaUpper << " == " << m_nbins << " ? " << endl;
-        return m_flatAreaUpper == m_nbins;
+        cout << m_flatAreaUpper << " > " << m_nbins - m_system->overlap() << " ? " << endl;
+        return m_flatAreaUpper >= m_nbins - m_system->overlap();
     }
 
     else
@@ -624,6 +631,22 @@ bool Window::isFlat(const uint lowerLimit, const uint upperLimit) const
     return estimateFlatness(lowerLimit, upperLimit) >= m_system->flatnessCriterion();
 }
 
+bool Window::isFlatOnParent() const
+{
+    if (overlapsAtTop())
+    {
+        return isFlat(0, m_nbins - m_system->overlap());
+    }
+    else if (overlapsAtBottom())
+    {
+        return isFlat(m_system->overlap(), m_nbins);
+    }
+    else
+    {
+        return isFlat();
+    }
+}
+
 void Window::mergeWith(Window *other)
 {
     cout << m_lowerLimitOnParent << " " << m_upperLimitOnParent << " ############### MERGED SUB WINDOW ###################### " <<  other->lowerLimitOnParent() << " " << other->upperLimitOnParent() << endl;
@@ -643,7 +666,7 @@ void Window::mergeWith(Window *other)
 
     overlapPoint = overlapPointOnParent - other->lowerLimitOnParent();
 
-    if (other->overlapType() == Window::OverlapTypes::Lower)
+    if (other->overlapsAtBottom())
     {
         _span = span(overlapPoint, other->nbins() - 1);
         spanOnParent = span(overlapPointOnParent, other->upperLimitOnParent() - 1);
@@ -668,7 +691,7 @@ uint Window::getOverlapPoint(const Window *other)
     uint init;
     int bin;
 
-    if (other->overlapType() == OverlapTypes::Lower)
+    if (other->overlapsAtBottom())
     {
         init = (m_flatAreaUpper + other->lowerLimitOnParent())/2;
     }
@@ -683,7 +706,7 @@ uint Window::getOverlapPoint(const Window *other)
     while (isDeflatedBin(bin) || other->isDeflatedBin(bin - other->lowerLimitOnParent()))
     {
 
-        if (other->overlapType() == OverlapTypes::Lower)
+        if (other->overlapsAtBottom())
         {
 
             bin++;
