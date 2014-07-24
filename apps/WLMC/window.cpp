@@ -314,7 +314,7 @@ void Window::findComplementaryRoughAreas(vector<WindowParams> &roughWindowParams
 
     }
 
-    else if (!overlapsAtTop())
+    if (!overlapsAtTop())
     {
 
         if (m_flatAreaUpper != m_nbins)
