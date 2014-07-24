@@ -10,6 +10,7 @@ using namespace WLMC;
 Window::Window(System *system,
                const vec &parentDOS,
                const vec &parentEnergies,
+               const vector<bool> &parentBinDeflation,
                const uint lowerLimitOnParent,
                const uint upperLimitOnParent,
                OverlapTypes overlapType,
@@ -25,21 +26,30 @@ Window::Window(System *system,
     m_valueSpan(m_maxValue - m_minValue),
     m_DOS(parentDOS(span(lowerLimitOnParent, upperLimitOnParent - 1))),
     m_energies(parentEnergies(span(lowerLimitOnParent, upperLimitOnParent - 1))),
-    m_visitCounts(uvec(m_nbins))
+    m_visitCounts(uvec(m_nbins)),
+    m_gradientSampleCounter(0),
+    m_deflatedBins(vector<bool>(m_nbins))
 {
-    m_visitCounts.fill(m_unsetCount);
+    for (uint i = 0; i < m_nbins; ++i)
+    {
+        m_visitCounts(i) = m_unsetCount;
+        m_deflatedBins.at(i) = parentBinDeflation.at(m_lowerLimitOnParent + i);
+    }
+
 
     BADAss(upperLimitOnParent, >, lowerLimitOnParent, "illegal window.");
 
 }
 
-Window::Window(System *system, const uint nBins,
+Window::Window(System *system,
+               const uint nBins,
                const double minValue,
                const double maxValue,
                bool allowSubwindowing) :
     Window(system,
            ones(nBins),
            linspace(minValue, maxValue, nBins),
+           vector<bool>(nBins, false),
            0,
            nBins,
            Window::OverlapTypes::None,
@@ -52,6 +62,7 @@ Window::Window(const Window &parentWindow, const WindowParams &windowParams) :
     Window(parentWindow.system(),
            parentWindow.DOS(),
            parentWindow.energies(),
+           parentWindow.deflatedBins(),
            windowParams.m_lowerLimit,
            windowParams.m_upperLimit,
            windowParams.m_overlapType,
@@ -135,6 +146,10 @@ void Window::loadInitialConfig()
 
 void Window::calculateWindow()
 {
+    BADAssBool(isLegal(m_system->getTotalValue()), "Initigal configuration is illegal.", badass::quickie([&] ()
+    {
+        cout << m_minValue << " " << m_maxValue << " " << m_system->getTotalValue() << endl;
+    }));
 
     cout << "sampling on " << m_lowerLimitOnParent << " " << m_upperLimitOnParent << " f = " << m_system->f() << endl;
 
@@ -169,6 +184,8 @@ void Window::calculateWindow()
         tmp_output();
 
     }
+
+    cout << "Window done: " << m_lowerLimitOnParent << " " << m_upperLimitOnParent << endl;
 
 }
 
@@ -484,6 +501,8 @@ void Window::getSubWindowLimits(WindowParams &windowParams) const
 
 void Window::registerVisit(const uint bin)
 {
+    BADAssBool(!isDeflatedBin(bin), "deflated bins should not be visited.");
+
     if (isUnsetCount(bin))
     {
         m_visitCounts(bin) = 1;
@@ -525,6 +544,31 @@ void Window::reset()
     m_subWindows.clear();
 
     m_visitCounts.fill(m_unsetCount);
+}
+
+void Window::deflateDOS()
+{
+    double eps = 1E-16;
+    for (uint bin = 0; bin < m_nbins; ++bin)
+    {
+
+        if (isDeflatedBin(bin))
+        {
+            continue;
+        }
+
+        else if (m_DOS(bin) < eps)
+        {
+            cout << "DEFLATED BIN " << bin << endl;
+            cout << m_DOS.t() << endl;
+
+            m_visitCounts(bin) = m_unsetCount;
+            m_DOS(bin) = 0;
+            m_deflatedBins.at(bin) = true;
+
+            cout << m_DOS.t() << endl;
+        }
+    }
 }
 
 void Window::resetDOS()

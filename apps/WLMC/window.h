@@ -27,7 +27,7 @@ public:
 
     Window(System *system,
            const vec &parentDOS,
-           const vec &parentEnergies,
+           const vec &parentEnergies, const vector<bool> &parentBinDeflation,
            const uint lowerLimitOnParent,
            const uint upperLimitOnParent,
            Window::OverlapTypes overlapType,
@@ -157,6 +157,16 @@ public:
         return m_visitCounts(i);
     }
 
+    const vector<bool> &deflatedBins() const
+    {
+        return m_deflatedBins;
+    }
+
+    bool isDeflatedBin(const uint bin) const
+    {
+        return m_deflatedBins.at(bin);
+    }
+
     const uint &nbins() const
     {
         return m_nbins;
@@ -205,7 +215,7 @@ private:
     uint m_flatAreaLower;
     uint m_flatAreaUpper;
 
-    uint m_gradientSampleCounter = 0;
+    uint m_gradientSampleCounter;
 
     double m_spanSum;
     vec4 m_spanSums;
@@ -215,10 +225,14 @@ private:
     vec4 m_centerSums;
     double m_centerGradient;
 
+    vector<bool> m_deflatedBins;
+    void deflateDOS();
 
     void normaliseDOS()
     {
-        m_DOS = m_DOS/m_DOS.min();
+        m_DOS = normalise(m_DOS);
+
+        deflateDOS();
     }
 
     void mergeWith(Window *other);

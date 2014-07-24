@@ -8,14 +8,14 @@
 using namespace WLMC;
 
 System::System(const uint nParticles,
-                       const uint NX,
-                       const uint NY,
-                       const uint NZ,
-                       const uint movesPerSampling,
-                       const double flatnessCriterion,
-                       const uint overlap,
-                       const uint minWindowSizeRough,
-                       function<double()> URNG) :
+               const uint NX,
+               const uint NY,
+               const uint NZ,
+               const uint movesPerSampling,
+               const double flatnessCriterion,
+               const uint overlap,
+               const uint minWindowSizeRough,
+               function<double()> URNG) :
     m_nParticles(nParticles),
     m_NX(NX),
     m_NY(NY),
@@ -42,13 +42,16 @@ void System::execute(const uint nbins, const double adaptive, const double fStar
 
     Window mainWindow(this, nbins, min, max, adaptive);
 
-//    clipWindow(mainWindow);
+    //    clipWindow(mainWindow);
 
     setupPresetWindowConfigurations(mainWindow);
 
 //    Window subWindow(mainWindow, WindowParams(0, 150, Window::OverlapTypes::Upper));
 
 //    subWindow.loadInitialConfig();
+//    m_f = fStart;
+//    cout << " alal " << getTotalValue() << endl;
+//    subWindow.calculateWin|dow();
 //    return;
 
     m_f = fStart;
@@ -89,14 +92,22 @@ bool System::doWLMCMove(Window *window)
 
     if (!window->isLegal(newValue))
     {
-        window->registerVisit(oldBin);
         return false;
     }
 
     uint newBin = window->getBin(newValue);
 
+    if (window->isDeflatedBin(oldBin) || window->isDeflatedBin(newBin))
+    {
+        changePosition(particleIndex, xd, yd, zd);
+        return false;
+    }
+
+
     double oldDOS = window->DOS(oldBin);
     double newDOS = window->DOS(newBin);
+
+    BADAss(newDOS, >, 1E-16);
 
     bool accepted = true;
 
@@ -114,10 +125,7 @@ bool System::doWLMCMove(Window *window)
 
     else
     {
-        if (window->isLegal(oldValue))
-        {
-            window->registerVisit(oldBin);
-        }
+        window->registerVisit(oldBin);
     }
 
     return true;
@@ -167,16 +175,15 @@ void System::findDestination(const uint destination, uint &xd, uint &yd, uint &z
 
 void System::locateGlobalExtremaValues(double &min, double &max)
 {
-    uint nSweeps = 1;
-    uint sweep = 0;
-
+    uint nSweeps, sweep, x, y, z;
     double localMax, localMin;
-
-    min = std::numeric_limits<double>::max();
-    max = std::numeric_limits<double>::min();
-
-    vector<double> allExtrema;
     bool isIn;
+    vector<double> allExtrema;
+
+    nSweeps = 1;
+    sweep = 0;
+    min = std::numeric_limits<double>::max();
+    m_presetMinimum.set_size(m_nParticles, 3);
 
     while (sweep < nSweeps)
     {
@@ -202,13 +209,24 @@ void System::locateGlobalExtremaValues(double &min, double &max)
         if (localMin < min)
         {
             min = localMin;
+
+            for (uint particleIndex = 0; particleIndex < m_nParticles; ++particleIndex)
+            {
+                getPosition(particleIndex, x, y, z);
+
+                m_presetMinimum(particleIndex, 0) = x;
+                m_presetMinimum(particleIndex, 1) = y;
+                m_presetMinimum(particleIndex, 2) = z;
+            }
         }
 
         sweep++;
     }
 
-    nSweeps = 100;
+    nSweeps = 20;
     sweep = 0;
+    max = std::numeric_limits<double>::min();
+    m_presetMaximum.set_size(m_nParticles, 3);
 
     while (sweep < nSweeps)
     {
@@ -234,6 +252,15 @@ void System::locateGlobalExtremaValues(double &min, double &max)
         if (localMax > max)
         {
             max = localMax;
+
+            for (uint particleIndex = 0; particleIndex < m_nParticles; ++particleIndex)
+            {
+                getPosition(particleIndex, x, y, z);
+
+                m_presetMaximum(particleIndex, 0) = x;
+                m_presetMaximum(particleIndex, 1) = y;
+                m_presetMaximum(particleIndex, 2) = z;
+            }
         }
 
         sweep++;
@@ -245,26 +272,29 @@ void System::locateGlobalExtremaValues(double &min, double &max)
 
 void System::setupPresetWindowConfigurations(const Window &mainWindow)
 {
-    double max = mainWindow.maxValue();
-    double min = mainWindow.minValue();
+    uint x, y, z, bin, nSet;
+    double value, max, min;
+
+    max = mainWindow.maxValue();
+    min = mainWindow.minValue();
 
     uint n = ceil(mainWindow.nbins()/double(m_minWindowSize + m_overlap));
 
     m_presetWindowConfigurations.set_size(n, m_nParticles, 3);
     m_presetWindowValues = linspace(min, max, n + 1);
-    double value;
 
     uvec binSet = zeros<uvec>(n);
-    uint bin;
 
+    //Set the max and min as extrema configurations
+    m_presetWindowConfigurations(span(0), span::all, span::all) = m_presetMinimum;
+    m_presetWindowConfigurations(span(n-1), span::all, span::all) = m_presetMaximum;
 
-    uint nSet = 0;
+    binSet(0) = 1;
+    binSet(n - 1) = 1;
+    nSet = 2;
 
-    uint x, y, z;
-
-    while (nSet != n)
+    while (nSet < n)
     {
-        //Optimize this..
         doRandomMove();
 
         value = getTotalValue();

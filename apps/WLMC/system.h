@@ -122,6 +122,9 @@ private:
     ucube m_presetWindowConfigurations;
     vec m_presetWindowValues;
 
+    umat m_presetMinimum;
+    umat m_presetMaximum;
+
     double getGlobalExtremum(const extrema type);
 
     void getRandomParticleAndDestination(uint &particleIndex, uint &xd, uint &yd, uint &zd) const;
