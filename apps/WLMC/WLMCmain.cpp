@@ -1,4 +1,5 @@
 #include <kMC>
+#include <BADAss/badass.h>
 #include <libconfig_utils/libconfig_utils.h>
 
 #include "kmcwlmcsystem.h"
@@ -47,7 +48,10 @@ void initializeWLMC(KMCSolver *solver, const Setting &root)
 
     const uint &adaptiveWindows = getSetting<uint>(initCFG, "adaptiveWindows");
 
-    const uint &nParticles = getSetting<uint>(initCFG, "nParticles");
+    const uint &nParticlesStart = getSetting<uint>(initCFG, "nParticlesStart");
+    const uint &nParticlesStop = getSetting<uint>(initCFG, "nParticlesStop");
+
+    BADAss(nParticlesStart, <=, nParticlesStop);
 
     const uint &movesPerSampling = getSetting<uint>(initCFG, "movesPerSampling");
 
@@ -75,6 +79,9 @@ void initializeWLMC(KMCSolver *solver, const Setting &root)
                          overlap,
                          minWindowSize);
 
-    system.execute(nbins, adaptiveWindows, fStart, fFinal);
+    WLMC::Window *mainWindow = system.execute(nbins, adaptiveWindows, fStart, fFinal);
+
+
+
 
 }

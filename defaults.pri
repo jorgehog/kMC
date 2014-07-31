@@ -28,7 +28,6 @@ QMAKE_LFLAGS_RELEASE -= -O1
 QMAKE_LFLAGS_RELEASE += -O3
 
 INCLUDEPATH += \
-    $(HOME)/Dropbox/libs \
     $$PWD/ignis/include
 
 QMAKE_LIBDIR += $$PWD/ignis/lib
