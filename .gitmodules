@@ -1,1 +1,19 @@
 
+[submodule "utils/libconfig_utils"]
+	path = utils/libconfig_utils
+	url = https://github.com/jorgehog/libconfig_utils
+[submodule "utils/ignis"]
+	path = utils/ignis
+	url = https://github.com/jorgehog/ignis
+[submodule "utils/lammpswriter"]
+	path = utils/lammpswriter
+	url = https://github.com/jorgehog/lammpswriter
+[submodule "utils/WLMC"]
+	path = utils/WLMC
+	url = https://github.com/jorgehog/WLMC
+[submodule "utils/diamondSquare"]
+	path = utils/diamondSquare
+	url = https://github.com/jorgehog/diamondSquare
+[submodule "utils/BADAss"]
+	path = utils/BADAss
+	url = https://github.com/jorgehog/BADAss

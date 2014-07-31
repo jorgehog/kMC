@@ -9,6 +9,4 @@ OTHER_FILES += infiles/WLMC.cfg
 
 HEADERS = kmcwlmcsystem.h
 
-INCLUDEPATH += $$PWD/WLMC/include
-
-LIBS += -L$$PWD/WLMC/lib -lWLMC
+LIBS += -L$$UTILS/WLMC/lib -lWLMC

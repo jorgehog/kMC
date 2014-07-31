@@ -3,7 +3,7 @@ CONFIG -= app_bundle
 CONFIG -= qt
 CONFIG += ordered
 
-SUBDIRS += ignis src apps
+SUBDIRS += utils src apps
 
 OTHER_FILES += infiles/config.cfg \
                include/kMC \
