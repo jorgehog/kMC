@@ -20,7 +20,7 @@
 #include "../src/boundary/periodicshifted/periodicshifted.h"
 
 
-#include "../ignis/include/ignis.h"
+#include <ignis/include/ignis.h>
 
 #include "../src/ignisinterface/solverevent.h"
 

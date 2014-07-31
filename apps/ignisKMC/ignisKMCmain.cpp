@@ -32,9 +32,8 @@ int main()
 
     initialize_ignisKMC(solver, root);
 
-
-//    DCViz viz("/tmp/ignisEventsOut.arma");
-//    viz.launch(true, 10, 30, 16);
+    DCViz viz("/tmp/ignisEventsOut.arma");
+    viz.launch(true, 10, 30, 16);
 
     t.tic();
 

@@ -2,7 +2,7 @@
 
 #include "kmcparticles.h"
 
-#include "../../ignis/include/ignis.h"
+#include <ignis/include/ignis.h>
 
 using ignis::Event;
 

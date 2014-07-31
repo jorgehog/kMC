@@ -31,7 +31,7 @@ UTILS = $$PWD/utils
 
 INCLUDEPATH += $$UTILS
 
-QMAKE_LIBDIR += $$PWD/ignis/lib
+QMAKE_LIBDIR += $$UTILS/ignis/lib
 
 LIBS += \
     -larmadillo \
@@ -40,7 +40,8 @@ LIBS += \
     -fopenmp
 
 DEFINES += \
-    ARMA_MAT_PREALLOC=3
+    ARMA_MAT_PREALLOC=3 \
+    NO_DCVIZ
 
 CONFIG(NO_OMP) {
     DEFINES += KMC_NO_OMP

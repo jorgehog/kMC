@@ -9,4 +9,5 @@ SUBDIRS += ignis \
 
 HEADERS += lammpswriter/lammpswriter.h \
     libconfig_utils/libconfig_utils.h \
+    DCViz/include/DCViz.h \
     BADAss/BADAss.h

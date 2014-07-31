@@ -17,3 +17,6 @@
 [submodule "utils/BADAss"]
 	path = utils/BADAss
 	url = https://github.com/jorgehog/BADAss
+[submodule "utils/DCViz"]
+	path = utils/DCViz
+	url = https://github.com/jorgehog/DCViz

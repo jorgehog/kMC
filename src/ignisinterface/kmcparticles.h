@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../ignis/include/ignis.h"
+#include <ignis/include/ignis.h>
 
 namespace kMC
 {

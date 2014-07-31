@@ -8,15 +8,15 @@ OTHER_FILES += infiles/diamondSquareSurface.cfg
 
 ### DiamondSquare interface
 
-INCLUDEPATH += $$PWD/diamondSquare
+INCLUDEPATH += $$UTILS/diamondSquare
 
-HEADERS += diamondSquare/src/random/random.h \
-           diamondSquare/src/diamondSquare/diamondSquare.h
+HEADERS += $$UTILS/diamondSquare/src/random/random.h \
+           $$UTILS/diamondSquare/src/diamondSquare/diamondSquare.h
 
 
 
-SOURCES += diamondSquare/src/random/random.cpp \
-           diamondSquare/src/diamondSquare/diamondSquare.cpp
+SOURCES += $$UTILS/diamondSquare/src/random/random.cpp \
+           $$UTILS/diamondSquare/src/diamondSquare/diamondSquare.cpp
 
 
 

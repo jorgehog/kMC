@@ -71,15 +71,32 @@ void initializeWLMC(KMCSolver *solver, const Setting &root)
     const double &fFinalMinusOne = getSetting<double>(initCFG, "fFinalMinusOne");
     const double fFinal = fFinalMinusOne + 1;
 
-    solver->insertRandomParticles(nParticles);
 
-    KMCWLMCSystem system(solver,
-                         movesPerSampling,
-                         flatnessCriterion,
-                         overlap,
-                         minWindowSize);
+    KMCWLMCSystem *system;
 
-    WLMC::Window *mainWindow = system.execute(nbins, adaptiveWindows, fStart, fFinal);
+    WLMC::Window *mainWindow;
+
+    for (uint nParticles = nParticlesStart; nParticles < nParticlesStop; ++nParticles)
+    {
+        solver->insertRandomParticles(nParticles);
+
+        system = new KMCWLMCSystem(solver,
+                                   movesPerSampling,
+                                   flatnessCriterion,
+                                   overlap,
+                                   minWindowSize);
+
+        mainWindow = system->execute(nbins, adaptiveWindows, fStart, fFinal);
+
+
+
+        delete system;
+        delete mainWindow;
+
+        solver->clearParticles();
+    }
+
+
 
 
 
