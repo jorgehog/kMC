@@ -1612,9 +1612,9 @@ void testBed::testReactionChoise()
     uint N = 2;
     uint n = 0;
 
-    KMCDebugger_Assert(0, ==, SoluteParticle::affectedParticles().size());
-    KMCDebugger_Assert(0, ==, solver->allPossibleReactions().size());
-    KMCDebugger_Assert(0, ==, solver->accuAllRates().size());
+    BADAss(0, ==, SoluteParticle::affectedParticles().size());
+    BADAss(0, ==, solver->allPossibleReactions().size());
+    BADAss(0, ==, solver->accuAllRates().size());
 
     solver->setTargetConcentration(10./(NX()*NY()*NZ()));
     solver->initializeCrystal(0.2);
@@ -3071,7 +3071,7 @@ void testBed::fill_rate_stuff(vector<double> & accuAllRates, vector<Reaction*> &
         particle->forEachActiveReactionDo([&] (Reaction * reaction)
         {
 
-            KMCDebugger_Assert(reaction->rate(), !=, Reaction::UNSET_RATE, "Reaction rate should not be unset at this point.", reaction->getFinalizingDebugMessage());
+            BADAss(reaction->rate(), !=, Reaction::UNSET_RATE, "Reaction rate should not be unset at this point.", KMCBAI( reaction->getFinalizingDebugMessage()));
 
             kTot += reaction->rate();
 

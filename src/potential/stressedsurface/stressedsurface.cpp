@@ -51,7 +51,7 @@ void StressedSurface::initialize()
         m_potential.at(i) = strain(r - (int)m_nEdgeLayers);
     }
 
-    KMCDebugger_Assert(i, ==, m_potential.size());
+    BADAss(i, ==, m_potential.size());
 
     if (m_interface->orientation() == 1)
     {
@@ -94,8 +94,8 @@ double StressedSurface::evaluateSaddleFor(const DiffusionReaction *currentReacti
                        currentReaction->path(1),
                        currentReaction->path(2));
 
-    KMCDebugger_Assert((int)r + dr, >=, 0,"out of bounds.");
-    KMCDebugger_Assert((int)r + dr, < , (int)m_interface->span(), "out of bounds.");
+    BADAss((int)r + dr, >=, 0,"out of bounds.");
+    BADAss((int)r + dr, < , (int)m_interface->span(), "out of bounds.");
 
     return m_potential.at(2*r + dr);
 }
@@ -122,7 +122,7 @@ double StressedSurface::onNeighborChange(SoluteParticle *particle,
         {
             //not qualified and affected.
             m_trackedParticles.erase(particle->ID());
-            KMCDebugger_AssertBool(!isTracked(particle));
+            BADAssBool(!isTracked(particle));
 
             return -evaluateGivenQualified(particle);
         }

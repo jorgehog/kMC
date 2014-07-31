@@ -26,7 +26,7 @@ void TSTDiffusion::calcRate()
     double newRate = 0;
     const double &E   = reactant()->energy();
 
-    KMCDebugger_Assert(updateFlag(), !=, UNSET_UPDATE_FLAG);
+    BADAss(updateFlag(), !=, UNSET_UPDATE_FLAG);
 
     if (updateFlag() == defaultUpdateFlag)
     {
@@ -40,13 +40,13 @@ void TSTDiffusion::calcRate()
 
     else if(updateFlag() == updateKeepSaddle)
     {
-        KMCDebugger_Assert(rate(), !=, UNSET_RATE ,"Saddle can't update when the rate has not been calculated.", getFinalizingDebugMessage());
-        KMCDebugger_Assert(updateFlag(), ==, updateKeepSaddle, "Errorous updateFlag.", getFinalizingDebugMessage());
-        KMCDebugger_Assert(lastUsedEnergy(), !=, UNSET_ENERGY, "energy never calculated before.", getFinalizingDebugMessage());
+        BADAss(rate(), !=, UNSET_RATE ,"Saddle can't update when the rate has not been calculated.", KMCBAI( getFinalizingDebugMessage()));
+        BADAss(updateFlag(), ==, updateKeepSaddle, "Errorous updateFlag.", KMCBAI( getFinalizingDebugMessage()));
+        BADAss(lastUsedEnergy(), !=, UNSET_ENERGY, "energy never calculated before.", KMCBAI( getFinalizingDebugMessage()));
 
         newRate = rate()*std::exp(beta()*(lastUsedEnergy() - E));
 
-        KMCDebugger_AssertClose(getSaddleEnergy(), m_lastUsedEsp, 1E-10, "Saddle energy was not conserved as assumed by flag. ", getFinalizingDebugMessage());
+        BADAssClose(getSaddleEnergy(), m_lastUsedEsp, 1E-10, "Saddle energy was not conserved as assumed by flag. ", KMCBAI( getFinalizingDebugMessage()));
 
     }
 
@@ -66,7 +66,7 @@ void TSTDiffusion::reset()
 void TSTDiffusion::setDirectUpdateFlags(const SoluteParticle *changedReactant, const uint level)
 {
 
-    KMCDebugger_Assert(changedReactant, !=, reactant());
+    BADAss(changedReactant, !=, reactant());
 
     if (rate() == UNSET_RATE)
     {
@@ -89,7 +89,7 @@ void TSTDiffusion::setDirectUpdateFlags(const SoluteParticle *changedReactant, c
             //if the destination is outsite the interaction cutoff, we can keep the old saddle energy.
             if (d_maxDistance > Site::nNeighborsLimit())
             {
-                KMCDebugger_Assert(Site::nNeighborsLimit() + 1, ==,  d_maxDistance);
+                BADAss(Site::nNeighborsLimit() + 1, ==,  d_maxDistance);
                 registerUpdateFlag(updateKeepSaddle);
             }
 
@@ -288,9 +288,9 @@ double TSTDiffusion::getSaddleEnergy()
 
                 Esp += dEsp;
 
-                KMCDebugger_AssertClose(dEsp, getSaddleEnergyContributionFrom(targetSite->associatedParticle()), 1E-10,
-                                        "Mismatch in saddle energy contribution.",
-                                        getFinalizingDebugMessage());
+                BADAssClose(dEsp, getSaddleEnergyContributionFrom(targetSite->associatedParticle()), 1E-10,
+                            "Mismatch in saddle energy contribution.",
+                            KMCBAI(getFinalizingDebugMessage()));
             }
         }
     }
@@ -358,7 +358,7 @@ imat::fixed<3, 2> TSTDiffusion::makeSaddleOverlapMatrix(const ivec & relCoor)
             overlap(xyz, 0) = -span;
             overlap(xyz, 1) = span;
 
-            KMCDebugger_Assert(relCoor(xyz), ==, 0, "There should be no other option.");
+            BADAss(relCoor(xyz), ==, 0, "There should be no other option.");
         }
     }
 

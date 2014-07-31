@@ -13,16 +13,6 @@
     _KMCDebugger_IGNORE(0)
 #define KMCDebugger_IsEnabled \
     false
-#define KMCDebugger_Assert(A, OP, B, ...) \
-    _KMCDebugger_IGNORE(0)
-#define KMCDebugger_AssertBool(expr, ...) \
-    _KMCDebugger_IGNORE(0)
-#define KMCDebugger_AssertEqual(A, B, ...) \
-    _KMCDebugger_IGNORE(0)
-#define KMCDebugger_AssertBreak(...) \
-    _KMCDebugger_IGNORE(0)
-#define KMCDebugger_AssertClose(A, B, lim, ...) \
-    _KMCDebugger_IGNORE(0)
 #define KMCDebugger_GetReaction(which) \
     _KMCDebugger_IGNORE(0)
 #define KMCDebugger_SetFilename(filename) \
@@ -50,4 +40,6 @@
 #define KMCDebugger_PushTraces() \
     _KMCDebugger_IGNORE(0)
 #define KMCDebugger_PushImplication(site, _new) \
+    _KMCDebugger_IGNORE(0)
+#define KMCBAI(...) \
     _KMCDebugger_IGNORE(0)

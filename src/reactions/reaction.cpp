@@ -27,7 +27,7 @@ Reaction::~Reaction()
 
     m_reactant = NULL;
 
-    KMCDebugger_Assert(refCount, !=, 0);
+    BADAss(refCount, !=, 0);
 
     if (solver()->solverEvent()->selectedReaction() == this)
     {
@@ -122,7 +122,7 @@ string Reaction::propertyString() const
 void Reaction::setRate(const double rate)
 {
 
-    KMCDebugger_Assert(rate, !=, 0, "This reaction should be deactive.", getFinalizingDebugMessage());
+    BADAss(rate, !=, 0, "This reaction should be deactive.", KMCBAI(getFinalizingDebugMessage()));
 
     solver()->registerReactionChange(this, rate);
 

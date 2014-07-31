@@ -63,7 +63,7 @@ void Boundary::getBoundarySite(uint n, uint &x, uint&y, uint &z) const
     }
     else
     {
-        KMCDebugger_Assert(dimension(), ==, X);
+        BADAss(dimension(), ==, X);
 
         y = n/NZ();
         z = n - y*NZ();
@@ -125,7 +125,7 @@ void Boundary::performConcentrationBoundaryConditionStep()
         return;
     }
 
-    KMCDebugger_Assert(m_maxEventsPrCycle, <=, boundarySize(), "Max events pr cycle cannot exceed the number of boundary sites.");
+    BADAss(m_maxEventsPrCycle, <=, boundarySize(), "Max events pr cycle cannot exceed the number of boundary sites.");
 
 
     Site * currentSite;

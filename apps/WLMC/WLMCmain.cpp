@@ -88,7 +88,7 @@ void initializeWLMC(KMCSolver *solver, const Setting &root)
 
         mainWindow = system->execute(nbins, adaptiveWindows, fStart, fFinal);
 
-
+        //do stuff.. setup folder structures etc. for loading later on.. use boost filesystem
 
         delete system;
         delete mainWindow;

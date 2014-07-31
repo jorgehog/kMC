@@ -10,7 +10,6 @@
 
 #include "intrinsicmacros.h"
 
-
 using namespace kMC;
 
 
@@ -91,7 +90,7 @@ void Debugger::pushTraces()
 
     if (currentReaction != NULL)
     {
-        KMCDebugger_Assert(currentReaction->reactant(), !=, NULL);
+        BADAss(currentReaction->reactant(), !=, NULL);
         reactionTraceAfter.push_back(_KMCDebugger_PARTICLE_STR(currentReaction->reactant()));
     }
 
@@ -246,7 +245,7 @@ std::string Debugger::setupAffectedUnion()
     s << "Total: " << intersect.size() << endl;
     intersect.clear();
 
-    KMCDebugger_Assert(affectedUnion.size(), ==, SoluteParticle::affectedParticles().size());
+    BADAss(affectedUnion.size(), ==, SoluteParticle::affectedParticles().size());
 
     return "New affected particle(s):\n" + s.str();
 

@@ -64,7 +64,7 @@ void Site::loadConfig(const Setting &setting)
 
 void Site::initializeBoundaries()
 {
-    KMCDebugger_AssertBool(!Site::boundariesIsInitialized(), "Boundaries needs to be finalized before they can be initialized.");
+    BADAssBool(!Site::boundariesIsInitialized(), "Boundaries needs to be finalized before they can be initialized.");
 
     KMCDebugger_SetEnabledTo(false);
 
@@ -202,7 +202,7 @@ void Site::forShellDo(const uint x, const uint y, const uint z, const int shellN
     int dy;
     int dz;
 
-    KMCDebugger_Assert(shellNumber, >=, 1);
+    BADAss(shellNumber, >=, 1);
 
     Site * shellSite;
 
@@ -270,13 +270,13 @@ void Site::forShellDo(const uint x, const uint y, const uint z, const int shellN
 
 Site *Site::neighborhood(const int x, const int y, const int z, const int xr, const int yr, const int zr)
 {
-    KMCDebugger_Assert(x, >=, 0);
-    KMCDebugger_Assert(y, >=, 0);
-    KMCDebugger_Assert(z, >=, 0);
+    BADAss(x, >=, 0);
+    BADAss(y, >=, 0);
+    BADAss(z, >=, 0);
 
-    KMCDebugger_Assert(x, <, (int)NX());
-    KMCDebugger_Assert(y, <, (int)NY());
-    KMCDebugger_Assert(z, <, (int)NZ());
+    BADAss(x, <, (int)NX());
+    BADAss(y, <, (int)NY());
+    BADAss(z, <, (int)NZ());
 
     return m_solver->getSite(xr + x, yr + y, zr + z);
 }
@@ -339,7 +339,7 @@ Site *Site::getNextNeighbor(const uint x, const uint y, const uint z, const int 
 
     else
     {
-        KMCDebugger_Assert(dim, ==, 2);
+        BADAss(dim, ==, 2);
 
         return Site::neighborhood(x, y, z, 0, 0, dr);
     }
@@ -547,7 +547,7 @@ void Site::clearAll()
 void Site::resetBoundariesTo(const umat &boundaryMatrix)
 {
 
-    KMCDebugger_Assert(refCounter, ==, 0, "Sites must be cleared before the neighborhood length can change.");
+    BADAss(refCounter, ==, 0, "Sites must be cleared before the neighborhood length can change.");
 
     finalizeBoundaries();
 
@@ -565,7 +565,7 @@ void Site::resetBoundariesTo(const int boundaryType)
 void Site::resetNNeighborsLimitTo(const uint &nNeighborsLimit, bool check)
 {
 
-    KMCDebugger_Assert(refCounter, ==, 0, "Sites must be cleared before the neighborhood length can change.");
+    BADAss(refCounter, ==, 0, "Sites must be cleared before the neighborhood length can change.");
 
     setInitialNNeighborsLimit(nNeighborsLimit, check);
 
@@ -811,7 +811,7 @@ void Site::setInitialNNeighborsLimit(const uint &nNeighborsLimit, bool check)
 void Site::setInitialBoundaries(const umat &boundaryMatrix)
 {
 
-    KMCDebugger_AssertBool(m_boundaries.empty(), "Boundaries need to be clearedd before they can be initialized.");
+    BADAssBool(m_boundaries.empty(), "Boundaries need to be clearedd before they can be initialized.");
 
 
     m_boundaryTypes = boundaryMatrix;

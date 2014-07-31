@@ -278,7 +278,7 @@ void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate
     else if (prevRate == Reaction::UNSET_RATE)
     {
 
-        KMCDebugger_Assert(newRate, !=, Reaction::UNSET_RATE);
+        BADAss(newRate, !=, Reaction::UNSET_RATE);
 
         m_kTot += newRate;
 
@@ -322,8 +322,8 @@ void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate
         m_kTot -= prevRate;
 
 
-        KMCDebugger_Assert(reaction->address(), !=, Reaction::UNSET_ADDRESS);
-        KMCDebugger_AssertBool(!isEmptyAddress(reaction->address()), "address is already set as empty.");
+        BADAss(reaction->address(), !=, Reaction::UNSET_ADDRESS);
+        BADAssBool(!isEmptyAddress(reaction->address()), "address is already set as empty.");
 
 
         m_availableReactionSlots.push_back(reaction->address());
@@ -404,13 +404,13 @@ void KMCSolver::reshuffleReactions()
 void KMCSolver::swapReactionAddresses(const uint dest, const uint orig)
 {
 
-    KMCDebugger_AssertBool(isEmptyAddress(dest),  "destination should be empty.");
-    KMCDebugger_AssertBool(!isEmptyAddress(orig), "origin should not be empty.");
+    BADAssBool(isEmptyAddress(dest),  "destination should be empty.");
+    BADAssBool(!isEmptyAddress(orig), "origin should not be empty.");
 
     Reaction * swappedReaction = m_allPossibleReactions.at(orig);
 
-    KMCDebugger_Assert(orig,                    ==, swappedReaction->address(), "mismatch in address.", swappedReaction->getFinalizingDebugMessage());
-    KMCDebugger_AssertBool(swappedReaction->isAllowed(), "swapped reaction should be allowed and active.", swappedReaction->getFinalizingDebugMessage());
+    BADAss(orig,                    ==, swappedReaction->address(), "mismatch in address.", KMCBAI( swappedReaction->getFinalizingDebugMessage()));
+    BADAssBool(swappedReaction->isAllowed(), "swapped reaction should be allowed and active.", KMCBAI( swappedReaction->getFinalizingDebugMessage()));
 
     m_allPossibleReactions.at(dest) = swappedReaction;
 
@@ -429,10 +429,10 @@ void KMCSolver::postReactionShuffleCleanup(const uint nVacancies)
 
     m_availableReactionSlots.clear();
 
-    KMCDebugger_Assert(m_allPossibleReactions.size(), ==, m_accuAllRates.size(), "These vectors should be equal of length.");
+    BADAss(m_allPossibleReactions.size(), ==, m_accuAllRates.size(), "These vectors should be equal of length.");
     m_accuAllRates.size() == 0
             ? (void) 0
-            : KMCDebugger_AssertClose(m_accuAllRates.at(m_accuAllRates.size()- 1),
+            : BADAssClose(m_accuAllRates.at(m_accuAllRates.size()- 1),
                                       m_kTot, minRateThreshold(),
                                       "kTot should be the last element of accuAllRates");
 
@@ -440,7 +440,7 @@ void KMCSolver::postReactionShuffleCleanup(const uint nVacancies)
 
 void KMCSolver::updateAccuAllRateElements(const uint from, const uint to, const double value)
 {
-    KMCDebugger_Assert(from, <=, to);
+    BADAss(from, <=, to);
 
 #ifndef KMC_NO_OMP
 #pragma omp parallel for
@@ -449,7 +449,7 @@ void KMCSolver::updateAccuAllRateElements(const uint from, const uint to, const 
     {
         m_accuAllRates[i] += value;
 
-        KMCDebugger_Assert(m_accuAllRates.at(i), >=, -minRateThreshold(), "should be zero", SoluteParticle::nParticles());
+        BADAss(m_accuAllRates.at(i), >=, -minRateThreshold(), "should be zero", KMCBAI(SoluteParticle::nParticles()));
     }
 
 }
@@ -460,9 +460,9 @@ void KMCSolver::remakeAccuAllRates()
     uint i = 0;
     for (Reaction *r : m_allPossibleReactions)
     {
-        KMCDebugger_Assert(r->rate(), !=, Reaction::UNSET_RATE, "Rates should not be all changed before they are set once.");
-        KMCDebugger_Assert(r->rate(), >, 0, "Rate should be positive.");
-        KMCDebugger_AssertBool(!r->hasVacantStatus(), "Reaction should be enabled.");
+        BADAss(r->rate(), !=, Reaction::UNSET_RATE, "Rates should not be all changed before they are set once.");
+        BADAss(r->rate(), >, 0, "Rate should be positive.");
+        BADAssBool(!r->hasVacantStatus(), "Reaction should be enabled.");
 
         m_kTot += r->rate();
         m_accuAllRates[i] = m_kTot;
@@ -600,7 +600,7 @@ void KMCSolver::forEachSiteDo(function<void (uint x, uint y, uint z, Site *)> ap
 void KMCSolver::initializeSites()
 {
 
-    KMCDebugger_Assert(Site::_refCount(), ==, 0, "Sites was not cleared properly.");
+    BADAss(Site::_refCount(), ==, 0, "Sites was not cleared properly.");
 
     uint xTrans, yTrans, zTrans, m_NX_full, m_NY_full, m_NZ_full;
 
@@ -637,8 +637,8 @@ void KMCSolver::initializeSites()
     }
 
 
-    KMCDebugger_Assert(Site::_refCount(), !=, 0, "Can't simulate an empty system.");
-    KMCDebugger_Assert(Site::_refCount(), ==, NX()*NY()*NZ(), "Wrong number of sites initialized.");
+    BADAss(Site::_refCount(), !=, 0, "Can't simulate an empty system.");
+    BADAss(Site::_refCount(), ==, NX()*NY()*NZ(), "Wrong number of sites initialized.");
 
     //Boundaries
     for (uint x = 0; x < m_NX_full; ++x)
@@ -721,9 +721,9 @@ void KMCSolver::initializeSites()
 void KMCSolver::clearSites()
 {
 
-    KMCDebugger_Assert(Site::_refCount(), !=, 0, "Sites already cleared.");
+    BADAss(Site::_refCount(), !=, 0, "Sites already cleared.");
 
-    KMCDebugger_Assert(SoluteParticle::nParticles(), ==, 0, "Cannot clear sites with particles active.");
+    BADAss(SoluteParticle::nParticles(), ==, 0, "Cannot clear sites with particles active.");
 
     KMCDebugger_SetEnabledTo(false);
 
@@ -756,7 +756,7 @@ void KMCSolver::clearSites()
 
     delete [] sites;
 
-    KMCDebugger_Assert(Site::_refCount(), ==, 0, "Sites was not cleared properly.");
+    BADAss(Site::_refCount(), ==, 0, "Sites was not cleared properly.");
 
     KMCDebugger_ResetEnabled();
 
@@ -792,14 +792,14 @@ void KMCSolver::sortReactionsByRate()
         address++;
     }
 
-    KMCDebugger_AssertClose(kTot, m_kTot, 1E-15);
+    BADAssClose(kTot, m_kTot, 1E-15);
 
 }
 
 uint KMCSolver::binarySearchForInterval(const double target, const vector<double> &intervals)
 {
 
-    KMCDebugger_Assert(intervals.size(), !=, 0, "Number of intervals cannot be zero.");
+    BADAss(intervals.size(), !=, 0, "Number of intervals cannot be zero.");
 
     uint imax = intervals.size() - 1;
     uint MAX = imax;
@@ -919,7 +919,7 @@ bool KMCSolver::spawnParticle(SoluteParticle *particle, const uint x, const uint
 
     particle->setSite(x, y, z);
 
-    KMCDebugger_AssertBool(!checkIfLegal || particle->nNeighbors() == 0);
+    BADAssBool(!checkIfLegal || particle->nNeighbors() == 0);
 
     m_particles.push_back(particle);
 
@@ -929,7 +929,7 @@ bool KMCSolver::spawnParticle(SoluteParticle *particle, const uint x, const uint
 
 SoluteParticle *KMCSolver::forceSpawnParticle(const uint x, const uint y, const uint z, const uint species, const bool sticky)
 {
-    KMCDebugger_AssertBool(!getSite(x, y, z)->isActive());
+    BADAssBool(!getSite(x, y, z)->isActive());
 
     SoluteParticle *particle = new SoluteParticle(species, sticky);
 
@@ -945,17 +945,17 @@ SoluteParticle *KMCSolver::forceSpawnParticle(const uint x, const uint y, const 
 
 void KMCSolver::despawnParticle(SoluteParticle *particle)
 {
-    KMCDebugger_Assert(particle, !=, NULL, "particle does not exist.");
-    KMCDebugger_Assert(particle->site(), !=, NULL, "despawning particle that was never initialized. (Despawning inside particle loop?)");
-    KMCDebugger_AssertBool(particle->site()->isActive(), "this should never happen.");
+    BADAss(particle, !=, NULL, "particle does not exist.");
+    BADAss(particle->site(), !=, NULL, "despawning particle that was never initialized. (Despawning inside particle loop?)");
+    BADAssBool(particle->site()->isActive(), "this should never happen.");
 
     SoluteParticle::popAffectedParticle(particle);
 
-    KMCDebugger_AssertBool(isRegisteredParticle(particle));
+    BADAssBool(isRegisteredParticle(particle));
 
     m_particles.erase(std::find(m_particles.begin(), m_particles.end(), particle));
 
-    KMCDebugger_AssertBool(!isRegisteredParticle(particle));
+    BADAssBool(!isRegisteredParticle(particle));
 
     delete particle;
 
@@ -976,7 +976,7 @@ const Reaction *KMCSolver::executeRandomReaction()
         }
     }
 
-    KMCDebugger_Assert(which, <, m_allPossibleReactions.size());
+    BADAss(which, <, m_allPossibleReactions.size());
 
     Reaction *reaction = m_allPossibleReactions.at(which);
 
@@ -1166,9 +1166,9 @@ void KMCSolver::initializeFromXYZ(string path, uint frame)
     uint i = 0;
     for (SoluteParticle *p : m_particles)
     {
-        KMCDebugger_AssertEqual(t.at(i), p->particleStateShortName());
-        KMCDebugger_AssertEqual(p->nNeighborsSum(), nn.at(i));
-        KMCDebugger_AssertClose(p->energy(), e.at(i), 1E-5);
+        BADAssEqual(t.at(i), p->particleStateShortName());
+        BADAssEqual(p->nNeighborsSum(), nn.at(i));
+        BADAssClose(p->energy(), e.at(i), 1E-5);
         ++i;
     }
 #endif
@@ -1447,8 +1447,8 @@ void KMCSolver::getRateVariables()
 
     reshuffleReactions();
 
-    KMCDebugger_AssertBool(!allPossibleReactions().empty(), "No available reactions.");
-    KMCDebugger_AssertClose(accuAllRates().at(0), allPossibleReactions().at(0)->rate(), minRateThreshold(), "zeroth accuallrate should be the first rate.");
+    BADAssBool(!allPossibleReactions().empty(), "No available reactions.");
+    BADAssClose(accuAllRates().at(0), allPossibleReactions().at(0)->rate(), minRateThreshold(), "zeroth accuallrate should be the first rate.");
 
 }
 
@@ -1461,7 +1461,7 @@ const uint &KMCSolver::cycle() const
 void KMCSolver::setBoxSize(const uint NX, const uint NY, const uint NZ, bool check)
 {
 
-    KMCDebugger_Assert(Site::_refCount(), ==, 0, "Sites need to be c.leared before a new boxsize is set.");
+    BADAss(Site::_refCount(), ==, 0, "Sites need to be c.leared before a new boxsize is set.");
 
     m_NX = NX;
     m_NY = NY;
@@ -1520,16 +1520,16 @@ void KMCSolver::clearParticles()
         delete particle;
     }
 
-    KMCDebugger_AssertClose(0, std::accumulate(m_accuAllRates.begin(), m_accuAllRates.end(), 0.0), 1E-5);
+    BADAssClose(0, std::accumulate(m_accuAllRates.begin(), m_accuAllRates.end(), 0.0), 1E-5);
 
     SoluteParticle::clearAll();
 
     m_particles.clear();
 
-    KMCDebugger_Assert(accu(SoluteParticle::totalParticlesVector()), ==, 0);
-    KMCDebugger_Assert(SoluteParticle::nParticles(), ==, 0);
-    KMCDebugger_Assert(SoluteParticle::affectedParticles().size(), ==, 0);
-    KMCDebugger_AssertClose(SoluteParticle::totalEnergy(), 0, 1E-5);
+    BADAss(accu(SoluteParticle::totalParticlesVector()), ==, 0);
+    BADAss(SoluteParticle::nParticles(), ==, 0);
+    BADAss(SoluteParticle::affectedParticles().size(), ==, 0);
+    BADAssClose(SoluteParticle::totalEnergy(), 0, 1E-5);
 
     SoluteParticle::setZeroTotalEnergy();
 

@@ -21,35 +21,11 @@
 #define KMCDebugger_IsEnabled \
     kMC::Debugger::enabled
 
-
 #define KMCDebugger_SetFilename(filename) \
     kMC::Debugger::setFilename(filename)
 
 #define KMCDebugger_SetPath(path) \
     kMC::Debugger::setFilepath(path)
-
-
-#define KMCDebugger_Assert(A, OP, B, ...) \
-    (((A) OP (B)) \
-    ? static_cast<void>(0) \
-    : kMC::Debugger::_assert(A, B, #OP, #A, #B, \
-    __FILE__, \
-    __PRETTY_FUNCTION__, \
-    __LINE__, ##__VA_ARGS__))
-
-#define KMCDebugger_AssertEqual(A, B, ...) \
-    KMCDebugger_Assert(A, ==, B, ##__VA_ARGS__)
-
-#define KMCDebugger_AssertClose(A, B, lim, ...) \
-    ((A > B) \
-    ? KMCDebugger_Assert(A - B, <=, lim, ##__VA_ARGS__) \
-    : KMCDebugger_Assert(B - A, <=, lim, ##__VA_ARGS__))
-
-#define KMCDebugger_AssertBool(expr, ...) \
-    KMCDebugger_Assert((expr), ==, true, ##__VA_ARGS__)
-
-#define KMCDebugger_AssertBreak(...) \
-    KMCDebugger_AssertBool(false, ##__VA_ARGS__)
 
 #define KMCDebugger_SetEnabledTo(state) \
     kMC::Debugger::setEnabledTo(state)
@@ -61,6 +37,12 @@
 #define KMCDebugger_SearchReactionTraceBefore(i) _KMCDebugger_TRACE_SEARCH(kMC::Debugger::reactionTraceBefore, i)
 #define KMCDebugger_SearchReactionTraceAfter(i)  _KMCDebugger_TRACE_SEARCH(kMC::Debugger::reactionTraceAfter, i)
 #define KMCDebugger_SearchImplicationTrace(i)    _KMCDebugger_TRACE_SEARCH(kMC::Debugger::implicationTrace, i)
+
+//BADAss interface
+#define KMCBAI(info, ...) [&] (const badass::BADAssException &exc) { \
+    kMC::Debugger::dumpFullTrace(exc.whichLine(), exc.whichFile().c_str(), kMC::Debugger::stringify(info)); \
+    ##__VA_ARGS__ \
+    }
 
 
 //TRACE DUMP CALLERS

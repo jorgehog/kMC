@@ -28,7 +28,7 @@ SoluteParticle::SoluteParticle(const uint species, bool sticky) :
     m_ID(ID_count++)
 {
 
-    KMCDebugger_Assert(species, <, m_nSpecies, "invalid species.");
+    BADAss(species, <, m_nSpecies, "invalid species.");
 
     if (!m_sticky)
     {
@@ -45,7 +45,7 @@ SoluteParticle::SoluteParticle(const uint species, bool sticky) :
 SoluteParticle::~SoluteParticle()
 {
 
-    KMCDebugger_Assert(refCounter, !=, 0);
+    BADAss(refCounter, !=, 0);
 
     if (m_site != NULL)
     {
@@ -65,13 +65,13 @@ SoluteParticle::~SoluteParticle()
 void SoluteParticle::setSite(const uint x, const uint y, const uint z)
 {    
 
-    KMCDebugger_Assert(x, <, NX(), "mismatch in coordiantes. ", info());
-    KMCDebugger_Assert(y, <, NY(), "mismatch in coordiantes. ", info());
-    KMCDebugger_Assert(z, <, NZ(), "mismatch in coordiantes. ", info());
+    BADAss(x, <, NX(), "mismatch in coordiantes. ", KMCBAI(info()));
+    BADAss(y, <, NY(), "mismatch in coordiantes. ", KMCBAI(info()));
+    BADAss(z, <, NZ(), "mismatch in coordiantes. ", KMCBAI(info()));
 
     trySite(x, y, z);
 
-    KMCDebugger_AssertBool(!m_site->isActive(), "particle already present at site.", info());
+    BADAssBool(!m_site->isActive(), "particle already present at site.", KMCBAI( info()));
 
     m_site->associateWith(this);
 
@@ -105,7 +105,7 @@ void SoluteParticle::setSite(const uint x, const uint y, const uint z)
     });
 
 
-    KMCDebugger_Assert(m_site->associatedParticle(), ==, this, "mismatch in site and particle.");
+    BADAss(m_site->associatedParticle(), ==, this, "mismatch in site and particle.");
 
     KMCDebugger_MarkPre("void");
     KMCDebugger_PushImplication(this, "enabled");
@@ -119,7 +119,7 @@ void SoluteParticle::trySite(const uint x, const uint y, const uint z)
     m_y = y;
     m_z = z;
 
-    KMCDebugger_AssertBool(!Boundary::isBlocked(m_x, m_y, m_z), "coordinates were not set properly.");
+    BADAssBool(!Boundary::isBlocked(m_x, m_y, m_z), "coordinates were not set properly.");
 
     m_site = m_solver->getSite(x, y, z);
 }
@@ -136,9 +136,9 @@ void SoluteParticle::resetSite()
 
 void SoluteParticle::disableSite()
 {
-    KMCDebugger_Assert(m_site, !=, NULL, "disabeling disabled site. You need to call KMCSolver::despawnParticle to clean up particles.");
-    KMCDebugger_AssertBool(m_site->isActive(), "particle not present at site.", info());
-    KMCDebugger_Assert(m_site->associatedParticle(), ==, this, "mismatch in site and particle.");
+    BADAss(m_site, !=, NULL, "disabeling disabled site. You need to call KMCSolver::despawnParticle to clean up particles.");
+    BADAssBool(m_site->isActive(), "particle not present at site.", KMCBAI( info()));
+    BADAss(m_site->associatedParticle(), ==, this, "mismatch in site and particle.");
 
     KMCDebugger_MarkPre(particleStateName());
     KMCDebugger_PushImplication(this, "disabled");
@@ -168,7 +168,7 @@ void SoluteParticle::disableSite()
 
 void SoluteParticle::changePosition(const uint x, const uint y, const uint z)
 {
-    KMCDebugger_AssertBool(x != m_x || y != m_y || z != m_z, "changing to the same site.");
+    BADAssBool(x != m_x || y != m_y || z != m_z, "changing to the same site.");
 
     disableSite();
 
@@ -183,8 +183,8 @@ void SoluteParticle::setMainSolver(KMCSolver *solver)
 
 void SoluteParticle::nSpecies(const uint _nSpecies, bool recalculatePotential)
 {
-    KMCDebugger_Assert(_nSpecies, !=, 0);
-    KMCDebugger_AssertEqual(refCounter, 0);
+    BADAss(_nSpecies, !=, 0);
+    BADAssEqual(refCounter, 0);
 
     m_nSpecies = _nSpecies;
 
@@ -203,7 +203,7 @@ void SoluteParticle::popAffectedParticle(SoluteParticle *particle)
         return;
     }
 
-    KMCDebugger_AssertBool(particle->isAffected());
+    BADAssBool(particle->isAffected());
     KMCDebugger_PopAffected(particle);
 
     m_affectedParticles.erase(idx);
@@ -306,7 +306,7 @@ const string SoluteParticle::info(int xr, int yr, int zr, string desc) const
 
 void SoluteParticle::setZeroEnergy()
 {
-    KMCDebugger_Assert(m_nNeighborsSum, ==, 0, "Energy is not zero.", info());
+    BADAss(m_nNeighborsSum, ==, 0, "Energy is not zero.", KMCBAI( info()));
     m_energy = 0;
 
 }
@@ -360,7 +360,7 @@ void SoluteParticle::updateReactions()
 void SoluteParticle::setupAllNeighbors()
 {
 
-    KMCDebugger_Assert(m_energy, ==, 0, "Particle energy should be cleared prior to this call.", info());
+    BADAss(m_energy, ==, 0, "Particle energy should be cleared prior to this call.", KMCBAI( info()));
 
     m_nNeighbors.zeros();
 
@@ -522,7 +522,7 @@ void SoluteParticle::initializeDiffusionReactions()
         return;
     }
 
-    KMCDebugger_Assert(m_reactions.size(), ==, 0, "Sitereactions are already set", info());
+    BADAss(m_reactions.size(), ==, 0, "Sitereactions are already set", KMCBAI( info()));
 
     //For each site, loop over all closest neighbors
     for (int dx = -1; dx <= 1; ++dx)
@@ -579,7 +579,7 @@ int SoluteParticle::detectParticleState()
         return ParticleStates::solvant;
     }
 
-    KMCDebugger_AssertBool(qualifiesAsSurface());
+    BADAssBool(qualifiesAsSurface());
 
     return ParticleStates::surface;
 
@@ -619,7 +619,7 @@ void SoluteParticle::setZeroTotalEnergy()
 {
     m_totalEnergy = 0;
 
-    KMCDebugger_Assert(Site::solver()->particles().size(), ==, 0);
+    BADAss(Site::solver()->particles().size(), ==, 0);
 }
 
 void SoluteParticle::setSticky(const bool sticky)
@@ -646,7 +646,7 @@ void SoluteParticle::setSticky(const bool sticky)
 
 uint SoluteParticle::nNeighborsSum() const
 {
-    KMCDebugger_Assert(sum(m_nNeighbors), ==, m_nNeighborsSum, "Should be identical.", info());
+    BADAss(sum(m_nNeighbors), ==, m_nNeighborsSum, "Should be identical.", KMCBAI( info()));
     return m_nNeighborsSum;
 }
 
@@ -672,7 +672,7 @@ double SoluteParticle::getBruteForceEnergy() const
 
 void SoluteParticle::clearAll()
 {
-    KMCDebugger_Assert(refCounter, ==, 0, "cannot clear static members with object alive.");
+    BADAss(refCounter, ==, 0, "cannot clear static members with object alive.");
 
     //tmp
     if (ss != NULL)
@@ -728,7 +728,7 @@ void SoluteParticle::changeParticleState(int newState)
     KMCDebugger_MarkPre(particleStateName());
 
 
-    KMCDebugger_Assert(m_totalParticles(particleState()), !=, 0, "trying to reduce particle type count below zero", info());
+    BADAss(m_totalParticles(particleState()), !=, 0, "trying to reduce particle type count below zero", KMCBAI( info()));
 
     m_totalParticles(particleState())--;
 

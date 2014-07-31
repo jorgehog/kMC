@@ -278,7 +278,7 @@ void DiffusionReaction::registerBetaChange(const double newBeta)
 {
     (void) newBeta;
 
-    KMCDebugger_AssertBool(rate() != UNSET_RATE, "Beta should not be changed untill rates have been calculated.");
+    BADAssBool(rate() != UNSET_RATE, "Beta should not be changed untill rates have been calculated.");
 
     _setRate(rate() * m_betaChangeScaleFactor);
 

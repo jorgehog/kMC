@@ -351,7 +351,7 @@ public:
             return;
         }
 
-        KMCDebugger_AssertEqual(m_particles.size(), 0);
+        BADAssEqual(m_particles.size(), 0);
 
         m_diffusionType = type;
 

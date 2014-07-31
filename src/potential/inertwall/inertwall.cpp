@@ -86,8 +86,8 @@ double InertWall::evaluateSaddleFor(const DiffusionReaction *currentReaction)
         return electroStatic(rScaled);
     }
 
-    KMCDebugger_Assert((int)r + dr, >=, 0,"out of bounds.");
-    KMCDebugger_Assert((int)r + dr, <= , (int)m_interface->span(), "out of bounds.");
+    BADAss((int)r + dr, >=, 0,"out of bounds.");
+    BADAss((int)r + dr, <= , (int)m_interface->span(), "out of bounds.");
 
 
     return valueAt(rScaled, 0, 0);
@@ -115,7 +115,7 @@ double InertWall::onNeighborChange(SoluteParticle *particle,
         {
             //not qualified and affected.
             m_trackedParticles.erase(particle->ID());
-            KMCDebugger_AssertBool(!isTracked(particle));
+            BADAssBool(!isTracked(particle));
 
             return -stressEnergy(getDistance(particle->r(m_interface->dimension())));
         }
@@ -184,14 +184,14 @@ bool InertWall::isQualifiedSaddle(const DiffusionReaction *currentReaction) cons
 
 double InertWall::stressEnergy(const double r) const
 {
-    KMCDebugger_Assert(r, >, 0);
+    BADAss(r, >, 0);
 
     return m_Es*std::exp(-r/m_r0)/r;
 }
 
 double InertWall::electroStatic(const double r) const
 {
-    KMCDebugger_Assert(r, >, 0);
+    BADAss(r, >, 0);
     return m_E_aw/std::pow(r, m_alpha_aw);
 }
 
