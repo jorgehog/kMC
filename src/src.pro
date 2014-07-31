@@ -67,6 +67,8 @@ SOURCES += RNG/zigrandom.cpp \
 
 }
 
+QMAKE_PRE_LINK += $(MKDIR) $$PWD/../lib $$shadowed($$PWD)/../lib
+
 !equals(PWD, $${OUT_PWD}) {
     QMAKE_POST_LINK += $(COPY_DIR) $$OUT_PWD/../lib $$TOP_PWD
 }

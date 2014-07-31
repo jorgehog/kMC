@@ -76,7 +76,7 @@ void initializeWLMC(KMCSolver *solver, const Setting &root)
 
     WLMC::Window *mainWindow;
 
-    for (uint nParticles = nParticlesStart; nParticles < nParticlesStop; ++nParticles)
+    for (uint nParticles = nParticlesStart; nParticles <= nParticlesStop; ++nParticles)
     {
         solver->insertRandomParticles(nParticles);
 
