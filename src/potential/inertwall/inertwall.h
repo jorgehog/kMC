@@ -39,7 +39,7 @@ public:
 
     double valueAt(const double r, const double a = 0, const double b = 0);
 
-    double evaluateFor(SoluteParticle *particle);
+    double evaluateFor(const SoluteParticle *particle);
 
     double evaluateSaddleFor(const DiffusionReaction *currentReaction);
 

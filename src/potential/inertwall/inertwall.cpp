@@ -54,7 +54,7 @@ double InertWall::valueAt(const double r, const double a, const double b)
     return stressEnergy(r) + electroStatic(r);
 }
 
-double InertWall::evaluateFor(SoluteParticle *particle)
+double InertWall::evaluateFor(const SoluteParticle *particle)
 {
 
     double rScaled = getDistance(particle->r(m_interface->dimension()));

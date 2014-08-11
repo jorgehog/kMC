@@ -2343,7 +2343,12 @@ void testBed::testKnownCase()
         }
     }
 
+    uint T = SoluteParticle::updateCounterTreshold();
+    SoluteParticle::setUpdateCounterTreshold(numeric_limits<uint>::max());
+
     solver->mainloop();
+
+    SoluteParticle::setUpdateCounterTreshold(T);
 
     string line;
     stringstream s;

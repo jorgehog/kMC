@@ -66,7 +66,7 @@ double StressedSurface::valueAt(const double x, const double y, const double z)
     return strain(std::abs(selectXYZ(x, y, z) - (int)m_interface->bound()) - m_nEdgeLayers);
 }
 
-double StressedSurface::evaluateFor(SoluteParticle *particle)
+double StressedSurface::evaluateFor(const SoluteParticle *particle)
 {
 
     if (!isQualified(particle))
@@ -142,7 +142,7 @@ double StressedSurface::onNeighborChange(SoluteParticle *particle,
 
 }
 
-double StressedSurface::evaluateGivenQualified(SoluteParticle *particle)
+double StressedSurface::evaluateGivenQualified(const SoluteParticle *particle)
 {
     return m_potential.at(2*particle->r(m_interface->dimension()));
 }

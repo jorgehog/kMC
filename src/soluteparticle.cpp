@@ -25,7 +25,8 @@ SoluteParticle::SoluteParticle(const uint species, bool sticky) :
     m_energy(0),
     m_species(species),
     m_sticky(sticky),
-    m_ID(ID_count++)
+    m_ID(ID_count++),
+    m_energyUpdateCounter(0)
 {
 
     BADAss(species, <, m_nSpecies, "invalid species.");
@@ -93,8 +94,7 @@ void SoluteParticle::setSite(const uint x, const uint y, const uint z)
     if (ss != NULL)
     {
         double dE = ss->evaluateFor(this);
-        m_energy += dE;
-        m_totalEnergy += dE;
+        shiftEnergy(dE);
     }
 
     markAsAffected();
@@ -157,10 +157,7 @@ void SoluteParticle::disableSite()
 
     m_totalParticles(particleState())--;
 
-    m_totalEnergy -= m_energy;
-
-    m_energy = 0;
-
+    setZeroEnergy();
 
     KMCDebugger_MarkPartialStep("PARTICLE DISABLED");
 
@@ -306,8 +303,10 @@ const string SoluteParticle::info(int xr, int yr, int zr, string desc) const
 
 void SoluteParticle::setZeroEnergy()
 {
-    BADAss(m_nNeighborsSum, ==, 0, "Energy is not zero.", KMCBAI( info()));
+    shiftTotalEnergy(-m_energy);
+
     m_energy = 0;
+    m_energyUpdateCounter = 0;
 
 }
 
@@ -386,8 +385,7 @@ void SoluteParticle::setupAllNeighbors()
 
     });
 
-    m_energy += dE;
-    m_totalEnergy += dE;
+    shiftEnergy(dE);
 
 }
 
@@ -438,10 +436,7 @@ void SoluteParticle::_updateNeighborProps(const int sign,
 
     }
 
-    m_energy += dE;
-
-    m_totalEnergy += dE;
-
+    shiftEnergy(dE);
 
     forEachActiveReactionDo([&level, &neighbor] (Reaction *reaction)
     {
@@ -663,9 +658,17 @@ double SoluteParticle::getBruteForceEnergy() const
             distanceTo(neighbor->associatedParticle(),dx, dy, dz);
             double r = sqrt(dx*dx + dy*dy + dz*dz);
             energy += DiffusionReaction::strength(m_species, s)/pow(r, DiffusionReaction::rPower(m_species, s));
+
         }
 
     });
+
+    //tmp
+    if (ss != NULL)
+    {
+        double dE = ss->evaluateFor(this);
+        energy += dE;
+    }
 
     return energy;
 }
@@ -684,6 +687,9 @@ void SoluteParticle::clearAll()
 
     clearAffectedParticles();
     ID_count = 0;
+
+    m_totalEnergy = 0;
+    m_totalEnergyUpdateCounter = 0;
 }
 
 void SoluteParticle::clearAffectedParticles()
@@ -741,11 +747,64 @@ void SoluteParticle::changeParticleState(int newState)
 
 }
 
+void SoluteParticle::shiftEnergy(const double amount)
+{
+    if (m_energyUpdateCounter > m_updateCounterTreshold)
+    {
+        double pre = m_energy + amount;
+
+        m_energy = getBruteForceEnergy();
+
+        BADAssClose(m_energy, pre, 1E-3);
+
+        m_energyUpdateCounter = 0;
+    }
+    else
+    {
+        m_energy += amount;
+        m_energyUpdateCounter++;
+    }
+
+    shiftTotalEnergy(amount);
+
+}
+
+void SoluteParticle::shiftTotalEnergy(const double amount)
+{
+
+    if (m_totalEnergyUpdateCounter > m_updateCounterTreshold)
+    {
+        double pre = m_totalEnergy + amount;
+        recalcTotalEnergy();
+        BADAssClose(m_totalEnergy, pre, 1E-3, "wopsie!", badass::quickie([&] () {cout << amount << endl;}));
+    }
+    else
+    {
+        m_totalEnergy += amount;
+        m_totalEnergyUpdateCounter++;
+    }
+
+}
+
+void SoluteParticle::recalcTotalEnergy()
+{
+    m_totalEnergy = 0;
+
+    for (const SoluteParticle *particle : m_solver->particles())
+    {
+        if (particle != NULL)
+        {
+            m_totalEnergy += particle->energy();
+        }
+    }
+
+    m_totalEnergyUpdateCounter = 0;
+
+}
+
 
 void SoluteParticle::reset()
 {
-
-    m_totalEnergy -= m_energy;
 
     setZeroEnergy();
 
@@ -797,6 +856,9 @@ uint        SoluteParticle::m_nSpecies = 1;
 
 uint SoluteParticle::ID_count = 0;
 uint SoluteParticle::refCounter = 0;
+
+uint SoluteParticle::m_totalEnergyUpdateCounter = 0;
+uint SoluteParticle::m_updateCounterTreshold = 1000;
 
 
 ostream & operator << (ostream& os, const SoluteParticle& ss)

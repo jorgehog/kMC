@@ -1518,6 +1518,7 @@ void KMCSolver::clearParticles()
     for (SoluteParticle *particle : m_particles)
     {
         delete particle;
+        particle = NULL;
     }
 
     BADAssClose(0, std::accumulate(m_accuAllRates.begin(), m_accuAllRates.end(), 0.0), 1E-5);

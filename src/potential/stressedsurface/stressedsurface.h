@@ -39,7 +39,7 @@ public:
 
     double valueAt(const double x, const double y, const double z);
 
-    double evaluateFor(SoluteParticle *particle);
+    double evaluateFor(const SoluteParticle *particle);
 
     double evaluateSaddleFor(const DiffusionReaction *currentReaction);
 
@@ -74,7 +74,7 @@ private:
 
     vector<double> m_potential;
 
-    double evaluateGivenQualified(SoluteParticle *particle);
+    double evaluateGivenQualified(const SoluteParticle *particle);
 
 
     double strain(const double r) const;

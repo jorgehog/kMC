@@ -23,7 +23,7 @@ public:
 
     virtual double valueAt(const double x, const double y, const double z) = 0;
 
-    virtual double evaluateFor(SoluteParticle *particle) = 0;
+    virtual double evaluateFor(const SoluteParticle *particle) = 0;
 
     virtual double evaluateSaddleFor(const DiffusionReaction *currentReaction) = 0;
 
