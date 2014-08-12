@@ -202,6 +202,8 @@ public:
         return m_totalEnergy;
     }
 
+    static double getBruteForceTotalEnergy();
+
     static const uvec4 & totalParticlesVector()
     {
         return m_totalParticles;
@@ -510,16 +512,6 @@ public:
 
     void setVectorSizes();
 
-    static const uint &updateCounterTreshold()
-    {
-        return m_updateCounterTreshold;
-    }
-
-    static void setUpdateCounterTreshold(const uint T)
-    {
-        m_updateCounterTreshold = T;
-    }
-
 
 private:
 
@@ -575,10 +567,6 @@ private:
 
     void shiftEnergy(const double amount);
 
-    static void shiftTotalEnergy(const double amount);
-
-    static void recalcTotalEnergy();
-
 
     const uint m_ID;
 
@@ -587,12 +575,6 @@ private:
     static uint refCounter;
 
     static KMCSolver *m_solver;
-
-
-    static uint m_totalEnergyUpdateCounter;
-    static uint m_updateCounterTreshold;
-
-    uint m_energyUpdateCounter;
 
 };
 

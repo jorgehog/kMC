@@ -917,11 +917,11 @@ bool KMCSolver::spawnParticle(SoluteParticle *particle, const uint x, const uint
 
     }
 
+    m_particles.push_back(particle);
+
     particle->setSite(x, y, z);
 
     BADAssBool(!checkIfLegal || particle->nNeighbors() == 0);
-
-    m_particles.push_back(particle);
 
     return true;
 

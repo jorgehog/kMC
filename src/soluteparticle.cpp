@@ -25,8 +25,7 @@ SoluteParticle::SoluteParticle(const uint species, bool sticky) :
     m_energy(0),
     m_species(species),
     m_sticky(sticky),
-    m_ID(ID_count++),
-    m_energyUpdateCounter(0)
+    m_ID(ID_count++)
 {
 
     BADAss(species, <, m_nSpecies, "invalid species.");
@@ -106,6 +105,10 @@ void SoluteParticle::setSite(const uint x, const uint y, const uint z)
 
 
     BADAss(m_site->associatedParticle(), ==, this, "mismatch in site and particle.");
+    BADAssClose(getBruteForceTotalEnergy(), m_totalEnergy, 1E-3, "mismatch in total energy calculation.", [&] ()
+    {
+        cout << getBruteForceEnergy() << " " << m_totalEnergy << " " << getBruteForceEnergy() - m_totalEnergy << endl;
+    });
 
     KMCDebugger_MarkPre("void");
     KMCDebugger_PushImplication(this, "enabled");
@@ -158,6 +161,8 @@ void SoluteParticle::disableSite()
     m_totalParticles(particleState())--;
 
     setZeroEnergy();
+
+    BADAssClose(getBruteForceTotalEnergy(), m_totalEnergy, 1E-3, "mismatch in total energy calculation.");
 
     KMCDebugger_MarkPartialStep("PARTICLE DISABLED");
 
@@ -303,10 +308,9 @@ const string SoluteParticle::info(int xr, int yr, int zr, string desc) const
 
 void SoluteParticle::setZeroEnergy()
 {
-    shiftTotalEnergy(-m_energy);
+    m_totalEnergy -= m_energy;
 
     m_energy = 0;
-    m_energyUpdateCounter = 0;
 
 }
 
@@ -445,6 +449,9 @@ void SoluteParticle::_updateNeighborProps(const int sign,
 
     markAsAffected();
 
+#ifdef KMC_EXTRA_DEBUG
+    BADAssClose(getBruteForceEnergy(), m_energy, 1E-3, "mismatch in energy calculation.");
+#endif
 
     KMCDebugger_PushImplication(neighbor, neighbor->particleStateName().c_str());
 }
@@ -689,7 +696,6 @@ void SoluteParticle::clearAll()
     ID_count = 0;
 
     m_totalEnergy = 0;
-    m_totalEnergyUpdateCounter = 0;
 }
 
 void SoluteParticle::clearAffectedParticles()
@@ -749,56 +755,25 @@ void SoluteParticle::changeParticleState(int newState)
 
 void SoluteParticle::shiftEnergy(const double amount)
 {
-    if (m_energyUpdateCounter > m_updateCounterTreshold)
-    {
-        double pre = m_energy + amount;
+    m_energy += amount;
 
-        m_energy = getBruteForceEnergy();
-
-        BADAssClose(m_energy, pre, 1E-3);
-
-        m_energyUpdateCounter = 0;
-    }
-    else
-    {
-        m_energy += amount;
-        m_energyUpdateCounter++;
-    }
-
-    shiftTotalEnergy(amount);
+    m_totalEnergy += amount;
 
 }
 
-void SoluteParticle::shiftTotalEnergy(const double amount)
+double SoluteParticle::getBruteForceTotalEnergy()
 {
-
-    if (m_totalEnergyUpdateCounter > m_updateCounterTreshold)
-    {
-        double pre = m_totalEnergy + amount;
-        recalcTotalEnergy();
-        BADAssClose(m_totalEnergy, pre, 1E-3, "wopsie!", badass::quickie([&] () {cout << amount << endl;}));
-    }
-    else
-    {
-        m_totalEnergy += amount;
-        m_totalEnergyUpdateCounter++;
-    }
-
-}
-
-void SoluteParticle::recalcTotalEnergy()
-{
-    m_totalEnergy = 0;
+    double totalEnergy = 0;
 
     for (const SoluteParticle *particle : m_solver->particles())
     {
         if (particle != NULL)
         {
-            m_totalEnergy += particle->energy();
+           totalEnergy += particle->energy();
         }
     }
 
-    m_totalEnergyUpdateCounter = 0;
+    return totalEnergy;
 
 }
 
@@ -856,10 +831,6 @@ uint        SoluteParticle::m_nSpecies = 1;
 
 uint SoluteParticle::ID_count = 0;
 uint SoluteParticle::refCounter = 0;
-
-uint SoluteParticle::m_totalEnergyUpdateCounter = 0;
-uint SoluteParticle::m_updateCounterTreshold = 1000;
-
 
 ostream & operator << (ostream& os, const SoluteParticle& ss)
 {
