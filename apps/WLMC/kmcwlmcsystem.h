@@ -14,7 +14,8 @@ public:
                   const uint movesPerSampling,
                   const double flatnessCriterion,
                   const uint overlap,
-                  const uint minWindowSize);
+                  const uint minWindowSize,
+                  const double flatnessGradientTreshold);
 
     bool isOccupiedLoction(const uint x, const uint y, const uint z) const;
 

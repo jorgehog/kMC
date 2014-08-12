@@ -60,6 +60,8 @@ void initializeWLMC(KMCSolver *solver, const Setting &root)
 
     const double &flatnessCriterion = getSetting<double>(initCFG, "flatnessCriterion");
 
+    const double &flatnessGradientTreshold = getSetting<double>(initCFG, "flatnessGradientTreshold");
+
     const double &fStart = getSetting<double>(initCFG, "fStart");
 
     const double &fFinalMinusOne = getSetting<double>(initCFG, "fFinalMinusOne");
@@ -77,7 +79,8 @@ void initializeWLMC(KMCSolver *solver, const Setting &root)
                                    movesPerSampling,
                                    flatnessCriterion,
                                    overlap,
-                                   minWindowSize);
+                                   minWindowSize,
+                                   flatnessGradientTreshold);
 
         mainWindow = system->execute(nbins, adaptiveWindows, fStart, fFinal);
 
