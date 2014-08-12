@@ -1,11 +1,13 @@
 #pragma once
 
 #include "particlestates.h"
+#include "kmcsolver.h"
 
 #include <vector>
 #include <sys/types.h>
 #include <armadillo>
 
+#include <BADAss/badass.h>
 #include <libconfig_utils/libconfig_utils.h>
 
 
@@ -15,8 +17,6 @@ using namespace arma;
 namespace kMC
 {
 
-
-class KMCSolver;
 class Reaction;
 class DiffusionReaction;
 class SoluteParticle;
@@ -53,7 +53,10 @@ public:
 
     static constexpr uint closestShellSize = 26;
 
-    static uint maxNeighbors();
+    static uint maxNeighbors()
+    {
+        return std::pow(m_neighborhoodLength, 3) - 1;
+    }
 
 
     /*
@@ -125,9 +128,18 @@ public:
 
     static uint maxDistanceBetween(const uint x0, const uint y0, const uint z0, const uint x1, const uint y1, const uint z1);
 
-    static void forEachNeighborDo(const uint x, const uint y, const uint z, function<void (Site *)> applyFunction);
-
     static void forEachNeighborDo_sendPath(const uint x, const uint y, const uint z, function<void (Site *, int, int, int)> applyFunction);
+
+    static void forEachNeighborDo(const uint x, const uint y, const uint z, function<void (Site *)> applyFunction)
+    {
+        forEachNeighborDo_sendPath(x, y, z, [&applyFunction] (Site *site, int dx, int dy, int dz)
+        {
+            (void)dx;
+            (void)dy;
+            (void)dz;
+            applyFunction(site);
+        });
+    }
 
     static void forEachNeighborDo_sendIndices(const uint x, const uint y, const uint z, function<void (Site *, uint, uint, uint)> applyFunction);
 
@@ -203,7 +215,18 @@ public:
         return m_associatedParticle != NULL;
     }
 
-    static Site *neighborhood(const int x, const int y, const int z, const int xr, const int yr, const int zr);
+    static Site *neighborhood(const int x, const int y, const int z, const int xr, const int yr, const int zr)
+    {
+        BADAss(x, >=, 0);
+        BADAss(y, >=, 0);
+        BADAss(z, >=, 0);
+
+        BADAss(x, <, (int)NX());
+        BADAss(y, <, (int)NY());
+        BADAss(z, <, (int)NZ());
+
+        return m_solver->getSite(xr + x, yr + y, zr + z);
+    }
 
     static Site *neighborhood_fromIndex(const int x, const int y, const int z, const uint xr, const uint yr, const uint zr)
     {

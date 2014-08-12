@@ -215,10 +215,6 @@ void DiffusionReaction::setupPotential()
 
 }
 
-Site *DiffusionReaction::destinationSite() const
-{
-    return Site::neighborhood(x(), y(), z(), m_path[0], m_path[1], m_path[2]);
-}
 
 void DiffusionReaction::execute()
 {

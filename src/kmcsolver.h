@@ -1,8 +1,5 @@
 #pragma once
 
-
-#include "site.h"
-
 #include "reactions/reaction.h"
 
 #include "debugger/debugger.h"
@@ -30,6 +27,7 @@ namespace kMC
 
 const uint UNSET_UINT = std::numeric_limits<uint>::max();
 
+class Site;
 class DumpFile;
 class SolverEvent;
 

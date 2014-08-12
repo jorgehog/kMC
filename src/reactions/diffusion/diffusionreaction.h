@@ -2,6 +2,7 @@
 
 
 #include "../reaction.h"
+#include "../../site.h"
 
 #include <armadillo>
 
@@ -57,7 +58,10 @@ public:
         return m_strengths(i, j);
     }
 
-    Site *destinationSite() const;
+    Site *destinationSite() const
+    {
+        return Site::neighborhood(x(), y(), z(), m_path[0], m_path[1], m_path[2]);
+    }
 
     const int &path(const int i) const
     {

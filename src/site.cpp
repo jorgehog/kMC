@@ -1,5 +1,4 @@
 #include "site.h"
-#include "kmcsolver.h"
 #include "reactions/reaction.h"
 #include "reactions/diffusion/tstdiffusion.h"
 
@@ -111,25 +110,6 @@ bool Site::boundariesIsInitialized()
     }
 
     return true;
-}
-
-
-uint Site::maxNeighbors()
-{
-    return std::pow(m_neighborhoodLength, 3) - 1;
-}
-
-
-
-void Site::forEachNeighborDo(const uint x, const uint y, const uint z, function<void (Site *)> applyFunction)
-{
-    forEachNeighborDo_sendPath(x, y, z, [&applyFunction] (Site *site, int dx, int dy, int dz)
-    {
-        (void)dx;
-        (void)dy;
-        (void)dz;
-        applyFunction(site);
-    });
 }
 
 void Site::forEachNeighborDo_sendPath(const uint x, const uint y, const uint z, function<void (Site *, int, int, int)> applyFunction)
@@ -266,19 +246,6 @@ void Site::forShellDo(const uint x, const uint y, const uint z, const int shellN
         }
     }
 
-}
-
-Site *Site::neighborhood(const int x, const int y, const int z, const int xr, const int yr, const int zr)
-{
-    BADAss(x, >=, 0);
-    BADAss(y, >=, 0);
-    BADAss(z, >=, 0);
-
-    BADAss(x, <, (int)NX());
-    BADAss(y, <, (int)NY());
-    BADAss(z, <, (int)NZ());
-
-    return m_solver->getSite(xr + x, yr + y, zr + z);
 }
 
 const string Site::str(const uint x, const uint y, const uint z)
