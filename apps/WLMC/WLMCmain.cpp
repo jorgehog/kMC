@@ -8,7 +8,7 @@ using namespace libconfig;
 using namespace kMC;
 
 
-void initializeWLMC(KMCSolver * solver, const Setting & root);
+void initializeWLMC(KMCSolver *solver, const Setting & root);
 
 int main()
 {
@@ -21,10 +21,7 @@ int main()
 
     const Setting & root = cfg.getRoot();
 
-
-    KMCDebugger_SetFilename("WLMC");
-
-    KMCDebugger_SetEnabledTo(getSetting<int>(root, "buildTrace") == 0 ? false : true);
+    KMCDebugger_SetEnabledTo(false);
 
     KMCSolver::enableDumpLAMMPS(false);
     KMCSolver::enableDumpXYZ(false);
@@ -34,8 +31,6 @@ int main()
 
     initializeWLMC(solver, root);
 
-    KMCDebugger_DumpFullTrace();
-
     return 0;
 
 }
@@ -43,7 +38,6 @@ int main()
 
 void initializeWLMC(KMCSolver *solver, const Setting &root)
 {
-
     const Setting &initCFG = getSetting(root, "Initialization");
 
     const uint &adaptiveWindows = getSetting<uint>(initCFG, "adaptiveWindows");
@@ -70,7 +64,6 @@ void initializeWLMC(KMCSolver *solver, const Setting &root)
 
     const double &fFinalMinusOne = getSetting<double>(initCFG, "fFinalMinusOne");
     const double fFinal = fFinalMinusOne + 1;
-
 
     KMCWLMCSystem *system;
 
