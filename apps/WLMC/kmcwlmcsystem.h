@@ -15,7 +15,8 @@ public:
                   const double flatnessCriterion,
                   const uint overlap,
                   const uint minWindowSize,
-                  const double flatnessGradientTreshold);
+                  const double flatnessGradientTreshold,
+                  const double deflationLimit);
 
     bool isOccupiedLoction(const uint x, const uint y, const uint z) const;
 

@@ -10,7 +10,8 @@ KMCWLMCSystem::KMCWLMCSystem(KMCSolver *solver,
                              const double flatnessCriterion,
                              const uint overlap,
                              const uint minWindowSize,
-                             const double flatnessGradientTreshold) :
+                             const double flatnessGradientTreshold,
+                             const double deflationLimit) :
     System(SoluteParticle::nParticles(),
            solver->NX(),
            solver->NY(),
@@ -20,6 +21,7 @@ KMCWLMCSystem::KMCWLMCSystem(KMCSolver *solver,
            overlap,
            minWindowSize,
            flatnessGradientTreshold,
+           deflationLimit,
            solver->filePath(),
            [] () {return KMC_RNG_UNIFORM();}),
     m_solver(solver)

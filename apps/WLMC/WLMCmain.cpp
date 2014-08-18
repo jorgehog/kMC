@@ -75,6 +75,8 @@ void initializeWLMC(KMCSolver *solver, const Setting &root)
 
     const double &flatnessGradientTreshold = getSetting<double>(initCFG, "flatnessGradientTreshold");
 
+    const double &deflationLimit = getSetting<double>(initCFG, "deflationLimit");
+
     const double &fStart = getSetting<double>(initCFG, "fStart");
 
     const double &fFinalMinusOne = getSetting<double>(initCFG, "fFinalMinusOne");
@@ -97,7 +99,8 @@ void initializeWLMC(KMCSolver *solver, const Setting &root)
                                    flatnessCriterion,
                                    overlap,
                                    minWindowSize,
-                                   flatnessGradientTreshold);
+                                   flatnessGradientTreshold,
+                                   deflationLimit);
 
         //memory will be freed by the wrapper
         Member &particles = systemGroup.addMember(nParticles, overwrite);
