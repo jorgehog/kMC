@@ -3071,7 +3071,7 @@ void testBed::fill_rate_stuff(vector<double> & accuAllRates, vector<Reaction*> &
         particle->forEachActiveReactionDo([&] (Reaction * reaction)
         {
 
-            BADAss(reaction->rate(), !=, Reaction::UNSET_RATE, "Reaction rate should not be unset at this point.", KMCBAI( reaction->getFinalizingDebugMessage()));
+            BADAss(reaction->rate(), !=, Reaction::UNSET_RATE, "Reaction rate should not be unset at this point.", KMCBAI( reaction->info()));
 
             kTot += reaction->rate();
 

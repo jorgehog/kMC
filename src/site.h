@@ -1,7 +1,7 @@
 #pragma once
 
-#include "particlestates.h"
 #include "kmcsolver.h"
+#include "particlestates.h"
 
 #include <vector>
 #include <sys/types.h>

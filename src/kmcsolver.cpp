@@ -409,8 +409,8 @@ void KMCSolver::swapReactionAddresses(const uint dest, const uint orig)
 
     Reaction * swappedReaction = m_allPossibleReactions.at(orig);
 
-    BADAss(orig,                    ==, swappedReaction->address(), "mismatch in address.", KMCBAI( swappedReaction->getFinalizingDebugMessage()));
-    BADAssBool(swappedReaction->isAllowed(), "swapped reaction should be allowed and active.", KMCBAI( swappedReaction->getFinalizingDebugMessage()));
+    BADAss(orig,                    ==, swappedReaction->address(), "mismatch in address.", KMCBAI( swappedReaction->info()));
+    BADAssBool(swappedReaction->isAllowed(), "swapped reaction should be allowed and active.", KMCBAI( swappedReaction->info()));
 
     m_allPossibleReactions.at(dest) = swappedReaction;
 

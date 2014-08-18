@@ -6,10 +6,11 @@
 
 #include "../../soluteparticle.h"
 
-#include "../../debugger/debugger.h"
-
 #include "../../potential/potential.h"
 
+#include "debugger/debugger.h"
+
+#include <BADAss/badass.h>
 
 using namespace kMC;
 
@@ -40,13 +41,13 @@ void TSTDiffusion::calcRate()
 
     else if(updateFlag() == updateKeepSaddle)
     {
-        BADAss(rate(), !=, UNSET_RATE ,"Saddle can't update when the rate has not been calculated.", KMCBAI( getFinalizingDebugMessage()));
-        BADAss(updateFlag(), ==, updateKeepSaddle, "Errorous updateFlag.", KMCBAI( getFinalizingDebugMessage()));
-        BADAss(lastUsedEnergy(), !=, UNSET_ENERGY, "energy never calculated before.", KMCBAI( getFinalizingDebugMessage()));
+        BADAss(rate(), !=, UNSET_RATE ,"Saddle can't update when the rate has not been calculated.", KMCBAI( info()));
+        BADAss(updateFlag(), ==, updateKeepSaddle, "Errorous updateFlag.", KMCBAI( info()));
+        BADAss(lastUsedEnergy(), !=, UNSET_ENERGY, "energy never calculated before.", KMCBAI( info()));
 
         newRate = rate()*std::exp(beta()*(lastUsedEnergy() - E));
 
-        BADAssClose(getSaddleEnergy(), m_lastUsedEsp, 1E-10, "Saddle energy was not conserved as assumed by flag. ", KMCBAI( getFinalizingDebugMessage()));
+        BADAssClose(getSaddleEnergy(), m_lastUsedEsp, 1E-10, "Saddle energy was not conserved as assumed by flag. ", KMCBAI( info()));
 
     }
 
@@ -290,7 +291,7 @@ double TSTDiffusion::getSaddleEnergy()
 
                 BADAssClose(dEsp, getSaddleEnergyContributionFrom(targetSite->associatedParticle()), 1E-10,
                             "Mismatch in saddle energy contribution.",
-                            KMCBAI(getFinalizingDebugMessage()));
+                            KMCBAI(info()));
             }
         }
     }

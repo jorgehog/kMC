@@ -4,8 +4,6 @@
 
 #include "../../soluteparticle.h"
 
-#include "../../debugger/debugger.h"
-
 using namespace kMC;
 
 ConcentrationWall::ConcentrationWall(const uint dimension, const uint orientation) :

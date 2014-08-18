@@ -2,7 +2,11 @@
 #include <BADAss/badass.h>
 #include <libconfig_utils/libconfig_utils.h>
 
+#include <HDF5Wrapper/include/hdf5wrapper.h>
+
 #include "kmcwlmcsystem.h"
+
+#include <boost/mpi.hpp>
 
 using namespace libconfig;
 using namespace kMC;
@@ -84,7 +88,7 @@ void initializeWLMC(KMCSolver *solver, const Setting &root)
 
         mainWindow = system->execute(nbins, adaptiveWindows, fStart, fFinal);
 
-        //do stuff.. setup folder structures etc. for loading later on.. use boost filesystem
+
 
         delete system;
         delete mainWindow;

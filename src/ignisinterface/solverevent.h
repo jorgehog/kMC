@@ -7,6 +7,10 @@
 #include "../soluteparticle.h"
 #include "../potential/potential.h"
 
+#include "../debugger/debugger.h"
+
+#include <BADAss/badass.h>
+
 using ignis::Event;
 
 namespace kMC

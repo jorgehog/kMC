@@ -4,12 +4,10 @@
 #include "../site.h"
 #include "../soluteparticle.h"
 
-#include "../debugger/debugger.h"
-
 #include <limits>
 
 #include <armadillo>
-
+#include <BADAss/badass.h>
 
 
 using namespace arma;

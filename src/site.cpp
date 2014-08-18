@@ -11,6 +11,8 @@
 
 #include "debugger/debugger.h"
 
+#include <BADAss/badass.h>
+
 using namespace kMC;
 
 

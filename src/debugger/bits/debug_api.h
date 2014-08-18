@@ -2,14 +2,9 @@
 
 #ifndef KMC_NO_DEBUG
 
-#include "../debugger.h"
-
 #include "debugger_class.h"
 
 #include "intrinsicmacros.h"
-
-#include <assert.h>
-#include <sstream>
 
 //MISC
 #define KMCDebugger_Init() \

@@ -2,8 +2,6 @@ CONFIG -= app_bundle
 CONFIG -= qt
 CONFIG += RNG_ZIG
 
-QMAKE_CXX = gcc
-
 !noccache {
     QMAKE_CXX = ccache $$QMAKE_CXX
 }

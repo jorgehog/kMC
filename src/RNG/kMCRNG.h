@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include <exception>
 
 #ifdef KMC_RNG_ZIG

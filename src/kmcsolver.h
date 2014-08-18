@@ -1,21 +1,14 @@
 #pragma once
 
-#include "reactions/reaction.h"
-
-#include "debugger/debugger.h"
-
 #include "RNG/kMCRNG.h"
 
 #include "ignisinterface/kmcevent.h"
 
 #include <sys/types.h>
-
 #include <armadillo>
-
 #include <limits>
-
 #include <libconfig_utils/libconfig_utils.h>
-
+#include <BADAss/badass.h>
 
 using namespace arma;
 
@@ -27,6 +20,8 @@ namespace kMC
 
 const uint UNSET_UINT = std::numeric_limits<uint>::max();
 
+class Reaction;
+class SoluteParticle;
 class Site;
 class DumpFile;
 class SolverEvent;
@@ -283,13 +278,7 @@ public:
 
     static double minRateThreshold()
     {
-        //        return max((*std::min_element(m_allPossibleReactions.begin(),
-        //                                  m_allPossibleReactions.end(),
-        //                                  [] (const Reaction *r1, const Reaction *r2) {return r1->rate() < r2->rate();}))->rate()/2,
-        //                   1E-8);
-
-        return Reaction::linearRateScale()*1E-8;
-
+        return 1E-5;
     }
 
 

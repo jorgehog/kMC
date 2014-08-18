@@ -1,11 +1,9 @@
 #include "inertwall.h"
 
-#include "../../debugger/debugger.h"
-
 #include "../../reactions/diffusion/diffusionreaction.h"
 
 #include <algorithm>
-
+#include <BADAss/badass.h>
 
 using namespace kMC;
 

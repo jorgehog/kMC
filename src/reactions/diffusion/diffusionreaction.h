@@ -95,8 +95,6 @@ public:
                                        const vector<double> &strenghts);
 
 
-    string getFinalizingDebugMessage() const;
-
 private:
 
     static mat m_rPowers;

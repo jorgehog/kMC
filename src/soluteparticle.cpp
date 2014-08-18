@@ -4,13 +4,15 @@
 
 #include "boundary/boundary.h"
 
-#include "debugger/debugger.h"
-
 #include "reactions/diffusion/tstdiffusion.h"
 
 #include "reactions/diffusion/arrheniusdiffusion.h"
 
 #include "potential/stressedsurface/stressedsurface.h"
+
+#include "debugger/debugger.h"
+
+#include <BADAss/badass.h>
 
 using namespace kMC;
 

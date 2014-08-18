@@ -5,7 +5,8 @@ CONFIG += ordered
 
 SUBDIRS += ignis \
     WLMC \
-    diamondSquare
+    diamondSquare \
+    HDF5Wrapper
 
 HEADERS += lammpswriter/lammpswriter.h \
     libconfig_utils/libconfig_utils.h \

@@ -5,9 +5,9 @@
 #include "../kmcsolver.h"
 #include "../soluteparticle.h"
 
-#include "../debugger/debugger.h"
-
 #include "../ignisinterface/solverevent.h"
+
+#include <BADAss/badass.h>
 
 using namespace kMC;
 
@@ -76,35 +76,6 @@ bool Reaction::hasVacantStatus() const
     return solver()->isEmptyAddress(m_address);
 }
 
-string Reaction::getFinalizingDebugMessage() const
-{
-#ifndef KMC_NO_DEBUG
-
-    if (!Debugger::enabled) return "";
-
-    int X, Y, Z;
-    X = 0;
-    Y = 0;
-    Z = 0;
-
-    stringstream s;
-
-    const Reaction * lastReaction = Debugger::lastCurrentReaction;
-
-    if (lastReaction != NULL)
-    {
-        reactant()->distanceTo(lastReaction->reactant(), X, Y, Z);
-    }
-    s << info();
-    s << "\nLast active reaction site marked on current site:\n\n";
-    s << reactant()->info(X, Y, Z);
-
-    return s.str();
-#else
-    return "";
-#endif
-}
-
 string Reaction::propertyString() const
 {
     stringstream s;
@@ -122,7 +93,7 @@ string Reaction::propertyString() const
 void Reaction::setRate(const double rate)
 {
 
-    BADAss(rate, !=, 0, "This reaction should be deactive.", KMCBAI(getFinalizingDebugMessage()));
+    BADAss(rate, !=, 0, "This reaction should be deactive.", KMCBAI(info()));
 
     solver()->registerReactionChange(this, rate);
 

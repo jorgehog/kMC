@@ -149,8 +149,6 @@ public:
         return m_reactant;
     }
 
-    virtual string getFinalizingDebugMessage() const;
-
     virtual string getInfoSnippet() const
     {
         return "-";

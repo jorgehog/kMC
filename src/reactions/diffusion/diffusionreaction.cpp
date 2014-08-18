@@ -6,9 +6,9 @@
 
 #include "../../soluteparticle.h"
 
-#include "../../debugger/debugger.h"
-
 #include "../../potential/potential.h"
+
+#include <BADAss/badass.h>
 
 
 using namespace kMC;
@@ -102,45 +102,6 @@ void DiffusionReaction::setPotentialParameters(const vector<double> &rPowers, co
         }
     }
 
-}
-
-string DiffusionReaction::getFinalizingDebugMessage() const
-{
-#ifndef KMC_NO_DEBUG
-
-    if (!Debugger::enabled) return "";
-
-    int X, Y, Z;
-    X = 0;
-    Y = 0;
-    Z = 0;
-
-    stringstream s;
-
-    s << Reaction::getFinalizingDebugMessage();
-
-
-    if (!Debugger::lastCurrentReaction->isType("DiffusionReaction"))
-    {
-        return s.str();
-    }
-
-    const DiffusionReaction *lastReaction = (DiffusionReaction*)Debugger::lastCurrentReaction;
-
-    if (lastReaction != NULL)
-    {
-        X = lastReaction->path(0);
-        Y = lastReaction->path(1);
-        Z = lastReaction->path(2);
-    }
-
-    s << "\nDestination of last active reaction site marked on current site:\n\n";
-    s << reactant()->info(X, Y, Z);
-
-    return s.str();
-#else
-    return "";
-#endif
 }
 
 void DiffusionReaction::setupPotential()

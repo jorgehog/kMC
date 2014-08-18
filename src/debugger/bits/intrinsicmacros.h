@@ -1,7 +1,5 @@
 #pragma once
 
-#include "debugger_class.h"
-
 #include "../../site.h"
 
 #include "../../reactions/reaction.h"
