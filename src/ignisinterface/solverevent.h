@@ -9,6 +9,8 @@
 
 #include "../debugger/debugger.h"
 
+#include "../reactions/reaction.h"
+
 #include <BADAss/badass.h>
 
 using ignis::Event;

@@ -6,8 +6,7 @@
 
 #include "kmcwlmcsystem.h"
 
-#include <boost/mpi.hpp>
-
+using namespace H5Wrapper;
 using namespace libconfig;
 using namespace kMC;
 
@@ -18,8 +17,6 @@ int main()
 {
 
     Config cfg;
-    wall_clock t;
-
 
     cfg.readFile("infiles/WLMC.cfg");
 
@@ -43,6 +40,18 @@ int main()
 void initializeWLMC(KMCSolver *solver, const Setting &root)
 {
     const Setting &initCFG = getSetting(root, "Initialization");
+
+
+    const Setting &output = getSetting(initCFG, "output");
+
+    const string &path = getSetting<string>(output, "path");
+    const string &filename = getSetting<string>(output, "filename");
+    const string &name = getSetting<string>(output, "name");
+
+    const bool &overwrite = getSetting<int>(output, "overwrite") == 1;
+
+    Root hdf5root(path + "/" + filename);
+    hdf5root.initialize();
 
     const uint &adaptiveWindows = getSetting<uint>(initCFG, "adaptiveWindows");
 
@@ -75,6 +84,10 @@ void initializeWLMC(KMCSolver *solver, const Setting &root)
 
     WLMC::Window *mainWindow;
 
+    Member &dataGroup = hdf5root.addMember(name);
+    Member &potentialGroup = dataGroup.addMember(DiffusionReaction::potentialString());
+    Member &systemGroup = potentialGroup.addMember(solver->volume());
+
     for (uint nParticles = nParticlesStart; nParticles <= nParticlesStop; ++nParticles)
     {
         solver->insertRandomParticles(nParticles);
@@ -86,19 +99,22 @@ void initializeWLMC(KMCSolver *solver, const Setting &root)
                                    minWindowSize,
                                    flatnessGradientTreshold);
 
+        //memory will be freed by the wrapper
+        Member &particles = systemGroup.addMember(nParticles, overwrite);
+
         mainWindow = system->execute(nbins, adaptiveWindows, fStart, fFinal);
 
+        particles.addData("DOS", mainWindow->DOS());
+        particles.addData("EBins", mainWindow->energies());
+        particles.addData("nbins", nbins);
 
+        particles.file()->flush(H5F_SCOPE_GLOBAL);
 
         delete system;
         delete mainWindow;
 
         solver->clearParticles();
     }
-
-
-
-
 
 
 }
