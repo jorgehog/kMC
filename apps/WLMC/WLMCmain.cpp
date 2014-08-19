@@ -50,8 +50,8 @@ void initializeWLMC(KMCSolver *solver, const Setting &root)
 
     const bool &overwrite = getSetting<int>(output, "overwrite") == 1;
 
-    Root hdf5root(path + "/" + filename);
-    hdf5root.initialize();
+//    Root hdf5root(path + "/" + filename);
+//    hdf5root.initialize();
 
     const uint &adaptiveWindows = getSetting<uint>(initCFG, "adaptiveWindows");
 
@@ -62,7 +62,8 @@ void initializeWLMC(KMCSolver *solver, const Setting &root)
 
     const uint &movesPerSampling = getSetting<uint>(initCFG, "movesPerSampling");
 
-    const uint &nbins = getSetting<uint>(initCFG, "nbins");
+//    const uint &nbins = getSetting<uint>(initCFG, "nbins");
+    const uint &nbins = 3*solver->volume();
 
     const uint &nbinsOverOverlap = getSetting<uint>(initCFG, "nbinsOverOverlap");
     const uint overlap = nbins/nbinsOverOverlap;
@@ -73,22 +74,21 @@ void initializeWLMC(KMCSolver *solver, const Setting &root)
 
     const double &flatnessCriterion = getSetting<double>(initCFG, "flatnessCriterion");
 
-    const double &flatnessGradientTreshold = getSetting<double>(initCFG, "flatnessGradientTreshold");
-
     const double &deflationLimit = getSetting<double>(initCFG, "deflationLimit");
 
-    const double &fStart = getSetting<double>(initCFG, "fStart");
+    const double &flatnessGradientTreshold = getSetting<double>(initCFG, "flatnessGradientTreshold");
 
-    const double &fFinalMinusOne = getSetting<double>(initCFG, "fFinalMinusOne");
-    const double fFinal = fFinalMinusOne + 1;
+    const double &logfStart = getSetting<double>(initCFG, "logfStart");
+
+    const double &logfFinal = getSetting<double>(initCFG, "logfFinal");
 
     KMCWLMCSystem *system;
 
     WLMC::Window *mainWindow;
 
-    Member &dataGroup = hdf5root.addMember(name);
-    Member &potentialGroup = dataGroup.addMember(DiffusionReaction::potentialString());
-    Member &systemGroup = potentialGroup.addMember(solver->volume());
+//    Member &dataGroup = hdf5root.addMember(name);
+//    Member &potentialGroup = dataGroup.addMember(DiffusionReaction::potentialString());
+//    Member &systemGroup = potentialGroup.addMember(solver->volume());
 
     for (uint nParticles = nParticlesStart; nParticles <= nParticlesStop; ++nParticles)
     {
@@ -103,15 +103,15 @@ void initializeWLMC(KMCSolver *solver, const Setting &root)
                                    deflationLimit);
 
         //memory will be freed by the wrapper
-        Member &particles = systemGroup.addMember(nParticles, overwrite);
+//        Member &particles = systemGroup.addMember(nParticles, overwrite);
 
-        mainWindow = system->execute(nbins, adaptiveWindows, fStart, fFinal);
+        mainWindow = system->execute(nbins, adaptiveWindows, logfStart, logfFinal);
 
-        particles.addData("DOS", mainWindow->DOS());
-        particles.addData("EBins", mainWindow->energies());
-        particles.addData("nbins", nbins);
+//        particles.addData("logDOS", mainWindow->logDOS());
+//        particles.addData("EBins", mainWindow->energies());
+//        particles.addData("nbins", nbins);
 
-        particles.file()->flush(H5F_SCOPE_GLOBAL);
+//        particles.file()->flush(H5F_SCOPE_GLOBAL);
 
         delete system;
         delete mainWindow;
