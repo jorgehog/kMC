@@ -27,7 +27,8 @@ protected:
     void execute()
     {
 
-        double RMS = std::sqrt(arma::mean(arma::pow(m_heightmap - mean(m_heightmap), 2)));
+        double meanHeight = sum(m_heightmap)/double(m_heightmap.size());
+        double RMS = std::sqrt(arma::mean(arma::pow(m_heightmap - meanHeight, 2)));
 
         setValue(m_RMS/nTimesExecuted());
 
@@ -195,6 +196,7 @@ ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &root, const uint
     QuasiDiffusionReaction::initialize();
 
     solver->addEvent(new DumpHeighmap(*heighmap));
+    solver->addEvent(new heightRMS(*heighmap));
 
     return heighmap;
 
