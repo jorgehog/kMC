@@ -31,8 +31,6 @@ public:
 
     static const string potentialString();
 
-    static const string potentialStringFromValues(const vector<double> &rPowers, const vector<double> &strengths);
-
     static void loadConfig(const Setting & setting);
 
     static void setupPotential();

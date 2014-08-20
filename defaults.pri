@@ -39,8 +39,7 @@ LIBS += \
     -fopenmp
 
 DEFINES += \
-    ARMA_MAT_PREALLOC=3 \
-    NO_DCVIZ
+    ARMA_MAT_PREALLOC=3
 
 CONFIG(NO_OMP) {
     DEFINES += KMC_NO_OMP

@@ -9,14 +9,25 @@ class QuasiDiffusionReaction : public Reaction
 {
 public:
 
-    QuasiDiffusionReaction(SoluteParticle *particle, ivec *heights) :
+    QuasiDiffusionReaction(SoluteParticle *particle, ivec &heights) :
         Reaction(particle),
-        m_heights(*heights),
+        m_heights(heights),
         m_rightSite(rightSite(1)),
         m_leftSite(leftSite(1))
     {
 
     }
+
+    static const string potentialString()
+    {
+        stringstream s;
+        s << DiffusionReaction::linearRateScale()
+          << "_" << DiffusionReaction::beta()
+          << "_" << DiffusionReaction::strength();
+
+        return s.str();
+    }
+
 
     const uint &leftSite() const
     {
@@ -55,17 +66,17 @@ public:
 
         if (leftHug && rightHug)
         {
-            return 2;
+            return 3;
         }
 
         else if (leftHug || rightHug)
         {
-            return 1;
+            return 2;
         }
 
         else
         {
-            return 0;
+            return 1;
         }
 
     }
@@ -73,6 +84,11 @@ public:
     int myHeight() const
     {
         return m_heights(site());
+    }
+
+    int heightDifference(const uint other) const
+    {
+        return m_heights(site()) - m_heights(other);
     }
 
     const uint &site() const
@@ -85,15 +101,20 @@ public:
         return solver()->NX();
     }
 
-    static void initialize(const int maxHeight)
+    static void initialize()
     {
-        m_leftRightRates.set_size(3);
+        m_leftRightRates.set_size(4);
 
-        m_leftRightRates(0) = DiffusionReaction::linearRateScale();
-        m_leftRightRates(1) = DiffusionReaction::linearRateScale()*exp(-DiffusionReaction::beta()*DiffusionReaction::strength());
-        m_leftRightRates(2) = DiffusionReaction::linearRateScale()*exp(-2*DiffusionReaction::beta()*DiffusionReaction::strength());
+        const double &l = DiffusionReaction::linearRateScale();
+        const double &b = DiffusionReaction::beta();
+        const double &s = DiffusionReaction::strength();
 
-        m_maxHeight = maxHeight;
+        m_leftRightRates(0) = 0;
+        m_leftRightRates(1) = exp(-b*(1 + 1*s));
+        m_leftRightRates(2) = exp(-b*(1 + 2*s));
+        m_leftRightRates(3) = exp(-b*(1 + 3*s));
+
+        m_depositionRate = l;
     }
 
 protected:
@@ -108,12 +129,15 @@ protected:
         solver()->getSite(rightSite(), 0, 0)->associatedParticle()->markAsAffected();
     }
 
-    const double &leftRightRate(const uint n) const
+    static const double &leftRightRate(const uint n)
     {
         return m_leftRightRates(n);
     }
 
-    static int m_maxHeight;
+    static const double &depositionRate()
+    {
+        return m_depositionRate;
+    }
 
 private:
 
@@ -121,6 +145,7 @@ private:
     const uint m_leftSite;
 
     static vec m_leftRightRates;
+    static double m_depositionRate;
 
 };
 
@@ -132,12 +157,12 @@ class LeftHop : public QuasiDiffusionReaction
 public:
     bool isAllowed() const
     {
-        return m_heights(leftSite()) == myHeight() - 1;
+        return m_heights(leftSite()) < myHeight();
     }
 
     void calcRate()
     {
-        setRate(leftRightRate(nNeighbors()));
+        setRate(leftRightRate(nNeighbors())/heightDifference(leftSite()));
     }
 
     void execute()
@@ -161,12 +186,12 @@ class RightHop : public QuasiDiffusionReaction
 public:
     bool isAllowed() const
     {
-        return m_heights(rightSite()) == myHeight() - 1;
+        return m_heights(rightSite()) < myHeight();
     }
 
     void calcRate()
     {
-        setRate(leftRightRate(nNeighbors()));
+        setRate(leftRightRate(nNeighbors())/heightDifference(rightSite()));
     }
 
     void execute()
@@ -180,7 +205,7 @@ public:
 
 };
 
-class Adsorbtion : public QuasiDiffusionReaction
+class Deposition : public QuasiDiffusionReaction
 {
     using QuasiDiffusionReaction::QuasiDiffusionReaction;
 
@@ -193,23 +218,18 @@ public:
 
     void calcRate()
     {
-        setRate(1.0/leftRightRate(nNeighbors()));
+        setRate(depositionRate());
     }
 
     void execute()
     {
         m_heights(site())++;
 
-        if (myHeight() > m_maxHeight)
-        {
-            m_maxHeight = myHeight();
-        }
-
         queueAffected();
     }
 };
 
-class Desorbtion : public QuasiDiffusionReaction
+class Dissolution : public QuasiDiffusionReaction
 {
     using QuasiDiffusionReaction::QuasiDiffusionReaction;
 
@@ -223,7 +243,8 @@ public:
 
     void calcRate()
     {
-        setRate(leftRightRate(nNeighbors()));
+        //skipped
+        disable();
     }
 
     void execute()
@@ -236,11 +257,6 @@ public:
     }
 };
 
-class LoadTracker : public KMCEvent
-{
-public:
-};
-
 
 vec QuasiDiffusionReaction::m_leftRightRates;
-int QuasiDiffusionReaction::m_maxHeight;
+double QuasiDiffusionReaction::m_depositionRate;

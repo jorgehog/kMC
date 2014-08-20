@@ -1490,6 +1490,17 @@ void KMCSolver::setBoxSize(const uint NX, const uint NY, const uint NZ, bool che
 
 }
 
+void KMCSolver::resetBoxSize(const uint NX, const uint NY, const uint NZ, bool check)
+{
+    Site::finalizeBoundaries();
+
+    clearSites();
+    setBoxSize(NX, NY, NZ, check);
+    initializeSites();
+
+    Site::initializeBoundaries();
+}
+
 void KMCSolver::setRNGSeed(uint seedState, int defaultSeed)
 {
 

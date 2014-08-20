@@ -29,6 +29,7 @@ public:
 
     }
 
+    virtual ~KMCEvent() {}
 
 protected:
 

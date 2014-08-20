@@ -212,6 +212,8 @@ public:
 
     void setBoxSize(const uint NX, const uint NY, const uint NZ, bool check = true);
 
+    void resetBoxSize(const uint NX, const uint NY, const uint NZ, bool check = true);
+
 
     void setNumberOfCycles(const uint nCycles)
     {

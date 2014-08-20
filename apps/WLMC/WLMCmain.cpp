@@ -51,7 +51,6 @@ void initializeWLMC(KMCSolver *solver, const Setting &root)
     const bool &overwrite = getSetting<int>(output, "overwrite") == 1;
 
     Root hdf5root(path + "/" + filename);
-    hdf5root.initialize();
 
     const uint &adaptiveWindows = getSetting<uint>(initCFG, "adaptiveWindows");
 

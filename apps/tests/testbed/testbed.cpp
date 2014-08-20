@@ -1,5 +1,4 @@
 #include "testbed.h"
-
 #include "../snapshot/snapshot.h"
 
 #include "../dummyreaction.h"

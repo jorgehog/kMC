@@ -6,9 +6,9 @@ CONFIG += ordered
 SUBDIRS += ignis \
     WLMC \
     diamondSquare \
-    HDF5Wrapper
+    HDF5Wrapper \
+    DCViz
 
 HEADERS += lammpswriter/lammpswriter.h \
     libconfig_utils/libconfig_utils.h \
-    DCViz/include/DCViz.h \
     BADAss/BADAss.h

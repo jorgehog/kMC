@@ -34,34 +34,21 @@ DiffusionReaction::~DiffusionReaction()
 
 const string DiffusionReaction::potentialString()
 {
-    vector<double> powers(SoluteParticle::nSpecies());
-    vector<double> strengths(SoluteParticle::nSpecies());
-
-    for (uint i = 0; i < SoluteParticle::nSpecies(); ++i)
-    {
-        powers.push_back(m_rPowers(i, i));
-        strengths.push_back(m_strengths(i, i));
-    }
-
-    return potentialStringFromValues(powers, strengths);
-}
-
-const string DiffusionReaction::potentialStringFromValues(const vector<double> &rPowers, const vector<double> &strengths)
-{
     stringstream s;
 
     s << "rp_";
 
-    for (const double &rp : rPowers)
+
+    for (uint i = 0; i < SoluteParticle::nSpecies(); ++i)
     {
-        s << setprecision(5) << rp << "_";
+        s << setprecision(5) << m_rPowers(i, i) << "_";
     }
 
     s << "s";
 
-    for (const double &st : strengths)
+    for (uint i = 0; i < SoluteParticle::nSpecies(); ++i)
     {
-        s << "_" << setprecision(5) << st;
+        s << "_" << setprecision(5) << m_strengths(i, i);
     }
 
     return s.str();
