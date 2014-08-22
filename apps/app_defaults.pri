@@ -3,7 +3,7 @@ include(../defaults.pri)
 TEMPLATE = app
 CONFIG += console
 
-INCLUDEPATH  += $$TOP_PWD/include /usr/local/hdf5/include
+INCLUDEPATH  += $$TOP_PWD/include /usr/local/hdf5/include $$PWD
 
 QMAKE_LIBDIR += $$TOP_PWD/lib
 
@@ -40,3 +40,5 @@ createDirs.commands = $(MKDIR) $$mkcommands
 first.depends = $(first) $$first.depends createDirs
 
 QMAKE_EXTRA_TARGETS += createDirs
+
+OTHER_FILES += commonkmcevents.h

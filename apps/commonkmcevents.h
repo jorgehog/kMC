@@ -1,0 +1,269 @@
+#pragma once
+
+#include "../include/kMC"
+
+
+namespace kMC
+{
+
+class Sphericity : public KMCEvent
+{
+public:
+    Sphericity() : KMCEvent("Sphericity", "", true, true) {}
+
+protected:
+
+    void execute()
+    {
+        uint A = 0;
+        solver()->forEachSiteDo([&A] (uint x, uint y, uint z, Site* _site)
+        {
+            Site *site = _site;
+
+            if (!site->isActive())
+            {
+                return;
+            }
+
+            if (site->associatedParticle()->isCrystal())
+            {
+                return;
+            }
+
+            if (!site->hasNeighboring(x, y, z, ParticleStates::crystal))
+            {
+                return;
+            }
+
+            uint nC = site->countNeighboring(x, y, z, ParticleStates::crystal);
+
+            if (nC == 1)
+            {
+                A += 3;
+            }
+
+            else if (nC == 2 || nC == 3)
+            {
+                A += 2;
+            }
+
+            else
+            {
+                A += 1;
+            }
+
+        });
+
+        setValue(pi3root*pow(6.0*(SoluteParticle::nCrystals() + A), 2./3)/A);
+    }
+
+private:
+
+    static const double pi3root;
+
+};
+
+const double Sphericity::pi3root = pow(datum::pi, 1./3);
+
+class tempChange : public KMCEvent
+{
+public:
+
+    tempChange(const double T1, uint therm = 1) :
+        KMCEvent("tempChange"),
+        therm(therm),
+        T1(T1)
+    {
+
+    }
+
+    void initialize()
+    {
+        T0 = DiffusionReaction::beta();
+        dT = (T1 - T0)/((eventLength/(double)therm - 1));
+
+    }
+
+    void execute()
+    {
+        if (m_nTimesExecuted%therm == 0)
+        {
+            DiffusionReaction::setBeta(T0 + dT*(m_nTimesExecuted/therm));
+        }
+    }
+
+
+
+private:
+
+    uint therm;
+
+    double T0;
+    const double T1;
+
+    double dT;
+
+
+};
+
+
+class TotalTime : public KMCEvent
+{
+public:
+
+    TotalTime() : KMCEvent("Time", "s*", true, true) {}
+
+protected:
+
+    void execute()
+    {
+        setValue(solver()->solverEvent()->totalTime());
+    }
+
+};
+
+class MeasureTemp : public KMCEvent
+{
+public:
+
+    MeasureTemp() : KMCEvent("Temperature", "T*", true, true) {}
+
+protected:
+
+    void execute()
+    {
+        setValue(DiffusionReaction::beta());
+    }
+
+};
+
+class AverageNeighbors : public KMCEvent
+{
+public:
+
+    AverageNeighbors() : KMCEvent("avgN", "", true, true) {}
+
+protected:
+
+    void execute()
+    {
+        uint cN = 0;
+        uint c  = 0;
+
+        for (SoluteParticle *particle : solver()->particles())
+        {
+            cN += particle->nNeighbors();
+            c++;
+        }
+
+        setValue(cN/(double(c)));
+    }
+
+};
+
+class TotalEnergy : public KMCEvent
+{
+public:
+
+    TotalEnergy() : KMCEvent("TotalEnergy", "E*", true, true) {}
+
+protected:
+
+    void execute()
+    {
+        setValue(SoluteParticle::totalEnergy());
+    }
+
+};
+
+
+class Debug : public KMCEvent
+{
+public:
+
+    Debug() : KMCEvent("debug", "", true) {}
+
+protected:
+
+    void execute()
+    {
+        setValue(particles(0, 0));
+    }
+};
+
+class Sort : public KMCEvent
+{
+public:
+
+    Sort() : KMCEvent() {}
+
+protected:
+
+    void execute()
+    {
+        if ((m_nTimesExecuted+1)%250000 == 0)
+        {
+            solver()->sortReactionsByRate();
+        }
+    }
+
+};
+
+class CPUTime : public KMCEvent
+{
+public:
+
+    CPUTime() : KMCEvent("CPUTime", "s", true, true) {}
+
+    void initialize()
+    {
+        clock.tic();
+    }
+
+protected:
+
+
+    void execute()
+    {
+        setValue(clock.toc());
+    }
+
+    arma::wall_clock clock;
+
+
+};
+
+class RandomInsertion : public KMCEvent
+{
+public:
+
+    RandomInsertion() : KMCEvent() {}
+
+    void initialize()
+    {
+        m_nPrev = SoluteParticle::nSolutionParticles();
+    }
+
+protected:
+
+    void execute()
+    {
+
+        if (m_nTimesExecuted%10 == 0)
+        {
+            if (SoluteParticle::nSolutionParticles() == 0)
+            {
+                solver()->insertRandomParticle();
+            }
+        }
+
+        m_nPrev = SoluteParticle::nSolutionParticles();
+    }
+
+private:
+
+    uint m_nPrev;
+
+};
+
+}

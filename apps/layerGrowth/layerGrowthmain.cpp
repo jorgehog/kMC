@@ -196,38 +196,7 @@ private:
 
 };
 
-class RandomInsertion : public KMCEvent
-{
-public:
 
-    RandomInsertion() : KMCEvent() {}
-
-    void initialize()
-    {
-        m_nPrev = SoluteParticle::nSolutionParticles();
-    }
-
-protected:
-
-    void execute()
-    {
-
-        if (m_nTimesExecuted%10 == 0)
-        {
-            if (SoluteParticle::nSolutionParticles() == 0)
-            {
-                solver()->insertRandomParticle();
-            }
-        }
-
-        m_nPrev = SoluteParticle::nSolutionParticles();
-    }
-
-private:
-
-    uint m_nPrev;
-
-};
 
 void initialize_layerGrowth(KMCSolver * solver, const Setting & root)
 {

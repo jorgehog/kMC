@@ -124,7 +124,7 @@ protected:
 
     void execute()
     {
-        if (m_nTimesExecuted%MainLattice::nCyclesPerOutput != 0)
+        if (m_nTimesExecuted%MainLattice::outputSpacing() != 0)
         {
             return;
         }

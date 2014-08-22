@@ -162,7 +162,8 @@ public:
 
     void calcRate()
     {
-        setRate(leftRightRate(nNeighbors())/heightDifference(leftSite()));
+//        setRate(leftRightRate(nNeighbors())/heightDifference(leftSite()));
+        setRate(leftRightRate(nNeighbors()));
     }
 
     void execute()
@@ -191,7 +192,8 @@ public:
 
     void calcRate()
     {
-        setRate(leftRightRate(nNeighbors())/heightDifference(rightSite()));
+//        setRate(leftRightRate(nNeighbors())/heightDifference(rightSite()));
+        setRate(leftRightRate(nNeighbors()));
     }
 
     void execute()

@@ -1,7 +1,9 @@
 TEMPLATE = subdirs
 CONFIG += ordered
 
-SUBDIRS += tests \
+SUBDIRS += \
+           Quasi2DLoaded \
+           tests \
            centerCrystal \
            surfaceGrowth \
            diamondSquareSurface \
@@ -10,8 +12,7 @@ SUBDIRS += tests \
            movingSteppes \
            impureSurface \
            stressedSurface \
-           WLMC \
-           Quasi2DLoaded
+           WLMC
 
 
 OTHER_FILES += defaults/default.pro.bones \

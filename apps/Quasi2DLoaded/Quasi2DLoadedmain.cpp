@@ -1,4 +1,5 @@
 #include "quasidiffusion.h"
+#include <commonkmcevents.h>
 
 #include <libconfig_utils/libconfig_utils.h>
 #include <DCViz/include/DCViz.h>
@@ -16,11 +17,13 @@ class heightRMS : public KMCEvent
 public:
 
     heightRMS(const ivec &heightmap) :
-        KMCEvent("heightRMS"),
-        m_heightmap(heightmap)
+        KMCEvent("heightRMS", "l0", true, true),
+        m_heightmap(heightmap),
+        m_L(heightmap.size())
     {
 
     }
+
 
 protected:
 
@@ -28,18 +31,26 @@ protected:
     {
 
         double meanHeight = sum(m_heightmap)/double(m_heightmap.size());
-        double RMS = std::sqrt(arma::mean(arma::pow(m_heightmap - meanHeight, 2)));
 
-        setValue(m_RMS/nTimesExecuted());
+        double RMS = 0;
 
-        m_RMS += RMS;
+        for (uint i = 0; i < m_L; ++i)
+        {
+            RMS += (m_heightmap(i) - meanHeight)*(m_heightmap(i) - meanHeight);
+        }
+
+        RMS /= m_L;
+
+        RMS = std::sqrt(RMS);
+
+        setValue(RMS);
 
     }
 
 private:
 
-    ivec m_heightmap;
-    double m_RMS;
+    const ivec &m_heightmap;
+    const uint m_L;
 
 };
 
@@ -62,11 +73,11 @@ int main()
     KMCDebugger_SetEnabledTo(getSetting<int>(root, "buildTrace") == 0 ? false : true);
 
     KMCSolver::enableDumpLAMMPS(false);
-    MainLattice::enableEventFile(false);
+    MainLattice::enableEventFile(true, "ignisQuasi2Dloaded.arma", 10000, 100);
 
     KMCSolver* solver = new KMCSolver(root);
 
-    H5Wrapper::Root h5root("heightmaps.h5");
+    H5Wrapper::Root h5root("Quasi2D.h5");
 
     const Setting &initCFG = getSetting(root, "Initialization");
 
@@ -102,6 +113,8 @@ int main()
 
             solver->mainloop();
             potentialMember.addData("heightmap", *heightmap);
+            potentialMember.addData("ignisData", KMCEvent::eventMatrix());
+            potentialMember.addData("ignisEventDescriptions", KMCEvent::outputEventDescriptions());
 
             potentialMember.file()->flush(H5F_SCOPE_GLOBAL);
             solver->reset();
@@ -145,7 +158,7 @@ protected:
 
     void execute()
     {
-        if (nTimesExecuted()%MainLattice::nCyclesPerOutput == 0)
+        if (nTimesExecuted()%MainLattice::outputSpacing() == 0)
         {
             m_heighmap.save(m_filename);
         }
@@ -169,13 +182,13 @@ ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &root, const uint
     solver->resetBoxSize(l, 1, 1);
     DiffusionReaction::setBeta(beta);
 
-    ivec* heighmap = new ivec(l);
+    ivec* heighmap = new ivec(l, fill::zeros);
 
     //Override standard diffusion. Necessary for quasi diffusive simulations.
     solver->setDiffusionType(KMCSolver::DiffusionTypes::None);
 
 
-    heighmap->at(0) = 0;
+//    heighmap->at(0) = 0;
     for (uint site = 0; site < l; ++site)
     {
         //        if (site != l - 1)
@@ -183,7 +196,7 @@ ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &root, const uint
         //            (*heighmap)(site + 1) = (*heighmap)(site) + round(-1 + 2*KMC_RNG_UNIFORM());
         //        }
 
-        (*heighmap)(site) = KMC_RNG_UNIFORM();
+//        (*heighmap)(site) = -1 + 3*KMC_RNG_UNIFORM();
 
         SoluteParticle* particle = solver->forceSpawnParticle(site, 0, 0);
         particle->addReaction(new LeftHop(particle, *heighmap));
@@ -196,6 +209,7 @@ ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &root, const uint
     QuasiDiffusionReaction::initialize();
 
     solver->addEvent(new DumpHeighmap(*heighmap));
+    solver->addEvent(new TotalTime());
     solver->addEvent(new heightRMS(*heighmap));
 
     return heighmap;

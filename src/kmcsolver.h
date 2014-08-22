@@ -222,7 +222,7 @@ public:
 
     void setCyclesPerOutput(const uint cyclesPerOutput)
     {
-        MainLattice::nCyclesPerOutput = cyclesPerOutput;
+        MainLattice::enableOutput(true, cyclesPerOutput);
     }
 
 
