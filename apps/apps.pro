@@ -17,4 +17,5 @@ SUBDIRS += \
 
 OTHER_FILES += defaults/default.pro.bones \
                defaults/defaultmain.cpp.bones \
-               defaults/defaultconfig.cfg.bones
+               defaults/defaultconfig.cfg.bones \
+               commonkmcevents.h

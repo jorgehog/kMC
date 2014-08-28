@@ -7,4 +7,5 @@ SOURCES = Quasi2DLoadedmain.cpp
 OTHER_FILES += infiles/Quasi2DLoaded.cfg
 
 HEADERS += \
-    quasidiffusion.h
+    quasidiffusion.h \
+    quasidiffusionevents.h

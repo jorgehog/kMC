@@ -40,5 +40,3 @@ createDirs.commands = $(MKDIR) $$mkcommands
 first.depends = $(first) $$first.depends createDirs
 
 QMAKE_EXTRA_TARGETS += createDirs
-
-OTHER_FILES += commonkmcevents.h
