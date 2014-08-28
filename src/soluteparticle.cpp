@@ -218,17 +218,36 @@ void SoluteParticle::updateAffectedParticles()
 
     KMCDebugger_PushTraces();
 
-    for (SoluteParticle* particle : m_affectedParticles)
+    if (!m_useLocalUpdating)
     {
-        if (particle != NULL)
+        BADAssBool(m_affectedParticles.empty(), "non local updates should not use affected particles.");
+
+        for (SoluteParticle* particle : m_solver->particles())
         {
-            particle->updateReactions();
+            if (particle != NULL)
+            {
+                particle->updateReactions();
+            }
+
         }
 
     }
 
-    clearAffectedParticles();
+    else
+    {
 
+        for (SoluteParticle* particle : m_affectedParticles)
+        {
+            if (particle != NULL)
+            {
+                particle->updateReactions();
+            }
+
+        }
+
+        clearAffectedParticles();
+
+    }
 }
 
 double SoluteParticle::getCurrentSolvantVolume()
@@ -771,7 +790,7 @@ double SoluteParticle::getBruteForceTotalEnergy()
     {
         if (particle != NULL)
         {
-           totalEnergy += particle->energy();
+            totalEnergy += particle->energy();
         }
     }
 
@@ -830,6 +849,9 @@ particleSet SoluteParticle::m_affectedParticles;
 #endif
 
 uint        SoluteParticle::m_nSpecies = 1;
+
+bool        SoluteParticle::m_useLocalUpdating = true;
+
 
 uint SoluteParticle::ID_count = 0;
 uint SoluteParticle::refCounter = 0;

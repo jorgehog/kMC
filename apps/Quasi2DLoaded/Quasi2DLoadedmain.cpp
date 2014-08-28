@@ -29,6 +29,7 @@ int main()
 
     KMCDebugger_SetEnabledTo(getSetting<int>(root, "buildTrace") == 0 ? false : true);
 
+    KMCSolver::enableLocalUpdating(false);
     KMCSolver::enableDumpLAMMPS(false);
     MainLattice::enableEventFile(true, "ignisQuasi2Dloaded.arma", 10000, 100);
 
@@ -98,19 +99,23 @@ ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &root, const uint
     //Override standard diffusion. Necessary for quasi diffusive simulations.
     solver->setDiffusionType(KMCSolver::DiffusionTypes::None);
 
+    //BAD PRATICE WITH POINTERS.. WILL FIX..
+    MovingWall *wallEvent = new MovingWall(20, 10, 3, *heighmap);
+
     for (uint site = 0; site < l; ++site)
     {
 
         SoluteParticle* particle = solver->forceSpawnParticle(site, 0, 0);
-        particle->addReaction(new LeftHop(particle, *heighmap));
-        particle->addReaction(new RightHop(particle, *heighmap));
-        particle->addReaction(new Deposition(particle, *heighmap));
-        //        particle->addReaction(new Desorbtion(particle, *heighmap));
+        particle->addReaction(new LeftHop(particle, *heighmap, *wallEvent));
+        particle->addReaction(new RightHop(particle, *heighmap, *wallEvent));
+        particle->addReaction(new Deposition(particle, *heighmap, *wallEvent));
+        particle->addReaction(new Dissolution(particle, *heighmap, *wallEvent));
 
     }
 
     QuasiDiffusionReaction::initialize();
 
+    solver->addEvent(wallEvent);
     solver->addEvent(new DumpHeighmap(*heighmap));
     solver->addEvent(new TotalTime());
     solver->addEvent(new heightRMS(*heighmap));

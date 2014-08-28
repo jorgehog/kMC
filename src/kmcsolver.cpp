@@ -580,6 +580,11 @@ void KMCSolver::dumpLAMMPS(const uint n)
 
 }
 
+void KMCSolver::enableLocalUpdating(const bool state)
+{
+    SoluteParticle::enableLocalUpdating(state);
+}
+
 
 
 void KMCSolver::forEachSiteDo(function<void (uint x, uint y, uint z, Site *)> applyFunction) const

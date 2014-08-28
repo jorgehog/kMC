@@ -284,6 +284,8 @@ public:
     }
 
 
+    static void enableLocalUpdating(const bool state);
+
     static void enableDumpXYZ(bool state)
     {
         m_dumpXYZ = state;

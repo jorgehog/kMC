@@ -5,15 +5,90 @@
 using namespace kMC;
 using namespace arma;
 
+class MovingWall : public KMCEvent
+{
+public:
+
+    MovingWall(const double h0,
+               const double r0,
+               const double s0,
+               const ivec &heighmap) :
+        KMCEvent("MovingWall", "l0", true, true),
+        m_h0(h0),
+        m_h(h0),
+        m_r0(r0),
+        m_s0(s0),
+        m_heighmap(heighmap)
+    {
+
+    }
+
+    void execute()
+    {
+        _rescaleHeight();
+
+//        double E = 0;
+//        for (uint site = 0; site < m_heighmap.size(); ++site)
+//        {
+//            E += localPressure(site);
+//        }
+
+//        setValue(E/(m_heighmap.size()*m_s0*exp(-m_h0/m_r0)));
+    }
+
+    double localPressure(const uint site) const
+    {
+        return -m_s0*std::exp(-(m_h - m_heighmap(site))/m_r0);
+    }
+
+    const double &height() const
+    {
+        return m_h;
+    }
+
+
+private:
+
+    const double m_h0;
+    double m_h;
+    const double m_r0;
+    const double m_s0;
+
+    const ivec &m_heighmap;
+
+
+    void _rescaleHeight()
+    {
+        double m = 0;
+        double m2 = 0;
+        for (uint i = 0; i < m_heighmap.size(); ++i)
+        {
+            m += exp(m_heighmap(i)/m_r0);
+            m2 += m_heighmap(i);
+        }
+
+        m /= m_heighmap.size();
+        m2 /= m_heighmap.size();
+
+        m_h = m_r0*std::log(m) + m_h0;
+
+        setValue(floor(m_h) - m2);
+    }
+
+
+
+};
+
 class QuasiDiffusionReaction : public Reaction
 {
 public:
 
-    QuasiDiffusionReaction(SoluteParticle *particle, ivec &heights) :
+    QuasiDiffusionReaction(SoluteParticle *particle, ivec &heights, const MovingWall &wallEvent) :
         Reaction(particle),
         m_heights(heights),
         m_rightSite(rightSite(1)),
-        m_leftSite(leftSite(1))
+        m_leftSite(leftSite(1)),
+        m_wallEvent(wallEvent)
     {
 
     }
@@ -22,7 +97,7 @@ public:
     {
         stringstream s;
         s << DiffusionReaction::linearRateScale()
-          << "_" << DiffusionReaction::beta()
+          << "_" << beta()
           << "_" << DiffusionReaction::strength();
 
         return s.str();
@@ -91,6 +166,11 @@ public:
         return m_heights(site()) - m_heights(other);
     }
 
+    const double &wallHeight() const
+    {
+        return m_wallEvent.height();
+    }
+
     const uint &site() const
     {
         return reactant()->x();
@@ -105,16 +185,12 @@ public:
     {
         m_leftRightRates.set_size(4);
 
-        const double &l = DiffusionReaction::linearRateScale();
-        const double &b = DiffusionReaction::beta();
-        const double &s = DiffusionReaction::strength();
-
         m_leftRightRates(0) = 0;
-        m_leftRightRates(1) = exp(-b*(1 + 1*s));
-        m_leftRightRates(2) = exp(-b*(1 + 2*s));
-        m_leftRightRates(3) = exp(-b*(1 + 3*s));
+        m_leftRightRates(1) = exp(-beta()*localEnergy(1));
+        m_leftRightRates(2) = exp(-beta()*localEnergy(2));
+        m_leftRightRates(3) = exp(-beta()*localEnergy(3));
 
-        m_depositionRate = l;
+        m_depositionRate = DiffusionReaction::linearRateScale();
     }
 
 protected:
@@ -134,9 +210,24 @@ protected:
         return m_leftRightRates(n);
     }
 
+    static double localEnergy(const uint n)
+    {
+        return 1 + n*DiffusionReaction::strength();
+    }
+
+    double localEnergy() const
+    {
+        return localEnergy(nNeighbors());
+    }
+
     static const double &depositionRate()
     {
         return m_depositionRate;
+    }
+
+    double localPressure() const
+    {
+        return m_wallEvent.localPressure(site());
     }
 
 private:
@@ -146,6 +237,8 @@ private:
 
     static vec m_leftRightRates;
     static double m_depositionRate;
+
+    const MovingWall &m_wallEvent;
 
 };
 
@@ -157,12 +250,11 @@ class LeftHop : public QuasiDiffusionReaction
 public:
     bool isAllowed() const
     {
-        return m_heights(leftSite()) < myHeight();
+        return m_heights(leftSite()) < myHeight() && m_heights(leftSite()) < floor(wallHeight());
     }
 
-    void calcRate()
+    virtual void calcRate()
     {
-//        setRate(leftRightRate(nNeighbors())/heightDifference(leftSite()));
         setRate(leftRightRate(nNeighbors()));
     }
 
@@ -171,8 +263,8 @@ public:
         m_heights(site())--;
         m_heights(leftSite())++;
 
-        queueAffected();
-        solver()->getSite(leftSite(2), 0, 0)->associatedParticle()->markAsAffected();
+//        queueAffected();
+//        solver()->getSite(leftSite(2), 0, 0)->associatedParticle()->markAsAffected();
 
     }
 
@@ -187,12 +279,11 @@ class RightHop : public QuasiDiffusionReaction
 public:
     bool isAllowed() const
     {
-        return m_heights(rightSite()) < myHeight();
+        return m_heights(rightSite()) < myHeight() && m_heights(rightSite()) < floor(wallHeight());
     }
 
-    void calcRate()
+    virtual void calcRate()
     {
-//        setRate(leftRightRate(nNeighbors())/heightDifference(rightSite()));
         setRate(leftRightRate(nNeighbors()));
     }
 
@@ -201,11 +292,70 @@ public:
         m_heights(site())--;
         m_heights(rightSite())++;
 
-        queueAffected();
-        solver()->getSite(rightSite(2), 0, 0)->associatedParticle()->markAsAffected();
+//        queueAffected();
+//        solver()->getSite(rightSite(2), 0, 0)->associatedParticle()->markAsAffected();
     }
 
 };
+
+
+class LeftHopScaled : public LeftHop
+{
+    using LeftHop::LeftHop;
+
+    // Reaction interface
+public:
+
+    void calcRate()
+    {
+        setRate(leftRightRate(nNeighbors())/heightDifference(leftSite()));
+    }
+
+};
+
+class RightHopScaled : public RightHop
+{
+    using RightHop::RightHop;
+
+    // Reaction interface
+public:
+
+    void calcRate()
+    {
+        setRate(leftRightRate(nNeighbors())/heightDifference(rightSite()));
+    }
+
+};
+
+
+class LeftHopPressurized : public LeftHop
+{
+    using LeftHop::LeftHop;
+
+    // Reaction interface
+public:
+
+    void calcRate()
+    {
+        setRate(exp(-beta()*(localEnergy() + localPressure()))/heightDifference(leftSite()));
+    }
+
+};
+
+class RightHopPressurized : public RightHop
+{
+    using RightHop::RightHop;
+
+    // Reaction interface
+public:
+
+    void calcRate()
+    {
+        setRate(leftRightRate(exp(-beta()*(localEnergy() + localPressure())))/heightDifference(rightSite()));
+    }
+
+};
+
 
 class Deposition : public QuasiDiffusionReaction
 {
@@ -215,7 +365,7 @@ class Deposition : public QuasiDiffusionReaction
 public:
     bool isAllowed() const
     {
-        return true;
+        return myHeight() < floor(wallHeight());
     }
 
     void calcRate()
@@ -226,10 +376,10 @@ public:
     void execute()
     {
         m_heights(site())++;
-
-        queueAffected();
     }
 };
+
+
 
 class Dissolution : public QuasiDiffusionReaction
 {
@@ -245,17 +395,12 @@ public:
 
     void calcRate()
     {
-        //skipped
-        disable();
+        setRate(depositionRate()/2);
     }
 
     void execute()
     {
         m_heights(site())--;
-
-        //Skipped desorbtion for now.
-
-        queueAffected();
     }
 };
 
