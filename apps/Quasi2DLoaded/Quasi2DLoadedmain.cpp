@@ -36,7 +36,6 @@ int main()
     KMCSolver* solver = new KMCSolver(root);
 
     H5Wrapper::Root h5root("Quasi2D.h5");
-    h5root.initialize();
 
     const Setting &initCFG = getSetting(root, "Initialization");
 
