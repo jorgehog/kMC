@@ -31,7 +31,7 @@ int main()
 
     KMCSolver::enableLocalUpdating(false);
     KMCSolver::enableDumpLAMMPS(false);
-    MainLattice::enableEventFile(true, "ignisQuasi2Dloaded.arma", 10000, 100);
+    MainLattice::enableEventFile(true, "ignisQuasi2Dloaded.arma", 1, 1);
 
     KMCSolver* solver = new KMCSolver(root);
 
