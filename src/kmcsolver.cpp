@@ -440,6 +440,11 @@ void KMCSolver::postReactionShuffleCleanup(const uint nVacancies)
 
 void KMCSolver::updateAccuAllRateElements(const uint from, const uint to, const double value)
 {
+    if (!m_useLocalUpdating)
+    {
+        return;
+    }
+
     BADAss(from, <=, to);
 
 #ifndef KMC_NO_OMP
@@ -578,11 +583,6 @@ void KMCSolver::dumpLAMMPS(const uint n)
 
     m_lammpswriter->finalize();
 
-}
-
-void KMCSolver::enableLocalUpdating(const bool state)
-{
-    SoluteParticle::enableLocalUpdating(state);
 }
 
 
@@ -1560,6 +1560,7 @@ void KMCSolver::clearParticles()
 
 KMCSolver *KMCSolver::m_instance = NULL;
 
+bool KMCSolver::m_useLocalUpdating = true;
 bool KMCSolver::m_dumpXYZ = false;
 bool KMCSolver::m_dumpLAMMPS = true;
 

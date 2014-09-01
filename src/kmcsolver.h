@@ -284,7 +284,15 @@ public:
     }
 
 
-    static void enableLocalUpdating(const bool state);
+    static void enableLocalUpdating(const bool state)
+    {
+        m_useLocalUpdating = state;
+    }
+
+    static const bool &localUpdating()
+    {
+        return m_useLocalUpdating;
+    }
 
     static void enableDumpXYZ(bool state)
     {
@@ -393,7 +401,7 @@ private:
 
     void finalizeObject();
 
-
+    static bool m_useLocalUpdating;
     static bool m_dumpXYZ;
     static bool m_dumpLAMMPS;
 

@@ -218,9 +218,15 @@ void SoluteParticle::updateAffectedParticles()
 
     KMCDebugger_PushTraces();
 
-    if (!m_useLocalUpdating)
+    if (!solver()->localUpdating())
     {
-        BADAssBool(m_affectedParticles.empty(), "non local updates should not use affected particles.");
+        BADAssBool(m_affectedParticles.empty(), "non local updates should not use affected particles.", [] ()
+        {
+            for (SoluteParticle* particle : m_affectedParticles)
+            {
+                cout << *particle << endl;
+            }
+        });
 
         for (SoluteParticle* particle : m_solver->particles())
         {
@@ -358,6 +364,11 @@ uint SoluteParticle::nActiveReactions() const
 
 void SoluteParticle::markAsAffected()
 {
+    if (!solver()->localUpdating())
+    {
+        return;
+    }
+
     m_affectedParticles.insert(this);
 }
 
@@ -849,8 +860,6 @@ particleSet SoluteParticle::m_affectedParticles;
 #endif
 
 uint        SoluteParticle::m_nSpecies = 1;
-
-bool        SoluteParticle::m_useLocalUpdating = true;
 
 
 uint SoluteParticle::ID_count = 0;

@@ -1,91 +1,19 @@
 #pragma once
 
 #include <kMC>
+#include "quasidiffusionevents.h"
 
 using namespace kMC;
 using namespace arma;
-
-class MovingWall : public KMCEvent
-{
-public:
-
-    MovingWall(const double h0,
-               const double r0,
-               const double s0,
-               const ivec &heighmap) :
-        KMCEvent("MovingWall", "l0", true, true),
-        m_h0(h0),
-        m_h(h0),
-        m_r0(r0),
-        m_s0(s0),
-        m_heighmap(heighmap)
-    {
-
-    }
-
-    void execute()
-    {
-        _rescaleHeight();
-
-//        double E = 0;
-//        for (uint site = 0; site < m_heighmap.size(); ++site)
-//        {
-//            E += localPressure(site);
-//        }
-
-//        setValue(E/(m_heighmap.size()*m_s0*exp(-m_h0/m_r0)));
-    }
-
-    double localPressure(const uint site) const
-    {
-        return -m_s0*std::exp(-(m_h - m_heighmap(site))/m_r0);
-    }
-
-    const double &height() const
-    {
-        return m_h;
-    }
-
-
-private:
-
-    const double m_h0;
-    double m_h;
-    const double m_r0;
-    const double m_s0;
-
-    const ivec &m_heighmap;
-
-
-    void _rescaleHeight()
-    {
-        double m = 0;
-        double m2 = 0;
-        for (uint i = 0; i < m_heighmap.size(); ++i)
-        {
-            m += exp(m_heighmap(i)/m_r0);
-            m2 += m_heighmap(i);
-        }
-
-        m /= m_heighmap.size();
-        m2 /= m_heighmap.size();
-
-        m_h = m_r0*std::log(m) + m_h0;
-
-        setValue(floor(m_h) - m2);
-    }
-
-
-
-};
 
 class QuasiDiffusionReaction : public Reaction
 {
 public:
 
-    QuasiDiffusionReaction(SoluteParticle *particle, ivec &heights, const MovingWall &wallEvent) :
+    QuasiDiffusionReaction(SoluteParticle *particle, ivec &heights, const double Eb, const MovingWall &wallEvent) :
         Reaction(particle),
         m_heights(heights),
+        m_Eb(Eb),
         m_rightSite(rightSite(1)),
         m_leftSite(leftSite(1)),
         m_wallEvent(wallEvent)
@@ -181,48 +109,24 @@ public:
         return solver()->NX();
     }
 
-    static void initialize()
-    {
-        m_leftRightRates.set_size(4);
-
-        m_leftRightRates(0) = 0;
-        m_leftRightRates(1) = exp(-beta()*localEnergy(1));
-        m_leftRightRates(2) = exp(-beta()*localEnergy(2));
-        m_leftRightRates(3) = exp(-beta()*localEnergy(3));
-
-        m_depositionRate = DiffusionReaction::linearRateScale();
-    }
-
 protected:
 
     ivec &m_heights;
 
-    void queueAffected()
-    {
-        reactant()->markAsAffected();
 
-        solver()->getSite(leftSite(), 0, 0)->associatedParticle()->markAsAffected();
-        solver()->getSite(rightSite(), 0, 0)->associatedParticle()->markAsAffected();
+    double leftRightRate(const uint n) const
+    {
+        return exp(-beta()*localEnergy(n));
     }
 
-    static const double &leftRightRate(const uint n)
+    double localEnergy(const uint n) const
     {
-        return m_leftRightRates(n);
-    }
-
-    static double localEnergy(const uint n)
-    {
-        return 1 + n*DiffusionReaction::strength();
+        return 1 + n*m_Eb;
     }
 
     double localEnergy() const
     {
         return localEnergy(nNeighbors());
-    }
-
-    static const double &depositionRate()
-    {
-        return m_depositionRate;
     }
 
     double localPressure() const
@@ -232,11 +136,10 @@ protected:
 
 private:
 
+    const double m_Eb;
+
     const uint m_rightSite;
     const uint m_leftSite;
-
-    static vec m_leftRightRates;
-    static double m_depositionRate;
 
     const MovingWall &m_wallEvent;
 
@@ -359,7 +262,22 @@ public:
 
 class Deposition : public QuasiDiffusionReaction
 {
-    using QuasiDiffusionReaction::QuasiDiffusionReaction;
+public:
+
+    Deposition(SoluteParticle *particle,
+               ivec &heights,
+               const double Eb,
+               const MovingWall &wallEvent,
+               const double depositionRate) :
+        QuasiDiffusionReaction(particle,
+                               heights,
+                               Eb,
+                               wallEvent),
+        m_depositionRate(depositionRate)
+    {
+
+    }
+
 
     // Reaction interface
 public:
@@ -370,21 +288,38 @@ public:
 
     void calcRate()
     {
-        setRate(depositionRate());
+        setRate(m_depositionRate);
     }
 
     void execute()
     {
         m_heights(site())++;
     }
+
+private:
+
+    const double m_depositionRate;
 };
 
 
 
 class Dissolution : public QuasiDiffusionReaction
 {
-    using QuasiDiffusionReaction::QuasiDiffusionReaction;
+public:
 
+    Dissolution(SoluteParticle *particle,
+               ivec &heights,
+               const double Eb,
+               const MovingWall &wallEvent,
+               const double dissolutionPrefactor) :
+        QuasiDiffusionReaction(particle,
+                               heights,
+                               Eb,
+                               wallEvent),
+        m_dissolutionPrefactor(dissolutionPrefactor)
+    {
+
+    }
 
     // Reaction interface
 public:
@@ -395,15 +330,15 @@ public:
 
     void calcRate()
     {
-        setRate(depositionRate()/2);
+        setRate(m_dissolutionPrefactor*(exp(-beta()*(localEnergy() + localPressure()))));
     }
 
     void execute()
     {
         m_heights(site())--;
     }
+
+private:
+
+    const double m_dissolutionPrefactor;
 };
-
-
-vec QuasiDiffusionReaction::m_leftRightRates;
-double QuasiDiffusionReaction::m_depositionRate;

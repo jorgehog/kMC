@@ -75,14 +75,15 @@ protected:
 
         m_selectedReaction->execute();
 
+        m_totalTime -= Reaction::linearRateScale()*std::log(KMC_RNG_UNIFORM())/solver()->kTot();
+
+
         Site::updateBoundaries();
 
         solver()->getRateVariables();
 
-        m_totalTime -= Reaction::linearRateScale()*std::log(KMC_RNG_UNIFORM())/solver()->kTot();
-
         //To counter buildup of roundoff errors
-        if (m_nTimesExecuted % 10000 == 0)
+        if (m_nTimesExecuted % 10000 == 0 || solver()->localUpdating())
         {
             solver()->remakeAccuAllRates();
         }

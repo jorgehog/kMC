@@ -4,6 +4,126 @@
 
 namespace kMC
 {
+
+
+class MovingWall : public KMCEvent
+{
+public:
+
+    MovingWall(const double h0,
+               const double EsMax,
+               const double EsInit,
+               const ivec &heighmap) :
+        KMCEvent("MovingWall", "h0", true, true),
+        m_h0(h0),
+        m_h(h0),
+        m_r0(r0FromEs(h0, EsMax, EsInit)),
+        m_s0(s0FromEs(h0, EsMax, EsInit)),
+        m_heighmap(heighmap)
+    {
+
+    }
+
+    void execute()
+    {
+        _rescaleHeight();
+    }
+
+    double localPressure(const uint site) const
+    {
+        return -m_s0*std::exp(-(m_h - m_heighmap(site))/m_r0);
+    }
+
+    const double &height() const
+    {
+        return m_h;
+    }
+
+    static double r0FromEs(const double h0, const double EsMax, const double EsInit)
+    {
+        return (h0 - 1.0)/std::log(EsMax/EsInit);
+    }
+
+    static double s0FromEs(const double h0, const double EsMax, const double EsInit)
+    {
+        using std::pow;
+
+        return pow(pow(EsMax, h0)/EsInit, (1./(h0 - 1)));
+    }
+
+
+private:
+
+    const double m_h0;
+    double m_h;
+
+    const double m_r0;
+    const double m_s0;
+
+    const ivec &m_heighmap;
+
+
+    void _rescaleHeight()
+    {
+        double m = 0;
+        double m2 = 0;
+        for (uint i = 0; i < m_heighmap.size(); ++i)
+        {
+            m += exp(m_heighmap(i)/m_r0);
+            m2 += m_heighmap(i);
+        }
+
+        m /= m_heighmap.size();
+        m2 /= m_heighmap.size();
+
+        m_h = m_r0*std::log(m) + m_h0;
+
+        setValue((m_h - m2)/m_h0);
+    }
+
+
+
+};
+
+
+class ConcentrationControl : public KMCEvent
+{
+public:
+
+    ConcentrationControl(const double cBoundary, const MovingWall &movingWallEvent) :
+        KMCEvent("ConcentrationControl"),
+        m_cBoundary(cBoundary),
+        m_movingWallEvent(movingWallEvent)
+    {
+
+    }
+
+    virtual ~ConcentrationControl()
+    {
+
+    }
+
+    void initialize()
+    {
+
+    }
+
+protected:
+
+    void execute()
+    {
+
+    }
+
+private:
+
+    double m_cBoundary;
+
+    const MovingWall &m_movingWallEvent;
+
+};
+
+
 class heightRMS : public KMCEvent
 {
 public:

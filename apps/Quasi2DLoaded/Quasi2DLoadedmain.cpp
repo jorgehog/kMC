@@ -10,6 +10,66 @@
 
 using namespace libconfig;
 
+class CustomSolverEvent : public KMCEvent
+{
+public:
+
+    CustomSolverEvent() : KMCEvent("CustomSolverEvent")
+    {
+
+    }
+
+    void initialize()
+    {
+        solver()->getRateVariables();
+
+        m_totalTime = 0;
+    }
+
+    const double & totalTime() const
+    {
+        return m_totalTime;
+    }
+
+protected:
+
+    void execute()
+    {
+        R = solver()->kTot()*KMC_RNG_UNIFORM();
+
+        choice = solver()->getReactionChoice(R);
+
+        m_selectedReaction = solver()->allPossibleReactions().at(choice);
+        KMCDebugger_SetActiveReaction(m_selectedReaction);
+
+        m_selectedReaction->execute();
+
+        Site::updateBoundaries();
+
+        solver()->getRateVariables();
+
+        m_totalTime -= Reaction::linearRateScale()*std::log(KMC_RNG_UNIFORM())/solver()->kTot();
+
+        //To counter buildup of roundoff errors
+        if (m_nTimesExecuted % 10000 == 0)
+        {
+            solver()->remakeAccuAllRates();
+        }
+
+    }
+
+private:
+
+    double R;
+
+    double m_totalTime;
+
+    uint choice;
+
+    Reaction * m_selectedReaction;
+
+};
+
 
 ivec *initializeQuasi2DLoaded(KMCSolver * solver, const Setting & root, const uint l, const double beta);
 
@@ -60,7 +120,7 @@ int main()
 
             cout << "Running l b = " << l << " " << t << endl;
 
-            ivec* heightmap = initializeQuasi2DLoaded(solver, root, l, t);
+            ivec* heightmap = initializeQuasi2DLoaded(solver, initCFG, l, t);
 
             H5Wrapper::Member &sizeMember = h5root.addMember(l);
 
@@ -86,9 +146,16 @@ int main()
 
 }
 
-ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &root, const uint l, const double beta)
+ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG, const uint l, const double beta)
 {
-    (void) root;
+
+    const uint &h0 = getSetting<uint>(initCFG, "h0");
+    const double &Eb = getSetting<double>(initCFG, "Eb");
+    const double &EsMax = getSetting<double>(initCFG, "EsMax")*Eb;
+    const double &EsInit = getSetting<double>(initCFG, "EsInit")*Eb;
+
+    const double &depositionRate = getSetting<double>(initCFG, "depositionRate");
+    const double &dissolutionPrefactor = getSetting<double>(initCFG, "dissolutionPrefactor");
 
     solver->resetBoxSize(l, 1, 1);
     DiffusionReaction::setBeta(beta);
@@ -99,20 +166,18 @@ ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &root, const uint
     solver->setDiffusionType(KMCSolver::DiffusionTypes::None);
 
     //BAD PRATICE WITH POINTERS.. WILL FIX..
-    MovingWall *wallEvent = new MovingWall(20, 10, 3, *heighmap);
+    MovingWall *wallEvent = new MovingWall(h0, EsMax, EsInit, *heighmap);
 
     for (uint site = 0; site < l; ++site)
     {
 
         SoluteParticle* particle = solver->forceSpawnParticle(site, 0, 0);
-        particle->addReaction(new LeftHop(particle, *heighmap, *wallEvent));
-        particle->addReaction(new RightHop(particle, *heighmap, *wallEvent));
-        particle->addReaction(new Deposition(particle, *heighmap, *wallEvent));
-        particle->addReaction(new Dissolution(particle, *heighmap, *wallEvent));
+        particle->addReaction(new LeftHop(particle, *heighmap, Eb, *wallEvent));
+        particle->addReaction(new RightHop(particle, *heighmap, Eb, *wallEvent));
+        particle->addReaction(new Deposition(particle, *heighmap, Eb, *wallEvent, depositionRate));
+        particle->addReaction(new Dissolution(particle, *heighmap, Eb, *wallEvent, dissolutionPrefactor));
 
     }
-
-    QuasiDiffusionReaction::initialize();
 
     solver->addEvent(wallEvent);
     solver->addEvent(new DumpHeighmap(*heighmap));

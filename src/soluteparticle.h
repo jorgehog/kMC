@@ -94,11 +94,6 @@ public:
      * Init / Reset / clear static implementations
      */
 
-    static void enableLocalUpdating(const bool state)
-    {
-        m_useLocalUpdating = state;
-    }
-
     static void clearAll();
 
     static void clearAffectedParticles();
@@ -529,8 +524,6 @@ private:
 
 
     static uint m_nSpecies;
-
-    static bool m_useLocalUpdating;
 
 
     int m_particleState;
