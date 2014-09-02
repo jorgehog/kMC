@@ -139,6 +139,7 @@ protected:
         return m_wallEvent.localPressure(site());
     }
 
+
 private:
 
     const double m_Eb;
@@ -298,7 +299,7 @@ public:
 
     void execute()
     {
-        m_concentrationController.registerPopulationChange(1);
+        m_concentrationController.registerPopulationChange(-1);
         m_heights(site())++;
     }
 
@@ -333,7 +334,7 @@ public:
 public:
     bool isAllowed() const
     {
-        return true;
+        return m_concentrationController.concentration() != 1;
     }
 
     void calcRate()
@@ -343,7 +344,7 @@ public:
 
     void execute()
     {
-        m_concentrationController.registerPopulationChange(-1);
+        m_concentrationController.registerPopulationChange(+1);
         m_heights(site())--;
     }
 

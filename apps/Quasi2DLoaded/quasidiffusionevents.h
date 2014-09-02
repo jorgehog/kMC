@@ -53,7 +53,7 @@ public:
             V += floor(m_h - m_heighmap(site));
         }
 
-        return V;
+        return V - length();
     }
 
     static double r0FromEs(const double h0, const double EsMax, const double EsInit)
@@ -110,7 +110,7 @@ public:
     ConcentrationControl(const double cBoundary,
                          const MovingWall &movingWallEvent) :
         KMCEvent("ConcentrationControl", "", true, true),
-        m_cBoundary(cBoundary),
+        m_boundaryConcentration(cBoundary),
         m_movingWallEvent(movingWallEvent)
     {
 
@@ -123,7 +123,7 @@ public:
 
     void initialize()
     {
-
+        m_nSolvants = m_boundaryConcentration*m_movingWallEvent.freeVolume();
     }
 
     void registerPopulationChange(int change)
@@ -131,8 +131,7 @@ public:
         BADAssBool(!(((change < 0) && (m_nSolvants == 0)) || ((change > 0) && (m_nSolvants == signed(m_movingWallEvent.freeVolume())))),
                    "Illegal concentration values initiated.", [&] ()
         {
-            cerr << "change: " << change << " " << m_nSolvants << " " << m_movingWallEvent.freeVolume() << endl;
-            lallertest("alalal");
+            BADAssSimpleDump(change, m_nSolvants, m_movingWallEvent.freeVolume());
         });
 
         m_nSolvants += change;
@@ -159,7 +158,7 @@ protected:
 
 private:
 
-    double m_cBoundary;
+    const double m_boundaryConcentration;
 
     const MovingWall &m_movingWallEvent;
 
