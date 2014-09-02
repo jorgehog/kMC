@@ -150,12 +150,16 @@ ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG, const u
 {
 
     const uint &h0 = getSetting<uint>(initCFG, "h0");
+    const uint &nCells = getSetting<uint>(initCFG, "nCells");
+    const double &concentrationFieldLength = getSetting<double>(initCFG, "concentrationFieldLength");
+
     const double &Eb = getSetting<double>(initCFG, "Eb");
     const double &EsMax = getSetting<double>(initCFG, "EsMax")*Eb;
     const double &EsInit = getSetting<double>(initCFG, "EsInit")*Eb;
 
     const double &chemicalPotentialDifference = getSetting<double>(initCFG, "chemicalPotentialDifference");
     const double &boundaryConcentration = getSetting<double>(initCFG, "boundaryConcentration");
+    const double &diffusivity = getSetting<double>(initCFG, "diffusivity");
 
     solver->resetBoxSize(l, 1, 1);
     DiffusionReaction::setBeta(beta);
@@ -167,11 +171,10 @@ ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG, const u
 
     //BAD PRATICE WITH POINTERS.. WILL FIX..
     MovingWall *wallEvent = new MovingWall(h0, EsMax, EsInit, *heighmap);
-    ConcentrationControl *cc = new ConcentrationControl(boundaryConcentration, *wallEvent);
+    ConcentrationControl *cc = new ConcentrationControl(boundaryConcentration, diffusivity, nCells, concentrationFieldLength, *wallEvent);
 
     for (uint site = 0; site < l; ++site)
     {
-
         SoluteParticle* particle = solver->forceSpawnParticle(site, 0, 0);
         particle->addReaction(new LeftHopPressurized(particle, *heighmap, Eb, *wallEvent));
         particle->addReaction(new RightHopPressurized(particle, *heighmap, Eb, *wallEvent));

@@ -114,6 +114,11 @@ protected:
     ivec &m_heights;
 
 
+    const MovingWall &wallEvent() const
+    {
+        return m_wallEvent;
+    }
+
     const double &Eb() const
     {
         return m_Eb;
@@ -284,13 +289,17 @@ public:
 public:
     bool isAllowed() const
     {
-        return myHeight() < floor(wallHeight()) && m_concentrationController.nSolvants() != 0;
+        return myHeight() < floor(wallHeight()) && m_concentrationController.concentration() != 0;
     }
 
     void calcRate()
     {
         double mu = 1.0;
-        double prefactor = mu*m_concentrationController.nSolvants()*exp(beta()*m_chemicalPotentialDifference);
+        double prob = 1 - pow(1 - 1.0/wallEvent().length(), m_concentrationController.nSolvants());
+        double chemWeight = exp(beta()*m_chemicalPotentialDifference);
+
+        double prefactor = mu*chemWeight*prob;
+
 
         double activatioEnergy = 1.0 + 4*m_concentrationController.concentration()*Eb();
 
@@ -321,11 +330,11 @@ public:
                 const double Eb,
                 const MovingWall &wallEvent,
                 ConcentrationControl &concentrationController) :
-    QuasiDiffusionReaction(particle,
-                           heights,
-                           Eb,
-                           wallEvent),
-    m_concentrationController(concentrationController)
+        QuasiDiffusionReaction(particle,
+                               heights,
+                               Eb,
+                               wallEvent),
+        m_concentrationController(concentrationController)
     {
 
     }
@@ -339,7 +348,14 @@ public:
 
     void calcRate()
     {
-        setRate(exp(-beta()*(localEnergy() + localPressure())));
+        double factor = 1.0;
+
+//        if (solver()->solverEvent()->totalTime() > 30)
+//        {
+//            factor *= 100;
+//        }
+
+        setRate(factor*exp(-beta()*(localEnergy() + localPressure())));
     }
 
     void execute()

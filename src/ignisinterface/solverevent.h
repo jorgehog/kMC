@@ -52,6 +52,11 @@ public:
         return m_totalTime;
     }
 
+    const double &lastTimeStep() const
+    {
+        return m_lastTimeStep;
+    }
+
     const Reaction * selectedReaction() const
     {
         return m_selectedReaction;
@@ -94,7 +99,9 @@ protected:
 
         m_selectedReaction->execute();
 
-        m_totalTime -= Reaction::linearRateScale()*std::log(KMC_RNG_UNIFORM())/solver()->kTot();
+        m_lastTimeStep = -Reaction::linearRateScale()*std::log(KMC_RNG_UNIFORM())/solver()->kTot();
+
+        m_totalTime += m_lastTimeStep;
     }
 
 private:
@@ -102,6 +109,8 @@ private:
     double R;
 
     double m_totalTime;
+
+    double m_lastTimeStep;
 
     uint choice;
 

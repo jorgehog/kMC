@@ -34,6 +34,11 @@ public:
         return -m_s0*std::exp(-(m_h - m_heighmap(site))/m_r0);
     }
 
+    const double &initialHeight() const
+    {
+        return m_h0;
+    }
+
     const double &height() const
     {
         return m_h;
@@ -108,10 +113,17 @@ class ConcentrationControl : public KMCEvent
 public:
 
     ConcentrationControl(const double cBoundary,
+                         const double diffusivity,
+                         const uint nCells,
+                         const double concentrationFieldLength,
                          const MovingWall &movingWallEvent) :
         KMCEvent("ConcentrationControl", "", true, true),
         m_boundaryConcentration(cBoundary),
-        m_movingWallEvent(movingWallEvent)
+        m_diffusivity(diffusivity),
+        m_movingWallEvent(movingWallEvent),
+        m_nCells(nCells),
+        m_dxSquared(pow((concentrationFieldLength/m_nCells), 2)),
+        m_concentrations(m_nCells)
     {
 
     }
@@ -123,28 +135,32 @@ public:
 
     void initialize()
     {
-        m_nSolvants = m_boundaryConcentration*m_movingWallEvent.freeVolume();
+        m_concentrations.fill(m_boundaryConcentration);
     }
 
     void registerPopulationChange(int change)
     {
-        BADAssBool(!(((change < 0) && (m_nSolvants == 0)) || ((change > 0) && (m_nSolvants == signed(m_movingWallEvent.freeVolume())))),
+
+        double dC = 1.0/m_movingWallEvent.freeVolume();
+
+        m_concentrations(0) += change*dC;
+
+        BADAssBool(concentration() >= 0 && concentration() <= 1,
                    "Illegal concentration values initiated.", [&] ()
         {
-            BADAssSimpleDump(change, m_nSolvants, m_movingWallEvent.freeVolume());
+            BADAssSimpleDump(change, concentration(), m_movingWallEvent.freeVolume());
         });
 
-        m_nSolvants += change;
     }
 
-    double concentration() const
+    const double &concentration() const
     {
-        return double(m_nSolvants)/m_movingWallEvent.freeVolume();
+        return m_concentrations(0);
     }
 
-    const int &nSolvants() const
+    uint nSolvants() const
     {
-        return m_nSolvants;
+        return concentration()*m_movingWallEvent.freeVolume();
     }
 
 protected:
@@ -153,16 +169,49 @@ protected:
     {
         //diffusion etc. can be added here.
 
+        diffuse();
+
         setValue(concentration());
+
+        if (nTimesExecuted() % MainLattice::saveFileSpacing() == 0) m_concentrations.save(solver()->filePath() + "conc0.arma");
     }
 
 private:
 
     const double m_boundaryConcentration;
 
+    double m_diffusivity;
+
+
     const MovingWall &m_movingWallEvent;
 
-    int m_nSolvants;
+    const uint m_nCells;
+
+    const double m_dxSquared;
+
+    vec m_concentrations;
+
+
+
+    void diffuse()
+    {
+        vec newConcentration(m_nCells);
+
+        double fac = m_diffusivity*solver()->solverEvent()->lastTimeStep()/(m_dxSquared);
+
+
+        newConcentration(m_nCells - 1) = m_concentrations(m_nCells - 1) + fac*(m_boundaryConcentration - 2*m_concentrations(m_nCells - 1) + m_concentrations(m_nCells - 2));
+
+        for (int cell = m_nCells - 2; cell > 0; --cell)
+        {
+            newConcentration(cell) = m_concentrations(cell) + fac*(m_concentrations(cell + 1) - 2*m_concentrations(cell) + m_concentrations(cell - 1));
+        }
+
+        double boundaryCondition = m_concentrations(0);
+        newConcentration(0) = m_concentrations(0) + fac*(m_concentrations(1) - 2*m_concentrations(0) + boundaryCondition);
+
+        m_concentrations = newConcentration;
+    }
 
 };
 
