@@ -62,6 +62,25 @@ public:
         m_selectedReaction = NULL;
     }
 
+    void reset()
+    {
+        Site::updateBoundaries();
+
+        solver()->getRateVariables();
+
+        //To counter buildup of roundoff errors
+        if (m_nTimesExecuted % 10000 == 0 || !solver()->localUpdating())
+        {
+            solver()->remakeAccuAllRates();
+        }
+
+        BADAssBool(!solver()->allPossibleReactions().empty(), "No available reactions.");
+        BADAss(solver()->allPossibleReactions().size(), ==, solver()->accuAllRates().size(), "These vectors should be equal of length.");
+        BADAssClose(solver()->accuAllRates().at(0), solver()->allPossibleReactions().at(0)->rate(), solver()->minRateThreshold(), "zeroth accuallrate should be the first rate.");
+        BADAssClose(solver()->accuAllRates().at(solver()->accuAllRates().size()- 1), solver()->kTot(), solver()->minRateThreshold(), "kTot should be the last element of accuAllRates");
+
+    }
+
 protected:
 
     void execute()
@@ -76,19 +95,6 @@ protected:
         m_selectedReaction->execute();
 
         m_totalTime -= Reaction::linearRateScale()*std::log(KMC_RNG_UNIFORM())/solver()->kTot();
-    }
-
-    void reset()
-    {
-        Site::updateBoundaries();
-
-        solver()->getRateVariables();
-
-        //To counter buildup of roundoff errors
-        if (m_nTimesExecuted % 10000 == 0 || solver()->localUpdating())
-        {
-            solver()->remakeAccuAllRates();
-        }
     }
 
 private:

@@ -3,8 +3,8 @@ CONFIG += ordered
 
 SUBDIRS += \
            Quasi2DLoaded \
-           WLMC \
-#           tests \
+           tests \
+#           WLMC \
 #           centerCrystal \
 #           surfaceGrowth \
 #           diamondSquareSurface \

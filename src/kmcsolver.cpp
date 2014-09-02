@@ -429,13 +429,6 @@ void KMCSolver::postReactionShuffleCleanup(const uint nVacancies)
 
     m_availableReactionSlots.clear();
 
-    BADAss(m_allPossibleReactions.size(), ==, m_accuAllRates.size(), "These vectors should be equal of length.");
-    m_accuAllRates.size() == 0
-            ? (void) 0
-            : BADAssClose(m_accuAllRates.at(m_accuAllRates.size()- 1),
-                                      m_kTot, minRateThreshold(),
-                                      "kTot should be the last element of accuAllRates");
-
 }
 
 void KMCSolver::updateAccuAllRateElements(const uint from, const uint to, const double value)
@@ -1447,14 +1440,9 @@ void KMCSolver::initializeParticles()
 
 void KMCSolver::getRateVariables()
 {
-
     SoluteParticle::updateAffectedParticles();
 
     reshuffleReactions();
-
-    BADAssBool(!allPossibleReactions().empty(), "No available reactions.");
-    BADAssClose(accuAllRates().at(0), allPossibleReactions().at(0)->rate(), minRateThreshold(), "zeroth accuallrate should be the first rate.");
-
 }
 
 const uint &KMCSolver::cycle() const
