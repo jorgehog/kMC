@@ -105,7 +105,7 @@ int main()
 
     const double &tStart = getSetting<double>(initCFG, "tStart");
     const double &tEnd   = getSetting<double>(initCFG, "tEnd");
-    const uint &nTemps  = getSetting<uint>(initCFG, "nTemps");
+    const uint &nTemps   = getSetting<uint>(initCFG, "nTemps");
 
     vec temps = linspace(tStart, tEnd, nTemps);
     uint N = temps.size();
@@ -154,8 +154,8 @@ ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG, const u
     const double &EsMax = getSetting<double>(initCFG, "EsMax")*Eb;
     const double &EsInit = getSetting<double>(initCFG, "EsInit")*Eb;
 
-    const double &depositionRate = getSetting<double>(initCFG, "depositionRate");
-    const double &dissolutionPrefactor = getSetting<double>(initCFG, "dissolutionPrefactor");
+    const double &chemicalPotentialDifference = getSetting<double>(initCFG, "chemicalPotentialDifference");
+    const double &boundaryConcentration = getSetting<double>(initCFG, "boundaryConcentration");
 
     solver->resetBoxSize(l, 1, 1);
     DiffusionReaction::setBeta(beta);
@@ -167,19 +167,21 @@ ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG, const u
 
     //BAD PRATICE WITH POINTERS.. WILL FIX..
     MovingWall *wallEvent = new MovingWall(h0, EsMax, EsInit, *heighmap);
+    ConcentrationControl *cc = new ConcentrationControl(boundaryConcentration, *wallEvent);
 
     for (uint site = 0; site < l; ++site)
     {
 
         SoluteParticle* particle = solver->forceSpawnParticle(site, 0, 0);
-        particle->addReaction(new LeftHop(particle, *heighmap, Eb, *wallEvent));
-        particle->addReaction(new RightHop(particle, *heighmap, Eb, *wallEvent));
-        particle->addReaction(new Deposition(particle, *heighmap, Eb, *wallEvent, depositionRate));
-        particle->addReaction(new Dissolution(particle, *heighmap, Eb, *wallEvent, dissolutionPrefactor));
+        particle->addReaction(new LeftHopPressurized(particle, *heighmap, Eb, *wallEvent));
+        particle->addReaction(new RightHopPressurized(particle, *heighmap, Eb, *wallEvent));
+        particle->addReaction(new Deposition(particle, *heighmap, Eb, *wallEvent, chemicalPotentialDifference, *cc));
+        particle->addReaction(new Dissolution(particle, *heighmap, Eb, *wallEvent, *cc));
 
     }
 
     solver->addEvent(wallEvent);
+    solver->addEvent(cc);
     solver->addEvent(new DumpHeighmap(*heighmap));
     solver->addEvent(new TotalTime());
     solver->addEvent(new heightRMS(*heighmap));

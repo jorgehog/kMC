@@ -114,6 +114,11 @@ protected:
     ivec &m_heights;
 
 
+    const double &Eb() const
+    {
+        return m_Eb;
+    }
+
     double leftRightRate(const uint n) const
     {
         return exp(-beta()*localEnergy(n));
@@ -165,10 +170,6 @@ public:
     {
         m_heights(site())--;
         m_heights(leftSite())++;
-
-//        queueAffected();
-//        solver()->getSite(leftSite(2), 0, 0)->associatedParticle()->markAsAffected();
-
     }
 
 
@@ -194,9 +195,6 @@ public:
     {
         m_heights(site())--;
         m_heights(rightSite())++;
-
-//        queueAffected();
-//        solver()->getSite(rightSite(2), 0, 0)->associatedParticle()->markAsAffected();
     }
 
 };
@@ -240,7 +238,7 @@ public:
 
     void calcRate()
     {
-        setRate(exp(-beta()*(localEnergy() + localPressure()))/heightDifference(leftSite()));
+        setRate(exp(-beta()*(localEnergy() + localPressure())));
     }
 
 };
@@ -254,7 +252,7 @@ public:
 
     void calcRate()
     {
-        setRate(leftRightRate(exp(-beta()*(localEnergy() + localPressure())))/heightDifference(rightSite()));
+        setRate(exp(-beta()*(localEnergy() + localPressure())));
     }
 
 };
@@ -268,12 +266,14 @@ public:
                ivec &heights,
                const double Eb,
                const MovingWall &wallEvent,
-               const double depositionRate) :
+               const double chemicalPotentialDifference,
+               ConcentrationControl &concentrationController) :
         QuasiDiffusionReaction(particle,
                                heights,
                                Eb,
                                wallEvent),
-        m_depositionRate(depositionRate)
+        m_chemicalPotentialDifference(chemicalPotentialDifference),
+        m_concentrationController(concentrationController)
     {
 
     }
@@ -283,22 +283,30 @@ public:
 public:
     bool isAllowed() const
     {
-        return myHeight() < floor(wallHeight());
+        return myHeight() < floor(wallHeight()) && m_concentrationController.nSolvants() != 0;
     }
 
     void calcRate()
     {
-        setRate(m_depositionRate);
+        double mu = 1.0;
+        double prefactor = mu*m_concentrationController.nSolvants()*exp(beta()*m_chemicalPotentialDifference);
+
+        double activatioEnergy = 1.0 + 4*m_concentrationController.concentration()*Eb();
+
+        setRate(prefactor*exp(-beta()*activatioEnergy));
     }
 
     void execute()
     {
+        m_concentrationController.registerPopulationChange(1);
         m_heights(site())++;
     }
 
 private:
 
-    const double m_depositionRate;
+    const double m_chemicalPotentialDifference;
+
+    ConcentrationControl &m_concentrationController;
 };
 
 
@@ -308,15 +316,15 @@ class Dissolution : public QuasiDiffusionReaction
 public:
 
     Dissolution(SoluteParticle *particle,
-               ivec &heights,
-               const double Eb,
-               const MovingWall &wallEvent,
-               const double dissolutionPrefactor) :
-        QuasiDiffusionReaction(particle,
-                               heights,
-                               Eb,
-                               wallEvent),
-        m_dissolutionPrefactor(dissolutionPrefactor)
+                ivec &heights,
+                const double Eb,
+                const MovingWall &wallEvent,
+                ConcentrationControl &concentrationController) :
+    QuasiDiffusionReaction(particle,
+                           heights,
+                           Eb,
+                           wallEvent),
+    m_concentrationController(concentrationController)
     {
 
     }
@@ -330,15 +338,16 @@ public:
 
     void calcRate()
     {
-        setRate(m_dissolutionPrefactor*(exp(-beta()*(localEnergy() + localPressure()))));
+        setRate(exp(-beta()*(localEnergy() + localPressure())));
     }
 
     void execute()
     {
+        m_concentrationController.registerPopulationChange(-1);
         m_heights(site())--;
     }
 
 private:
 
-    const double m_dissolutionPrefactor;
+    ConcentrationControl &m_concentrationController;
 };

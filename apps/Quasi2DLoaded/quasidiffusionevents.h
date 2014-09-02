@@ -39,6 +39,23 @@ public:
         return m_h;
     }
 
+    const uint &length() const
+    {
+        return m_heighmap.n_elem;
+    }
+
+    uint freeVolume() const
+    {
+        uint V = 0;
+
+        for (uint site = 0; site < length(); ++site)
+        {
+            V += floor(m_h - m_heighmap(site));
+        }
+
+        return V;
+    }
+
     static double r0FromEs(const double h0, const double EsMax, const double EsInit)
     {
         return (h0 - 1.0)/std::log(EsMax/EsInit);
@@ -90,8 +107,9 @@ class ConcentrationControl : public KMCEvent
 {
 public:
 
-    ConcentrationControl(const double cBoundary, const MovingWall &movingWallEvent) :
-        KMCEvent("ConcentrationControl"),
+    ConcentrationControl(const double cBoundary,
+                         const MovingWall &movingWallEvent) :
+        KMCEvent("ConcentrationControl", "", true, true),
         m_cBoundary(cBoundary),
         m_movingWallEvent(movingWallEvent)
     {
@@ -108,11 +126,35 @@ public:
 
     }
 
+    void registerPopulationChange(int change)
+    {
+        BADAssBool(!(((change < 0) && (m_nSolvants == 0)) || ((change > 0) && (m_nSolvants == signed(m_movingWallEvent.freeVolume())))),
+                   "Illegal concentration values initiated.", [&] ()
+        {
+            cerr << "change: " << change << " " << m_nSolvants << " " << m_movingWallEvent.freeVolume() << endl;
+            lallertest("alalal");
+        });
+
+        m_nSolvants += change;
+    }
+
+    double concentration() const
+    {
+        return double(m_nSolvants)/m_movingWallEvent.freeVolume();
+    }
+
+    const int &nSolvants() const
+    {
+        return m_nSolvants;
+    }
+
 protected:
 
     void execute()
     {
+        //diffusion etc. can be added here.
 
+        setValue(concentration());
     }
 
 private:
@@ -120,6 +162,8 @@ private:
     double m_cBoundary;
 
     const MovingWall &m_movingWallEvent;
+
+    int m_nSolvants;
 
 };
 

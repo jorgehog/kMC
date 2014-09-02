@@ -34,10 +34,24 @@
 #define KMCDebugger_SearchImplicationTrace(i)    _KMCDebugger_TRACE_SEARCH(kMC::Debugger::implicationTrace, i)
 
 //BADAss interface
-#define KMCBAI(info, ...) [&] (const badass::BADAssException &exc) { \
-    kMC::Debugger::dumpFullTrace(exc.whichLine(), exc.whichFile().c_str(), kMC::Debugger::stringify(info)); \
-    ##__VA_ARGS__ \
-    }
+template<typename T, typename fT>
+std::function<void(const badass::BADAssException &)> static inline KMCBAI(T &&info, const fT func)
+{
+    return [&info, &func] (const badass::BADAssException &exc)
+    {
+        kMC::Debugger::dumpFullTrace(exc.whichLine(), exc.whichFile().c_str(), kMC::Debugger::stringify(info));
+        cerr << info << endl;
+        func();
+    };
+}
+
+template<typename T>
+std::function<void(const badass::BADAssException &)> static inline KMCBAI(T &&info)
+{
+    return KMCBAI(info, [] () {});
+}
+
+
 
 
 //TRACE DUMP CALLERS

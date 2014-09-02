@@ -76,8 +76,10 @@ protected:
         m_selectedReaction->execute();
 
         m_totalTime -= Reaction::linearRateScale()*std::log(KMC_RNG_UNIFORM())/solver()->kTot();
+    }
 
-
+    void reset()
+    {
         Site::updateBoundaries();
 
         solver()->getRateVariables();
@@ -87,7 +89,6 @@ protected:
         {
             solver()->remakeAccuAllRates();
         }
-
     }
 
 private:
