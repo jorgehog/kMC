@@ -2,6 +2,8 @@
 
 #include "../quasidiffusionevents.h"
 
+#include <lammpswriter/lammpswriter.h>
+
 using namespace kMC;
 
 uint ConcentrationControl::nSolvants() const
@@ -52,6 +54,8 @@ void ConcentrationControl1D::diffuse(const double dt)
 
 
 
+//3D
+
 
 ConcentrationControl3D::ConcentrationControl3D(const double cBoundary, const double diffusivity, const uint nCells, const double dH) :
     ConcentrationControl(cBoundary, diffusivity, dH/nCells),
@@ -77,27 +81,75 @@ void ConcentrationControl3D::initialize()
 
 void ConcentrationControl3D::diffuse(const double dt)
 {
-    cout << "hey" << endl;
     (void) dt;
 
     int yCentered;
-    uint z;
+    uint zMax;
 
     uint s = m_movingWall->span();
     uint H = 2*m_nCells + s;
 
+    lammpswriter w(4, "conc3D", KMCSolver::instance()->filePath());
+    w.setSystemSize(m_movingWall->length(), H, r());
+    w.initializeNewFile(0);
+
+    uint c = 0;
     for (int y = 0; y < H; ++y)
     {
         yCentered = y - (int)(m_nCells + s/2);
 
-        z = sqrt((H*H)/4 - yCentered*yCentered);
+        zMax = round(sqrt((H*H)/4 - yCentered*yCentered));
 
-        for (uint x = 0; x < m_movingWall->length(); ++x)
+        for (uint z = 0; z < zMax; ++z)
         {
-            m_concentrationField(x, y, z) = sqrt(pow(((int)y - (int)yCentered), 2) + z*z);
+
+            for (uint x = 0; x < m_movingWall->length(); ++x)
+            {
+                m_concentrationField(x, y, z) = sqrt(pow(((int)y - (int)yCentered), 2) + z*z);
+
+                w << x << y << z << m_concentrationField(x, y, z);
+                c++;
+            }
+
         }
     }
 
-    m_concentrationField.save(KMCSolver::instance()->filePath() + "conc3D.arma", raw_ascii);
+    cout << c << " " << datum::pi*(r()*r()/2*m_movingWall->length()) << endl;
+    w.finalize();
+
+
+
     exit(1);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

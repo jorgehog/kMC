@@ -22,10 +22,13 @@ public:
 
     }
 
+
     virtual ~ConcentrationControl()
     {
 
     }
+
+    virtual void initialize() = 0;
 
     virtual void onParticleAddition(const uint x) = 0;
 
@@ -76,25 +79,25 @@ public:
 
     }
 
-    void initialize()
+    virtual void initialize() override final
     {
         m_concentrations.fill(m_boundaryConcentration);
     }
 
     void registerPopulationChange(int change);
 
-    void onParticleAddition(const uint x)
+    void onParticleAddition(const uint x) override final
     {
         (void) x;
         registerPopulationChange(+1);
     }
-    void onParticleRemoval(const uint x)
+    void onParticleRemoval(const uint x) override final
     {
         (void) x;
         registerPopulationChange(-1);
     }
 
-    double concentration() const
+    double concentration() const override final
     {
         return m_concentrations(0);
     }
@@ -107,7 +110,7 @@ private:
 
 
 
-    void diffuse(const double dt);
+    virtual void diffuse(const double dt) override final;
 
 };
 
@@ -120,41 +123,42 @@ public:
                            const double diffusivity,
                            const uint nCells,
                            const double dH);
+
+    virtual ~ConcentrationControl3D()
+    {
+
+    }
+
     uint r() const;
 
-    // Event interface
-public:
-    void initialize();
+    virtual void initialize() override final;
 
     // ConcentrationControl interface
 public:
-    void onParticleAddition(const uint x)
+    void onParticleAddition(const uint x) override final
     {
         (void) x;
     }
 
-    void onParticleRemoval(const uint x)
+    void onParticleRemoval(const uint x) override final
     {
         (void) x;
     }
 
-    double concentration() const
+    double concentration() const override final
     {
         return 0;
     }
 
 private:
 
-    void diffuse(const double dt);
+    virtual void diffuse(const double dt) override final;
 
     const double m_dH;
 
     const uint m_nCells;
 
     arma::cube m_concentrationField;
-
-
-
 };
 
 

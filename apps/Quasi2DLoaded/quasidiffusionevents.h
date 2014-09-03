@@ -25,12 +25,13 @@ public:
         m_cc(cc)
     {
         cc.setMovingWallEvent(this);
+        cc.initialize();
     }
 
     void execute()
     {
         _rescaleHeight();
-        cout << "dada" << endl;
+
         m_cc.diffuse(solver()->solverEvent()->lastTimeStep());
     }
 
