@@ -91,9 +91,8 @@ void ConcentrationControl3D::diffuse(const double dt)
 
     lammpswriter w(4, "conc3D", KMCSolver::instance()->filePath());
     w.setSystemSize(m_movingWall->length(), H, r());
-    w.initializeNewFile(0);
+    w.initializeNewFile();
 
-    uint c = 0;
     for (int y = 0; y < H; ++y)
     {
         yCentered = y - (int)(m_nCells + s/2);
@@ -105,16 +104,14 @@ void ConcentrationControl3D::diffuse(const double dt)
 
             for (uint x = 0; x < m_movingWall->length(); ++x)
             {
-                m_concentrationField(x, y, z) = sqrt(pow(((int)y - (int)yCentered), 2) + z*z);
+                m_concentrationField(x, y, z) = sqrt(yCentered*yCentered + z*z);
 
                 w << x << y << z << m_concentrationField(x, y, z);
-                c++;
             }
 
         }
     }
 
-    cout << c << " " << datum::pi*(r()*r()/2*m_movingWall->length()) << endl;
     w.finalize();
 
 
