@@ -308,7 +308,7 @@ public:
 
     void execute()
     {
-        m_concentrationController.registerPopulationChange(-1);
+        m_concentrationController.onParticleRemoval(site());
         m_heights(site())++;
     }
 
@@ -360,7 +360,7 @@ public:
 
     void execute()
     {
-        m_concentrationController.registerPopulationChange(+1);
+        m_concentrationController.onParticleAddition(site());
         m_heights(site())--;
     }
 

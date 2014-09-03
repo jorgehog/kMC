@@ -49,6 +49,11 @@ public:
         return m_heighmap.n_elem;
     }
 
+    uint span() const
+    {
+        return m_h - m_heighmap.min();
+    }
+
     uint freeVolume() const
     {
         uint V = 0;
@@ -114,21 +119,81 @@ public:
 
     ConcentrationControl(const double cBoundary,
                          const double diffusivity,
-                         const uint nCells,
-                         const double concentrationFieldLength,
+                         const double dx,
                          const MovingWall &movingWallEvent) :
         KMCEvent("ConcentrationControl", "", true, true),
         m_boundaryConcentration(cBoundary),
         m_diffusivity(diffusivity),
         m_movingWallEvent(movingWallEvent),
-        m_nCells(nCells),
-        m_dxSquared(pow((concentrationFieldLength/m_nCells), 2)),
-        m_concentrations(m_nCells)
+        m_dx(dx),
+        m_dxSquared(dx*dx)
     {
 
     }
 
     virtual ~ConcentrationControl()
+    {
+
+    }
+
+    virtual void onConfinementGeometricChange() = 0;
+
+    virtual void onParticleAddition(const uint x) = 0;
+
+    virtual void onParticleRemoval(const uint x) = 0;
+
+    virtual double concentration() const = 0;
+
+    uint nSolvants() const
+    {
+        return concentration()*m_movingWallEvent.freeVolume();
+    }
+
+protected:
+
+    void execute()
+    {
+        //diffusion etc. can be added here.
+
+        diffuse();
+
+        setValue(concentration());
+
+    }
+
+    const double m_boundaryConcentration;
+
+    const double m_diffusivity;
+
+    const MovingWall &m_movingWallEvent;
+
+    const double m_dx;
+    const double m_dxSquared;
+
+private:
+
+
+    virtual void diffuse() = 0;
+
+};
+
+class ConcentrationControl1D : public ConcentrationControl
+{
+public:
+
+    ConcentrationControl1D(const double cBoundary,
+                           const double diffusivity,
+                           const uint nCells,
+                           const double concentrationFieldLength,
+                           const MovingWall &movingWallEvent) :
+        ConcentrationControl(cBoundary, diffusivity, concentrationFieldLength/nCells, movingWallEvent),
+        m_nCells(nCells),
+        m_concentrations(m_nCells)
+    {
+
+    }
+
+    virtual ~ConcentrationControl1D()
     {
 
     }
@@ -153,41 +218,30 @@ public:
 
     }
 
-    const double &concentration() const
+    void onParticleAddition(const uint x)
+    {
+        (void) x;
+        registerPopulationChange(+1);
+    }
+    void onParticleRemoval(const uint x)
+    {
+        (void) x;
+        registerPopulationChange(-1);
+    }
+
+    double concentration() const
     {
         return m_concentrations(0);
     }
 
-    uint nSolvants() const
+    void onConfinementGeometricChange()
     {
-        return concentration()*m_movingWallEvent.freeVolume();
-    }
 
-protected:
-
-    void execute()
-    {
-        //diffusion etc. can be added here.
-
-        diffuse();
-
-        setValue(concentration());
-
-        if (nTimesExecuted() % MainLattice::saveFileSpacing() == 0) m_concentrations.save(solver()->filePath() + "conc0.arma");
     }
 
 private:
 
-    const double m_boundaryConcentration;
-
-    double m_diffusivity;
-
-
-    const MovingWall &m_movingWallEvent;
-
     const uint m_nCells;
-
-    const double m_dxSquared;
 
     vec m_concentrations;
 
@@ -211,7 +265,99 @@ private:
         newConcentration(0) = m_concentrations(0) + fac*(m_concentrations(1) - 2*m_concentrations(0) + boundaryCondition);
 
         m_concentrations = newConcentration;
+
+        if (nTimesExecuted() % MainLattice::saveFileSpacing() == 0)
+        {
+            m_concentrations.save(solver()->filePath() + "conc0.arma");
+        }
     }
+
+};
+
+class ConcentrationControl3D : public ConcentrationControl
+{
+    ConcentrationControl3D(const double cBoundary,
+                           const double diffusivity,
+                           const uint nCells,
+                           const double dH,
+                           const MovingWall &movingWallEvent) :
+        ConcentrationControl(cBoundary, diffusivity, dH/nCells, movingWallEvent),
+        m_dH(dH),
+        m_nCells(nCells),
+        m_concentrationField(movingWallEvent.length(), 2*nCells + movingWallEvent.height(), r())
+    {
+
+    }
+
+public:
+
+    uint r() const
+    {
+        return m_movingWallEvent.span()/2 + m_nCells;
+    }
+
+    // Event interface
+public:
+    void initialize()
+    {
+        m_concentrationField.fill(m_boundaryConcentration);
+    }
+
+    // ConcentrationControl interface
+public:
+    void onParticleAddition(const uint x)
+    {
+        (void) x;
+    }
+
+    void onParticleRemoval(const uint x)
+    {
+        (void) x;
+    }
+
+    double concentration() const
+    {
+        return 0;
+    }
+
+    void onConfinementGeometricChange()
+    {
+
+    }
+
+private:
+
+    void diffuse()
+    {
+
+        uint yCentered, z;
+
+        uint s = m_movingWallEvent.span();
+        uint H = 2*m_nCells + s;
+
+        for (uint y = 0; y < H; ++y)
+        {
+            yCentered = y - m_movingWallEvent.height() - s/2;
+
+            z = sqrt((H*H)/4 - yCentered*yCentered);
+
+            for (uint x = 0; x < m_movingWallEvent.length(); ++x)
+            {
+                m_concentrationField(x, y, z) = sqrt(pow(((int)y - (int)yCentered), 2) + z*z);
+            }
+        }
+
+        m_concentrationField.save(solver()->filePath() + "conc3D.arma", raw_ascii);
+        exit(1);
+    }
+
+    const double m_dH;
+
+    const uint m_nCells;
+
+    cube m_concentrationField;
+
+
 
 };
 
