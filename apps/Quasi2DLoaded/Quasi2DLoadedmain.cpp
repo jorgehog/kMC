@@ -171,7 +171,7 @@ ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG, const u
 
     //BAD PRATICE WITH POINTERS.. WILL FIX..
     MovingWall *wallEvent = new MovingWall(h0, EsMax, EsInit, *heighmap);
-    ConcentrationControl *cc = new ConcentrationControl1D(boundaryConcentration, diffusivity, nCells, concentrationFieldLength, *wallEvent);
+    ConcentrationControl *cc = new ConcentrationControl3D(boundaryConcentration, diffusivity, nCells, concentrationFieldLength, *wallEvent);
 
     for (uint site = 0; site < l; ++site)
     {

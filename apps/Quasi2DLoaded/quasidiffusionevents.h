@@ -276,6 +276,8 @@ private:
 
 class ConcentrationControl3D : public ConcentrationControl
 {
+public:
+
     ConcentrationControl3D(const double cBoundary,
                            const double diffusivity,
                            const uint nCells,
@@ -288,8 +290,6 @@ class ConcentrationControl3D : public ConcentrationControl
     {
 
     }
-
-public:
 
     uint r() const
     {
