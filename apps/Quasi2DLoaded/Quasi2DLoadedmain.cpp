@@ -170,8 +170,8 @@ ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG, const u
     solver->setDiffusionType(KMCSolver::DiffusionTypes::None);
 
     //BAD PRATICE WITH POINTERS.. WILL FIX..
-    MovingWall *wallEvent = new MovingWall(h0, EsMax, EsInit, *heighmap);
-    ConcentrationControl *cc = new ConcentrationControl3D(boundaryConcentration, diffusivity, nCells, concentrationFieldLength, *wallEvent);
+    ConcentrationControl *cc = new ConcentrationControl3D(boundaryConcentration, diffusivity, nCells, concentrationFieldLength);
+    MovingWall *wallEvent = new MovingWall(h0, EsMax, EsInit, *heighmap, *cc);
 
     for (uint site = 0; site < l; ++site)
     {
@@ -184,7 +184,6 @@ ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG, const u
     }
 
     solver->addEvent(wallEvent);
-    solver->addEvent(cc);
     solver->addEvent(new DumpHeighmap(*heighmap));
     solver->addEvent(new TotalTime());
     solver->addEvent(new heightRMS(*heighmap));

@@ -4,8 +4,6 @@ TEMPLATE = lib
 
 TARGET = ../lib/kMC
 
-QMAKE_LFLAGS_DEBUG += -g
-
 HEADERS = RNG/kMCRNG.h \
     reactions/reaction.h \
     kmcsolver.h \

@@ -11,4 +11,4 @@ SUBDIRS += ignis \
 
 HEADERS += lammpswriter/lammpswriter.h \
     libconfig_utils/libconfig_utils.h \
-    BADAss/BADAss.h
+    BADAss/badass.h
