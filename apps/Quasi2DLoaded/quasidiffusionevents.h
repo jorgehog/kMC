@@ -180,7 +180,7 @@ protected:
 
     void execute()
     {
-        setValue(m_heighmap.max());
+        setValue(mean(conv_to<vec>::from(m_heighmap)));
 
         if (nTimesExecuted()%MainLattice::outputSpacing() == 0)
         {
