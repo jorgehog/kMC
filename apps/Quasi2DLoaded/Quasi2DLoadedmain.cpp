@@ -150,8 +150,8 @@ ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG, const u
 {
 
     const uint &h0 = getSetting<uint>(initCFG, "h0");
-    const uint &nCells = getSetting<uint>(initCFG, "nCells");
-    const double &concentrationFieldLength = getSetting<double>(initCFG, "concentrationFieldLength");
+//    const uint &nCells = getSetting<uint>(initCFG, "nCells");
+//    const double &concentrationFieldLength = getSetting<double>(initCFG, "concentrationFieldLength");
 
     const double &Eb = getSetting<double>(initCFG, "Eb");
     const double &EsMax = getSetting<double>(initCFG, "EsMax")*Eb;
@@ -159,7 +159,7 @@ ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG, const u
 
     const double &chemicalPotentialDifference = getSetting<double>(initCFG, "chemicalPotentialDifference");
     const double &boundaryConcentration = getSetting<double>(initCFG, "boundaryConcentration");
-    const double &diffusivity = getSetting<double>(initCFG, "diffusivity");
+//    const double &diffusivity = getSetting<double>(initCFG, "diffusivity");
 
     solver->resetBoxSize(l, 1, 1);
     DiffusionReaction::setBeta(beta);
@@ -170,7 +170,8 @@ ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG, const u
     solver->setDiffusionType(KMCSolver::DiffusionTypes::None);
 
     //BAD PRATICE WITH POINTERS.. WILL FIX..
-    ConcentrationControl *cc = new ConcentrationControl3D(boundaryConcentration, diffusivity, nCells, concentrationFieldLength);
+//    ConcentrationControl *cc = new ConcentrationControl3D(boundaryConcentration, diffusivity, nCells, concentrationFieldLength);
+    ConcentrationControl *cc = new NoControl(boundaryConcentration);
     MovingWall *wallEvent = new MovingWall(h0, EsMax, EsInit, *heighmap, *cc);
 
     for (uint site = 0; site < l; ++site)
@@ -178,7 +179,7 @@ ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG, const u
         SoluteParticle* particle = solver->forceSpawnParticle(site, 0, 0);
         particle->addReaction(new LeftHopPressurized(particle, *heighmap, Eb, *wallEvent));
         particle->addReaction(new RightHopPressurized(particle, *heighmap, Eb, *wallEvent));
-        particle->addReaction(new Deposition(particle, *heighmap, Eb, *wallEvent, chemicalPotentialDifference, *cc));
+        particle->addReaction(new DepositionMirrorImageArhenius(particle, *heighmap, Eb, *wallEvent, *cc));
         particle->addReaction(new Dissolution(particle, *heighmap, Eb, *wallEvent, *cc));
 
     }

@@ -61,7 +61,7 @@ public:
         return m_h - m_heighmap.min();
     }
 
-    uint freeVolume() const
+    uint cavityVolume() const
     {
         uint V = 0;
 
@@ -70,7 +70,7 @@ public:
             V += floor(m_h - m_heighmap(site));
         }
 
-        return V - length();
+        return V;
     }
 
     static double r0FromEs(const double h0, const double EsMax, const double EsInit)
@@ -169,7 +169,7 @@ class DumpHeighmap : public KMCEvent
 public:
 
     DumpHeighmap(const ivec &heighmap) :
-        KMCEvent(),
+        KMCEvent("height", "", true, true),
         m_heighmap(heighmap),
         m_filename(solver()->filePath() + "heighmap.arma")
     {
@@ -180,6 +180,8 @@ protected:
 
     void execute()
     {
+        setValue(m_heighmap.max());
+
         if (nTimesExecuted()%MainLattice::outputSpacing() == 0)
         {
             m_heighmap.save(m_filename);

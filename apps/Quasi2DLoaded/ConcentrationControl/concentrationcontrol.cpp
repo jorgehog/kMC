@@ -8,21 +8,21 @@ using namespace kMC;
 
 uint ConcentrationControl::nSolvants() const
 {
-    return concentration()*m_movingWall->freeVolume();
+    return concentration()*m_movingWall->cavityVolume();
 }
 
 
 void ConcentrationControl1D::registerPopulationChange(int change)
 {
 
-    double dC = 1.0/m_movingWall->freeVolume();
+    double dC = 1.0/m_movingWall->cavityVolume();
 
     m_concentrations(0) += change*dC;
 
     BADAssBool(concentration() >= 0 && concentration() <= 1,
                "Illegal concentration values initiated.", [&] ()
     {
-        BADAssSimpleDump(change, concentration(), m_movingWall->freeVolume());
+        BADAssSimpleDump(change, concentration(), m_movingWall->cavityVolume());
     });
 
 }
@@ -93,7 +93,7 @@ void ConcentrationControl3D::diffuse(const double dt)
     w.setSystemSize(m_movingWall->length(), H, r());
     w.initializeNewFile();
 
-    for (int y = 0; y < H; ++y)
+    for (int y = 0; y < signed(H); ++y)
     {
         yCentered = y - (int)(m_nCells + s/2);
 

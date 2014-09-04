@@ -109,6 +109,32 @@ public:
         return solver()->NX();
     }
 
+    virtual double activationEnergy() const
+    {
+        return localEnergy(nNeighbors());
+    }
+
+    virtual double prefactor() const
+    {
+        return 1.0;
+    }
+
+
+    void calcRate()
+    {
+        double Ea = activationEnergy();
+
+        if (Ea == 0)
+        {
+            setRate(prefactor());
+        }
+        else
+        {
+            setRate(prefactor()*exp(-beta()*activationEnergy()));
+        }
+
+    }
+
 protected:
 
     ivec &m_heights;
@@ -122,11 +148,6 @@ protected:
     const double &Eb() const
     {
         return m_Eb;
-    }
-
-    double leftRightRate(const uint n) const
-    {
-        return exp(-beta()*localEnergy(n));
     }
 
     double localEnergy(const uint n) const
@@ -167,18 +188,11 @@ public:
         return m_heights(leftSite()) < myHeight() && m_heights(leftSite()) < floor(wallHeight());
     }
 
-    virtual void calcRate()
-    {
-        setRate(leftRightRate(nNeighbors()));
-    }
-
     void execute()
     {
         m_heights(site())--;
         m_heights(leftSite())++;
     }
-
-
 };
 
 class RightHop : public QuasiDiffusionReaction
@@ -192,11 +206,6 @@ public:
         return m_heights(rightSite()) < myHeight() && m_heights(rightSite()) < floor(wallHeight());
     }
 
-    virtual void calcRate()
-    {
-        setRate(leftRightRate(nNeighbors()));
-    }
-
     void execute()
     {
         m_heights(site())--;
@@ -205,46 +214,14 @@ public:
 
 };
 
-
-class LeftHopScaled : public LeftHop
-{
-    using LeftHop::LeftHop;
-
-    // Reaction interface
-public:
-
-    void calcRate()
-    {
-        setRate(leftRightRate(nNeighbors())/heightDifference(leftSite()));
-    }
-
-};
-
-class RightHopScaled : public RightHop
-{
-    using RightHop::RightHop;
-
-    // Reaction interface
-public:
-
-    void calcRate()
-    {
-        setRate(leftRightRate(nNeighbors())/heightDifference(rightSite()));
-    }
-
-};
-
-
 class LeftHopPressurized : public LeftHop
 {
     using LeftHop::LeftHop;
 
-    // Reaction interface
 public:
-
-    void calcRate()
+    double activationEnergy() const override
     {
-        setRate(exp(-beta()*(localEnergy() + localPressure())));
+        return localEnergy() + localPressure();
     }
 
 };
@@ -253,12 +230,10 @@ class RightHopPressurized : public RightHop
 {
     using RightHop::RightHop;
 
-    // Reaction interface
 public:
-
-    void calcRate()
+    double activationEnergy() const override
     {
-        setRate(exp(-beta()*(localEnergy() + localPressure())));
+        return localEnergy() + localPressure();
     }
 
 };
@@ -272,13 +247,11 @@ public:
                ivec &heights,
                const double Eb,
                const MovingWall &wallEvent,
-               const double chemicalPotentialDifference,
                ConcentrationControl &concentrationController) :
         QuasiDiffusionReaction(particle,
                                heights,
                                Eb,
                                wallEvent),
-        m_chemicalPotentialDifference(chemicalPotentialDifference),
         m_concentrationController(concentrationController)
     {
 
@@ -292,33 +265,113 @@ public:
         return myHeight() < floor(wallHeight()) && m_concentrationController.concentration() != 0;
     }
 
-    void calcRate()
-    {
-        double mu = 1.0;
-        double prob = 1 - pow(1 - 1.0/wallEvent().length(), m_concentrationController.nSolvants());
-        double chemWeight = exp(beta()*m_chemicalPotentialDifference);
-
-        double prefactor = mu*chemWeight*prob;
-
-
-        double activatioEnergy = 1.0 + 4*m_concentrationController.concentration()*Eb();
-
-        setRate(prefactor*exp(-beta()*activatioEnergy));
-    }
-
     void execute()
     {
         m_concentrationController.onParticleRemoval(site());
         m_heights(site())++;
     }
 
+    double activationEnergy() const = 0;
+
+    double prefactor() const = 0;
+
+
+protected:
+
+    const ConcentrationControl &concentrationController() const
+    {
+        return m_concentrationController;
+    }
+
+private:
+
+    ConcentrationControl &m_concentrationController;
+
+};
+
+class DepositionSpesifiedChemicalPotential : public Deposition
+{
+public:
+    DepositionSpesifiedChemicalPotential(SoluteParticle *particle,
+                                         ivec &heights,
+                                         const double Eb,
+                                         const MovingWall &wallEvent,
+                                         const double chemicalPotentialDifference,
+                                         ConcentrationControl &concentrationController) :
+        Deposition(particle, heights, Eb, wallEvent, concentrationController),
+        m_chemicalPotentialDifference(chemicalPotentialDifference)
+    {
+
+    }
+
+    double activationEnergy() const
+    {
+        return 1.0 + 2*Eb();
+    }
+    double prefactor() const
+    {
+        return exp(beta()*m_chemicalPotentialDifference);
+    }
+
 private:
 
     const double m_chemicalPotentialDifference;
 
-    ConcentrationControl &m_concentrationController;
 };
 
+class DepositionPurelyFromConcentration : public Deposition
+{
+    using Deposition::Deposition;
+
+public:
+
+    double activationEnergy() const
+    {
+        return 1.0 + 2*Eb();
+    }
+
+    double prefactor() const
+    {
+        return concentrationController().concentration();
+    }
+
+};
+
+class DepositionMirrorImageArhenius : public Deposition
+{
+    using Deposition::Deposition;
+
+public:
+
+    uint nVacantNeighbors() const
+    {
+        uint nvn = 1;
+
+        if (heightDifference(leftSite()) > 0)
+        {
+            nvn++;
+        }
+        if (heightDifference(rightSite() > 0))
+        {
+            nvn++;
+        }
+
+        return nvn;
+
+    }
+
+    double activationEnergy() const
+    {
+        return 1.0;
+    }
+
+    double prefactor() const
+    {
+        return nVacantNeighbors()*concentrationController().concentration();
+    }
+
+
+};
 
 
 class Dissolution : public QuasiDiffusionReaction
@@ -346,16 +399,9 @@ public:
         return m_concentrationController.concentration() != 1;
     }
 
-    void calcRate()
+    double activationEnergy() const
     {
-        double factor = 1.0;
-
-//        if (solver()->solverEvent()->totalTime() > 30)
-//        {
-//            factor *= 100;
-//        }
-
-        setRate(factor*exp(-beta()*(localEnergy() + localPressure())));
+        return localEnergy() + localPressure();
     }
 
     void execute()

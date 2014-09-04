@@ -58,6 +58,40 @@ protected:
 
 };
 
+class NoControl : public ConcentrationControl
+{
+public:
+    NoControl(const double concentration) :
+        ConcentrationControl(concentration, 1, 1)
+    {
+
+    }
+
+
+
+    // ConcentrationControl interface
+public:
+    void initialize()
+    {
+    }
+    void onParticleAddition(const uint x)
+    {
+        (void) x;
+    }
+    void onParticleRemoval(const uint x)
+    {
+        (void) x;
+    }
+    double concentration() const
+    {
+        return m_boundaryConcentration;
+    }
+    void diffuse(const double dt)
+    {
+        (void) dt;
+    }
+};
+
 
 class ConcentrationControl1D : public ConcentrationControl
 {
