@@ -21,12 +21,12 @@ public:
 
     }
 
-    static const string potentialString()
+    const string numericDescription() const
     {
         stringstream s;
-        s << DiffusionReaction::linearRateScale()
-          << "_" << beta()
-          << "_" << DiffusionReaction::strength();
+        s << "Eb_" << Eb()
+          << "_beta_" << beta()
+          << "_" << wallEvent().numericDescription();
 
         return s.str();
     }

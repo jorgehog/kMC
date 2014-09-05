@@ -124,7 +124,7 @@ int main()
 
             H5Wrapper::Member &sizeMember = h5root.addMember(l);
 
-            H5Wrapper::Member &potentialMember = sizeMember.addMember(QuasiDiffusionReaction::potentialString());
+            H5Wrapper::Member &potentialMember = sizeMember.addMember(dynamic_cast<QuasiDiffusionReaction*>(solver->particle(0)->reactions().at(0))->numericDescription());
 
             solver->mainloop();
             potentialMember.addData("heightmap", *heightmap);

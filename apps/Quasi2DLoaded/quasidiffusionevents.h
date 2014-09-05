@@ -19,6 +19,8 @@ public:
         KMCEvent("MovingWall", "h0", true, true),
         m_h0(h0),
         m_h(h0),
+        m_EsMax(EsMax),
+        m_EsInit(EsInit),
         m_r0(r0FromEs(h0, EsMax, EsInit)),
         m_s0(s0FromEs(h0, EsMax, EsInit)),
         m_heighmap(heighmap),
@@ -26,6 +28,18 @@ public:
     {
         cc.setMovingWallEvent(this);
         cc.initialize();
+    }
+
+    const string numericDescription() const
+    {
+        stringstream s;
+        s << "EsMax_" << m_EsMax
+          << "_EsInit_" << m_EsInit
+          << "_h0_" << m_h0
+          << m_cc.numericDescription();
+
+        return s.str();
+
     }
 
     void execute()
@@ -90,6 +104,9 @@ private:
 
     const double m_h0;
     double m_h;
+
+    const double m_EsMax;
+    const double m_EsInit;
 
     const double m_r0;
     const double m_s0;

@@ -22,6 +22,12 @@ public:
 
     }
 
+    virtual const std::string numericDescription() const
+    {
+        std::stringstream s;
+        s << "concentration_" << concentration();
+        return s.str();
+    }
 
     virtual ~ConcentrationControl()
     {
