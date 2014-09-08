@@ -51,7 +51,7 @@ protected:
         m_totalTime -= Reaction::linearRateScale()*std::log(KMC_RNG_UNIFORM())/solver()->kTot();
 
         //To counter buildup of roundoff errors
-        if (m_nTimesExecuted % 10000 == 0)
+        if (m_cycle % 10000 == 0)
         {
             solver()->remakeAccuAllRates();
         }
@@ -91,9 +91,11 @@ int main()
 
     KMCSolver::enableLocalUpdating(false);
     KMCSolver::enableDumpLAMMPS(false);
-    MainLattice::enableEventFile(true, "ignisQuasi2Dloaded.arma", 1, 1);
 
     KMCSolver* solver = new KMCSolver(root);
+
+    string ignisOutputName = "ignisQuasi2Dloaded.ign";
+    solver->mainLattice()->enableEventValueStorage(true, true, ignisOutputName, solver->filePath(), 1);
 
     H5Wrapper::Root h5root("Quasi2D.h5");
 
@@ -109,6 +111,7 @@ int main()
 
     vec temps = linspace(tStart, tEnd, nTemps);
     uint N = temps.size();
+    mat eventMatrix;
 
     t.tic();
 
@@ -127,9 +130,10 @@ int main()
             H5Wrapper::Member &potentialMember = sizeMember.addMember(dynamic_cast<QuasiDiffusionReaction*>(solver->particle(0)->reactions().at(0))->numericDescription());
 
             solver->mainloop();
+
             potentialMember.addData("heightmap", *heightmap);
-            potentialMember.addData("ignisData", KMCEvent::eventMatrix());
-            potentialMember.addData("ignisEventDescriptions", KMCEvent::outputEventDescriptions());
+            potentialMember.addData("ignisData", solver->mainLattice()->storedEventValues());
+            potentialMember.addData("ignisEventDescriptions", solver->mainLattice()->outputEventDescriptions());
 
             potentialMember.file()->flush(H5F_SCOPE_GLOBAL);
             solver->reset();

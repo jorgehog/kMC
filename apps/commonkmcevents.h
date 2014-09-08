@@ -80,15 +80,15 @@ public:
     void initialize()
     {
         T0 = DiffusionReaction::beta();
-        dT = (T1 - T0)/((eventLength/(double)therm - 1));
+        dT = (T1 - T0)/((eventLength()/(double)therm - 1));
 
     }
 
     void execute()
     {
-        if (m_nTimesExecuted%therm == 0)
+        if (m_cycle%therm == 0)
         {
-            DiffusionReaction::setBeta(T0 + dT*(m_nTimesExecuted/therm));
+            DiffusionReaction::setBeta(T0 + dT*(m_cycle/therm));
         }
     }
 
@@ -187,7 +187,7 @@ protected:
 
     void execute()
     {
-        setValue(particles(0, 0));
+        setValue(registeredHandler(0, 0));
     }
 };
 
@@ -201,7 +201,7 @@ protected:
 
     void execute()
     {
-        if ((m_nTimesExecuted+1)%250000 == 0)
+        if ((m_cycle+1)%250000 == 0)
         {
             solver()->sortReactionsByRate();
         }
@@ -249,7 +249,7 @@ protected:
     void execute()
     {
 
-        if (m_nTimesExecuted%10 == 0)
+        if (m_cycle%10 == 0)
         {
             if (SoluteParticle::nSolutionParticles() == 0)
             {

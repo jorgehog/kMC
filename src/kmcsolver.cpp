@@ -189,9 +189,9 @@ void KMCSolver::onConstruct()
 void KMCSolver::setupMainLattice()
 {
 
-    MainLattice::setCurrentParticles(new KMCParticles(this));
+    Lattice::setCurrentParticles(new KMCParticles(this));
 
-    m_mainLattice = new MainLattice();
+    m_mainLattice = new Lattice();
     m_mainLattice->setOutputPath(filePath());
 
     m_solverEvent = new SolverEvent();
@@ -226,9 +226,6 @@ void KMCSolver::finalizeObject()
 
 
     delete m_mainLattice;
-
-    Event<uint>::resetEventParameters();
-
 
     KMCDebugger_Finalize();
 }
@@ -863,7 +860,7 @@ uint KMCSolver::binarySearchForInterval(const double target, const vector<double
 
 void KMCSolver::swapMainSolverEventWith(KMCEvent *event)
 {
-    m_mainLattice->removeEvent(m_solverEvent->getAddress());
+    m_mainLattice->removeEvent(m_solverEvent->meshAddress());
 
     event->setManualPriority(0);
     addEvent(event);
@@ -1447,7 +1444,7 @@ void KMCSolver::getRateVariables()
 
 const uint &KMCSolver::cycle() const
 {
-    return m_solverEvent->nTimesExecuted();
+    return m_solverEvent->cycle();
 }
 
 

@@ -51,7 +51,7 @@ public:
 
     void mainloop()
     {
-        m_mainLattice->eventLoop();
+        m_mainLattice->eventLoop(m_nCycles);
     }
 
     void addEvent(Event<uint> &event)
@@ -64,12 +64,12 @@ public:
         m_mainLattice->addEvent(event);
     }
 
-    void addSubLattice(lattice &subLattice)
+    void addSubLattice(latticefield &subLattice)
     {
         m_mainLattice->addSubField(subLattice);
     }
 
-    void addSubLattice(lattice *subLattice)
+    void addSubLattice(latticefield *subLattice)
     {
         m_mainLattice->addSubField(subLattice);
     }
@@ -129,7 +129,7 @@ public:
         return sites[i + m_boundaryPadding][j + m_boundaryPadding][k + m_boundaryPadding];
     }
 
-    MainLattice *mainLattice() const
+    Lattice *mainLattice() const
     {
         return m_mainLattice;
     }
@@ -217,12 +217,12 @@ public:
 
     void setNumberOfCycles(const uint nCycles)
     {
-        MainLattice::nCycles = nCycles;
+        m_nCycles = nCycles;
     }
 
     void setCyclesPerOutput(const uint cyclesPerOutput)
     {
-        MainLattice::enableOutput(true, cyclesPerOutput);
+        m_mainLattice->enableOutput(true, cyclesPerOutput);
     }
 
 
@@ -368,7 +368,7 @@ private:
 
     double m_targetConcentration;
 
-    MainLattice *m_mainLattice;
+    Lattice *m_mainLattice;
 
     Site**** sites;
 
@@ -379,6 +379,8 @@ private:
     uint m_NZ;
 
     uvec3 m_N;
+
+    uint m_nCycles;
 
 
     vector<SoluteParticle*> m_particles;

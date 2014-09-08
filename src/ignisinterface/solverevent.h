@@ -74,7 +74,7 @@ public:
         solver()->getRateVariables();
 
         //To counter buildup of roundoff errors
-        if (m_nTimesExecuted % 10000 == 0 || !solver()->localUpdating())
+        if (m_cycle % 10000 == 0 || !solver()->localUpdating())
         {
             solver()->remakeAccuAllRates();
         }
@@ -141,7 +141,7 @@ protected:
 
     void execute()
     {
-        if (m_nTimesExecuted%MainLattice::outputSpacing() != 0)
+        if (m_cycle%solver()->mainLattice()->outputSpacing() != 0)
         {
             return;
         }

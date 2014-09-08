@@ -46,7 +46,7 @@ void ConcentrationControl1D::diffuse(const double dt)
 
     m_concentrations = newConcentration;
 
-    if (m_movingWall->nTimesExecuted() % MainLattice::saveFileSpacing() == 0)
+    if (m_movingWall->cycle() % KMCSolver::instance()->mainLattice()->saveValuesSpacing() == 0)
     {
         m_concentrations.save(KMCSolver::instance()->filePath() + "conc0.arma");
     }

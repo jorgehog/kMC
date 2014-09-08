@@ -35,7 +35,7 @@ protected:
 
     KMCSolver *solver() const
     {
-        return particles().solver();
+        return registeredHandler().solver();
     }
 
     const DiffusionReaction *lastReaction() const;

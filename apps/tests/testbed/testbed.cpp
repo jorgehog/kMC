@@ -11,6 +11,9 @@ void testBed::makeSolver()
 {
 
     solver = new KMCSolver();
+    solver->mainLattice()->enableOutput(false);
+    solver->mainLattice()->enableEventValueStorage(false, false);
+    solver->mainLattice()->enableProgressReport(false);
 
     initSimpleSystemParameters(false);
 

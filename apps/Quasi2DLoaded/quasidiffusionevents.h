@@ -199,7 +199,7 @@ protected:
     {
         setValue(mean(conv_to<vec>::from(m_heighmap)));
 
-        if (nTimesExecuted()%MainLattice::outputSpacing() == 0)
+        if (cycle()%solver()->mainLattice()->outputSpacing() == 0)
         {
             m_heighmap.save(m_filename);
         }

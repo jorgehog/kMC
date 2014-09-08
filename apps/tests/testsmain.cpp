@@ -121,9 +121,7 @@ int main()
     using namespace SuiteMixedBoundaries;
 
     KMCDebugger_SetEnabledTo(false);
-    MainLattice::enableOutput(false);
-    MainLattice::enableEventFile(false);
-    MainLattice::enableProgressReport(false);
+
     KMCSolver::enableDumpLAMMPS(false);
 
     testBed::makeSolver();
