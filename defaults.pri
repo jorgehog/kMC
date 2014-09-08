@@ -47,6 +47,7 @@ DEFINES += \
 CONFIG(NO_OMP) {
     DEFINES += KMC_NO_OMP
     LIBS -= -fopenmp
+    QMAKE_CXXFLAGS -= -fopenmp
     QMAKE_CXXFLAGS_RELEASE -= -fopenmp
     QMAKE_CXXFLAGS_DEBUG -= -fopenmp
 }
