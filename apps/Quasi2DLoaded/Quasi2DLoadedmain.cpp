@@ -140,7 +140,6 @@ ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG)
     const double &EsInit = getSetting<double>(initCFG, "EsInit")*Eb;
 
 //    const double &chemicalPotentialDifference = getSetting<double>(initCFG, "chemicalPotentialDifference");
-    const double &boundaryConcentration = getSetting<double>(initCFG, "boundaryConcentration");
     //    const double &diffusivity = getSetting<double>(initCFG, "diffusivity");
 
     ivec* heighmap = new ivec(solver->NX(), fill::zeros);
@@ -150,7 +149,7 @@ ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG)
 
     //BAD PRATICE WITH POINTERS.. WILL FIX..
     //    ConcentrationControl *cc = new ConcentrationControl3D(boundaryConcentration, diffusivity, nCells, concentrationFieldLength);
-    ConcentrationControl *cc = new NoControl(boundaryConcentration);
+    ConcentrationControl *cc = new NoControl(solver->targetConcentration());
     MovingWall *wallEvent = new MovingWall(h0, EsMax, EsInit, *heighmap, *cc);
 
     for (uint site = 0; site < solver->NX(); ++site)

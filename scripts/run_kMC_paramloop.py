@@ -22,11 +22,15 @@ def main():
 
     controller = ParameterSetController()
 
-    lengths = ParameterSet(100, 150, 50, cfg, "BoxSize\s*=\s*\[(\d+), .*\]")
-    temperatures = ParameterSet(0.5, 1.0, 0.5, cfg, "beta\s*=\s*(.*)\;")
+    lengths = ParameterSet(100, 1000, 100, cfg, "BoxSize\s*=\s*\[(\d+), .*\]")
+    temperatures = ParameterSet(0.1, 1.0, 0.1, cfg, "beta\s*=\s*(.*)\;")
+    es_maxes = ParameterSet(2.0, 50.0, 2.0, cfg, "EsMax\s*\=\s*(.*)\;", lambda p, i: p*i)
+    concentrations = ParameterSet(0.1, 0.9, 0.1, cfg, "SaturationLevel\s*=\s*(.*)\;")
 
     controller.register_parameter_set(lengths)
     controller.register_parameter_set(temperatures)
+    controller.register_parameter_set(es_maxes)
+    controller.register_parameter_set(concentrations)
 
     controller.run(run_kmc, controller, this_dir, path, app)
 
