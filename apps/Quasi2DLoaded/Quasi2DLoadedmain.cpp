@@ -71,7 +71,7 @@ private:
 };
 
 
-ivec *initializeQuasi2DLoaded(KMCSolver * solver, const Setting & root, const uint l, const double beta);
+ivec *initializeQuasi2DLoaded(KMCSolver * solver, const Setting & root);
 
 int main()
 {
@@ -101,46 +101,24 @@ int main()
 
     const Setting &initCFG = getSetting(root, "Initialization");
 
-    const uint &lStart = getSetting<uint>(initCFG, "lStart");
-    const uint &lEnd   = getSetting<uint>(initCFG, "lEnd");
-    const uint &lStep  = getSetting<uint>(initCFG, "lStep");
-
-    const double &tStart = getSetting<double>(initCFG, "tStart");
-    const double &tEnd   = getSetting<double>(initCFG, "tEnd");
-    const uint &nTemps   = getSetting<uint>(initCFG, "nTemps");
-
-    vec temps = linspace(tStart, tEnd, nTemps);
-    uint N = temps.size();
-    mat eventMatrix;
-
     t.tic();
 
-    for (uint l = lStart; l <= lEnd; l += lStep)
-    {
-        for (uint i = 0; i < N; ++i)
-        {
-            double t = temps(i);
+    ivec* heightmap = initializeQuasi2DLoaded(solver, initCFG);
 
-            cout << "Running l b = " << l << " " << t << endl;
+    H5Wrapper::Member &sizeMember = h5root.addMember(solver->NX());
 
-            ivec* heightmap = initializeQuasi2DLoaded(solver, initCFG, l, t);
+    H5Wrapper::Member &potentialMember = sizeMember.addMember(dynamic_cast<QuasiDiffusionReaction*>(solver->particle(0)->reactions().at(0))->numericDescription());
 
-            H5Wrapper::Member &sizeMember = h5root.addMember(l);
+    solver->mainloop();
 
-            H5Wrapper::Member &potentialMember = sizeMember.addMember(dynamic_cast<QuasiDiffusionReaction*>(solver->particle(0)->reactions().at(0))->numericDescription());
+    potentialMember.addData("heightmap", *heightmap);
+    potentialMember.addData("ignisData", solver->mainLattice()->storedEventValues());
+    potentialMember.addData("ignisEventDescriptions", solver->mainLattice()->outputEventDescriptions());
 
-            solver->mainloop();
+    potentialMember.file()->flush(H5F_SCOPE_GLOBAL);
+    solver->reset();
 
-            potentialMember.addData("heightmap", *heightmap);
-            potentialMember.addData("ignisData", solver->mainLattice()->storedEventValues());
-            potentialMember.addData("ignisEventDescriptions", solver->mainLattice()->outputEventDescriptions());
-
-            potentialMember.file()->flush(H5F_SCOPE_GLOBAL);
-            solver->reset();
-
-            delete heightmap;
-        }
-    }
+    delete heightmap;
 
     cout << "Simulation ended after " << t.toc() << " seconds" << endl;
 
@@ -150,35 +128,32 @@ int main()
 
 }
 
-ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG, const uint l, const double beta)
+ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG)
 {
 
     const uint &h0 = getSetting<uint>(initCFG, "h0");
-//    const uint &nCells = getSetting<uint>(initCFG, "nCells");
-//    const double &concentrationFieldLength = getSetting<double>(initCFG, "concentrationFieldLength");
+    //    const uint &nCells = getSetting<uint>(initCFG, "nCells");
+    //    const double &concentrationFieldLength = getSetting<double>(initCFG, "concentrationFieldLength");
 
     const double &Eb = getSetting<double>(initCFG, "Eb");
     const double &EsMax = getSetting<double>(initCFG, "EsMax")*Eb;
     const double &EsInit = getSetting<double>(initCFG, "EsInit")*Eb;
 
-    const double &chemicalPotentialDifference = getSetting<double>(initCFG, "chemicalPotentialDifference");
+//    const double &chemicalPotentialDifference = getSetting<double>(initCFG, "chemicalPotentialDifference");
     const double &boundaryConcentration = getSetting<double>(initCFG, "boundaryConcentration");
-//    const double &diffusivity = getSetting<double>(initCFG, "diffusivity");
+    //    const double &diffusivity = getSetting<double>(initCFG, "diffusivity");
 
-    solver->resetBoxSize(l, 1, 1);
-    DiffusionReaction::setBeta(beta);
-
-    ivec* heighmap = new ivec(l, fill::zeros);
+    ivec* heighmap = new ivec(solver->NX(), fill::zeros);
 
     //Override standard diffusion. Necessary for quasi diffusive simulations.
     solver->setDiffusionType(KMCSolver::DiffusionTypes::None);
 
     //BAD PRATICE WITH POINTERS.. WILL FIX..
-//    ConcentrationControl *cc = new ConcentrationControl3D(boundaryConcentration, diffusivity, nCells, concentrationFieldLength);
+    //    ConcentrationControl *cc = new ConcentrationControl3D(boundaryConcentration, diffusivity, nCells, concentrationFieldLength);
     ConcentrationControl *cc = new NoControl(boundaryConcentration);
     MovingWall *wallEvent = new MovingWall(h0, EsMax, EsInit, *heighmap, *cc);
 
-    for (uint site = 0; site < l; ++site)
+    for (uint site = 0; site < solver->NX(); ++site)
     {
         SoluteParticle* particle = solver->forceSpawnParticle(site, 0, 0);
         particle->addReaction(new LeftHopPressurized(particle, *heighmap, Eb, *wallEvent));

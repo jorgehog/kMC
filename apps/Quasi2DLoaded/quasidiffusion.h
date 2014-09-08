@@ -6,6 +6,7 @@
 using namespace kMC;
 using namespace arma;
 
+
 class QuasiDiffusionReaction : public Reaction
 {
 public:
@@ -134,6 +135,7 @@ public:
         }
 
     }
+
 
 protected:
 
