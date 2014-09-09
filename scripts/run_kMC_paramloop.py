@@ -17,15 +17,15 @@ def run_kmc(controller, this_dir, path, app):
 def main():
     this_dir = getcwd()
     app = "Quasi2DLoaded"
-    path = "../../build-kMC-Desktop_Qt_5_3_GCC_64bit-Release/apps/Quasi2DLoaded"
+    path = "../../build-kMC-Desktop_Qt_5_2_1_GCC_64bit-Release/apps/Quasi2DLoaded"
     cfg = join(path, "infiles", app + ".cfg")
 
     controller = ParameterSetController()
 
     lengths = ParameterSet(100, 1000, 100, cfg, "BoxSize\s*=\s*\[(\d+), .*\]")
-    temperatures = ParameterSet(0.1, 1.0, 0.1, cfg, "beta\s*=\s*(.*)\;")
-    es_maxes = ParameterSet(2.0, 50.0, 2.0, cfg, "EsMax\s*\=\s*(.*)\;", lambda p, i: p*i)
-    concentrations = ParameterSet(0.1, 0.9, 0.1, cfg, "SaturationLevel\s*=\s*(.*)\;")
+    temperatures = ParameterSet(0.5, 1.0, 0.5, cfg, "beta\s*=\s*(.*)\;")
+    es_maxes = ParameterSet(10.0, 10.0, 2.0, cfg, "EsMax\s*\=\s*(.*)\;", lambda p, i: p*i)
+    concentrations = ParameterSet(0.38, 0.38, 0.1, cfg, "SaturationLevel\s*=\s*(.*)\;")
 
     controller.register_parameter_set(lengths)
     controller.register_parameter_set(temperatures)
