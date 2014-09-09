@@ -7,6 +7,8 @@ f = h5py.File(sys.argv[1], 'r')
 
 alldata = {}
 
+n = len(f.keys())
+k = 0
 for l, run in f.items():
     for potential, data in run.items():
         t = float(re.findall("beta\_(\d+\.?\d*)", potential)[0])
@@ -17,8 +19,10 @@ for l, run in f.items():
         alldata[t][l] = {}
 
         for i, name in enumerate(data["ignisEventDescriptions"][0]):
-            print str(name).split("@")[0]
             alldata[t][l][str(name).split("@")[0]] = data["ignisData"][i, :]
+
+    print k+1, " / ", n, "complete."
+    k += 1
 
 for t, lengths in alldata.items():
     figure()
@@ -33,6 +37,8 @@ for t, lengths in alldata.items():
     xlabel("t [s * R_0]")
     ylabel("RMS(h)")
     draw()
+    savefig("t_vs_hrms_beta" + str(t) + ".png")
+
 show()
 
 f.close()
