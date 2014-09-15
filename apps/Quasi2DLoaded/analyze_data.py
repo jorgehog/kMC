@@ -2,57 +2,202 @@ import h5py
 import sys
 import re
 from matplotlib.pylab import *
-
-f = h5py.File(sys.argv[1], 'r')
-
-alldata = {}
-
-c0 = 0.9
-em0 = 2
-
-n = len(f.keys())
-k = 0
-for l, run in f.items():
-    for potential, data in run.items():
-
-        eb, t, em, c = [float(re.findall("%s\_(\d+\.?\d*)" % ID, potential)[0]) for ID in ["Eb", "beta", "EsMax", "concentration"]]
-
-        if c != c0 or em != em0*eb:
-            continue
-
-        if t not in alldata.keys():
-            alldata[t] = {}
-        if em not in alldata[t].keys():
-            alldata[t][em] = {}
-        if c not in alldata[t][em].keys():
-            alldata[t][em][c] = {}
-
-        alldata[t][em][c][l] = {}
-
-        for i, name in enumerate(data["ignisEventDescriptions"][0]):
-            alldata[t][em][c][l][str(name).split("@")[0]] = data["ignisData"][i, :]
-        alldata[t][em][c][l]["name"] = potential
-
-    print k+1, " / ", n, "complete."
-    k += 1
+from math import log
+from numpy import where, asarray, random
 
 
-for t, rest in alldata.items():
-    for em, rest2 in rest.items():
-        for c, lengths in rest2.items():
-                figure()
 
-                hold("on")
-                for length, data in lengths.items():
-                    loglog(data["Time"], data["heightRMS"], label=length)
+def interpolate(value_array, time_array, time, start=0):
 
-                    title(data["name"])
+    if time > time_array[-1] or time < time_array[0]:
+        return start, 0, 0
 
-                legend(loc=2)
-                xlabel("t [s * R_0]")
-                ylabel("RMS(h)")
-                draw()
-                savefig(data["name"] + ".png")
+    i = start
+    while time_array[i] < time:
+        i += 1
 
-f.close()
+    incline = (value_array[i] - value_array[i-1])/(time_array[i] - time_array[i-1])
 
+    return i, 1, value_array[i-1] + incline*(time - time_array[i-1])
+
+
+def combine_results(value_array, time_array):
+
+    times = set()
+    for time in time_array:
+        time = asarray(time)
+        times = times.union(set(time))
+
+    all_f_t = zeros([len(value_array), len(times)])
+    scales = zeros(len(times))
+    starts = zeros(len(value_array))
+
+    times = array(sorted(list(times)))
+
+    for ti, time in enumerate(times):
+        for i in range(len(value_array)):
+            loc, scale, all_f_t[i][ti] = interpolate(value_array[i], time_array[i], time, starts[i])
+
+            scales[ti] += scale
+            starts[i] = loc
+
+        if scales[ti] == 0:
+            print "ERROR IN SCALING", ti, time
+
+        if ti % (len(times)/10) == 0:
+            print float(ti) / len(times) * 100, "%"
+
+    return times, all_f_t.sum(0)/scales
+
+
+def roughen(*args):
+
+    size = len(args[0])
+
+    new = [[] for i in range(len(args))]
+    for i in range(size):
+
+        idx = [0]
+        k = 1
+        N = len(args[0][i])
+
+        while k < N:
+            idx.append(int(round(k)))
+            k += 0.001*k*log(1 + k)
+
+        idx = unique(asarray(idx, dtype=int))
+
+        for n, arg in enumerate(args):
+            new[n].append(arg[i][idx])
+
+    return new
+
+
+def get_w_beta(rms, times, do_plot=False):
+
+    r_rms, r_times = roughen(rms, times)
+
+    t, f_t = combine_results(r_rms, r_times)
+
+    from scipy import polyfit
+
+    M = 10000000000000000
+    M2 = M
+
+    logt = np.log(t)
+    logf = np.log(f_t)
+    N = len(logt)
+
+    I = None
+    I2 = None
+    R = None
+    R2 = None
+    for i in range(N/10, N):
+        r, residuals, c, c, c = polyfit(logt[:i], logf[:i], 1, full=True)
+
+        if residuals[0] < M:
+            M = residuals[0]
+            R = r
+            I = i
+
+        i2 = N - i
+        r2, residuals2, c, c, c = polyfit(logt[i2:-1], logf[i2:-1], 1, full=True)
+
+        if residuals2[0] < M2:
+            M2 = residuals2[0]
+            R2 = r2
+            I2 = i2
+
+    if do_plot:
+        cla()
+        loglog(t, f_t)
+
+        figure()
+        plot(logt, logf)
+        plot(logt[:I], R[1] + logt[:I]*R[0])
+        plot(logt[I2:], R2[1] + logt[I2:]*R2[0])
+
+        print "w inf = %g, beta = %g" % (R[0], R2[1])
+
+        show()
+
+    return R[0], R2[1]
+
+
+def main():
+    f = h5py.File(sys.argv[1], 'r')
+
+    all_data = {}
+
+    c0 = 0.38
+    em0 = 10
+    t0 = 1.0
+
+    n = len(f.keys())
+    k = 0
+    for l, run in f.items():
+
+        print "%2d / %2d Parsing %d items ..." % (k + 1, n, len(run.items()))
+
+        for potential, data in run.items():
+
+            eb, t, em, c = [float(re.findall("%s\_(\d+\.?\d*)" % ID, potential)[0]) for ID in ["Eb",
+                                                                                               "beta",
+                                                                                               "EsMax",
+                                                                                               "concentration"]]
+
+            if c != c0 or em != em0*eb or t != t0:
+                continue
+
+            if t not in all_data.keys():
+                all_data[t] = {}
+            if em not in all_data[t].keys():
+                all_data[t][em] = {}
+            if c not in all_data[t][em].keys():
+                all_data[t][em][c] = {}
+
+            all_data[t][em][c][l] = {}
+
+            for i, name in enumerate(data["ignisEventDescriptions"][0]):
+                all_data[t][em][c][l][str(name).split("@")[0]] = data["ignisData"][i, :]
+            all_data[t][em][c][l]["name"] = potential
+
+        k += 1
+
+    f.close()
+
+    all_times = []
+    all_lengths = []
+    all_rms = []
+
+    for t, rest in all_data.items():
+        for em, rest2 in rest.items():
+            for c, lengths in rest2.items():
+                    figure()
+
+                    name = lengths.values()[0]["name"]
+
+                    hold("on")
+                    for length, data in lengths.items():
+                        loglog(data["Time"], data["heightRMS"], label=length)
+
+                        all_times.append(data["Time"])
+                        all_lengths.append(length)
+                        all_rms.append(data["heightRMS"])
+
+                    title(name)
+
+                    legend(loc=2)
+                    xlabel("t [s * R_0]")
+                    ylabel("RMS(h)")
+                    draw()
+                    savefig(name + ".png")
+
+                    clf()
+
+                    winf, beta = get_w_beta(all_rms, all_times, True)
+
+
+
+if __name__ == "__main__":
+    main()
