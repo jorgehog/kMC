@@ -1,4 +1,5 @@
 import h5py
+from hgext.mq import clone
 import sys
 import re
 from matplotlib.pylab import *
@@ -129,9 +130,11 @@ def main():
 
     all_data = {}
 
-    c0 = 0.38
+    c0 = 0.48
     em0 = 10
     t0 = 1.0
+    n0 = 1
+    l0 = 128
 
     n = len(f.keys())
     k = 0
@@ -141,12 +144,23 @@ def main():
 
         for potential, data in run.items():
 
-            eb, t, em, c = [float(re.findall("%s\_(\d+\.?\d*)" % ID, potential)[0]) for ID in ["Eb",
-                                                                                               "beta",
-                                                                                               "EsMax",
-                                                                                               "concentration"]]
+            eb, t, em, c, n = [float(re.findall("%s\_(\d+\.?\d*)" % ID, potential)[0]) for ID in ["Eb",
+                                                                                                  "beta",
+                                                                                                  "EsMax",
+                                                                                                  "concentration",
+                                                                                                  r"\_n"]]
 
-            if c != c0 or em != em0*eb or t != t0:
+
+            print c,c0, em, em0*eb, t, t0, l, l0
+            if c != c0 or em != em0*eb or t != t0 or l != l0:
+                if c != c0:
+                    print "c"
+                if em != em0:
+                    print "em"
+                if t != t0:
+                    print "t"
+                if l != l0:
+                    print "l"
                 continue
 
             if t not in all_data.keys():
@@ -155,12 +169,16 @@ def main():
                 all_data[t][em] = {}
             if c not in all_data[t][em].keys():
                 all_data[t][em][c] = {}
+            if n not in all_data[t][em][c].keys():
+                all_data[t][em][c][n] = {}
 
-            all_data[t][em][c][l] = {}
+            all_data[t][em][c][n][l] = {}
+
+            print "hey",
 
             for i, name in enumerate(data["ignisEventDescriptions"][0]):
-                all_data[t][em][c][l][str(name).split("@")[0]] = data["ignisData"][i, :]
-            all_data[t][em][c][l]["name"] = potential
+                all_data[t][em][c][n][l][str(name).split("@")[0]] = data["ignisData"][i, :]
+            all_data[t][em][c][n][l]["name"] = potential
 
         k += 1
 
@@ -172,7 +190,8 @@ def main():
 
     for t, rest in all_data.items():
         for em, rest2 in rest.items():
-            for c, lengths in rest2.items():
+            for c, rest3 in rest2.items():
+                for n, lengths in rest3.items():
                     figure()
 
                     name = lengths.values()[0]["name"]
@@ -195,7 +214,32 @@ def main():
 
                     clf()
 
-                    winf, beta = get_w_beta(all_rms, all_times, True)
+                    winf, beta = get_w_beta(all_rms, all_times)
+
+
+    close("all")
+    for t, rest in all_data.items():
+        for em, rest2 in rest.items():
+            for c, lengths in rest2.items():
+                figure()
+
+                name = lengths.values()[0]["name"]
+
+                hold("on")
+                for length, data in lengths.items():
+                    plot(data["Time"], data["height"]/data["Time"], label=length)
+
+                xscale("log")
+                title(name)
+
+                legend(loc=2)
+                xlabel("t [s * R_0]")
+                ylabel("<v(t)>")
+                draw()
+
+
+    show()
+
 
 
 

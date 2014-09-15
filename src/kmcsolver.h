@@ -49,8 +49,10 @@ public:
 
     void reset();
 
-    void mainloop()
+    void mainloop(bool reportProgress = true)
     {
+        m_mainLattice->enableProgressReport(reportProgress);
+
         m_mainLattice->eventLoop(m_nCycles);
     }
 

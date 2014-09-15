@@ -101,26 +101,34 @@ int main()
 
     const Setting &initCFG = getSetting(root, "Initialization");
 
-    t.tic();
+    const uint &runID = getSetting<uint>(initCFG, "runID");
 
-    ivec* heightmap = initializeQuasi2DLoaded(solver, initCFG);
+        t.tic();
 
-    H5Wrapper::Member &sizeMember = h5root.addMember(solver->NX());
+        ivec* heightmap = initializeQuasi2DLoaded(solver, initCFG);
 
-    H5Wrapper::Member &potentialMember = sizeMember.addMember(dynamic_cast<QuasiDiffusionReaction*>(solver->particle(0)->reactions().at(0))->numericDescription());
+        H5Wrapper::Member &sizeMember = h5root.addMember(solver->NX());
 
-    solver->mainloop();
 
-    potentialMember.addData("heightmap", *heightmap);
-    potentialMember.addData("ignisData", solver->mainLattice()->storedEventValues());
-    potentialMember.addData("ignisEventDescriptions", solver->mainLattice()->outputEventDescriptions());
+        stringstream s;
+        s << dynamic_cast<QuasiDiffusionReaction*>(solver->particle(0)->reactions().at(0))->numericDescription();
+        s << "_n_" << runID;
 
-    potentialMember.file()->flush(H5F_SCOPE_GLOBAL);
-    solver->reset();
+        H5Wrapper::Member &potentialMember = sizeMember.addMember(s.str());
 
-    delete heightmap;
+        solver->mainloop();
 
-    cout << "Simulation ended after " << t.toc() << " seconds" << endl;
+        potentialMember.addData("heightmap", *heightmap);
+        potentialMember.addData("ignisData", solver->mainLattice()->storedEventValues());
+        potentialMember.addData("ignisEventDescriptions", solver->mainLattice()->outputEventDescriptions());
+
+        potentialMember.file()->flush(H5F_SCOPE_GLOBAL);
+        solver->reset();
+
+        delete heightmap;
+
+        cout << "Simulation ended after " << t.toc() << " seconds" << endl;
+
 
     KMCDebugger_DumpFullTrace();
 
@@ -132,15 +140,10 @@ ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG)
 {
 
     const uint &h0 = getSetting<uint>(initCFG, "h0");
-    //    const uint &nCells = getSetting<uint>(initCFG, "nCells");
-    //    const double &concentrationFieldLength = getSetting<double>(initCFG, "concentrationFieldLength");
 
     const double &Eb = getSetting<double>(initCFG, "Eb");
     const double &EsMax = getSetting<double>(initCFG, "EsMax")*Eb;
     const double &EsInit = getSetting<double>(initCFG, "EsInit")*Eb;
-
-//    const double &chemicalPotentialDifference = getSetting<double>(initCFG, "chemicalPotentialDifference");
-    //    const double &diffusivity = getSetting<double>(initCFG, "diffusivity");
 
     ivec* heighmap = new ivec(solver->NX(), fill::zeros);
 
@@ -148,7 +151,6 @@ ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG)
     solver->setDiffusionType(KMCSolver::DiffusionTypes::None);
 
     //BAD PRATICE WITH POINTERS.. WILL FIX..
-    //    ConcentrationControl *cc = new ConcentrationControl3D(boundaryConcentration, diffusivity, nCells, concentrationFieldLength);
     ConcentrationControl *cc = new NoControl(solver->targetConcentration());
     MovingWall *wallEvent = new MovingWall(h0, EsMax, EsInit, *heighmap, *cc);
 
