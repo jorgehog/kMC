@@ -281,7 +281,6 @@ void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate
 
         m_kTot += newRate;
 
-
         //If there is a vacancy, we simply fill it.
         if (!m_availableReactionSlots.empty())
         {
@@ -303,7 +302,10 @@ void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate
         {
             m_allPossibleReactions.push_back(reaction);
 
-            m_accuAllRates.push_back(m_kTot);
+            if (m_useLocalUpdating)
+            {
+                m_accuAllRates.push_back(m_kTot);
+            }
 
             reaction->setAddress(m_allPossibleReactions.size()-1);
 
