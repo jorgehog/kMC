@@ -89,7 +89,7 @@ int main()
 
     KMCDebugger_SetEnabledTo(getSetting<int>(root, "buildTrace") == 0 ? false : true);
 
-    KMCSolver::enableLocalUpdating(false);
+//    KMCSolver::enableLocalUpdating(false);
     KMCSolver::enableDumpLAMMPS(false);
 
     KMCSolver* solver = new KMCSolver(root);

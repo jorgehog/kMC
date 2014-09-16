@@ -45,6 +45,11 @@ public:
 
         resetReaction();
 
+        if (!solver()->localUpdating())
+        {
+            solver()->remakeAccuAllRates();
+        }
+
     }
 
     const double & totalTime() const

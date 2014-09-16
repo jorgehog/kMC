@@ -49,6 +49,11 @@ public:
         m_cc.diffuse(solver()->solverEvent()->lastTimeStep());
     }
 
+    void reset()
+    {
+
+    }
+
 
     double localPressure(const uint site) const
     {

@@ -449,6 +449,9 @@ void KMCSolver::remakeAccuAllRates()
 {
     m_kTot = 0;
     uint i = 0;
+
+    m_accuAllRates.resize(m_allPossibleReactions.size());
+
     for (Reaction *r : m_allPossibleReactions)
     {
         BADAss(r->rate(), !=, Reaction::UNSET_RATE, "Rates should not be all changed before they are set once.");
@@ -1518,7 +1521,10 @@ void KMCSolver::clearParticles()
         particle = NULL;
     }
 
-    BADAssClose(0, std::accumulate(m_accuAllRates.begin(), m_accuAllRates.end(), 0.0), 1E-5);
+    if (m_useLocalUpdating)
+    {
+        BADAssClose(0, std::accumulate(m_accuAllRates.begin(), m_accuAllRates.end(), 0.0), 1E-5);
+    }
 
     SoluteParticle::clearAll();
 

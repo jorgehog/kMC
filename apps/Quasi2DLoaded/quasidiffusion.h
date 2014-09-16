@@ -120,7 +120,6 @@ public:
         return 1.0;
     }
 
-
     void calcRate()
     {
         double Ea = activationEnergy();
@@ -141,6 +140,13 @@ protected:
 
     ivec &m_heights;
 
+    void queueAffected()
+  {
+      reactant()->markAsAffected();
+
+      solver()->getSite(leftSite(), 0, 0)->associatedParticle()->markAsAffected();
+      solver()->getSite(rightSite(), 0, 0)->associatedParticle()->markAsAffected();
+  }
 
     const MovingWall &wallEvent() const
     {
@@ -194,7 +200,12 @@ public:
     {
         m_heights(site())--;
         m_heights(leftSite())++;
+
+        queueAffected();
+        solver()->getSite(leftSite(2), 0, 0)->associatedParticle()->markAsAffected();
     }
+
+
 };
 
 class RightHop : public QuasiDiffusionReaction
@@ -212,6 +223,9 @@ public:
     {
         m_heights(site())--;
         m_heights(rightSite())++;
+
+        queueAffected();
+        solver()->getSite(rightSite(2), 0, 0)->associatedParticle()->markAsAffected();
     }
 
 };
@@ -271,6 +285,8 @@ public:
     {
         m_concentrationController.onParticleRemoval(site());
         m_heights(site())++;
+
+        queueAffected();
     }
 
     double activationEnergy() const = 0;
@@ -410,6 +426,8 @@ public:
     {
         m_concentrationController.onParticleAddition(site());
         m_heights(site())--;
+
+        queueAffected();
     }
 
 private:
