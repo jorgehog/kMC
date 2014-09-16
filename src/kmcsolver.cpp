@@ -269,6 +269,8 @@ void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate
 
     if (prevRate == newRate)
     {
+        BADAssBool(!((prevRate == Reaction::UNSET_RATE) && (prevRate != Reaction::UNSET_RATE)));
+
         return;
     }
 

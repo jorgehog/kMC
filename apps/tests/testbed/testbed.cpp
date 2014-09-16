@@ -11,9 +11,6 @@ void testBed::makeSolver()
 {
 
     solver = new KMCSolver();
-    solver->mainLattice()->enableOutput(false);
-    solver->mainLattice()->enableEventValueStorage(false, false);
-    solver->mainLattice()->enableProgressReport(false);
 
     initSimpleSystemParameters(false);
 
@@ -2117,10 +2114,9 @@ const SnapShot * testBed::sequentialCore()
     uint nc = 1000;
 
     solver->setNumberOfCycles(nc);
-    solver->setCyclesPerOutput(nc + 1);
     solver->initializeCrystal(0.2);
 
-    solver->mainloop();
+    solver->mainloop(false);
 
     return new SnapShot(solver);
 
@@ -2312,6 +2308,7 @@ void testBed::testKnownCase()
     const Setting & root = cfg.getRoot();
 
     solver = new KMCSolver(root);
+    solver->mainLattice()->enableOutput(false);
 
     forceNewBoundaries(lastBoundaries);
 
@@ -2345,7 +2342,7 @@ void testBed::testKnownCase()
         }
     }
 
-    solver->mainloop();
+    solver->mainloop(false);
 
     string line;
     stringstream s;

@@ -22,7 +22,10 @@ def interpolate(value_array, time_array, time, start=0):
     return i, 1, value_array[i-1] + incline*(time - time_array[i-1])
 
 
-def combine_results(value_array, time_array):
+def combine_results(time_array, value_array, do_roughen=True):
+
+    if do_roughen:
+        value_array, time_array = roughen(value_array, time_array)
 
     times = set()
     for time in time_array:
@@ -35,6 +38,7 @@ def combine_results(value_array, time_array):
 
     times = array(sorted(list(times)))
 
+    length = 40
     for ti, time in enumerate(times):
         for i in range(len(value_array)):
             loc, scale, all_f_t[i][ti] = interpolate(value_array[i], time_array[i], time, starts[i])
@@ -45,8 +49,9 @@ def combine_results(value_array, time_array):
         if scales[ti] == 0:
             print "ERROR IN SCALING", ti, time
 
-        if ti % (len(times)/10) == 0:
-            print float(ti) / len(times) * 100, "%"
+        s = (ti*length)/(len(times)-1)
+        print "\rcombining: [%s%s]" % ("-"*s, " "*(length-s)),
+        sys.stdout.flush()
 
     return times, all_f_t.sum(0)/scales
 
@@ -76,9 +81,7 @@ def roughen(*args):
 
 def get_w_beta(rms, times, do_plot=False):
 
-    r_rms, r_times = roughen(rms, times)
-
-    t, f_t = combine_results(r_rms, r_times)
+    t, f_t = combine_results(times, rms, do_roughen=True)
 
     from scipy import polyfit
 
@@ -126,6 +129,7 @@ def get_w_beta(rms, times, do_plot=False):
 
 
 def main():
+
     f = h5py.File(sys.argv[1], 'r')
 
     all_data = {}
@@ -136,31 +140,36 @@ def main():
     n0 = 1
     l0 = 128
 
-    n = len(f.keys())
+    total = len(f.keys())
     k = 0
     for l, run in f.items():
 
-        print "%2d / %2d Parsing %d items ..." % (k + 1, n, len(run.items()))
+        print "%2d / %2d Parsing %d items ..." % (k + 1, total, len(run.items()))
 
         for potential, data in run.items():
 
-            eb, t, em, c, n = [float(re.findall("%s\_(\d+\.?\d*)" % ID, potential)[0]) for ID in ["Eb",
-                                                                                                  "beta",
-                                                                                                  "EsMax",
-                                                                                                  "concentration",
-                                                                                                  r"\_n"]]
+            eb, t, em, c = [float(re.findall("%s\_(\d+\.?\d*)" % ID, potential)[0]) for ID in ["Eb",
+                                                                                               "beta",
+                                                                                               "EsMax",
+                                                                                               "concentration"]]
 
+            n = re.findall("\_n_(\d+)", potential)
 
-            print c,c0, em, em0*eb, t, t0, l, l0
-            if c != c0 or em != em0*eb or t != t0 or l != l0:
-                if c != c0:
-                    print "c"
-                if em != em0:
-                    print "em"
-                if t != t0:
-                    print "t"
-                if l != l0:
-                    print "l"
+            if n:
+                n = int(n[0])
+            else:
+                n = ""
+
+            # print c,c0, em, em0*eb, t, t0, l, l0
+            if c != c0 or em != em0*eb or t != t0:
+                # if c != c0:
+                #     print "c"
+                # if em != em0*eb:
+                #     print "em"
+                # if t != t0:
+                #     print "t"
+                # if l != l0:
+                #     print "l"
                 continue
 
             if t not in all_data.keys():
@@ -169,16 +178,15 @@ def main():
                 all_data[t][em] = {}
             if c not in all_data[t][em].keys():
                 all_data[t][em][c] = {}
-            if n not in all_data[t][em][c].keys():
-                all_data[t][em][c][n] = {}
+            if l not in all_data[t][em][c].keys():
+                all_data[t][em][c][l] = {}
 
-            all_data[t][em][c][n][l] = {}
+            all_data[t][em][c][l][n] = {}
 
-            print "hey",
 
             for i, name in enumerate(data["ignisEventDescriptions"][0]):
-                all_data[t][em][c][n][l][str(name).split("@")[0]] = data["ignisData"][i, :]
-            all_data[t][em][c][n][l]["name"] = potential
+                all_data[t][em][c][l][n][str(name).split("@")[0]] = data["ignisData"][i, :]
+            all_data[t][em][c][l][n]["name"] = potential
 
         k += 1
 
@@ -191,54 +199,60 @@ def main():
     for t, rest in all_data.items():
         for em, rest2 in rest.items():
             for c, rest3 in rest2.items():
-                for n, lengths in rest3.items():
-                    figure()
 
-                    name = lengths.values()[0]["name"]
-
-                    hold("on")
-                    for length, data in lengths.items():
-                        loglog(data["Time"], data["heightRMS"], label=length)
-
-                        all_times.append(data["Time"])
-                        all_lengths.append(length)
-                        all_rms.append(data["heightRMS"])
-
-                    title(name)
-
-                    legend(loc=2)
-                    xlabel("t [s * R_0]")
-                    ylabel("RMS(h)")
-                    draw()
-                    savefig(name + ".png")
-
-                    clf()
-
-                    winf, beta = get_w_beta(all_rms, all_times)
-
-
-    close("all")
-    for t, rest in all_data.items():
-        for em, rest2 in rest.items():
-            for c, lengths in rest2.items():
                 figure()
-
-                name = lengths.values()[0]["name"]
-
                 hold("on")
-                for length, data in lengths.items():
-                    plot(data["Time"], data["height"]/data["Time"], label=length)
 
-                xscale("log")
+                name = rest3.values()[0].values()[0]["name"].split("_n_")[0]
+
+                print name
+                for length, all_runs in rest3.items():
+
+                    time_array = [data["Time"] for data in all_runs.values()]
+                    value_array = [data["heightRMS"] for data in all_runs.values()]
+
+                    t, f_t = combine_results(time_array, value_array, do_roughen=True)
+
+                    loglog(t, f_t, label=length)
+                    all_times.append(t)
+                    all_lengths.append(length)
+                    all_rms.append(f_t)
+
                 title(name)
 
                 legend(loc=2)
                 xlabel("t [s * R_0]")
-                ylabel("<v(t)>")
+                ylabel("<RMS(h)>")
                 draw()
+                savefig(name + ".png")
 
+                clf()
 
-    show()
+                # winf, beta = get_w_beta(all_rms, all_times)
+
+    #
+    # close("all")
+    # for t, rest in all_data.items():
+    #     for em, rest2 in rest.items():
+    #         for c, lengths in rest2.items():
+    #             figure()
+    #
+    #             name = lengths.values()[0]["name"]
+    #
+    #             hold("on")
+    #             for length, data in lengths.items():
+    #                 plot(data["Time"], data["height"]/data["Time"], label=length)
+    #
+    #             xscale("log")
+    #             title(name)
+    #
+    #             legend(loc=2)
+    #             xlabel("t [s * R_0]")
+    #             ylabel("<v(t)>")
+    #             draw()
+    #
+    #
+    # show()
 
 
 

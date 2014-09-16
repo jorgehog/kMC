@@ -86,8 +86,6 @@ public:
 
     }
 
-protected:
-
     void execute()
     {
         R = solver()->kTot()*KMC_RNG_UNIFORM();
@@ -135,10 +133,6 @@ public:
         m_outputCounter = m_offset;
     }
 
-protected:
-
-    virtual void dumpFile() const = 0;
-
     void execute()
     {
         if (m_cycle%solver()->mainLattice()->outputSpacing() != 0)
@@ -151,6 +145,10 @@ protected:
 
         m_outputCounter++;
     }
+
+protected:
+
+    virtual void dumpFile() const = 0;
 
     const uint &outputCounter() const
     {
