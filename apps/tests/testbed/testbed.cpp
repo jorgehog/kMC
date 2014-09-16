@@ -2676,7 +2676,7 @@ void testBed::testReactionVectorUpdate()
     for (uint i = 0; i < solver->allPossibleReactions().size(); ++i)
     {
         CHECK_EQUAL(true, solver->isEmptyAddress(i));
-        CHECK_EQUAL(0, solver->accuAllRates().at(i));
+        CHECK_CLOSE(0, solver->accuAllRates().at(i), solver->minRateThreshold());
     }
 
     //Activating again should reset back to original case. Not trivial because this

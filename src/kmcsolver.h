@@ -262,11 +262,6 @@ public:
 
     void remakeAccuAllRates();
 
-    double prevAccuAllRatesValue(const uint address) const
-    {
-        return address == 0 ? 0 : m_accuAllRates.at(address - 1);
-    }
-
     bool isEmptyAddress(const uint address) const;
 
     bool isRegisteredParticle(SoluteParticle *particle) const;

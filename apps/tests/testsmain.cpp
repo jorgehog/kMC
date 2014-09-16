@@ -9,8 +9,8 @@
 #include <sys/types.h>
 
 
-#define focusSuite "MixedBoundaries"
-#define focusTest  "KnownCase"
+//#define focusSuite "MixedBoundaries"
+//#define focusTest  "KnownCase"
 
 
 #include "defines.h"

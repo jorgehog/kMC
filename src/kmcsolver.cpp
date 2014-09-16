@@ -292,11 +292,7 @@ void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate
 
             m_allPossibleReactions.at(slot) = reaction;
 
-            m_accuAllRates.at(slot) = prevAccuAllRatesValue(slot);
-
-
             updateAccuAllRateElements(slot, m_accuAllRates.size(), newRate);
-
 
             m_availableReactionSlots.pop_back();
 
@@ -327,11 +323,7 @@ void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate
 
         m_availableReactionSlots.push_back(reaction->address());
 
-        //reset the accuallrates value to the previous value or zero, so that when we swap in a reaction to a vacant spot,
-        //we simply add the rate value on top of all higher elements.
-        m_accuAllRates.at(reaction->address()) = prevAccuAllRatesValue(reaction->address());
-
-        updateAccuAllRateElements(reaction->address() + 1, m_accuAllRates.size(), -prevRate);
+        updateAccuAllRateElements(reaction->address(), m_accuAllRates.size(), -prevRate);
 
         reaction->setAddress(Reaction::UNSET_ADDRESS);
 
