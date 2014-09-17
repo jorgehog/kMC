@@ -4,6 +4,7 @@
 #include <limits>
 #include <sstream>
 #include <set>
+#include <functional>
 
 #include <libconfig_utils/libconfig_utils.h>
 
@@ -64,12 +65,16 @@ public:
 
     virtual const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X")  const;
 
-
-    void registerUpdateFlag(int flag)
+    template<typename T>
+    void registerUpdateFlag(T flag)
     {
-        if (flag < m_updateFlag)
+        static_assert(std::is_scalar<T>::value, "invalid update flag.");
+
+        int iflag = static_cast<int>(flag);
+
+        if (iflag < m_updateFlag)
         {
-            m_updateFlag = flag;
+            m_updateFlag = iflag;
         }
     }
 
@@ -78,6 +83,12 @@ public:
     void setRate()
     {
         setRate(calcRate());
+    }
+
+    //Do not use unless you know what you are doing.
+    void changeRate(std::function<double(double)> changeFunction)
+    {
+        setRate(changeFunction(m_rate));
     }
 
     void disable()

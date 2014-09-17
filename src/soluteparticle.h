@@ -67,8 +67,6 @@ public:
 
     static void nSpecies(const uint _nSpecies, bool recalculatePotential = false);
 
-    static void selectUpdateFlags();
-
     static void popAffectedParticle(SoluteParticle *particle);
 
     static void updateAffectedParticles();

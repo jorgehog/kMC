@@ -87,6 +87,8 @@ ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG)
 
     ivec* heighmap = new ivec(solver->NX(), fill::zeros);
 
+    solver->enableLocalUpdating(false);
+
     //Override standard diffusion. Necessary for quasi diffusive simulations.
     solver->setDiffusionType(KMCSolver::DiffusionTypes::None);
 

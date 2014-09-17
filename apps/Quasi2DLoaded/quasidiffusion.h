@@ -11,7 +11,7 @@ class QuasiDiffusionReaction : public Reaction
 {
 public:
 
-    QuasiDiffusionReaction(SoluteParticle *particle, ivec &heights, const double Eb, const MovingWall &wallEvent) :
+    QuasiDiffusionReaction(SoluteParticle *particle, ivec &heights, const double Eb, MovingWall &wallEvent) :
         Reaction(particle),
         m_heights(heights),
         m_Eb(Eb),
@@ -127,6 +127,11 @@ public:
 
     virtual double calcRate() override final
     {
+        if (updateFlag() == (int)UpdateFlags::SKIP)
+        {
+            return rate();
+        }
+
         double Ea = activationEnergy();
 
         if (Ea == 0)
@@ -194,16 +199,26 @@ public:
         return s.str();
     }
 
+    enum class UpdateFlags
+    {
+        SKIP = 1
+    };
+
 protected:
 
     ivec &m_heights;
 
     void queueAffected()
     {
-        reactant()->markAsAffected();
+        m_wallEvent.markAsAffected(reactant());
 
-        solver()->getSite(leftSite(), 0, 0)->associatedParticle()->markAsAffected();
-        solver()->getSite(rightSite(), 0, 0)->associatedParticle()->markAsAffected();
+        m_wallEvent.markAsAffected(solver()->getSite(leftSite(), 0, 0)->associatedParticle());
+        m_wallEvent.markAsAffected(solver()->getSite(rightSite(), 0, 0)->associatedParticle());
+    }
+
+    MovingWall &wallEvent()
+    {
+        return m_wallEvent;
     }
 
 
@@ -215,7 +230,7 @@ private:
     const uint m_rightSite;
     const uint m_leftSite;
 
-    const MovingWall &m_wallEvent;
+    MovingWall &m_wallEvent;
 
 };
 
@@ -236,7 +251,7 @@ public:
         m_heights(leftSite())++;
 
         queueAffected();
-        solver()->getSite(leftSite(2), 0, 0)->associatedParticle()->markAsAffected();
+        wallEvent().markAsAffected(solver()->getSite(leftSite(2), 0, 0)->associatedParticle());
     }
 
 
@@ -264,7 +279,7 @@ public:
         m_heights(rightSite())++;
 
         queueAffected();
-        solver()->getSite(rightSite(2), 0, 0)->associatedParticle()->markAsAffected();
+        wallEvent().markAsAffected(solver()->getSite(rightSite(2), 0, 0)->associatedParticle());
     }
 
     const string info(int xr, int yr, int zr, string desc) const
@@ -340,7 +355,7 @@ public:
     DepositionSpesifiedChemicalPotential(SoluteParticle *particle,
                                          ivec &heights,
                                          const double Eb,
-                                         const MovingWall &wallEvent,
+                                         MovingWall &wallEvent,
                                          const double chemicalPotentialDifference) :
         Deposition(particle, heights, Eb, wallEvent),
         m_chemicalPotentialDifference(chemicalPotentialDifference)
@@ -402,11 +417,6 @@ public:
 
         return nvn;
 
-    }
-
-    void execute()
-    {
-        Deposition::execute();
     }
 
     double activationEnergy() const

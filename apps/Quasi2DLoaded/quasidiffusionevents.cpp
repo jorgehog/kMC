@@ -33,7 +33,7 @@ void MovingWall::execute()
 {
     for (uint i = 0; i < m_heighmap.size(); ++i)
     {
-        if (!solver()->particle(i)->isAffected())
+        if (!isAffected(solver()->particle(i)))
         {
             BADAssClose(localPressureEvaluate(i), localPressure(i), 1E-3);
         }
@@ -63,19 +63,10 @@ void MovingWall::reset()
         BADAssClose(r->calcRateBruteForce(), r->calcRate(), 1E-3);
     }
 
-    DepositionMirrorImageArhenius *r = static_cast<DepositionMirrorImageArhenius*>(solver()->particle(3)->reactions().at(2));
-
 }
 
 void MovingWall::_updatePressureRates()
 {
-    BADAssBool(!SoluteParticle::affectedParticles().empty(),
-               "No particles affected. Are the events out of order?",
-               [&] ()
-    {
-        solver()->mainLattice()->dumpLoopChunkInfo();
-    });
-
     for (SoluteParticle *particle : solver()->particles())
     {
         m_localPressure(particle->x()) = localPressureEvaluate(particle->x());
@@ -83,12 +74,15 @@ void MovingWall::_updatePressureRates()
 
     for (QuasiDiffusionReaction* r : m_pressureAffectedReactions)
     {
-        if (r->reactant()->isAffected() || !r->isAllowed())
+        if (!r->isAllowed() || isAffected(r->reactant()))
         {
             continue;
         }
 
         r->setRate();
+        r->registerUpdateFlag(QuasiDiffusionReaction::UpdateFlags::SKIP);
     }
+
+    m_affectedParticles.clear();
 }
 

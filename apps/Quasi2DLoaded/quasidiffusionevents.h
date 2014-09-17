@@ -1,6 +1,7 @@
 #pragma once
 
 #include <kMC>
+#include <set>
 
 class QuasiDiffusionReaction;
 
@@ -44,6 +45,16 @@ public:
     void execute();
 
     void reset();
+
+    void markAsAffected(SoluteParticle *particle)
+    {
+        m_affectedParticles.insert(particle);
+    }
+
+    bool isAffected(SoluteParticle *particle)
+    {
+        return m_affectedParticles.find(particle) != m_affectedParticles.end();
+    }
 
     const double &changeInHeight() const
     {
@@ -121,6 +132,7 @@ private:
 
     const ivec &m_heighmap;
     vec m_localPressure;
+    set<SoluteParticle *> m_affectedParticles;
 
     void _rescaleHeight()
     {
