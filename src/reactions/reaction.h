@@ -91,6 +91,11 @@ public:
         setRate(changeFunction(m_rate));
     }
 
+    void forceNewRate(const double rate)
+    {
+        m_rate = rate;
+    }
+
     void disable()
     {
         setRate(Reaction::UNSET_RATE);
@@ -233,11 +238,6 @@ private:
 protected:
 
     void setRate(const double rate);
-
-    void _setRate(const double rate)
-    {
-        m_rate = rate;
-    }
 
     static KMCSolver * solver()
     {

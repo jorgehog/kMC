@@ -259,7 +259,7 @@ void DiffusionReaction::registerBetaChange(const double newBeta)
 
     BADAssBool(rate() != UNSET_RATE, "Beta should not be changed untill rates have been calculated.");
 
-    _setRate(rate() * m_betaChangeScaleFactor);
+    forceNewRate(rate() * m_betaChangeScaleFactor);
 
 }
 

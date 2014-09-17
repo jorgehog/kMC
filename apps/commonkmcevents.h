@@ -19,13 +19,18 @@ public:
 
         for (Reaction *reaction : solver()->allPossibleReactions())
         {
-            BADAssClose(reaction->calcRate(), reaction->rate(), 1E-3, "error in rate updating.", [&] ()
+            double rate = reaction->rate();
+            reaction->forceNewRate(Reaction::UNSET_RATE);
+
+            double r2 = reaction->calcRate();
+            BADAssClose(rate, r2, 1E-3, "error in rate updating.", [&] ()
             {
-                cout << "woah" << endl;
                 cout << reaction->reactant()->info() << reaction->info() << endl;
-                cout << "cr " << reaction->calcRate() << endl;
+                cout << "cr " << rate << " " << r2 << endl;
                 KMCDebugger_DumpFullTrace(solver()->solverEvent()->selectedReaction()->info());
             });
+
+            reaction->forceNewRate(rate);
         }
 
     }

@@ -117,7 +117,7 @@ public:
 
     virtual double activationEnergy() const
     {
-        return localEnergy(nNeighbors());
+        return localEnergy();
     }
 
     virtual double prefactor() const
@@ -127,13 +127,12 @@ public:
 
     virtual double calcRate() override final
     {
-        if (updateFlag() != (int)AllUpdateFlags::defaultUpdateFlag && rate() != UNSET_RATE)
+        if (updateFlag() != (int)UpdateFlags::CALCULATE && rate() != UNSET_RATE)
         {
             return rate();
         }
 
         double Ea = activationEnergy();
-        cout << solver()->solverEvent()->cycle() << endl;
 
         if (Ea == 0)
         {
@@ -141,7 +140,7 @@ public:
         }
         else
         {
-            return prefactor()*exp(-beta()*activationEnergy());
+            return prefactor()*exp(-beta()*Ea);
         }
 
     }

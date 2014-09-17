@@ -28,7 +28,7 @@ int main()
 
     KMCDebugger_SetEnabledTo(getSetting<int>(root, "buildTrace") == 0 ? false : true);
 
-//    KMCSolver::enableLocalUpdating(false);
+    //    KMCSolver::enableLocalUpdating(false);
     KMCSolver::enableDumpLAMMPS(false);
 
     KMCSolver* solver = new KMCSolver(root);
@@ -42,31 +42,32 @@ int main()
 
     const uint &runID = getSetting<uint>(initCFG, "runID");
 
-        t.tic();
+    t.tic();
 
-        ivec* heightmap = initializeQuasi2DLoaded(solver, initCFG);
+    ivec* heightmap = initializeQuasi2DLoaded(solver, initCFG);
 
-        H5Wrapper::Member &sizeMember = h5root.addMember(solver->NX());
+    H5Wrapper::Member &sizeMember = h5root.addMember(solver->NX());
 
 
-        stringstream s;
-        s << dynamic_cast<QuasiDiffusionReaction*>(solver->particle(0)->reactions().at(0))->numericDescription();
-        s << "_n_" << runID;
+    stringstream s;
+    s << dynamic_cast<QuasiDiffusionReaction*>(solver->particle(0)->reactions().at(0))->numericDescription();
+    s << "_n_" << runID;
 
-        H5Wrapper::Member &potentialMember = sizeMember.addMember(s.str());
+    H5Wrapper::Member &potentialMember = sizeMember.addMember(s.str());
 
-        solver->mainloop();
+    solver->mainLattice()->enableOutput(false);
+    solver->mainloop();
 
-        potentialMember.addData("heightmap", *heightmap);
-        potentialMember.addData("ignisData", solver->mainLattice()->storedEventValues());
-        potentialMember.addData("ignisEventDescriptions", solver->mainLattice()->outputEventDescriptions());
+    potentialMember.addData("heightmap", *heightmap);
+    potentialMember.addData("ignisData", solver->mainLattice()->storedEventValues());
+    potentialMember.addData("ignisEventDescriptions", solver->mainLattice()->outputEventDescriptions());
 
-        potentialMember.file()->flush(H5F_SCOPE_GLOBAL);
-        solver->reset();
+    potentialMember.file()->flush(H5F_SCOPE_GLOBAL);
+    solver->reset();
 
-        delete heightmap;
+    delete heightmap;
 
-        cout << "Simulation ended after " << t.toc() << " seconds" << endl;
+    cout << "Simulation ended after " << t.toc() << " seconds" << endl;
 
 
     KMCDebugger_DumpFullTrace();
@@ -100,7 +101,7 @@ ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG)
         SoluteParticle* particle = solver->forceSpawnParticle(site, 0, 0);
         particle->addReaction(new LeftHopPressurized(particle, *heighmap, Eb, *wallEvent));
         particle->addReaction(new RightHopPressurized(particle, *heighmap, Eb, *wallEvent));
-        particle->addReaction(new DepositionMirrorImageArhenius(particle, *heighmap, Eb, *wallEvent));
+//        particle->addReaction(new DepositionMirrorImageArhenius(particle, *heighmap, Eb, *wallEvent));
         particle->addReaction(new Dissolution(particle, *heighmap, Eb, *wallEvent));
 
     }
