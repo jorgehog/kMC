@@ -56,6 +56,11 @@ public:
         return m_affectedParticles.find(particle) != m_affectedParticles.end();
     }
 
+    const set<SoluteParticle *> affectedParticles() const
+    {
+        return m_affectedParticles;
+    }
+
     const double &changeInHeight() const
     {
         return m_dh;

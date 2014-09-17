@@ -47,26 +47,18 @@ void MovingWall::execute()
 
 void MovingWall::reset()
 {
-    for (SoluteParticle *particle : SoluteParticle::affectedParticles())
+    for (SoluteParticle *particle : solver()->particles())
     {
         BADAssClose(localPressureEvaluate(particle->x()), localPressure(particle->x()), 1E-3);
     }
 
-    for (QuasiDiffusionReaction *r : m_pressureAffectedReactions)
-    {
-        if (r->reactant()->isAffected() || !r->isAllowed())
-        {
-            continue;
-        }
-
-        BADAssClose(r->calcRateBruteForce(), r->rate(), 1E-3);
-        BADAssClose(r->calcRateBruteForce(), r->calcRate(), 1E-3);
-    }
-
+    m_affectedParticles.clear();
 }
 
 void MovingWall::_updatePressureRates()
 {
+    vec localPressureOld = m_localPressure;
+
     for (SoluteParticle *particle : solver()->particles())
     {
         m_localPressure(particle->x()) = localPressureEvaluate(particle->x());
@@ -79,10 +71,12 @@ void MovingWall::_updatePressureRates()
             continue;
         }
 
-        r->setRate();
-        r->registerUpdateFlag(QuasiDiffusionReaction::UpdateFlags::SKIP);
-    }
+        r->changeRate([&] (const double rate)
+        {
+            return rate*exp(-Reaction::beta()*(m_localPressure(r->reactant()->x()) - localPressureOld(r->reactant()->x())));
+        });
 
-    m_affectedParticles.clear();
+        r->registerUpdateFlag(QuasiDiffusionReaction::UpdateFlags::CALCULATE);
+    }
 }
 

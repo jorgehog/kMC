@@ -19,7 +19,7 @@ public:
         m_leftSite(leftSite(1)),
         m_wallEvent(wallEvent)
     {
-
+        registerUpdateFlag(UpdateFlags::CALCULATE);
     }
 
     string name() const
@@ -127,8 +127,9 @@ public:
 
     virtual double calcRate() override final
     {
-        if (updateFlag() == (int)UpdateFlags::SKIP)
+        if (updateFlag() == (int)AllUpdateFlags::defaultUpdateFlag)
         {
+            BADAss(rate(), !=, UNSET_RATE);
             return rate();
         }
 
@@ -185,7 +186,7 @@ public:
         return m_wallEvent.localPressure(site());
     }
 
-    virtual const string info(int xr, int yr, int zr, string desc) const
+    virtual const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const
     {
         (void) xr;
         (void) yr;
@@ -195,13 +196,14 @@ public:
         stringstream s;
 
         s <<"site " << site() << " rs ls "<< rightSite() << " " << leftSite() << " height " << myHeight() << " dh " << heightDifference(leftSite()) << " " << heightDifference(rightSite()) << " rate " << rate() << endl;
+        s << "\n" << Reaction::info() << endl;
 
         return s.str();
     }
 
     enum class UpdateFlags
     {
-        SKIP = 1
+        CALCULATE = -1
     };
 
 protected:
@@ -255,7 +257,7 @@ public:
     }
 
 
-    const string info(int xr, int yr, int zr, string desc) const
+    const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const
     {
         return "Lefthop " + QuasiDiffusionReaction::info(xr, yr, zr, desc);
     }
@@ -282,7 +284,7 @@ public:
         wallEvent().markAsAffected(solver()->getSite(rightSite(2), 0, 0)->associatedParticle());
     }
 
-    const string info(int xr, int yr, int zr, string desc) const
+    const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const
     {
         return "Righthop " + QuasiDiffusionReaction::info(xr, yr, zr, desc);
     }
@@ -342,7 +344,7 @@ public:
 
     double prefactor() const = 0;
 
-    const string info(int xr, int yr, int zr, string desc) const
+    const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const
     {
         return "Deposition " + QuasiDiffusionReaction::info(xr, yr, zr, desc);
     }
@@ -455,7 +457,7 @@ public:
         queueAffected();
     }
 
-    const string info(int xr, int yr, int zr, string desc) const
+    const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const
     {
         return "Dissolution " + QuasiDiffusionReaction::info(xr, yr, zr, desc);
     }
