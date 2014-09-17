@@ -11,7 +11,7 @@ public:
 
     TSTDiffusion(SoluteParticle *reactant, int dx, int dy, int dz);
 
-    void calcRate();
+    double calcRate();
 
     void reset();
 

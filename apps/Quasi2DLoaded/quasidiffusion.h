@@ -120,37 +120,34 @@ public:
         return 1.0;
     }
 
-    void calcRate()
+    virtual double calcRate() override final
     {
         double Ea = activationEnergy();
 
         if (Ea == 0)
         {
-            setRate(prefactor());
+            return prefactor();
         }
         else
         {
-            setRate(prefactor()*exp(-beta()*activationEnergy()));
+            return prefactor()*exp(-beta()*activationEnergy());
         }
 
     }
 
-
-protected:
-
-    ivec &m_heights;
-
-    void queueAffected()
+    double calcRateBruteForce() const
     {
-        reactant()->markAsAffected();
-
-        solver()->getSite(leftSite(), 0, 0)->associatedParticle()->markAsAffected();
-        solver()->getSite(rightSite(), 0, 0)->associatedParticle()->markAsAffected();
+        return prefactor()*exp(-beta()*activationEnergy());
     }
 
     const MovingWall &wallEvent() const
     {
         return m_wallEvent;
+    }
+
+    const double &concentration() const
+    {
+        return solver()->targetConcentration();
     }
 
     const double &Eb() const
@@ -172,6 +169,19 @@ protected:
     {
         return m_wallEvent.localPressure(site());
     }
+
+protected:
+
+    ivec &m_heights;
+
+    void queueAffected()
+    {
+        reactant()->markAsAffected();
+
+        solver()->getSite(leftSite(), 0, 0)->associatedParticle()->markAsAffected();
+        solver()->getSite(rightSite(), 0, 0)->associatedParticle()->markAsAffected();
+    }
+
 
 
 private:
@@ -257,33 +267,18 @@ public:
 
 class Deposition : public QuasiDiffusionReaction
 {
-public:
 
-    Deposition(SoluteParticle *particle,
-               ivec &heights,
-               const double Eb,
-               const MovingWall &wallEvent,
-               ConcentrationControl &concentrationController) :
-        QuasiDiffusionReaction(particle,
-                               heights,
-                               Eb,
-                               wallEvent),
-        m_concentrationController(concentrationController)
-    {
-
-    }
-
+    using QuasiDiffusionReaction::QuasiDiffusionReaction;
 
     // Reaction interface
 public:
     bool isAllowed() const
     {
-        return myHeight() < floor(wallHeight()) && m_concentrationController.concentration() != 0;
+        return myHeight() < floor(wallHeight()) && concentration() != 0;
     }
 
     void execute()
     {
-        m_concentrationController.onParticleRemoval(site());
         m_heights(site())++;
 
         queueAffected();
@@ -292,18 +287,6 @@ public:
     double activationEnergy() const = 0;
 
     double prefactor() const = 0;
-
-
-protected:
-
-    const ConcentrationControl &concentrationController() const
-    {
-        return m_concentrationController;
-    }
-
-private:
-
-    ConcentrationControl &m_concentrationController;
 
 };
 
@@ -314,9 +297,8 @@ public:
                                          ivec &heights,
                                          const double Eb,
                                          const MovingWall &wallEvent,
-                                         const double chemicalPotentialDifference,
-                                         ConcentrationControl &concentrationController) :
-        Deposition(particle, heights, Eb, wallEvent, concentrationController),
+                                         const double chemicalPotentialDifference) :
+        Deposition(particle, heights, Eb, wallEvent),
         m_chemicalPotentialDifference(chemicalPotentialDifference)
     {
 
@@ -350,7 +332,7 @@ public:
 
     double prefactor() const
     {
-        return concentrationController().concentration();
+        return concentration();
     }
 
 };
@@ -385,7 +367,7 @@ public:
 
     double prefactor() const
     {
-        return nVacantNeighbors()*concentrationController().concentration();
+        return nVacantNeighbors()*concentration();
     }
 
 
@@ -394,27 +376,13 @@ public:
 
 class Dissolution : public QuasiDiffusionReaction
 {
-public:
-
-    Dissolution(SoluteParticle *particle,
-                ivec &heights,
-                const double Eb,
-                const MovingWall &wallEvent,
-                ConcentrationControl &concentrationController) :
-        QuasiDiffusionReaction(particle,
-                               heights,
-                               Eb,
-                               wallEvent),
-        m_concentrationController(concentrationController)
-    {
-
-    }
+    using QuasiDiffusionReaction::QuasiDiffusionReaction;
 
     // Reaction interface
 public:
     bool isAllowed() const
     {
-        return m_concentrationController.concentration() != 1;
+        return concentration() != 1;
     }
 
     double activationEnergy() const
@@ -424,13 +392,8 @@ public:
 
     void execute()
     {
-        m_concentrationController.onParticleAddition(site());
         m_heights(site())--;
 
         queueAffected();
     }
-
-private:
-
-    ConcentrationControl &m_concentrationController;
 };

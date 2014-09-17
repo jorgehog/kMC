@@ -23,6 +23,7 @@ Reaction::Reaction(SoluteParticle *reactant):
 
 Reaction::~Reaction()
 {
+
     disable();
 
     m_reactant = NULL;

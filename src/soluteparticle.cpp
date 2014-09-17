@@ -379,7 +379,7 @@ void SoluteParticle::updateReactions()
     {
         if (reaction->isAllowed())
         {
-            reaction->calcRate();
+            reaction->setRate();
             reaction->setLastUsedEnergy();
         }
 

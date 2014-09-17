@@ -51,8 +51,6 @@ public:
 
     virtual bool isAllowed() const = 0;
 
-    virtual void calcRate() = 0;
-
     virtual void execute() = 0;
 
     virtual void reset();
@@ -61,6 +59,8 @@ public:
     {
         (void) newBeta;
     }
+
+    virtual double calcRate() = 0;
 
     virtual const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X")  const;
 
@@ -74,6 +74,11 @@ public:
     }
 
     void setLastUsedEnergy();
+
+    void setRate()
+    {
+        setRate(calcRate());
+    }
 
     void disable()
     {

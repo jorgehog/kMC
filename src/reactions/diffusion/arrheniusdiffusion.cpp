@@ -9,7 +9,7 @@ ArrheniusDiffusion::ArrheniusDiffusion(SoluteParticle *reactant, int dx, int dy,
 
 }
 
-void ArrheniusDiffusion::calcRate()
+double ArrheniusDiffusion::calcRate()
 {
-    setRate(linearRateScale()*exp(beta()*reactant()->energy()));
+    return linearRateScale()*exp(beta()*reactant()->energy());
 }

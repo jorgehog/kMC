@@ -21,7 +21,7 @@ TSTDiffusion::TSTDiffusion(SoluteParticle *reactant, int dx, int dy, int dz) :
 
 }
 
-void TSTDiffusion::calcRate()
+double TSTDiffusion::calcRate()
 {
 
     double newRate = 0;
@@ -51,7 +51,7 @@ void TSTDiffusion::calcRate()
 
     }
 
-    setRate(newRate);
+    return newRate;
 
 }
 

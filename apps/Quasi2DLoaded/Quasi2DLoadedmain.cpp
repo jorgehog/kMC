@@ -10,67 +10,6 @@
 
 using namespace libconfig;
 
-class CustomSolverEvent : public KMCEvent
-{
-public:
-
-    CustomSolverEvent() : KMCEvent("CustomSolverEvent")
-    {
-
-    }
-
-    void initialize()
-    {
-        solver()->getRateVariables();
-
-        m_totalTime = 0;
-    }
-
-    const double & totalTime() const
-    {
-        return m_totalTime;
-    }
-
-protected:
-
-    void execute()
-    {
-        R = solver()->kTot()*KMC_RNG_UNIFORM();
-
-        choice = solver()->getReactionChoice(R);
-
-        m_selectedReaction = solver()->allPossibleReactions().at(choice);
-        KMCDebugger_SetActiveReaction(m_selectedReaction);
-
-        m_selectedReaction->execute();
-
-        Site::updateBoundaries();
-
-        solver()->getRateVariables();
-
-        m_totalTime -= Reaction::linearRateScale()*std::log(KMC_RNG_UNIFORM())/solver()->kTot();
-
-        //To counter buildup of roundoff errors
-        if (m_cycle % 10000 == 0)
-        {
-            solver()->remakeAccuAllRates();
-        }
-
-    }
-
-private:
-
-    double R;
-
-    double m_totalTime;
-
-    uint choice;
-
-    Reaction * m_selectedReaction;
-
-};
-
-
 ivec *initializeQuasi2DLoaded(KMCSolver * solver, const Setting & root);
 
 int main()
@@ -136,6 +75,27 @@ int main()
 
 }
 
+class RateChecker : public KMCEvent
+{
+    using KMCEvent::KMCEvent;
+
+public:
+
+    void execute() {}
+
+    void reset()
+    {
+
+        for (Reaction *reaction : solver()->allPossibleReactions())
+        {
+            BADAssClose(reaction->calcRate(), reaction->rate(), 1E-3);
+        }
+
+    }
+
+};
+
+
 ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG)
 {
 
@@ -151,16 +111,15 @@ ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG)
     solver->setDiffusionType(KMCSolver::DiffusionTypes::None);
 
     //BAD PRATICE WITH POINTERS.. WILL FIX..
-    ConcentrationControl *cc = new NoControl(solver->targetConcentration());
-    MovingWall *wallEvent = new MovingWall(h0, EsMax, EsInit, *heighmap, *cc);
+    MovingWall *wallEvent = new MovingWall(h0, EsMax, EsInit, *heighmap);
 
     for (uint site = 0; site < solver->NX(); ++site)
     {
         SoluteParticle* particle = solver->forceSpawnParticle(site, 0, 0);
         particle->addReaction(new LeftHopPressurized(particle, *heighmap, Eb, *wallEvent));
         particle->addReaction(new RightHopPressurized(particle, *heighmap, Eb, *wallEvent));
-        particle->addReaction(new DepositionMirrorImageArhenius(particle, *heighmap, Eb, *wallEvent, *cc));
-        particle->addReaction(new Dissolution(particle, *heighmap, Eb, *wallEvent, *cc));
+        particle->addReaction(new DepositionMirrorImageArhenius(particle, *heighmap, Eb, *wallEvent));
+        particle->addReaction(new Dissolution(particle, *heighmap, Eb, *wallEvent));
 
     }
 
@@ -168,6 +127,8 @@ ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG)
     solver->addEvent(new DumpHeighmap(*heighmap));
     solver->addEvent(new TotalTime());
     solver->addEvent(new heightRMS(*heighmap));
+
+    solver->addEvent(new RateChecker());
 
     return heighmap;
 

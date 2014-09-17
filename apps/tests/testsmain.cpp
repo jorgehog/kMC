@@ -10,7 +10,7 @@
 
 
 //#define focusSuite "MixedBoundaries"
-//#define focusTest  "KnownCase"
+//#define focusTest  "ReactionShuffler"
 
 
 #include "defines.h"

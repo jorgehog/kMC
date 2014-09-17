@@ -1814,7 +1814,7 @@ void testBed::testRateCalculation()
 
             r->forceUpdateFlag(Reaction::defaultUpdateFlag);
 
-            r->calcRate();
+            r->setRate();
 
             CHECK_EQUAL(E, r->lastUsedEnergy());
 
@@ -2871,7 +2871,7 @@ void testBed::testReactionShuffler()
 
     for (Reaction * r : allReacs)
     {
-        r->calcRate();
+        r->setRate();
     }
 
     SoluteParticle::clearAffectedParticles();
@@ -2900,12 +2900,12 @@ void testBed::testReactionShuffler()
     allReacs.at(nReacs - 1)->disable();
 
     allReacs.at(nReacs/2)->allowed = true;
-    allReacs.at(nReacs/2)->calcRate();
+    allReacs.at(nReacs/2)->setRate();
 
     SoluteParticle::clearAffectedParticles();
 
     allReacs.at(nReacs - 1)->allowed = true;
-    allReacs.at(nReacs - 1)->calcRate();
+    allReacs.at(nReacs - 1)->setRate();
 
     SoluteParticle::clearAffectedParticles();
 
@@ -2954,7 +2954,7 @@ void testBed::testReactionShuffler()
     for (uint i = 0; i < nReacs; ++i)
     {
         allReacs.at(i)->allowed = true;
-        allReacs.at(i)->calcRate();
+        allReacs.at(i)->setRate();
     }
 
     CHECK_EQUAL(0, solver->availableReactionSlots().size());

@@ -35,9 +35,9 @@ public:
         return allowed;
     }
 
-    void calcRate()
+    double calcRate()
     {
-        setRate(1.0);
+        return 1.0;
     }
 
     void execute()

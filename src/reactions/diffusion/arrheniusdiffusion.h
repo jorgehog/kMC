@@ -12,7 +12,7 @@ public:
 
     // DiffusionReaction interface
 public:
-    void calcRate();
+    double calcRate();
 
     static void clearAll()
     {

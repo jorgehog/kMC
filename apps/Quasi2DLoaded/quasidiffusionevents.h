@@ -2,8 +2,6 @@
 
 #include <kMC>
 
-#include "ConcentrationControl/concentrationcontrol.h"
-
 namespace kMC
 {
 
@@ -14,8 +12,7 @@ public:
     MovingWall(const double h0,
                const double EsMax,
                const double EsInit,
-               const ivec &heighmap,
-               ConcentrationControl &cc) :
+               const ivec &heighmap) :
         KMCEvent("MovingWall", "h0", true, true),
         m_h0(h0),
         m_h(h0),
@@ -24,10 +21,9 @@ public:
         m_r0(r0FromEs(h0, EsMax, EsInit)),
         m_s0(s0FromEs(h0, EsMax, EsInit)),
         m_heighmap(heighmap),
-        m_stressEnergy(heighmap.size()),
-        m_cc(cc)
+        m_localPressure(heighmap.size())
     {
-        cc.setMovingWallEvent(this);
+
     }
 
     const string numericDescription() const
@@ -35,8 +31,7 @@ public:
         stringstream s;
         s << "EsMax_" << m_EsMax
           << "_EsInit_" << m_EsInit
-          << "_h0_" << m_h0
-          << m_cc.numericDescription();
+          << "_h0_" << m_h0;
 
         return s.str();
 
@@ -44,30 +39,30 @@ public:
 
     void initialize()
     {
-        m_cc.initialize();
-
         for (uint site = 0; site < m_heighmap.size(); ++site)
         {
-            m_stressEnergy.at(site) = localPressure(site);
+            m_localPressure(site) = localPressureEvaluate(site);
         }
     }
 
     void execute()
     {
-        BADAssBool(!SoluteParticle::affectedParticles().empty(), "No particles affected. Are the events out of order?", [] ()
+        for (uint i = 0; i < m_heighmap.size(); ++i)
         {
-            cout << solver()->mainLattice()->dumpLoopChunkInfo() << endl;
-        });
+            if (!solver()->particle(i)->isAffected())
+            {
+                BADAssClose(localPressureEvaluate(i), localPressure(i), 1E-3);
+            }
+        }
 
         _rescaleHeight();
 
         _updatePressureRates();
 
-        m_cc.diffuse(solver()->solverEvent()->lastTimeStep());
-    }
-
-    void reset()
-    {
+        for (SoluteParticle *particle : SoluteParticle::affectedParticles())
+        {
+            BADAssClose(localPressureEvaluate(particle->x()), localPressure(particle->x()), 1E-3);
+        }
 
     }
 
@@ -76,7 +71,12 @@ public:
         return m_dh;
     }
 
-    double localPressure(const uint site) const
+    const double &localPressure(const uint site) const
+    {
+        return m_localPressure(site);
+    }
+
+    double localPressureEvaluate(const uint site) const
     {
         return -m_s0*std::exp(-(m_h - m_heighmap(site))/m_r0);
     }
@@ -139,10 +139,7 @@ private:
     const double m_s0;
 
     const ivec &m_heighmap;
-    vec m_stressEnergy;
-
-    ConcentrationControl &m_cc;
-
+    vec m_localPressure;
 
     void _rescaleHeight()
     {
@@ -166,7 +163,20 @@ private:
         setValue((m_h - m2)/m_h0);
     }
 
+    void _updatePressureRates()
+    {
+        BADAssBool(!SoluteParticle::affectedParticles().empty(),
+                   "No particles affected. Are the events out of order?",
+                   [&] ()
+        {
+            solver()->mainLattice()->dumpLoopChunkInfo();
+        });
 
+        for (SoluteParticle *particle : solver()->particles())
+        {
+            m_localPressure(particle->x()) = localPressureEvaluate(particle->x());
+        }
+    }
 
 };
 
