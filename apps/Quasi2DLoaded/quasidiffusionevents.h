@@ -15,19 +15,7 @@ public:
     MovingWall(const double h0,
                const double EsMax,
                const double EsInit,
-               const ivec &heighmap) :
-        KMCEvent("MovingWall", "h0", true, true),
-        m_h0(h0),
-        m_h(h0),
-        m_EsMax(EsMax),
-        m_EsInit(EsInit),
-        m_r0(r0FromEs(h0, EsMax, EsInit)),
-        m_s0(s0FromEs(h0, EsMax, EsInit)),
-        m_heighmap(heighmap),
-        m_localPressure(heighmap.size())
-    {
-
-    }
+               const ivec &heighmap);
 
     const string numericDescription() const
     {

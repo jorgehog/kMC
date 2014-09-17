@@ -5,6 +5,23 @@
 using namespace kMC;
 
 
+MovingWall::MovingWall(const double h0, const double EsMax, const double EsInit, const ivec &heighmap):
+    KMCEvent("MovingWall", "h0", true, true),
+    m_h0(h0),
+    m_h(h0),
+    m_EsMax(EsMax),
+    m_EsInit(EsInit),
+    m_r0(r0FromEs(h0, EsMax, EsInit)),
+    m_s0(s0FromEs(h0, EsMax, EsInit)),
+    m_heighmap(heighmap),
+    m_localPressure(heighmap.size())
+{
+    for (uint site = 0; site < m_heighmap.size(); ++site)
+    {
+        m_localPressure(site) = localPressureEvaluate(site);
+    }
+}
+
 void MovingWall::initialize()
 {
     for (SoluteParticle *particle : solver()->particles())
@@ -21,11 +38,6 @@ void MovingWall::initialize()
                 }
             }
         }
-    }
-
-    for (uint site = 0; site < m_heighmap.size(); ++site)
-    {
-        m_localPressure(site) = localPressureEvaluate(site);
     }
 }
 
@@ -110,7 +122,7 @@ void MovingWall::_updatePressureRates()
         r->forceNewRate(R);
 
         //DETTE SKJER KUN I SYKEL NULL. HVA ER GALT? NOE SOM IKKE ER SOM DET SKAL.
-        if (fabs(R - R2) > 0.001 && cycle() > 0)
+        if (fabs(R - R2) > 0.001)
         {
             cout << R << " " << R2 << endl;
             cout << r->info() << endl;
@@ -119,25 +131,25 @@ void MovingWall::_updatePressureRates()
             cout << "----" << endl;
         }
 
-//        double R3 = R/exp(-Reaction::beta()*localPressure(r->x()));
+        double R3 = R/exp(-Reaction::beta()*localPressure(r->x()));
 
-//        double n0 = (-log(R0) - 1)/r->Eb();
-//        double n3 = (-log(R3) - 1)/r->Eb();
+        double n0 = (-log(R0) - 1)/r->Eb();
+        double n3 = (-log(R3) - 1)/r->Eb();
 
-//        BADAssClose(n0, n3, 1E-16, "fail", [&] ()
-//        {
-//            cout << solver()->solverEvent()->selectedReaction()->info() << endl;
-//            cout << "---" << endl;
-//            cout << r->info() << endl;
+        BADAssClose(n0, n3, 1E-10, "fail", [&] ()
+        {
+            cout << solver()->solverEvent()->selectedReaction()->info() << endl;
+            cout << "---" << endl;
+            cout << r->info() << endl;
 
-//            BADAssSimpleDump(solver()->solverEvent()->cycle(),
-//                             r->nNeighbors(),
-//                             n0,
-//                             n3,
-//                             localPressure(r->x()),
-//                             localPressureOld(r->x()));
-//        });
-//        BADAssClose(R, R2, 1E-3);
+            BADAssSimpleDump(solver()->solverEvent()->cycle(),
+                             r->nNeighbors(),
+                             n0,
+                             n3,
+                             localPressure(r->x()),
+                             localPressureOld(r->x()));
+        });
+        BADAssClose(R, R2, 1E-3);
 
     }
 }
