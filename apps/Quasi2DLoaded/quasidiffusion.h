@@ -127,13 +127,13 @@ public:
 
     virtual double calcRate() override final
     {
-        if (updateFlag() == (int)AllUpdateFlags::defaultUpdateFlag)
+        if (updateFlag() != (int)AllUpdateFlags::defaultUpdateFlag && rate() != UNSET_RATE)
         {
-            BADAss(rate(), !=, UNSET_RATE);
             return rate();
         }
 
         double Ea = activationEnergy();
+        cout << solver()->solverEvent()->cycle() << endl;
 
         if (Ea == 0)
         {
