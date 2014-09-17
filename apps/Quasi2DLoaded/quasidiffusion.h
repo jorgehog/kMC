@@ -141,12 +141,12 @@ protected:
     ivec &m_heights;
 
     void queueAffected()
-  {
-      reactant()->markAsAffected();
+    {
+        reactant()->markAsAffected();
 
-      solver()->getSite(leftSite(), 0, 0)->associatedParticle()->markAsAffected();
-      solver()->getSite(rightSite(), 0, 0)->associatedParticle()->markAsAffected();
-  }
+        solver()->getSite(leftSite(), 0, 0)->associatedParticle()->markAsAffected();
+        solver()->getSite(rightSite(), 0, 0)->associatedParticle()->markAsAffected();
+    }
 
     const MovingWall &wallEvent() const
     {

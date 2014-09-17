@@ -24,10 +24,10 @@ public:
         m_r0(r0FromEs(h0, EsMax, EsInit)),
         m_s0(s0FromEs(h0, EsMax, EsInit)),
         m_heighmap(heighmap),
+        m_stressEnergy(heighmap.size()),
         m_cc(cc)
     {
         cc.setMovingWallEvent(this);
-        cc.initialize();
     }
 
     const string numericDescription() const
@@ -42,9 +42,26 @@ public:
 
     }
 
+    void initialize()
+    {
+        m_cc.initialize();
+
+        for (uint site = 0; site < m_heighmap.size(); ++site)
+        {
+            m_stressEnergy.at(site) = localPressure(site);
+        }
+    }
+
     void execute()
     {
+        BADAssBool(!SoluteParticle::affectedParticles().empty(), "No particles affected. Are the events out of order?", [] ()
+        {
+            cout << solver()->mainLattice()->dumpLoopChunkInfo() << endl;
+        });
+
         _rescaleHeight();
+
+        _updatePressureRates();
 
         m_cc.diffuse(solver()->solverEvent()->lastTimeStep());
     }
@@ -54,6 +71,10 @@ public:
 
     }
 
+    const double &changeInHeight() const
+    {
+        return m_dh;
+    }
 
     double localPressure(const uint site) const
     {
@@ -109,6 +130,7 @@ private:
 
     const double m_h0;
     double m_h;
+    double m_dh;
 
     const double m_EsMax;
     const double m_EsInit;
@@ -117,6 +139,7 @@ private:
     const double m_s0;
 
     const ivec &m_heighmap;
+    vec m_stressEnergy;
 
     ConcentrationControl &m_cc;
 
@@ -134,7 +157,11 @@ private:
         m /= m_heighmap.size();
         m2 /= m_heighmap.size();
 
+        double hPrev = m_h;
+
         m_h = m_r0*std::log(m) + m_h0;
+
+        m_dh = m_h - hPrev;
 
         setValue((m_h - m2)/m_h0);
     }
