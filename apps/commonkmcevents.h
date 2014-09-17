@@ -6,6 +6,32 @@
 namespace kMC
 {
 
+class RateChecker : public KMCEvent
+{
+    using KMCEvent::KMCEvent;
+
+public:
+
+    void execute() {}
+
+    void reset()
+    {
+
+        for (Reaction *reaction : solver()->allPossibleReactions())
+        {
+            BADAssClose(reaction->calcRate(), reaction->rate(), 1E-3, "error in rate updating.", [&] ()
+            {
+                cout << "woah" << endl;
+                cout << reaction->reactant()->info() << reaction->info() << endl;
+                cout << "cr " << reaction->calcRate() << endl;
+                KMCDebugger_DumpFullTrace(solver()->solverEvent()->selectedReaction()->info());
+            });
+        }
+
+    }
+
+};
+
 class Sphericity : public KMCEvent
 {
 public:

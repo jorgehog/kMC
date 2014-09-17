@@ -22,6 +22,11 @@ public:
 
     }
 
+    string name() const
+    {
+        return "QuasiDiffusionReaction";
+    }
+
     const string numericDescription() const
     {
         stringstream s;
@@ -140,6 +145,11 @@ public:
         return prefactor()*exp(-beta()*activationEnergy());
     }
 
+    virtual bool pressureAffected() const
+    {
+        return true;
+    }
+
     const MovingWall &wallEvent() const
     {
         return m_wallEvent;
@@ -168,6 +178,20 @@ public:
     double localPressure() const
     {
         return m_wallEvent.localPressure(site());
+    }
+
+    virtual const string info(int xr, int yr, int zr, string desc) const
+    {
+        (void) xr;
+        (void) yr;
+        (void) zr;
+        (void) desc;
+
+        stringstream s;
+
+        s <<"site " << site() << " rs ls "<< rightSite() << " " << leftSite() << " height " << myHeight() << " dh " << heightDifference(leftSite()) << " " << heightDifference(rightSite()) << " rate " << rate() << endl;
+
+        return s.str();
     }
 
 protected:
@@ -199,8 +223,8 @@ class LeftHop : public QuasiDiffusionReaction
 {
     using QuasiDiffusionReaction::QuasiDiffusionReaction;
 
-    // Reaction interface
 public:
+
     bool isAllowed() const
     {
         return m_heights(leftSite()) < myHeight() && m_heights(leftSite()) < floor(wallHeight());
@@ -216,14 +240,19 @@ public:
     }
 
 
+    const string info(int xr, int yr, int zr, string desc) const
+    {
+        return "Lefthop " + QuasiDiffusionReaction::info(xr, yr, zr, desc);
+    }
+
 };
 
 class RightHop : public QuasiDiffusionReaction
 {
     using QuasiDiffusionReaction::QuasiDiffusionReaction;
 
-    // Reaction interface
 public:
+
     bool isAllowed() const
     {
         return m_heights(rightSite()) < myHeight() && m_heights(rightSite()) < floor(wallHeight());
@@ -236,6 +265,11 @@ public:
 
         queueAffected();
         solver()->getSite(rightSite(2), 0, 0)->associatedParticle()->markAsAffected();
+    }
+
+    const string info(int xr, int yr, int zr, string desc) const
+    {
+        return "Righthop " + QuasiDiffusionReaction::info(xr, yr, zr, desc);
     }
 
 };
@@ -270,11 +304,16 @@ class Deposition : public QuasiDiffusionReaction
 
     using QuasiDiffusionReaction::QuasiDiffusionReaction;
 
-    // Reaction interface
 public:
+
+    bool pressureAffected() const
+    {
+        return false;
+    }
+
     bool isAllowed() const
     {
-        return myHeight() < floor(wallHeight()) && concentration() != 0;
+        return (myHeight() < floor(wallHeight())) && (concentration() != 0);
     }
 
     void execute()
@@ -287,6 +326,11 @@ public:
     double activationEnergy() const = 0;
 
     double prefactor() const = 0;
+
+    const string info(int xr, int yr, int zr, string desc) const
+    {
+        return "Deposition " + QuasiDiffusionReaction::info(xr, yr, zr, desc);
+    }
 
 };
 
@@ -351,13 +395,18 @@ public:
         {
             nvn++;
         }
-        if (heightDifference(rightSite() > 0))
+        if (heightDifference(rightSite()) > 0)
         {
             nvn++;
         }
 
         return nvn;
 
+    }
+
+    void execute()
+    {
+        Deposition::execute();
     }
 
     double activationEnergy() const
@@ -370,7 +419,6 @@ public:
         return nVacantNeighbors()*concentration();
     }
 
-
 };
 
 
@@ -378,8 +426,8 @@ class Dissolution : public QuasiDiffusionReaction
 {
     using QuasiDiffusionReaction::QuasiDiffusionReaction;
 
-    // Reaction interface
 public:
+
     bool isAllowed() const
     {
         return concentration() != 1;
@@ -395,5 +443,10 @@ public:
         m_heights(site())--;
 
         queueAffected();
+    }
+
+    const string info(int xr, int yr, int zr, string desc) const
+    {
+        return "Dissolution " + QuasiDiffusionReaction::info(xr, yr, zr, desc);
     }
 };

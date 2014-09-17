@@ -75,26 +75,6 @@ int main()
 
 }
 
-class RateChecker : public KMCEvent
-{
-    using KMCEvent::KMCEvent;
-
-public:
-
-    void execute() {}
-
-    void reset()
-    {
-
-        for (Reaction *reaction : solver()->allPossibleReactions())
-        {
-            BADAssClose(reaction->calcRate(), reaction->rate(), 1E-3);
-        }
-
-    }
-
-};
-
 
 ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG)
 {

@@ -228,7 +228,7 @@ double TSTDiffusion::saddlePotential(const uint i,
 
 
 
-double TSTDiffusion::getSaddleEnergy()
+double TSTDiffusion::getSaddleEnergy() const
 {
 
     double Esp = 0;
@@ -301,7 +301,7 @@ double TSTDiffusion::getSaddleEnergy()
 
 }
 
-double TSTDiffusion::getSaddleEnergyContributionFrom(const SoluteParticle *particle)
+double TSTDiffusion::getSaddleEnergyContributionFrom(const SoluteParticle *particle) const
 {
     int X, Y, Z;
 
@@ -311,7 +311,7 @@ double TSTDiffusion::getSaddleEnergyContributionFrom(const SoluteParticle *parti
 
 }
 
-double TSTDiffusion::getSaddleEnergyContributionFromNeighborAt(const int dxn, const int dyn, const int dzn, const uint s1, const uint s2)
+double TSTDiffusion::getSaddleEnergyContributionFromNeighborAt(const int dxn, const int dyn, const int dzn, const uint s1, const uint s2) const
 {
 
     double dx = path(0)/2.0;

@@ -2,7 +2,8 @@ include(../app_defaults.pri)
 
 TARGET  = Quasi2DLoaded
 
-SOURCES = Quasi2DLoadedmain.cpp
+SOURCES = Quasi2DLoadedmain.cpp \
+    quasidiffusionevents.cpp
 
 OTHER_FILES += infiles/Quasi2DLoaded.cfg
 

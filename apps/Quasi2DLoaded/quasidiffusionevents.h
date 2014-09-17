@@ -2,6 +2,8 @@
 
 #include <kMC>
 
+class QuasiDiffusionReaction;
+
 namespace kMC
 {
 
@@ -37,34 +39,11 @@ public:
 
     }
 
-    void initialize()
-    {
-        for (uint site = 0; site < m_heighmap.size(); ++site)
-        {
-            m_localPressure(site) = localPressureEvaluate(site);
-        }
-    }
+    void initialize();
 
-    void execute()
-    {
-        for (uint i = 0; i < m_heighmap.size(); ++i)
-        {
-            if (!solver()->particle(i)->isAffected())
-            {
-                BADAssClose(localPressureEvaluate(i), localPressure(i), 1E-3);
-            }
-        }
+    void execute();
 
-        _rescaleHeight();
-
-        _updatePressureRates();
-
-        for (SoluteParticle *particle : SoluteParticle::affectedParticles())
-        {
-            BADAssClose(localPressureEvaluate(particle->x()), localPressure(particle->x()), 1E-3);
-        }
-
-    }
+    void reset();
 
     const double &changeInHeight() const
     {
@@ -128,6 +107,8 @@ public:
 
 private:
 
+    vector<QuasiDiffusionReaction *> m_pressureAffectedReactions;
+
     const double m_h0;
     double m_h;
     double m_dh;
@@ -163,20 +144,7 @@ private:
         setValue((m_h - m2)/m_h0);
     }
 
-    void _updatePressureRates()
-    {
-        BADAssBool(!SoluteParticle::affectedParticles().empty(),
-                   "No particles affected. Are the events out of order?",
-                   [&] ()
-        {
-            solver()->mainLattice()->dumpLoopChunkInfo();
-        });
-
-        for (SoluteParticle *particle : solver()->particles())
-        {
-            m_localPressure(particle->x()) = localPressureEvaluate(particle->x());
-        }
-    }
+    void _updatePressureRates();
 
 };
 

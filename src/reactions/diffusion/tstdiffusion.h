@@ -31,11 +31,11 @@ public:
 
     double saddlePotential(SoluteParticle *particle);
 
-    double getSaddleEnergy();
+    double getSaddleEnergy() const;
 
-    double getSaddleEnergyContributionFrom(const SoluteParticle *particle);
+    double getSaddleEnergyContributionFrom(const SoluteParticle *particle) const;
 
-    double getSaddleEnergyContributionFromNeighborAt(const int dxn, const int dyn, const int dzn, const uint s1, const uint s2);
+    double getSaddleEnergyContributionFromNeighborAt(const int dxn, const int dyn, const int dzn, const uint s1, const uint s2) const;
 
     static imat::fixed<3, 2> makeSaddleOverlapMatrix(const ivec &relCoor);
 
