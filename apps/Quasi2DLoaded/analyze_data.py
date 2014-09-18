@@ -134,9 +134,9 @@ def main():
 
     all_data = {}
 
-    c0 = 0.48
+    c0 = 0.4
     em0 = 10
-    t0 = 1.0
+    t0 = 0.1
     n0 = 1
     l0 = 128
 
@@ -147,6 +147,9 @@ def main():
         print "%2d / %2d Parsing %d items ..." % (k + 1, total, len(run.items()))
 
         for potential, data in run.items():
+
+            if not "concentration" in potential:
+                potential += "_concentration_0.4"
 
             eb, t, em, c = [float(re.findall("%s\_(\d+\.?\d*)" % ID, potential)[0]) for ID in ["Eb",
                                                                                                "beta",
@@ -182,7 +185,6 @@ def main():
                 all_data[t][em][c][l] = {}
 
             all_data[t][em][c][l][n] = {}
-
 
             for i, name in enumerate(data["ignisEventDescriptions"][0]):
                 all_data[t][em][c][l][n][str(name).split("@")[0]] = data["ignisData"][i, :]

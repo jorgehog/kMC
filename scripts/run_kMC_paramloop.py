@@ -23,10 +23,10 @@ def main():
 
     controller = ParameterSetController()
 
-    lengths = ParameterSet(8, 1024, 2, cfg, "BoxSize\s*=\s*\[(\d+), .*\]", lambda p, i: p*i)
+    lengths = ParameterSet(128, 1024, 2, cfg, "BoxSize\s*=\s*\[(\d+), .*\]", lambda p, i: p*i)
     temperatures = ParameterSet(0.1, 1.0, 0.1, cfg, "beta\s*=\s*(.*)\;")
     es_maxes = ParameterSet(10.0, 10.0, 2.0, cfg, "EsMax\s*\=\s*(.*)\;", lambda p, i: p*i)
-    concentrations = ParameterSet(0.2, 0.8, 0.1, cfg, "SaturationLevel\s*=\s*(.*)\;")
+    concentrations = ParameterSet(0.4, 0.4, 0.1, cfg, "SaturationLevel\s*=\s*(.*)\;")
     IDS = ParameterSet(1, nLoops, 1, cfg, "runID\s*=\s*(.*)\;")
 
     controller.register_parameter_set(lengths)

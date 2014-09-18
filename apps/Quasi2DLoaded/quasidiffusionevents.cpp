@@ -133,9 +133,6 @@ void MovingWall::_updatePressureRates()
 
     double expFac = expSmallArg(-m_dh/m_r0);
 
-#ifndef KMC_NO_OMP
-#pragma omp parallel for
-#endif
     for (uint i = 0; i < m_heighmap.size(); ++i)
     {
         if (!isAffected(solver()->particle(i)))

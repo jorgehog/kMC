@@ -32,7 +32,8 @@ public:
         stringstream s;
         s << "Eb_" << Eb()
           << "_beta_" << beta()
-          << "_" << wallEvent().numericDescription();
+          << "_" << wallEvent().numericDescription()
+          << "_concentration_" << concentration();
 
         return s.str();
     }
