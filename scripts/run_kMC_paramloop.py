@@ -1,5 +1,5 @@
 from sys import argv
-from os.path import join
+from os.path import join, split
 from os import (system,
                 chdir,
                 getcwd)
@@ -16,17 +16,17 @@ def run_kmc(controller, this_dir, path, app):
 
 def main():
     this_dir = getcwd()
-    app = "Quasi2DLoaded"
-    path = "../../build-kMC-Desktop_Qt_5_3_GCC_64bit-Release/apps/Quasi2DLoaded"
+    path, app = split(argv[1])
+
     cfg = join(path, "infiles", app + ".cfg")
-    nLoops = 100
+    nLoops = 300
 
     controller = ParameterSetController()
 
-    lengths = ParameterSet(128, 512, 2, cfg, "BoxSize\s*=\s*\[(\d+), .*\]", lambda p, i: p*i)
-    temperatures = ParameterSet(1.0, 1.0, 0.5, cfg, "beta\s*=\s*(.*)\;")
+    lengths = ParameterSet(8, 1024, 2, cfg, "BoxSize\s*=\s*\[(\d+), .*\]", lambda p, i: p*i)
+    temperatures = ParameterSet(0.1, 1.0, 0.1, cfg, "beta\s*=\s*(.*)\;")
     es_maxes = ParameterSet(10.0, 10.0, 2.0, cfg, "EsMax\s*\=\s*(.*)\;", lambda p, i: p*i)
-    concentrations = ParameterSet(0.48, 0.48, 0.1, cfg, "SaturationLevel\s*=\s*(.*)\;")
+    concentrations = ParameterSet(0.2, 0.8, 0.1, cfg, "SaturationLevel\s*=\s*(.*)\;")
     IDS = ParameterSet(1, nLoops, 1, cfg, "runID\s*=\s*(.*)\;")
 
     controller.register_parameter_set(lengths)

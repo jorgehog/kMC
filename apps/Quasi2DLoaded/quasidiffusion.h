@@ -206,11 +206,9 @@ public:
 
 protected:
 
-    ivec &m_heights;
 
     void registerHeightChange(const uint site, const int change)
     {
-        m_wallEvent.registerHeightChange(site, change);
         m_heights(site) += change;
     }
 
@@ -227,9 +225,14 @@ protected:
         return m_wallEvent;
     }
 
-
+    const int &heights(const uint i) const
+    {
+        return m_heights(i);
+    }
 
 private:
+
+    ivec &m_heights;
 
     const double m_Eb;
 
@@ -237,6 +240,7 @@ private:
     const uint m_leftSite;
 
     MovingWall &m_wallEvent;
+
 
 };
 
@@ -248,7 +252,7 @@ public:
 
     bool isAllowed() const
     {
-        return m_heights(leftSite()) < myHeight() && m_heights(leftSite()) < floor(wallHeight());
+        return heights(leftSite()) < myHeight() && heights(leftSite()) < floor(wallHeight());
     }
 
     void execute()
@@ -276,7 +280,7 @@ public:
 
     bool isAllowed() const
     {
-        return m_heights(rightSite()) < myHeight() && m_heights(rightSite()) < floor(wallHeight());
+        return heights(rightSite()) < myHeight() && heights(rightSite()) < floor(wallHeight());
     }
 
     void execute()

@@ -36,7 +36,8 @@ MovingWall::~MovingWall()
 
 void MovingWall::initialize()
 {
-    m_partialHeightExponentialsSum = 0;
+
+    m_mPrev = 0;
     m_pressureAffectedReactions.reserve(m_heighmap.size());
 
     uint i;
@@ -44,7 +45,7 @@ void MovingWall::initialize()
     {
         i = particle->x();
 
-        m_partialHeightExponentialsSum += exp(m_heighmap(i)/m_r0);
+        m_mPrev += exp(m_heighmap(i)/m_r0);
 
         for (Reaction *reaction : particle->reactions())
         {
@@ -59,6 +60,8 @@ void MovingWall::initialize()
             }
         }
     }
+
+    m_mPrev /= m_heighmap.size();
 
 }
 
@@ -103,31 +106,21 @@ void MovingWall::reset()
     m_affectedParticles.clear();
 }
 
-void MovingWall::registerHeightChange(const uint site, const int change)
-{
-    BADAssBool(change == 1 || change == -1, "Illegal height change");
-
-    m_partialHeightExponentialsSum += exp(m_heighmap(site)/m_r0)*((change == 1 ? m_expOneOverR0 : m_expNegOneOverR0) - 1);
-}
-
 void MovingWall::_rescaleHeight()
 {
 
-#ifndef NDEBUG
     double m = 0;
     for (uint i = 0; i < m_heighmap.size(); ++i)
     {
         m += exp(m_heighmap(i)/m_r0);
     }
 
-    BADAssClose(m, m_partialHeightExponentialsSum, 1E-5);
-#endif
+    m /= m_heighmap.size();
 
-    double hPrev = m_h;
+    m_dh = m_r0*std::log(m/m_mPrev);
 
-    m_h = m_r0*std::log(m_partialHeightExponentialsSum/m_heighmap.size()) + m_h0;
-
-    m_dh = m_h - hPrev;
+    m_h += m_dh;
+    m_mPrev = m;
 
     setValue(m_h);
 
@@ -175,7 +168,7 @@ void MovingWall::_updatePressureRates()
 
         BADAssClose(localPressureEvaluate(i), m_localPressure(i), 1E-3, "incorrect pressure update", [&] ()
         {
-            BADAssSimpleDump(cycle(), i, localPressure(i), expFac);
+            BADAssSimpleDump(cycle(), i, localPressure(i), expFac, m_heighmap);
         });
     }
 
@@ -184,10 +177,8 @@ void MovingWall::_updatePressureRates()
 void MovingWall::remakeUpdatedValues()
 {
 
-    m_partialHeightExponentialsSum = 0;
     for (uint i = 0; i < m_heighmap.size(); ++i)
     {
-        m_partialHeightExponentialsSum += exp(m_heighmap(i)/m_r0);
         m_localPressure(i) = localPressureEvaluate(i);
     }
 

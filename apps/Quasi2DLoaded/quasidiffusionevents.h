@@ -61,8 +61,6 @@ public:
 
     void reset();
 
-    void registerHeightChange(const uint site, const int change);
-
     void markAsAffected(SoluteParticle *particle)
     {
         m_affectedParticles.insert(particle);
@@ -141,11 +139,11 @@ public:
 private:
 
     vector<vector<QuasiDiffusionReaction *>> m_pressureAffectedReactions;
-    double m_partialHeightExponentialsSum;
 
     const double m_h0;
     double m_h;
     double m_dh;
+    double m_mPrev;
 
     const double m_EsMax;
     const double m_EsInit;
