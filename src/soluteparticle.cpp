@@ -228,13 +228,14 @@ void SoluteParticle::updateAffectedParticles()
             }
         });
 
-        for (SoluteParticle* particle : m_solver->particles())
+        for (uint i = 0; i < solver()->particles().size(); ++i)
         {
+            SoluteParticle *particle = solver()->particle(i);
+
             if (particle != NULL)
             {
                 particle->updateReactions();
             }
-
         }
 
     }

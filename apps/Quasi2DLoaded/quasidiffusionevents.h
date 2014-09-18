@@ -28,11 +28,40 @@ public:
 
     }
 
+    ~MovingWall();
+
+    static double expSmallArg(double arg)
+    {
+        if (arg > 0.1 || arg < -0.1)
+        {
+            return exp(arg);
+        }
+
+        BADAssClose(arg, 0, 0.1, "Argument is not small.", [&arg] ()
+        {
+            BADAssSimpleDump(arg);
+        });
+
+        double arg2 = arg*arg;
+        double arg4 = arg2*arg2;
+        double approx = 1.0 + arg*(1 + 1.0/6*arg2 + 1.0/120*arg4) + 0.5*(arg2 + 1.0/12*arg4);
+
+        BADAssClose(exp(arg), approx, 1E-5,
+                    "Exponential approximation failed.", [&] ()
+        {
+            BADAssSimpleDump(arg, exp(arg), approx);
+        });
+
+        return approx;
+    }
+
     void initialize();
 
     void execute();
 
     void reset();
+
+    void registerHeightChange(const uint site, const int change);
 
     void markAsAffected(SoluteParticle *particle)
     {
@@ -111,7 +140,8 @@ public:
 
 private:
 
-    vector<QuasiDiffusionReaction *> m_pressureAffectedReactions;
+    vector<vector<QuasiDiffusionReaction *>> m_pressureAffectedReactions;
+    double m_partialHeightExponentialsSum;
 
     const double m_h0;
     double m_h;
@@ -127,29 +157,15 @@ private:
     vec m_localPressure;
     set<SoluteParticle *> m_affectedParticles;
 
-    void _rescaleHeight()
-    {
-        double m = 0;
-        double m2 = 0;
-        for (uint i = 0; i < m_heighmap.size(); ++i)
-        {
-            m += exp(m_heighmap(i)/m_r0);
-            m2 += m_heighmap(i);
-        }
-
-        m /= m_heighmap.size();
-        m2 /= m_heighmap.size();
-
-        double hPrev = m_h;
-
-        m_h = m_r0*std::log(m) + m_h0;
-
-        m_dh = m_h - hPrev;
-
-        setValue((m_h - m2)/m_h0);
-    }
+    void _rescaleHeight();
 
     void _updatePressureRates();
+
+    void remakeUpdatedValues();
+
+    const double m_expNegOneOverR0;
+
+    const double m_expOneOverR0;
 
 };
 

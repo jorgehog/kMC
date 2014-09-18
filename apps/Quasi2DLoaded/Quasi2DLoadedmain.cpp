@@ -55,7 +55,6 @@ int main()
 
     H5Wrapper::Member &potentialMember = sizeMember.addMember(s.str());
 
-    solver->mainLattice()->enableOutput(false);
     solver->mainloop();
 
     potentialMember.addData("heightmap", *heightmap);
@@ -101,9 +100,8 @@ ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG)
         SoluteParticle* particle = solver->forceSpawnParticle(site, 0, 0);
         particle->addReaction(new LeftHopPressurized(particle, *heighmap, Eb, *wallEvent));
         particle->addReaction(new RightHopPressurized(particle, *heighmap, Eb, *wallEvent));
-//        particle->addReaction(new DepositionMirrorImageArhenius(particle, *heighmap, Eb, *wallEvent));
+        particle->addReaction(new DepositionMirrorImageArhenius(particle, *heighmap, Eb, *wallEvent));
         particle->addReaction(new Dissolution(particle, *heighmap, Eb, *wallEvent));
-
     }
 
     solver->addEvent(wallEvent);
@@ -111,7 +109,10 @@ ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG)
     solver->addEvent(new TotalTime());
     solver->addEvent(new heightRMS(*heighmap));
 
+#ifndef NDEBUG
+    cout << "checking rates." << endl;
     solver->addEvent(new RateChecker());
+#endif
 
     return heighmap;
 

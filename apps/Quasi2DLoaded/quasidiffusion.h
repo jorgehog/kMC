@@ -37,7 +37,6 @@ public:
         return s.str();
     }
 
-
     const uint &leftSite() const
     {
         return m_leftSite;
@@ -209,6 +208,12 @@ protected:
 
     ivec &m_heights;
 
+    void registerHeightChange(const uint site, const int change)
+    {
+        m_wallEvent.registerHeightChange(site, change);
+        m_heights(site) += change;
+    }
+
     void queueAffected()
     {
         m_wallEvent.markAsAffected(reactant());
@@ -248,8 +253,8 @@ public:
 
     void execute()
     {
-        m_heights(site())--;
-        m_heights(leftSite())++;
+        registerHeightChange(site(), -1);
+        registerHeightChange(leftSite(), +1);
 
         queueAffected();
         wallEvent().markAsAffected(solver()->getSite(leftSite(2), 0, 0)->associatedParticle());
@@ -276,8 +281,8 @@ public:
 
     void execute()
     {
-        m_heights(site())--;
-        m_heights(rightSite())++;
+        registerHeightChange(site(), -1);
+        registerHeightChange(rightSite(), +1);
 
         queueAffected();
         wallEvent().markAsAffected(solver()->getSite(rightSite(2), 0, 0)->associatedParticle());
@@ -334,7 +339,7 @@ public:
 
     void execute()
     {
-        m_heights(site())++;
+        registerHeightChange(site(), +1);
 
         queueAffected();
     }
@@ -451,7 +456,7 @@ public:
 
     void execute()
     {
-        m_heights(site())--;
+        registerHeightChange(site(), -1);
 
         queueAffected();
     }

@@ -14,7 +14,9 @@ MovingWall::MovingWall(const double h0, const double EsMax, const double EsInit,
     m_r0(r0FromEs(h0, EsMax, EsInit)),
     m_s0(s0FromEs(h0, EsMax, EsInit)),
     m_heighmap(heighmap),
-    m_localPressure(heighmap.size())
+    m_localPressure(heighmap.size()),
+    m_expNegOneOverR0(exp(-1.0/m_r0)),
+    m_expOneOverR0(exp(1.0/m_r0))
 {
     for (uint site = 0; site < m_heighmap.size(); ++site)
     {
@@ -22,10 +24,28 @@ MovingWall::MovingWall(const double h0, const double EsMax, const double EsInit,
     }
 }
 
+MovingWall::~MovingWall()
+{
+    for (uint i = 0; i < m_heighmap.size(); ++i)
+    {
+        m_pressureAffectedReactions.at(i).clear();
+    }
+
+    m_pressureAffectedReactions.clear();
+}
+
 void MovingWall::initialize()
 {
+    m_partialHeightExponentialsSum = 0;
+    m_pressureAffectedReactions.reserve(m_heighmap.size());
+
+    uint i;
     for (SoluteParticle *particle : solver()->particles())
     {
+        i = particle->x();
+
+        m_partialHeightExponentialsSum += exp(m_heighmap(i)/m_r0);
+
         for (Reaction *reaction : particle->reactions())
         {
             if (reaction->isType("QuasiDiffusionReaction"))
@@ -34,15 +54,17 @@ void MovingWall::initialize()
 
                 if (qdr->pressureAffected())
                 {
-                    m_pressureAffectedReactions.push_back(qdr);
+                    m_pressureAffectedReactions[i].push_back(qdr);
                 }
             }
         }
     }
+
 }
 
 void MovingWall::execute()
 {
+#ifndef NDEBUG
     for (uint i = 0; i < m_heighmap.size(); ++i)
     {
         if (!isAffected(solver()->particle(i)))
@@ -50,31 +72,12 @@ void MovingWall::execute()
             BADAssClose(localPressureEvaluate(i), localPressure(i), 1E-3);
         }
     }
+#endif
 
     _rescaleHeight();
 
     _updatePressureRates();
 
-}
-
-void MovingWall::reset()
-{
-    for (SoluteParticle *particle : solver()->particles())
-    {
-        BADAssClose(localPressureEvaluate(particle->x()), localPressure(particle->x()), 1E-3);
-    }
-
-    m_affectedParticles.clear();
-}
-
-void MovingWall::_updatePressureRates()
-{
-    vec localPressureOld = m_localPressure;
-
-    for (uint i = 0; i < m_heighmap.size(); ++i)
-    {
-        m_localPressure(i) = localPressureEvaluate(i);
-    }
 
     for (SoluteParticle* particle : m_affectedParticles)
     {
@@ -87,70 +90,111 @@ void MovingWall::_updatePressureRates()
         }
     }
 
-    for (QuasiDiffusionReaction* r : m_pressureAffectedReactions)
+
+    if ((cycle() + 1)%10000 == 0)
     {
-        BADAssBool(r->pressureAffected());
+        remakeUpdatedValues();
+    }
 
-        if (!r->isAllowed())
+}
+
+void MovingWall::reset()
+{
+    m_affectedParticles.clear();
+}
+
+void MovingWall::registerHeightChange(const uint site, const int change)
+{
+    BADAssBool(change == 1 || change == -1, "Illegal height change");
+
+    m_partialHeightExponentialsSum += exp(m_heighmap(site)/m_r0)*((change == 1 ? m_expOneOverR0 : m_expNegOneOverR0) - 1);
+}
+
+void MovingWall::_rescaleHeight()
+{
+
+#ifndef NDEBUG
+    double m = 0;
+    for (uint i = 0; i < m_heighmap.size(); ++i)
+    {
+        m += exp(m_heighmap(i)/m_r0);
+    }
+
+    BADAssClose(m, m_partialHeightExponentialsSum, 1E-5);
+#endif
+
+    double hPrev = m_h;
+
+    m_h = m_r0*std::log(m_partialHeightExponentialsSum/m_heighmap.size()) + m_h0;
+
+    m_dh = m_h - hPrev;
+
+    setValue(m_h);
+
+}
+
+void MovingWall::_updatePressureRates()
+{
+
+    double rateChange;
+
+    double expFac = expSmallArg(-m_dh/m_r0);
+
+#ifndef KMC_NO_OMP
+#pragma omp parallel for
+#endif
+    for (uint i = 0; i < m_heighmap.size(); ++i)
+    {
+        if (!isAffected(solver()->particle(i)))
         {
-            continue;
+            rateChange = expSmallArg(-Reaction::beta()*m_localPressure(i)*(expFac - 1));
+
+            for (auto &r : m_pressureAffectedReactions[i])
+            {
+                BADAssBool(r->pressureAffected(), "This reaction does not belong here.", [&r] ()
+                {
+                    cout << r->info() << endl;
+                });
+
+                if (!r->isAllowed())
+                {
+                    continue;
+                }
+
+                r->changeRate(r->rate()*rateChange);
+
+            }
+
+            m_localPressure(i) *= expFac;
+
+        }
+        else
+        {
+            m_localPressure(i) = localPressureEvaluate(i);
         }
 
-        else if (isAffected(r->reactant()))
+        BADAssClose(localPressureEvaluate(i), m_localPressure(i), 1E-3, "incorrect pressure update", [&] ()
         {
-            continue;
-        }
-
-        double R0 = r->rate()/exp(-Reaction::beta()*localPressureOld(r->x()));
-
-        r->changeRate([&] (const double rate)
-        {
-            double delta = m_localPressure(r->x()) - localPressureOld(r->x());
-            double arg = -Reaction::beta()*delta;
-            double arg2 = arg*arg;
-            double approx = 1 + arg + 0.5*arg2 + 1./6*arg*arg2;
-
-            BADAssClose(exp(arg), approx, 1E-3);
-
-            return rate*approx;
+            BADAssSimpleDump(cycle(), i, localPressure(i), expFac);
         });
+    }
 
-        double R2 = r->rate();
-        r->registerUpdateFlag(QuasiDiffusionReaction::UpdateFlags::CALCULATE);
-        double R = r->calcRate();
+}
 
-        r->forceNewRate(R);
+void MovingWall::remakeUpdatedValues()
+{
 
-        //DETTE SKJER KUN I SYKEL NULL. HVA ER GALT? NOE SOM IKKE ER SOM DET SKAL.
-        if (fabs(R - R2) > 0.001)
-        {
-            cout << R << " " << R2 << endl;
-            cout << r->info() << endl;
-            cout << solver()->solverEvent()->selectedReaction()->info() << endl;
-            cout << solver()->solverEvent()->cycle() << endl;
-            cout << "----" << endl;
-        }
+    m_partialHeightExponentialsSum = 0;
+    for (uint i = 0; i < m_heighmap.size(); ++i)
+    {
+        m_partialHeightExponentialsSum += exp(m_heighmap(i)/m_r0);
+        m_localPressure(i) = localPressureEvaluate(i);
+    }
 
-        double R3 = R/exp(-Reaction::beta()*localPressure(r->x()));
-
-        double n0 = (-log(R0) - 1)/r->Eb();
-        double n3 = (-log(R3) - 1)/r->Eb();
-
-        BADAssClose(n0, n3, 1E-10, "fail", [&] ()
-        {
-            cout << solver()->solverEvent()->selectedReaction()->info() << endl;
-            cout << "---" << endl;
-            cout << r->info() << endl;
-
-            BADAssSimpleDump(solver()->solverEvent()->cycle(),
-                             r->nNeighbors(),
-                             n0,
-                             n3,
-                             localPressure(r->x()),
-                             localPressureOld(r->x()));
-        });
-        BADAssClose(R, R2, 1E-3);
-
+    for (Reaction *reaction : solver()->allPossibleReactions())
+    {
+         reaction->registerUpdateFlag(QuasiDiffusionReaction::UpdateFlags::CALCULATE);
+         reaction->setRate();
     }
 }
 

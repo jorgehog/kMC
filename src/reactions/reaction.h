@@ -86,9 +86,9 @@ public:
     }
 
     //Do not use unless you know what you are doing.
-    void changeRate(std::function<double(double)> changeFunction)
+    void changeRate(const double rate)
     {
-        setRate(changeFunction(m_rate));
+        setRate(rate);
     }
 
     void forceNewRate(const double rate)
