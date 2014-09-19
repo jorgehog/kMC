@@ -38,7 +38,7 @@ void MovingWall::initialize()
 {
 
     m_mPrev = 0;
-    m_pressureAffectedReactions.reserve(m_heighmap.size());
+    m_pressureAffectedReactions.resize(m_heighmap.size());
 
     uint i;
     for (SoluteParticle *particle : solver()->particles())
