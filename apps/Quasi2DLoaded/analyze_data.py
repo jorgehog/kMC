@@ -2,6 +2,7 @@ import h5py
 from hgext.mq import clone
 import sys
 import re
+from gst._gst import TIME_ARGS
 from matplotlib.pylab import *
 from math import log
 from numpy import where, asarray, random
@@ -10,12 +11,22 @@ from numpy import where, asarray, random
 
 def interpolate(value_array, time_array, time, start=0):
 
-    if time > time_array[-1] or time < time_array[0]:
+    if start >= len(time_array):
         return start, 0, 0
 
     i = start
     while time_array[i] < time:
         i += 1
+
+        if i == len(time_array):
+            return i, 0, 0
+
+    if i == 0:
+
+        if time != time_array[0]:
+            return 0, 0, 0
+
+        return i, 1, value_array[0]
 
     incline = (value_array[i] - value_array[i-1])/(time_array[i] - time_array[i-1])
 
@@ -25,22 +36,29 @@ def interpolate(value_array, time_array, time, start=0):
 def combine_results(time_array, value_array, do_roughen=True):
 
     if do_roughen:
-        value_array, time_array = roughen(value_array, time_array)
+        time_array = roughen(*time_array)
+        value_array = roughen(*value_array)
 
     times = set()
     for time in time_array:
         time = asarray(time)
         times = times.union(set(time))
 
+    print min(times), max(times)
+
+    times = array(sorted(list(times)))
+    times = roughen(times)
+
     all_f_t = zeros([len(value_array), len(times)])
     scales = zeros(len(times))
     starts = zeros(len(value_array))
 
-    times = array(sorted(list(times)))
-
     length = 40
     for ti, time in enumerate(times):
         for i in range(len(value_array)):
+
+
+
             loc, scale, all_f_t[i][ti] = interpolate(value_array[i], time_array[i], time, starts[i])
 
             scales[ti] += scale
@@ -48,6 +66,7 @@ def combine_results(time_array, value_array, do_roughen=True):
 
         if scales[ti] == 0:
             print "ERROR IN SCALING", ti, time
+            sys.exit(1)
 
         s = (ti*length)/(len(times)-1)
         print "\rcombining: [%s%s]" % ("-"*s, " "*(length-s)),
@@ -58,14 +77,14 @@ def combine_results(time_array, value_array, do_roughen=True):
 
 def roughen(*args):
 
-    size = len(args[0])
+    n_args = len(args)
 
-    new = [[] for i in range(len(args))]
-    for i in range(size):
+    new = []
+    for i in range(n_args):
 
         idx = [0]
         k = 1
-        N = len(args[0][i])
+        N = len(args[i])
 
         while k < N:
             idx.append(int(round(k)))
@@ -73,10 +92,13 @@ def roughen(*args):
 
         idx = unique(asarray(idx, dtype=int))
 
-        for n, arg in enumerate(args):
-            new[n].append(arg[i][idx])
+        new.append(args[i][idx])
 
-    return new
+    if n_args == 1:
+        return new[0]
+    else:
+        return tuple(new)
+
 
 
 def get_w_beta(rms, times, do_plot=False):
@@ -138,13 +160,13 @@ def main():
     em0 = 10
     t0 = 0.1
     n0 = 1
-    l0 = 128
+    l0 = 1024
 
     total = len(f.keys())
     k = 0
     for l, run in f.items():
 
-        print "%2d / %2d Parsing %d items ..." % (k + 1, total, len(run.items()))
+        print "l=%5s %2d / %2d Parsing %d items ..." % (l, k + 1, total, len(run.items()))
 
         for potential, data in run.items():
 
@@ -207,11 +229,25 @@ def main():
 
                 name = rest3.values()[0].values()[0]["name"].split("_n_")[0]
 
-                print name
+                print name,
                 for length, all_runs in rest3.items():
+                    print length
 
                     time_array = [data["Time"] for data in all_runs.values()]
                     value_array = [data["heightRMS"] for data in all_runs.values()]
+
+                    toss = []
+                    for i, t in enumerate(time_array):
+                        if where(t < 0)[0].size != 0:
+                            print "Negative times in run ", i
+                            toss.append(i)
+
+                    for i in toss[::-1]:
+                        time_array.pop(i)
+                        value_array.pop(i)
+
+
+
 
                     t, f_t = combine_results(time_array, value_array, do_roughen=True)
 
@@ -220,6 +256,7 @@ def main():
                     all_lengths.append(length)
                     all_rms.append(f_t)
 
+                print
                 title(name)
 
                 legend(loc=2)

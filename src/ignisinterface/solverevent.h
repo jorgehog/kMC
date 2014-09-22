@@ -104,6 +104,8 @@ public:
 
         m_lastTimeStep = -Reaction::linearRateScale()*std::log(KMC_RNG_UNIFORM())/solver()->kTot();
 
+        BADAss(m_lastTimeStep, >, 0, "timestep should be posiive.");
+
         m_totalTime += m_lastTimeStep;
     }
 

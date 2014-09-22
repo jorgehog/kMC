@@ -168,11 +168,11 @@ private:
 };
 
 
-class heightRMS : public KMCEvent
+class HeightRMS : public KMCEvent
 {
 public:
 
-    heightRMS(const ivec &heightmap) :
+    HeightRMS(const ivec &heightmap) :
         KMCEvent("heightRMS", "l0", true, true),
         m_heightmap(heightmap),
         m_L(heightmap.size())
@@ -186,7 +186,7 @@ protected:
     void execute()
     {
 
-        double meanHeight = sum(m_heightmap)/double(m_heightmap.size());
+        const double &meanHeight = dependency("height")->value();
 
         double RMS = 0;
 
@@ -241,5 +241,58 @@ private:
     const string m_filename;
 
 };
+
+class AutoCorrHeight : public KMCEvent
+{
+public:
+
+    AutoCorrHeight(const ivec &heightmap) :
+        KMCEvent("AutoCorrHeight"),
+        m_heightmap(heightmap),
+        m_M(heightmap.n_elem/2),
+        m_acf(m_M),
+        m_filename(solver()->filePath() + "acf.arma")
+    {
+
+    }
+
+    const vec &acf() const
+    {
+        return m_acf;
+    }
+
+    void execute()
+    {
+        const double &meanHeight = dependency("height")->value();
+
+        m_acf.zeros();
+
+        for (uint dx = 0; dx < m_M; ++dx)
+        {
+            for (uint site = 0; site < m_M; ++site)
+            {
+                m_acf(dx) += (m_heightmap(site) - meanHeight)*(m_heightmap(site + dx) - meanHeight);
+            }
+        }
+
+        m_acf /= double(m_M);
+
+        if (cycle()%solver()->mainLattice()->outputSpacing() == 0)
+        {
+            m_acf.save(m_filename);
+        }
+    }
+
+private:
+
+    const ivec &m_heightmap;
+
+    const uint m_M;
+    vec m_acf;
+
+    const string m_filename;
+
+};
+
 
 }

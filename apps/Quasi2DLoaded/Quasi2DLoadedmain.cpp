@@ -10,7 +10,7 @@
 
 using namespace libconfig;
 
-ivec *initializeQuasi2DLoaded(KMCSolver * solver, const Setting & root);
+void initializeQuasi2DLoaded(KMCSolver * solver, const Setting & root, ivec *heigthmap);
 
 int main()
 {
@@ -42,12 +42,31 @@ int main()
 
     const uint &runID = getSetting<uint>(initCFG, "runID");
 
-    t.tic();
+    const bool overwrite = getSetting<uint>(initCFG, "overwrite") == 1;
 
-    ivec* heightmap = initializeQuasi2DLoaded(solver, initCFG);
+
+    ivec heightmap(solver->NX(), fill::zeros);
+
+    DumpHeighmap dumpHeightmap(heightmap);
+    HeightRMS heightRMS(heightmap);
+    AutoCorrHeight autocorr(heightmap);
+
+
+    heightRMS.setDependency(dumpHeightmap);
+    autocorr.setDependency(dumpHeightmap);
+
+    solver->addEvent(new TotalTime());
+    solver->addEvent(dumpHeightmap);
+    solver->addEvent(heightRMS);
+    solver->addEvent(autocorr);
+#ifndef NDEBUG
+    cout << "checking rates." << endl;
+    solver->addEvent(new RateChecker());
+#endif
+
+    initializeQuasi2DLoaded(solver, initCFG, &heightmap);
 
     H5Wrapper::Member &sizeMember = h5root.addMember(solver->NX());
-
 
     stringstream s;
     s << dynamic_cast<QuasiDiffusionReaction*>(solver->particle(0)->reactions().at(0))->numericDescription();
@@ -55,18 +74,18 @@ int main()
 
     H5Wrapper::Member &potentialMember = sizeMember.addMember(s.str());
 
+    t.tic();
     solver->mainloop();
+    cout << "Simulation ended after " << t.toc() << " seconds" << endl;
 
-    potentialMember.addData("heightmap", *heightmap);
-    potentialMember.addData("ignisData", solver->mainLattice()->storedEventValues());
-    potentialMember.addData("ignisEventDescriptions", solver->mainLattice()->outputEventDescriptions());
+    potentialMember.addData("heightmap", heightmap, overwrite);
+    potentialMember.addData("ignisData", solver->mainLattice()->storedEventValues(), overwrite);
+    potentialMember.addData("ignisEventDescriptions", solver->mainLattice()->outputEventDescriptions(), overwrite);
+    potentialMember.addData("AutoCorr", autocorr.acf(), overwrite);
 
     potentialMember.file()->flush(H5F_SCOPE_GLOBAL);
-    solver->reset();
 
-    delete heightmap;
-
-    cout << "Simulation ended after " << t.toc() << " seconds" << endl;
+    delete solver;
 
 
     KMCDebugger_DumpFullTrace();
@@ -76,7 +95,7 @@ int main()
 }
 
 
-ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG)
+void initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG, ivec *heigthmap)
 {
 
     const uint &h0 = getSetting<uint>(initCFG, "h0");
@@ -85,35 +104,24 @@ ivec* initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG)
     const double &EsMax = getSetting<double>(initCFG, "EsMax")*Eb;
     const double &EsInit = getSetting<double>(initCFG, "EsInit")*Eb;
 
-    ivec* heighmap = new ivec(solver->NX(), fill::zeros);
-
     solver->enableLocalUpdating(false);
 
     //Override standard diffusion. Necessary for quasi diffusive simulations.
     solver->setDiffusionType(KMCSolver::DiffusionTypes::None);
 
     //BAD PRATICE WITH POINTERS.. WILL FIX..
-    MovingWall *wallEvent = new MovingWall(h0, EsMax, EsInit, *heighmap);
+    MovingWall *wallEvent = new MovingWall(h0, EsMax, EsInit, *heigthmap);
 
     for (uint site = 0; site < solver->NX(); ++site)
     {
         SoluteParticle* particle = solver->forceSpawnParticle(site, 0, 0);
-        particle->addReaction(new LeftHopPressurized(particle, *heighmap, Eb, *wallEvent));
-        particle->addReaction(new RightHopPressurized(particle, *heighmap, Eb, *wallEvent));
-        particle->addReaction(new DepositionMirrorImageArhenius(particle, *heighmap, Eb, *wallEvent));
-        particle->addReaction(new Dissolution(particle, *heighmap, Eb, *wallEvent));
+        particle->addReaction(new LeftHopPressurized(particle, *heigthmap, Eb, *wallEvent));
+        particle->addReaction(new RightHopPressurized(particle, *heigthmap, Eb, *wallEvent));
+        particle->addReaction(new DepositionMirrorImageArhenius(particle, *heigthmap, Eb, *wallEvent));
+        particle->addReaction(new Dissolution(particle, *heigthmap, Eb, *wallEvent));
     }
 
+    wallEvent->setDependency(solver->solverEvent());
     solver->addEvent(wallEvent);
-    solver->addEvent(new DumpHeighmap(*heighmap));
-    solver->addEvent(new TotalTime());
-    solver->addEvent(new heightRMS(*heighmap));
-
-#ifndef NDEBUG
-    cout << "checking rates." << endl;
-    solver->addEvent(new RateChecker());
-#endif
-
-    return heighmap;
 
 }
