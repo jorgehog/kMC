@@ -1,11 +1,13 @@
+from distutils.fancy_getopt import neg_alias_re
 import h5py
 from hgext.mq import clone
 import sys
 import re
 from gst._gst import TIME_ARGS
+from matplotlib.artist import allow_rasterization
 from matplotlib.pylab import *
-from math import log
-from numpy import where, asarray, random
+from math import log as scalar_log
+from numpy import where, asarray, random, log, empty
 
 
 
@@ -33,21 +35,36 @@ def interpolate(value_array, time_array, time, start=0):
     return i, 1, value_array[i-1] + incline*(time - time_array[i-1])
 
 
-def combine_results(time_array, value_array, do_roughen=True):
+def time_derivative(time, data, pad=False):
 
-    if do_roughen:
-        time_array = roughen(*time_array)
-        value_array = roughen(*value_array)
+    N = len(time)
+
+    if pad:
+        derivative = zeros(N)
+    else:
+        derivative = zeros(N-2)
+
+    for i in range(1, N-1):
+        derivative[i] = (data[i+1] - data[i-1])/(time[i+1]-time[i-1])
+
+    if pad:
+        derivative[0] = derivative[1]
+        derivative[-1] = derivative[-2]
+
+    return derivative
+
+
+def combine_results(time_array, value_array, do_roughen=True):
 
     times = set()
     for time in time_array:
         time = asarray(time)
         times = times.union(set(time))
 
-    print min(times), max(times)
-
     times = array(sorted(list(times)))
-    times = roughen(times)
+
+    if do_roughen:
+        times = roughen(times)
 
     all_f_t = zeros([len(value_array), len(times)])
     scales = zeros(len(times))
@@ -56,9 +73,6 @@ def combine_results(time_array, value_array, do_roughen=True):
     length = 40
     for ti, time in enumerate(times):
         for i in range(len(value_array)):
-
-
-
             loc, scale, all_f_t[i][ti] = interpolate(value_array[i], time_array[i], time, starts[i])
 
             scales[ti] += scale
@@ -88,11 +102,11 @@ def roughen(*args):
 
         while k < N:
             idx.append(int(round(k)))
-            k += 0.001*k*log(1 + k)
+            k += 0.001*k*scalar_log(1 + k)
 
         idx = unique(asarray(idx, dtype=int))
 
-        new.append(args[i][idx])
+        new.append(asarray(args[i])[idx])
 
     if n_args == 1:
         return new[0]
@@ -110,8 +124,8 @@ def get_w_beta(rms, times, do_plot=False):
     M = 10000000000000000
     M2 = M
 
-    logt = np.log(t)
-    logf = np.log(f_t)
+    logt = log(t)
+    logf = log(f_t)
     N = len(logt)
 
     I = None
@@ -158,15 +172,15 @@ def main():
 
     c0 = 0.4
     em0 = 10
-    t0 = 0.1
+    t0 = 1
     n0 = 1
-    l0 = 1024
+    l0 = 128
 
     total = len(f.keys())
     k = 0
     for l, run in f.items():
 
-        print "l=%5s %2d / %2d Parsing %d items ..." % (l, k + 1, total, len(run.items()))
+        print "l=%4s %2d / %2d Parsing %d items ..." % (l, k + 1, total, len(run.items()))
 
         for potential, data in run.items():
 
@@ -212,6 +226,9 @@ def main():
                 all_data[t][em][c][l][n][str(name).split("@")[0]] = data["ignisData"][i, :]
             all_data[t][em][c][l][n]["name"] = potential
 
+            all_data[t][em][c][l][n]["AutoCorr"] = array(data["AutoCorr"])
+
+
         k += 1
 
     f.close()
@@ -224,17 +241,17 @@ def main():
         for em, rest2 in rest.items():
             for c, rest3 in rest2.items():
 
-                figure()
-                hold("on")
-
                 name = rest3.values()[0].values()[0]["name"].split("_n_")[0]
 
-                print name,
+                print name
                 for length, all_runs in rest3.items():
+                    print
                     print length
 
                     time_array = [data["Time"] for data in all_runs.values()]
-                    value_array = [data["heightRMS"] for data in all_runs.values()]
+                    rms_array = [data["heightRMS"] for data in all_runs.values()]
+                    h_array = [data["height"] for data in all_runs.values()]
+                    acf = [data["AutoCorr"] for data in all_runs.values()]
 
                     toss = []
                     for i, t in enumerate(time_array):
@@ -244,28 +261,88 @@ def main():
 
                     for i in toss[::-1]:
                         time_array.pop(i)
-                        value_array.pop(i)
+                        rms_array.pop(i)
 
+                    t, f_t = combine_results(roughen(*time_array), roughen(*rms_array), do_roughen=True)
 
-
-
-                    t, f_t = combine_results(time_array, value_array, do_roughen=True)
-
+                    figure(0)
+                    hold("on")
                     loglog(t, f_t, label=length)
-                    all_times.append(t)
-                    all_lengths.append(length)
-                    all_rms.append(f_t)
+
+                    t, f_t = combine_results(roughen(*time_array), [h_i/t_i for h_i, t_i in zip(h_array, time_array)])
+
+                    K = 10
+                    L = len(t)/K
+
+                    figure(1)
+                    hold("on")
+                    plot(t[L:], f_t[L:], label=length)
+
+                    if int(length) == 512:
+
+                        a = []
+
+                        figure(2)
+                        hold("on")
+
+                        for t_i, h_i in zip(time_array, h_array):
+                            v = h_i/t_i
+
+                            l_i = len(h_i)/K
+                            plot(t_i[l_i:], v[l_i:])
+                            a.append(v[l_i:].mean())
+
+                        figure(3)
+                        hist(a, max([len(time_array)/5, 20]))
+
+                    D = 20
+                    acf_tot = zeros(D)
+                    for acf_i in acf:
+                        acf_tot += acf_i[:D]
+                    acf_tot /= len(acf)
+
+                    figure(4)
+                    hold("on")
+                    plot(acf_tot, label=length)
+
+
 
                 print
+
+                figure(0)
                 title(name)
 
                 legend(loc=2)
                 xlabel("t [s * R_0]")
                 ylabel("<RMS(h)>")
                 draw()
-                savefig(name + ".png")
+                savefig(name + "_logT_logRMS.png")
 
-                clf()
+                figure(1)
+                legend(loc=2)
+                xlabel("t [s * R_0]")
+                ylabel("<v(t)>")
+                xscale('log')
+                draw()
+                savefig(name + "_logT_v.png")
+
+                figure(2)
+                draw()
+                savefig("test.png")
+
+                figure(3)
+                draw()
+                savefig("v0dist.png")
+
+                figure(4)
+                legend()
+                xlabel("dx")
+                ylabel("acf(dx)")
+                draw()
+                savefig("acf.png")
+
+                # show()
+
 
                 # winf, beta = get_w_beta(all_rms, all_times)
 
