@@ -258,24 +258,26 @@ public:
 
     const vec &acf() const
     {
-        return m_acf;
+        return m_acf/cycle();
     }
 
     void execute()
     {
         const double &meanHeight = dependency("height")->value();
 
-        m_acf.zeros();
+        vec acf = zeros(m_M);
 
         for (uint dx = 0; dx < m_M; ++dx)
         {
             for (uint site = 0; site < m_M; ++site)
             {
-                m_acf(dx) += (m_heightmap(site) - meanHeight)*(m_heightmap(site + dx) - meanHeight);
+                acf(dx) += (m_heightmap(site) - meanHeight)*(m_heightmap(site + dx) - meanHeight);
             }
         }
 
-        m_acf /= double(m_M);
+        acf /= double(m_M);
+
+        m_acf += acf;
 
         if (cycle()%solver()->mainLattice()->outputSpacing() == 0)
         {
