@@ -93,6 +93,8 @@ void MovingWall::execute()
 
     _rescaleHeight();
 
+    _locateNewAffected();
+
     _updatePressureRates();
 
     BADAssClose(pressureEnergySum(), m_E0, 1E-5);
@@ -180,6 +182,21 @@ void MovingWall::_updatePressureRates()
         });
     }
 
+}
+
+void MovingWall::_locateNewAffected()
+{
+    for (SoluteParticle *particle : solver()->particles())
+    {
+        for (Reaction *reaction : particle->reactions())
+        {
+            if (reaction->isAllowed() && (reaction->rate() == Reaction::UNSET_RATE))
+            {
+                m_affectedParticles.insert(particle);
+                break;
+            }
+        }
+    }
 }
 
 void MovingWall::remakeUpdatedValues()

@@ -175,6 +175,8 @@ private:
 
     void _updatePressureRates();
 
+    void _locateNewAffected();
+
     void remakeUpdatedValues();
 
     double _pressureExpression(const double heightDifference) const
