@@ -29,6 +29,11 @@ public:
         return "Reaction";
     }
 
+    virtual string type() const
+    {
+        return name();
+    }
+
     static void setMainSolver(KMCSolver * m_solver);
 
     static void loadConfig(const Setting & setting);
@@ -137,9 +142,11 @@ public:
         m_updateFlag = UNSET_UPDATE_FLAG;
     }
 
-    void forceUpdateFlag(int flag)
+    template<typename T>
+    void forceUpdateFlag(const T flag)
     {
-        m_updateFlag = flag;
+        static_assert(std::is_scalar<T>::value, "invalid update flag.");
+        m_updateFlag = static_cast<int>(flag);
     }
 
     const double &  rate() const
@@ -162,7 +169,7 @@ public:
 
     bool isType(const string name) const
     {
-        return name.compare(this->name()) == 0;
+        return name.compare(this->type()) == 0;
     }
 
     SoluteParticle * reactant() const

@@ -277,6 +277,11 @@ void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate
     else if (prevRate == Reaction::UNSET_RATE)
     {
 
+        BADAssBool(reaction->isAllowed(), "illegal reaction assigned rate.", [&reaction] ()
+        {
+            cout << reaction->info() << endl;
+        });
+
         BADAss(newRate, !=, Reaction::UNSET_RATE);
 
         m_kTot += newRate;
@@ -318,10 +323,8 @@ void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate
 
         m_kTot -= prevRate;
 
-
         BADAss(reaction->address(), !=, Reaction::UNSET_ADDRESS);
         BADAssBool(!isEmptyAddress(reaction->address()), "address is already set as empty.");
-
 
         m_availableReactionSlots.push_back(reaction->address());
 
@@ -347,7 +350,7 @@ void KMCSolver::registerReactionChange(Reaction *reaction, const double &newRate
 void KMCSolver::reshuffleReactions()
 {
 
-    uint nVacancies = m_availableReactionSlots.size();
+    const uint nVacancies = m_availableReactionSlots.size();
 
     uint firstVacancy;
     uint lastReaction = m_allPossibleReactions.size() - 1;

@@ -194,6 +194,11 @@ public:
 
     const uint & cycle() const;
 
+    const uint &numberOfCycles() const
+    {
+        return m_nCycles;
+    }
+
     const double & kTot() const
     {
         return m_kTot;

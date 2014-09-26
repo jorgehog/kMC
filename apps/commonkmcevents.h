@@ -24,14 +24,28 @@ public:
     void reset()
     {
 
+        for (SoluteParticle *particle : solver()->particles())
+        {
+            for (Reaction* reaction : particle->reactions())
+            {
+                if (reaction->isAllowed())
+                {
+                    BADAss(reaction->address(), !=, Reaction::UNSET_ADDRESS);
+                }
+            }
+        }
+
         for (Reaction *reaction : solver()->allPossibleReactions())
         {
+            BADAssBool(reaction->isAllowed());
+
             double rate = reaction->rate();
             reaction->forceNewRate(Reaction::UNSET_RATE);
 
             double r2 = reaction->calcRate();
             BADAssClose(rate, r2, 1E-3, "error in rate updating.", [&] ()
             {
+                reaction->forceNewRate(rate);
                 cout << reaction->reactant()->info() << reaction->info() << endl;
                 cout << "cr " << rate << " " << r2 << endl;
                 KMCDebugger_DumpFullTrace(solver()->solverEvent()->selectedReaction()->info());

@@ -84,12 +84,13 @@ public:
 
     const double &localPressure(const uint site) const
     {
-        return m_localPressure(site);
+        BADAssBool(!m_pressureAffectedReactions.empty());
+        return m_localPressure[site];
     }
 
     double localPressureEvaluate(const uint site) const
     {
-        return -m_s0*std::exp(-(m_h - m_heighmap(site))/m_r0);
+        return _pressureExpression(m_h - m_heighmap(site));
     }
 
     const double &initialHeight() const
@@ -136,6 +137,20 @@ public:
         return pow(pow(EsMax, h0)/EsInit, (1./(h0 - 1)));
     }
 
+    double pressureEnergySum() const
+    {
+        double s = 0;
+
+        for (uint site = 0; site < m_heighmap.size(); ++site)
+        {
+            BADAssClose(localPressure(site), localPressureEvaluate(site), 1E-3);
+
+            s += localPressure(site);
+        }
+
+        return s;
+    }
+
 
 private:
 
@@ -151,9 +166,10 @@ private:
 
     const double m_r0;
     const double m_s0;
+    const double m_E0;
 
     const ivec &m_heighmap;
-    vec m_localPressure;
+    vector<double> m_localPressure;
     set<SoluteParticle *> m_affectedParticles;
 
     void _rescaleHeight();
@@ -161,6 +177,11 @@ private:
     void _updatePressureRates();
 
     void remakeUpdatedValues();
+
+    double _pressureExpression(const double heightDifference) const
+    {
+        return -m_s0*std::exp(-heightDifference/m_r0);
+    }
 
 };
 

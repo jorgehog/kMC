@@ -88,9 +88,6 @@ int main()
 
     delete solver;
 
-
-    KMCDebugger_DumpFullTrace();
-
     return 0;
 
 }
@@ -105,6 +102,7 @@ void initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG, ivec *he
     const double &EsMax = getSetting<double>(initCFG, "EsMax")*Eb;
     const double &EsInit = getSetting<double>(initCFG, "EsInit")*Eb;
 
+    const bool useWall = getSetting<uint>(initCFG, "useWall") == 1;
     const uint &wallOnsetCycle = getSetting<uint>(initCFG, "wallOnsetCycle");
 
     solver->enableLocalUpdating(false);
@@ -115,6 +113,14 @@ void initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG, ivec *he
     //BAD PRATICE WITH POINTERS.. WILL FIX..
     MovingWall *wallEvent = new MovingWall(h0, EsMax, EsInit, *heigthmap);
 
+    wallEvent->setDependency(solver->solverEvent());
+    wallEvent->setOnsetTime(wallOnsetCycle);
+
+    if (useWall)
+    {
+        solver->addEvent(wallEvent);
+    }
+
     for (uint site = 0; site < solver->NX(); ++site)
     {
         SoluteParticle* particle = solver->forceSpawnParticle(site, 0, 0);
@@ -124,9 +130,5 @@ void initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG, ivec *he
         particle->addReaction(new Dissolution(particle, *heigthmap, Eb, *wallEvent));
     }
 
-    wallEvent->setDependency(solver->solverEvent());
-    wallEvent->setOnsetTime(wallOnsetCycle);
-
-    solver->addEvent(wallEvent);
 
 }

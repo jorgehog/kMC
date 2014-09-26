@@ -23,7 +23,12 @@ public:
         registerUpdateFlag(UpdateFlags::CALCULATE);
     }
 
-    string name() const
+    virtual string name() const
+    {
+        return "QuasiDiffusionReaction";
+    }
+
+    virtual string type() const
     {
         return "QuasiDiffusionReaction";
     }
@@ -188,7 +193,7 @@ public:
 
     double localPressure() const
     {
-        if (!m_wallEvent.hasStarted())
+        if (!m_wallEvent.hasStarted() || m_wallEvent.cycle() == 0)
         {
             return 0;
         }
@@ -226,25 +231,25 @@ protected:
 
     void markAsAffected(SoluteParticle *particle)
     {
-        if (!m_wallEvent.hasStarted())
+        if (m_wallEvent.hasStarted())
         {
-            return;
+            m_wallEvent.markAsAffected(particle);
         }
 
-        m_wallEvent.markAsAffected(particle);
+        for (Reaction *reaction : particle->reactions())
+        {
+            if (reaction->isAllowed())
+            {
+                reaction->registerUpdateFlag(UpdateFlags::CALCULATE);
+            }
+        }
     }
 
-    void queueAffected()
+    void markAsAffected()
     {
-        if (!m_wallEvent.hasStarted())
-        {
-            return;
-        }
-
-        m_wallEvent.markAsAffected(reactant());
-
-        m_wallEvent.markAsAffected(solver()->getSite(leftSite(), 0, 0)->associatedParticle());
-        m_wallEvent.markAsAffected(solver()->getSite(rightSite(), 0, 0)->associatedParticle());
+        markAsAffected(reactant());
+        markAsAffected(solver()->getSite(leftSite(), 0, 0)->associatedParticle());
+        markAsAffected(solver()->getSite(rightSite(), 0, 0)->associatedParticle());
     }
 
     MovingWall &wallEvent()
@@ -277,9 +282,14 @@ class LeftHop : public QuasiDiffusionReaction
 
 public:
 
+    virtual string name() const
+    {
+        return "LeftHop";
+    }
+
     bool isAllowed() const
     {
-        return heights(leftSite()) < myHeight() && heights(leftSite()) < floor(wallHeight());
+        return heights(leftSite()) < myHeight();
     }
 
     void execute()
@@ -287,7 +297,7 @@ public:
         registerHeightChange(site(), -1);
         registerHeightChange(leftSite(), +1);
 
-        queueAffected();
+        markAsAffected();
         markAsAffected(solver()->getSite(leftSite(2), 0, 0)->associatedParticle());
     }
 
@@ -305,9 +315,14 @@ class RightHop : public QuasiDiffusionReaction
 
 public:
 
+    virtual string name() const
+    {
+        return "RightHop";
+    }
+
     bool isAllowed() const
     {
-        return heights(rightSite()) < myHeight() && heights(rightSite()) < floor(wallHeight());
+        return heights(rightSite()) < myHeight();
     }
 
     void execute()
@@ -315,7 +330,7 @@ public:
         registerHeightChange(site(), -1);
         registerHeightChange(rightSite(), +1);
 
-        queueAffected();
+        markAsAffected();
         markAsAffected(solver()->getSite(rightSite(2), 0, 0)->associatedParticle());
     }
 
@@ -343,6 +358,7 @@ class RightHopPressurized : public RightHop
     using RightHop::RightHop;
 
 public:
+
     double activationEnergy() const override
     {
         return localEnergy() + localPressure();
@@ -358,6 +374,11 @@ class Deposition : public QuasiDiffusionReaction
 
 public:
 
+    virtual string name() const
+    {
+        return "Deposition";
+    }
+
     bool pressureAffected() const
     {
         return false;
@@ -365,14 +386,14 @@ public:
 
     bool isAllowed() const
     {
-        return (myHeight() < floor(wallHeight())) && (concentration() != 0);
+        return myHeight() < floor(wallHeight());
     }
 
     void execute()
     {
         registerHeightChange(site(), +1);
 
-        queueAffected();
+        markAsAffected();
     }
 
     double activationEnergy() const = 0;
@@ -475,6 +496,11 @@ class Dissolution : public QuasiDiffusionReaction
 
 public:
 
+    virtual string name() const
+    {
+        return "Dissolution";
+    }
+
     bool isAllowed() const
     {
         return concentration() != 1;
@@ -489,7 +515,7 @@ public:
     {
         registerHeightChange(site(), -1);
 
-        queueAffected();
+        markAsAffected();
     }
 
     const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const

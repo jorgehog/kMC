@@ -13,13 +13,11 @@ MovingWall::MovingWall(const double h0, const double EsMax, const double EsInit,
     m_EsInit(EsInit),
     m_r0(r0FromEs(h0, EsMax, EsInit)),
     m_s0(s0FromEs(h0, EsMax, EsInit)),
+    m_E0(heighmap.size()*_pressureExpression(m_h0)),
     m_heighmap(heighmap),
     m_localPressure(heighmap.size())
 {
-    for (uint site = 0; site < m_heighmap.size(); ++site)
-    {
-        m_localPressure(site) = localPressureEvaluate(site);
-    }
+
 }
 
 MovingWall::~MovingWall()
@@ -34,16 +32,17 @@ MovingWall::~MovingWall()
 
 void MovingWall::initialize()
 {
+    BADAssBool(isActive() && hasStarted());
 
     m_mPrev = 0;
     m_pressureAffectedReactions.resize(m_heighmap.size());
 
-    uint i;
+    uint site;
     for (SoluteParticle *particle : solver()->particles())
     {
-        i = particle->x();
+        site = particle->x();
 
-        m_mPrev += exp(m_heighmap(i)/m_r0);
+        m_mPrev += exp(m_heighmap(site)/m_r0);
 
         for (Reaction *reaction : particle->reactions())
         {
@@ -53,13 +52,30 @@ void MovingWall::initialize()
 
                 if (qdr->pressureAffected())
                 {
-                    m_pressureAffectedReactions[i].push_back(qdr);
+                    m_pressureAffectedReactions[site].push_back(qdr);
                 }
             }
         }
     }
 
     m_mPrev /= m_heighmap.size();
+
+    m_h = m_r0*std::log(m_heighmap.size()*m_s0*m_mPrev/(-m_E0));
+
+    for (uint site = 0; site < m_heighmap.size(); ++site)
+    {
+        m_localPressure.at(site) = localPressureEvaluate(site);
+
+        for (Reaction *reaction : solver()->particle(site)->reactions())
+        {
+            reaction->registerUpdateFlag(QuasiDiffusionReaction::UpdateFlags::CALCULATE);
+        }
+    }
+
+    solver()->getRateVariables();
+    solver()->remakeAccuAllRates();
+
+    BADAssClose(pressureEnergySum(), m_E0, 1E-5);
 
 }
 
@@ -79,18 +95,7 @@ void MovingWall::execute()
 
     _updatePressureRates();
 
-
-    for (SoluteParticle* particle : m_affectedParticles)
-    {
-        for (Reaction *r : particle->reactions())
-        {
-            if (r->isAllowed())
-            {
-                r->registerUpdateFlag(QuasiDiffusionReaction::UpdateFlags::CALCULATE);
-            }
-        }
-    }
-
+    BADAssClose(pressureEnergySum(), m_E0, 1E-5);
 
     if ((cycle() + 1)%10000 == 0)
     {
@@ -133,9 +138,12 @@ void MovingWall::_updatePressureRates()
 
     for (uint i = 0; i < m_heighmap.size(); ++i)
     {
+        BADAss(m_heighmap(i), <, m_h);
+
         if (!isAffected(solver()->particle(i)))
         {
-            rateChange = expSmallArg(-Reaction::beta()*m_localPressure(i)*(expFac - 1));
+
+            rateChange = expSmallArg(-Reaction::beta()*m_localPressure[i]*(expFac - 1));
 
             for (auto &r : m_pressureAffectedReactions[i])
             {
@@ -153,15 +161,15 @@ void MovingWall::_updatePressureRates()
 
             }
 
-            m_localPressure(i) *= expFac;
+            m_localPressure[i] *= expFac;
 
         }
         else
         {
-            m_localPressure(i) = localPressureEvaluate(i);
+            m_localPressure[i] = localPressureEvaluate(i);
         }
 
-        BADAssClose(localPressureEvaluate(i), m_localPressure(i), 1E-3, "incorrect pressure update", [&] ()
+        BADAssClose(localPressureEvaluate(i), m_localPressure[i], 1E-3, "incorrect pressure update", [&] ()
         {
             BADAssSimpleDump(cycle(), i, localPressure(i), expFac, m_heighmap);
         });
@@ -174,13 +182,13 @@ void MovingWall::remakeUpdatedValues()
 
     for (uint i = 0; i < m_heighmap.size(); ++i)
     {
-        m_localPressure(i) = localPressureEvaluate(i);
+        m_localPressure[i] = localPressureEvaluate(i);
     }
 
     for (Reaction *reaction : solver()->allPossibleReactions())
     {
-         reaction->registerUpdateFlag(QuasiDiffusionReaction::UpdateFlags::CALCULATE);
-         reaction->setRate();
+        reaction->registerUpdateFlag(QuasiDiffusionReaction::UpdateFlags::CALCULATE);
+        reaction->setRate();
     }
 }
 
