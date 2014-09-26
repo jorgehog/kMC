@@ -1,11 +1,12 @@
 #pragma once
 
 #include <kMC>
-#include "quasidiffusionevents.h"
+#include "movingwall.h"
 
-using namespace kMC;
 using namespace arma;
 
+namespace kMC
+{
 
 class QuasiDiffusionReaction : public Reaction
 {
@@ -100,8 +101,13 @@ public:
         return m_heights(site()) - m_heights(other);
     }
 
-    const double &wallHeight() const
+    double wallHeight() const
     {
+        if (!m_wallEvent.hasStarted())
+        {
+            return std::numeric_limits<double>::max();
+        }
+
         return m_wallEvent.height();
     }
 
@@ -182,6 +188,11 @@ public:
 
     double localPressure() const
     {
+        if (!m_wallEvent.hasStarted())
+        {
+            return 0;
+        }
+
         return m_wallEvent.localPressure(site());
     }
 
@@ -194,7 +205,7 @@ public:
 
         stringstream s;
 
-        s <<"site " << site() << " rs ls "<< rightSite() << " " << leftSite() << " height " << myHeight() << " dh " << heightDifference(leftSite()) << " " << heightDifference(rightSite()) << " rate " << rate() << endl;
+        s <<"site " << site() << " rs ls "<< rightSite() << " " << leftSite() << " height " << myHeight() << " dh " << heightDifference(leftSite()) << " " << heightDifference(rightSite()) << " rate " << rate() << " pressure " << localPressure() << endl;
         s << "\n" << Reaction::info() << endl;
 
         return s.str();
@@ -213,8 +224,23 @@ protected:
         m_heights(site) += change;
     }
 
+    void markAsAffected(SoluteParticle *particle)
+    {
+        if (!m_wallEvent.hasStarted())
+        {
+            return;
+        }
+
+        m_wallEvent.markAsAffected(particle);
+    }
+
     void queueAffected()
     {
+        if (!m_wallEvent.hasStarted())
+        {
+            return;
+        }
+
         m_wallEvent.markAsAffected(reactant());
 
         m_wallEvent.markAsAffected(solver()->getSite(leftSite(), 0, 0)->associatedParticle());
@@ -262,7 +288,7 @@ public:
         registerHeightChange(leftSite(), +1);
 
         queueAffected();
-        wallEvent().markAsAffected(solver()->getSite(leftSite(2), 0, 0)->associatedParticle());
+        markAsAffected(solver()->getSite(leftSite(2), 0, 0)->associatedParticle());
     }
 
 
@@ -290,7 +316,7 @@ public:
         registerHeightChange(rightSite(), +1);
 
         queueAffected();
-        wallEvent().markAsAffected(solver()->getSite(rightSite(2), 0, 0)->associatedParticle());
+        markAsAffected(solver()->getSite(rightSite(2), 0, 0)->associatedParticle());
     }
 
     const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const
@@ -471,3 +497,5 @@ public:
         return "Dissolution " + QuasiDiffusionReaction::info(xr, yr, zr, desc);
     }
 };
+
+}

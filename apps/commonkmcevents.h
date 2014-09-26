@@ -8,9 +8,16 @@ namespace kMC
 
 class RateChecker : public KMCEvent
 {
-    using KMCEvent::KMCEvent;
 
 public:
+
+    RateChecker() :
+        KMCEvent("rateChecker")
+    {
+        BADAssBool(KMCSolver::instanceActive(), "Create a KMCSolver before creating the rateChecker.");
+
+        setDependency(KMCSolver::instance()->solverEvent());
+    }
 
     void execute() {}
 

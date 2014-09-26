@@ -1,5 +1,5 @@
-#include "quasidiffusion.h"
 #include "quasidiffusionevents.h"
+#include "quasidiffusion.h"
 
 #include <commonkmcevents.h>
 
@@ -9,6 +9,7 @@
 #include <HDF5Wrapper/include/hdf5wrapper.h>
 
 using namespace libconfig;
+using namespace kMC;
 
 void initializeQuasi2DLoaded(KMCSolver * solver, const Setting & root, ivec *heigthmap);
 
