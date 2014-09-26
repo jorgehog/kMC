@@ -104,6 +104,8 @@ void initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG, ivec *he
     const double &EsMax = getSetting<double>(initCFG, "EsMax")*Eb;
     const double &EsInit = getSetting<double>(initCFG, "EsInit")*Eb;
 
+    const uint &wallOnsetCycle = getSetting<uint>(initCFG, "wallOnsetCycle");
+
     solver->enableLocalUpdating(false);
 
     //Override standard diffusion. Necessary for quasi diffusive simulations.
@@ -122,6 +124,8 @@ void initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG, ivec *he
     }
 
     wallEvent->setDependency(solver->solverEvent());
+    wallEvent->setOnsetTime(wallOnsetCycle);
+
     solver->addEvent(wallEvent);
 
 }

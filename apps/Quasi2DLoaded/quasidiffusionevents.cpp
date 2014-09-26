@@ -14,9 +14,7 @@ MovingWall::MovingWall(const double h0, const double EsMax, const double EsInit,
     m_r0(r0FromEs(h0, EsMax, EsInit)),
     m_s0(s0FromEs(h0, EsMax, EsInit)),
     m_heighmap(heighmap),
-    m_localPressure(heighmap.size()),
-    m_expNegOneOverR0(exp(-1.0/m_r0)),
-    m_expOneOverR0(exp(1.0/m_r0))
+    m_localPressure(heighmap.size())
 {
     for (uint site = 0; site < m_heighmap.size(); ++site)
     {

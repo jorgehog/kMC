@@ -161,10 +161,6 @@ private:
 
     void remakeUpdatedValues();
 
-    const double m_expNegOneOverR0;
-
-    const double m_expOneOverR0;
-
 };
 
 
@@ -256,7 +252,7 @@ public:
 
     }
 
-    const vec &acf() const
+    const vec acf() const
     {
         return m_acf/cycle();
     }
@@ -295,6 +291,5 @@ private:
     const string m_filename;
 
 };
-
 
 }
