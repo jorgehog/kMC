@@ -84,7 +84,6 @@ public:
 
     const double &localPressure(const uint site) const
     {
-        BADAssBool(!m_pressureAffectedReactions.empty());
         return m_localPressure(site);
     }
 
