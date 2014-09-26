@@ -64,7 +64,7 @@ void MovingWall::initialize()
 
     for (uint site = 0; site < m_heighmap.size(); ++site)
     {
-        m_localPressure.at(site) = localPressureEvaluate(site);
+        m_localPressure(site) = localPressureEvaluate(site);
 
         for (Reaction *reaction : solver()->particle(site)->reactions())
         {
@@ -142,8 +142,7 @@ void MovingWall::_updatePressureRates()
 
         if (!isAffected(solver()->particle(i)))
         {
-
-            rateChange = expSmallArg(-Reaction::beta()*m_localPressure[i]*(expFac - 1));
+            rateChange = expSmallArg(-Reaction::beta()*m_localPressure(i)*(expFac - 1));
 
             for (auto &r : m_pressureAffectedReactions[i])
             {
@@ -157,19 +156,25 @@ void MovingWall::_updatePressureRates()
                     continue;
                 }
 
+//                cout << "changed rate " << *r << " from " << r->rate();
                 r->changeRate(r->rate()*rateChange);
+
+//                cout << " to " << r->rate() << endl;
+//                cout << r->prefactor()*exp(-Reaction::beta()*(r->localEnergy() + localPressureEvaluate(i))) << endl;
+//                cout << r->localEnergy() << " " << r->localPressure() << " " << localPressureEvaluate(i) << endl;
 
             }
 
-            m_localPressure[i] *= expFac;
+            m_localPressure(i) *= expFac;
+
 
         }
         else
         {
-            m_localPressure[i] = localPressureEvaluate(i);
+            m_localPressure(i) = localPressureEvaluate(i);
         }
 
-        BADAssClose(localPressureEvaluate(i), m_localPressure[i], 1E-3, "incorrect pressure update", [&] ()
+        BADAssClose(localPressureEvaluate(i), m_localPressure(i), 1E-3, "incorrect pressure update", [&] ()
         {
             BADAssSimpleDump(cycle(), i, localPressure(i), expFac, m_heighmap);
         });
@@ -182,7 +187,7 @@ void MovingWall::remakeUpdatedValues()
 
     for (uint i = 0; i < m_heighmap.size(); ++i)
     {
-        m_localPressure[i] = localPressureEvaluate(i);
+        m_localPressure(i) = localPressureEvaluate(i);
     }
 
     for (Reaction *reaction : solver()->allPossibleReactions())

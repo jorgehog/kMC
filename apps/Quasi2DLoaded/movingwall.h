@@ -85,7 +85,7 @@ public:
     const double &localPressure(const uint site) const
     {
         BADAssBool(!m_pressureAffectedReactions.empty());
-        return m_localPressure[site];
+        return m_localPressure(site);
     }
 
     double localPressureEvaluate(const uint site) const
@@ -169,7 +169,7 @@ private:
     const double m_E0;
 
     const ivec &m_heighmap;
-    vector<double> m_localPressure;
+    vec m_localPressure;
     set<SoluteParticle *> m_affectedParticles;
 
     void _rescaleHeight();

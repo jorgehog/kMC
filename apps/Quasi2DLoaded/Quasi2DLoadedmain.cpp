@@ -86,8 +86,6 @@ int main()
 
     potentialMember.file()->flush(H5F_SCOPE_GLOBAL);
 
-    delete solver;
-
     return 0;
 
 }

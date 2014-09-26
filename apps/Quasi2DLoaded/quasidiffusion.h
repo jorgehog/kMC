@@ -193,7 +193,7 @@ public:
 
     double localPressure() const
     {
-        if (!m_wallEvent.hasStarted() || m_wallEvent.cycle() == 0)
+        if (!m_wallEvent.hasStarted())
         {
             return 0;
         }
