@@ -111,11 +111,10 @@ void initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG, ivec *he
     //BAD PRATICE WITH POINTERS.. WILL FIX..
     MovingWall *wallEvent = new MovingWall(h0, EsMax, EsInit, *heigthmap);
 
-    wallEvent->setDependency(solver->solverEvent());
-    wallEvent->setOnsetTime(wallOnsetCycle);
-
     if (useWall)
     {
+        wallEvent->setDependency(solver->solverEvent());
+        wallEvent->setOnsetTime(wallOnsetCycle);
         solver->addEvent(wallEvent);
     }
 

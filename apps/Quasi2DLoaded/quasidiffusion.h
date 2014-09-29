@@ -118,7 +118,7 @@ public:
 
     const uint &site() const
     {
-        return reactant()->x();
+        return x();
     }
 
     const uint &nSites() const
@@ -138,6 +138,7 @@ public:
 
     virtual double calcRate() override final
     {
+
         if (updateFlag() != (int)UpdateFlags::CALCULATE && rate() != UNSET_RATE)
         {
             return rate();
@@ -235,12 +236,14 @@ protected:
         {
             m_wallEvent.markAsAffected(particle);
         }
-
-        for (Reaction *reaction : particle->reactions())
+        else
         {
-            if (reaction->isAllowed())
+            for (Reaction *reaction : particle->reactions())
             {
-                reaction->registerUpdateFlag(UpdateFlags::CALCULATE);
+                if (reaction->isAllowed())
+                {
+                    reaction->registerUpdateFlag(UpdateFlags::CALCULATE);
+                }
             }
         }
     }

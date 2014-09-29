@@ -73,7 +73,6 @@ void MovingWall::initialize()
     }
 
     solver()->getRateVariables();
-    solver()->remakeAccuAllRates();
 
     BADAssClose(pressureEnergySum(), m_E0, 1E-5);
 
@@ -104,6 +103,16 @@ void MovingWall::execute()
         remakeUpdatedValues();
     }
 
+    for (SoluteParticle *particle : m_affectedParticles)
+    {
+        for (Reaction *reaction : particle->reactions())
+        {
+            if (reaction->isAllowed())
+            {
+                reaction->registerUpdateFlag(QuasiDiffusionReaction::UpdateFlags::CALCULATE);
+            }
+        }
+    }
 }
 
 void MovingWall::reset()
@@ -158,12 +167,12 @@ void MovingWall::_updatePressureRates()
                     continue;
                 }
 
-//                cout << "changed rate " << *r << " from " << r->rate();
+                //                cout << "changed rate " << *r << " from " << r->rate();
                 r->changeRate(r->rate()*rateChange);
 
-//                cout << " to " << r->rate() << endl;
-//                cout << r->prefactor()*exp(-Reaction::beta()*(r->localEnergy() + localPressureEvaluate(i))) << endl;
-//                cout << r->localEnergy() << " " << r->localPressure() << " " << localPressureEvaluate(i) << endl;
+                //                cout << " to " << r->rate() << endl;
+                //                cout << r->prefactor()*exp(-Reaction::beta()*(r->localEnergy() + localPressureEvaluate(i))) << endl;
+                //                cout << r->localEnergy() << " " << r->localPressure() << " " << localPressureEvaluate(i) << endl;
 
             }
 

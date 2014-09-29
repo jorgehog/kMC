@@ -79,7 +79,7 @@ public:
         solver()->getRateVariables();
 
         //To counter buildup of roundoff errors
-        if (m_cycle % 10000 == 0 || !solver()->localUpdating())
+        if ((m_cycle % 10000 == 0) && solver()->localUpdating())
         {
             solver()->remakeAccuAllRates();
         }

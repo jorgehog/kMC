@@ -407,6 +407,7 @@ void KMCSolver::swapReactionAddresses(const uint dest, const uint orig)
 
     BADAss(orig,                    ==, swappedReaction->address(), "mismatch in address.", KMCBAI( swappedReaction->info()));
     BADAssBool(swappedReaction->isAllowed(), "swapped reaction should be allowed and active.", KMCBAI( swappedReaction->info()));
+    BADAss(swappedReaction->rate(), !=, Reaction::UNSET_RATE, "Reaction should not appear.");
 
     m_allPossibleReactions.at(dest) = swappedReaction;
 
@@ -457,9 +458,20 @@ void KMCSolver::remakeAccuAllRates()
 
     for (Reaction *r : m_allPossibleReactions)
     {
-        BADAss(r->rate(), !=, Reaction::UNSET_RATE, "Rates should not be all changed before they are set once.");
-        BADAss(r->rate(), >, 0, "Rate should be positive.");
-        BADAssBool(!r->hasVacantStatus(), "Reaction should be enabled.");
+        BADAssBool(!r->hasVacantStatus(), "Reaction should be enabled.", [&] ()
+        {
+            cout << r->info() << endl;
+        });
+
+        BADAss(r->rate(), !=, Reaction::UNSET_RATE, "UNSET RATE IN ACTIVE REACTION.", [&] ()
+        {
+            cout << r->info() << endl;
+        });
+
+        BADAss(r->rate(), >, 0, "Rate should be positive.", [&] ()
+        {
+            cout << r->info() << endl;
+        });
 
         m_kTot += r->rate();
         m_accuAllRates[i] = m_kTot;
@@ -1442,6 +1454,11 @@ void KMCSolver::getRateVariables()
     SoluteParticle::updateAffectedParticles();
 
     reshuffleReactions();
+
+    if (!m_useLocalUpdating)
+    {
+        remakeAccuAllRates();
+    }
 }
 
 const uint &KMCSolver::cycle() const
