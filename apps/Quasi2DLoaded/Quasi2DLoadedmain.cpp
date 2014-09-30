@@ -101,6 +101,13 @@ void initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG, ivec *he
     const double &EsInit = getSetting<double>(initCFG, "EsInit")*Eb;
 
     const bool useWall = getSetting<uint>(initCFG, "useWall") == 1;
+
+    const bool concEquil = getSetting<uint>(initCFG, "concEquil") == 1;
+    const double &gCrit = getSetting<double>(initCFG, "gCrit");
+    const double &treshold = getSetting<double>(initCFG, "treshold");
+    const uint &N = getSetting<uint>(initCFG, "N");
+
+
     const uint &wallOnsetCycle = getSetting<uint>(initCFG, "wallOnsetCycle");
 
     solver->enableLocalUpdating(false);
@@ -110,7 +117,10 @@ void initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG, ivec *he
 
     //BAD PRATICE WITH POINTERS.. WILL FIX..
     MovingWall *wallEvent = new MovingWall(h0, EsMax, EsInit, *heigthmap);
-    EquilibriumConcentrationEstimator *eqC = new EquilibriumConcentrationEstimator();
+
+    EqConc *eqC = new EqConc();
+    ConcEquilibriator *cc = new ConcEquilibriator(eqC, N, gCrit, treshold);
+
     eqC->setDependency(wallEvent);
 
     if (useWall)
@@ -121,8 +131,14 @@ void initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG, ivec *he
         solver->addEvent(wallEvent);
 
         eqC->setOnsetTime(wallOnsetCycle);
+        cc->setOnsetTime(wallOnsetCycle);
 
         solver->addEvent(eqC);
+
+        if (concEquil)
+        {
+            solver->addEvent(cc);
+        }
     }
 
     for (uint site = 0; site < solver->NX(); ++site)

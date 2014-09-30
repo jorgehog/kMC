@@ -58,6 +58,25 @@ public:
 
 };
 
+
+class Concentration : public KMCEvent
+{
+
+public:
+
+    Concentration(bool toFile = true) :
+        KMCEvent("Concentration", "", true, toFile)
+    {
+
+    }
+
+    void execute()
+    {
+        setValue(solver()->targetConcentration());
+    }
+
+};
+
 class Sphericity : public KMCEvent
 {
 public:

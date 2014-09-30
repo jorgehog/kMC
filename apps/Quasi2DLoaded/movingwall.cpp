@@ -121,8 +121,6 @@ void MovingWall::execute()
 void MovingWall::reset()
 {
     m_affectedParticles.clear();
-
-    cout << solver()->kTot() << endl;
 }
 
 void MovingWall::_rescaleHeight()
@@ -142,7 +140,9 @@ void MovingWall::_rescaleHeight()
     {
         m_dh = 0;
         m = m_mPrev;
+#ifndef NDEBUG
         cout << "WARNING: Unable to shift wall." << endl;
+#endif
     }
 
     m_h += m_dh;
@@ -179,12 +179,7 @@ void MovingWall::_updatePressureRates()
                     continue;
                 }
 
-                //                cout << "changed rate " << *r << " from " << r->rate();
                 r->changeRate(r->rate()*rateChange);
-
-                //                cout << " to " << r->rate() << endl;
-                //                cout << r->prefactor()*exp(-Reaction::beta()*(r->localEnergy() + localPressureEvaluate(i))) << endl;
-                //                cout << r->localEnergy() << " " << r->localPressure() << " " << localPressureEvaluate(i) << endl;
 
             }
 
