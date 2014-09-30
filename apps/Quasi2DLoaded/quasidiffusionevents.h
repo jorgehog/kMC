@@ -5,6 +5,50 @@
 namespace kMC
 {
 
+class Dissolution;
+
+class EquilibriumConcentrationEstimator : public KMCEvent
+{
+public:
+
+    EquilibriumConcentrationEstimator() :
+        KMCEvent("EquilibriumConcentrationEstimator", "", true, true)
+    {
+        setDependency(solver()->solverEvent());
+    }
+
+    virtual ~EquilibriumConcentrationEstimator()
+    {
+        m_dissolutionReactions.clear();
+    }
+
+    void initialize();
+
+    void execute();
+
+    void reset();
+
+    void restart()
+    {
+        m_eqConc = 0;
+
+        m_neighbours = 0;
+        m_dissolutionRate = 0;
+    }
+
+private:
+
+    double m_eqConc;
+
+    double m_neighbours;
+    double m_dissolutionRate;
+
+    double m_expFac;
+
+    vector<const Dissolution*> m_dissolutionReactions;
+
+};
+
 class HeightRMS : public KMCEvent
 {
 public:

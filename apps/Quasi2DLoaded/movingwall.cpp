@@ -96,7 +96,10 @@ void MovingWall::execute()
 
     _updatePressureRates();
 
-    BADAssClose(pressureEnergySum(), m_E0, 1E-5);
+    if (m_dh != 0)
+    {
+        BADAssClose(pressureEnergySum(), m_E0, 1E-5);
+    }
 
     if ((cycle() + 1)%10000 == 0)
     {
@@ -118,6 +121,8 @@ void MovingWall::execute()
 void MovingWall::reset()
 {
     m_affectedParticles.clear();
+
+    cout << solver()->kTot() << endl;
 }
 
 void MovingWall::_rescaleHeight()
@@ -133,7 +138,15 @@ void MovingWall::_rescaleHeight()
 
     m_dh = m_r0*std::log(m/m_mPrev);
 
+    if (m_h + m_dh < m_heighmap.max())
+    {
+        m_dh = 0;
+        m = m_mPrev;
+        cout << "WARNING: Unable to shift wall." << endl;
+    }
+
     m_h += m_dh;
+
     m_mPrev = m;
 
     setValue(m_h);
@@ -142,7 +155,6 @@ void MovingWall::_rescaleHeight()
 
 void MovingWall::_updatePressureRates()
 {
-
     double rateChange;
 
     double expFac = expSmallArg(-m_dh/m_r0);
