@@ -133,10 +133,10 @@ void initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG, ivec *he
         eqC->setOnsetTime(wallOnsetCycle);
         cc->setOnsetTime(wallOnsetCycle);
 
-        solver->addEvent(eqC);
 
         if (concEquil)
         {
+            solver->addEvent(eqC);
             solver->addEvent(cc);
         }
     }

@@ -98,6 +98,11 @@ public:
 
     double meanConcentration() const
     {
+        if (m_allConcentrations.empty())
+        {
+            return 0;
+        }
+
         return m_meanConcentration/m_allConcentrations.size();
     }
 
