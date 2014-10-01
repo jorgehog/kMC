@@ -145,7 +145,7 @@ void ConcEquilibriator::initiateNextConcentrationLevel()
 
     if (m_allConcentrations.size() > 2 && fabs((cNew + m_cPrev)/2 - meanConcentration()) < m_treshold)
     {
-        terminateLoop();
+        terminateLoop("Concentration converged");
     }
 
     else
