@@ -11,8 +11,6 @@
 using namespace libconfig;
 using namespace kMC;
 
-void initializeQuasi2DLoaded(KMCSolver * solver, const Setting & root, ivec *heigthmap);
-
 int main()
 {
 
@@ -65,35 +63,6 @@ int main()
     solver->addEvent(new RateChecker());
 #endif
 
-    initializeQuasi2DLoaded(solver, initCFG, &heightmap);
-
-    H5Wrapper::Member &sizeMember = h5root.addMember(solver->NX());
-
-    stringstream s;
-    s << dynamic_cast<QuasiDiffusionReaction*>(solver->particle(0)->reactions().at(0))->numericDescription();
-    s << "_n_" << runID;
-
-    H5Wrapper::Member &potentialMember = sizeMember.addMember(s.str());
-
-    t.tic();
-    solver->mainloop();
-    cout << "Simulation ended after " << t.toc() << " seconds" << endl;
-
-    potentialMember.addData("heightmap", heightmap, overwrite);
-    potentialMember.addData("ignisData", solver->mainLattice()->storedEventValues(), overwrite);
-    potentialMember.addData("ignisEventDescriptions", solver->mainLattice()->outputEventDescriptions(), overwrite);
-    potentialMember.addData("AutoCorr", autocorr.acf(), overwrite);
-
-    potentialMember.file()->flush(H5F_SCOPE_GLOBAL);
-
-    return 0;
-
-}
-
-
-void initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG, ivec *heigthmap)
-{
-
     const uint &h0 = getSetting<uint>(initCFG, "h0");
 
     const double &Eb = getSetting<double>(initCFG, "Eb");
@@ -116,7 +85,7 @@ void initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG, ivec *he
     solver->setDiffusionType(KMCSolver::DiffusionTypes::None);
 
     //BAD PRATICE WITH POINTERS.. WILL FIX..
-    MovingWall *wallEvent = new MovingWall(h0, EsMax, EsInit, *heigthmap);
+    MovingWall *wallEvent = new MovingWall(h0, EsMax, EsInit, heightmap);
 
     EqConc *eqC = new EqConc();
     ConcEquilibriator *cc = new ConcEquilibriator(eqC, N, gCrit, treshold);
@@ -144,11 +113,36 @@ void initializeQuasi2DLoaded(KMCSolver *solver, const Setting &initCFG, ivec *he
     for (uint site = 0; site < solver->NX(); ++site)
     {
         SoluteParticle* particle = solver->forceSpawnParticle(site, 0, 0);
-        particle->addReaction(new LeftHopPressurized(particle, *heigthmap, Eb, *wallEvent));
-        particle->addReaction(new RightHopPressurized(particle, *heigthmap, Eb, *wallEvent));
-        particle->addReaction(new DepositionMirrorImageArhenius(particle, *heigthmap, Eb, *wallEvent));
-        particle->addReaction(new Dissolution(particle, *heigthmap, Eb, *wallEvent));
+        particle->addReaction(new LeftHopPressurized(particle, heightmap, Eb, *wallEvent));
+        particle->addReaction(new RightHopPressurized(particle, heightmap, Eb, *wallEvent));
+        particle->addReaction(new DepositionMirrorImageArhenius(particle, heightmap, Eb, *wallEvent));
+        particle->addReaction(new Dissolution(particle, heightmap, Eb, *wallEvent));
     }
 
 
+    H5Wrapper::Member &sizeMember = h5root.addMember(solver->NX());
+
+    stringstream s;
+    s << dynamic_cast<QuasiDiffusionReaction*>(solver->particle(0)->reactions().at(0))->numericDescription();
+    s << "_n_" << runID;
+
+    H5Wrapper::Member &potentialMember = sizeMember.addMember(s.str());
+
+    t.tic();
+    solver->mainloop();
+    cout << "Simulation ended after " << t.toc() << " seconds" << endl;
+
+    potentialMember.addData("heightmap", heightmap, overwrite);
+    potentialMember.addData("ignisData", solver->mainLattice()->storedEventValues(), overwrite);
+    potentialMember.addData("ignisEventDescriptions", solver->mainLattice()->outputEventDescriptions(), overwrite);
+    potentialMember.addData("AutoCorr", autocorr.acf(), overwrite);
+
+    if (concEquil)
+    {
+        potentialMember.addData("eqConc", eqC->eqConc());
+    }
+
+    return 0;
+
 }
+
