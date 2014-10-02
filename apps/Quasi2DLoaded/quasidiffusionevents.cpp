@@ -45,9 +45,11 @@ void EqConc::update()
     double localNeighbors = 0;
     double localDissolutionRate = 0;
 
+    double Eb;
     uint nDissolutionReactions = 0;
     for (const Dissolution *dissolutionReaction : m_dissolutionReactions)
     {
+        Eb = dissolutionReaction->Eb();
         if (dissolutionReaction->isAllowed())
         {
             localDissolutionRate += dissolutionReaction->rate();
@@ -57,10 +59,12 @@ void EqConc::update()
         localNeighbors += dissolutionReaction->nNeighbors();
     }
 
+#ifndef NDEBUG
     if (localDissolutionRate > 100)
     {
         solver()->exit("Pressure too high?");
     }
+#endif
 
     localNeighbors /= m_dissolutionReactions.size();
     if (nDissolutionReactions != 0)
@@ -74,9 +78,16 @@ void EqConc::update()
     double avgNeighbours = m_neighbours/m_counter;
     double avgDissolutionRate = m_dissolutionRate/m_counter;
 
-    m_eqConc += avgDissolutionRate/(4 - avgNeighbours);
+//    m_eqConc += avgDissolutionRate/(4 - avgNeighbours);
+    m_eqConc += avgDissolutionRate;
 
     m_counter++;
+
+    if (cycle()%1000 == 0)
+    {
+        cout << "k : " << -log(eqConc())/(Reaction::beta()*Eb) << endl;
+        cout << "n : " << avgNeighbours << endl;
+    }
 }
 
 
@@ -150,7 +161,6 @@ void ConcEquilibriator::initiateNextConcentrationLevel()
 
     else
     {
-        cout << fabs((cNew + m_cPrev)/2 - meanConcentration())/m_treshold << endl;
         solver()->setTargetConcentration(cNew);
         m_eqConcEvent->restart();
 

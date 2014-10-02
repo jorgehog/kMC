@@ -64,7 +64,7 @@ def combine_results(time_array, value_array, do_roughen=True):
     times = array(sorted(list(times)))
 
     if do_roughen:
-        times = roughen(times)
+        times = roughen_single(times)
 
     all_f_t = zeros([len(value_array), len(times)])
     scales = zeros(len(times))
@@ -89,30 +89,30 @@ def combine_results(time_array, value_array, do_roughen=True):
     return times, all_f_t.sum(0)/scales
 
 
+def roughen_single(_array):
+
+    idx = [0]
+    k = 1
+    N = len(_array)
+
+    while round(k) < N:
+        idx.append(int(round(k)))
+        k += 0.001*k*scalar_log(1 + k)
+
+    idx = unique(asarray(idx, dtype=int))
+
+    return asarray(_array)[idx]
+
+
 def roughen(*args):
 
     n_args = len(args)
 
     new = []
-    for i in range(n_args):
+    for _array in args:
+        new.append(roughen_single(_array))
 
-        idx = [0]
-        k = 1
-        N = len(args[i])
-
-        while k < N:
-            idx.append(int(round(k)))
-            k += 0.001*k*scalar_log(1 + k)
-
-        idx = unique(asarray(idx, dtype=int))
-
-        new.append(asarray(args[i])[idx])
-
-    if n_args == 1:
-        return new[0]
-    else:
-        return tuple(new)
-
+    return new
 
 
 def get_w_beta(rms, times, do_plot=False):
@@ -198,36 +198,41 @@ def main():
                 n = int(n[0])
             else:
                 n = ""
+            #
+            # # print c,c0, em, em0*eb, t, t0, l, l0
+            # if c != c0 or em != em0*eb or t != t0:
+            #     # if c != c0:
+            #     #     print "c"
+            #     # if em != em0*eb:
+            #     #     print "em"
+            #     # if t != t0:
+            #     #     print "t"
+            #     # if l != l0:
+            #     #     print "l"
+            #     continue
 
-            # print c,c0, em, em0*eb, t, t0, l, l0
-            if c != c0 or em != em0*eb or t != t0:
-                # if c != c0:
-                #     print "c"
-                # if em != em0*eb:
-                #     print "em"
-                # if t != t0:
-                #     print "t"
-                # if l != l0:
-                #     print "l"
-                continue
+            if eb not in all_data.keys():
+                all_data[eb] = {}
 
-            if t not in all_data.keys():
-                all_data[t] = {}
-            if em not in all_data[t].keys():
-                all_data[t][em] = {}
-            if c not in all_data[t][em].keys():
-                all_data[t][em][c] = {}
-            if l not in all_data[t][em][c].keys():
-                all_data[t][em][c][l] = {}
+            if t not in all_data[eb].keys():
+                all_data[eb][t] = {}
+            if em not in all_data[eb][t].keys():
+                all_data[eb][t][em] = {}
+            if c not in all_data[eb][t][em].keys():
+                all_data[eb][t][em][c] = {}
+            if l not in all_data[eb][t][em][c].keys():
+                all_data[eb][t][em][c][l] = {}
 
-            all_data[t][em][c][l][n] = {}
+            all_data[eb][t][em][c][l][n] = {}
 
             for i, name in enumerate(data["ignisEventDescriptions"][0]):
-                all_data[t][em][c][l][n][str(name).split("@")[0]] = data["ignisData"][i, :]
-            all_data[t][em][c][l][n]["name"] = potential
+                all_data[eb][t][em][c][l][n][str(name).split("@")[0]] = data["ignisData"][i, :]
+            all_data[eb][t][em][c][l][n]["name"] = potential
 
-            all_data[t][em][c][l][n]["AutoCorr"] = array(data["AutoCorr"])
+            all_data[eb][t][em][c][l][n]["AutoCorr"] = array(data["AutoCorr"])
 
+            if "eqConc" in data.attrs.keys():
+                all_data[eb][t][em][c][l][n]["eqConc"] = data.attrs["eqConc"]
 
         k += 1
 
@@ -237,114 +242,139 @@ def main():
     all_lengths = []
     all_rms = []
 
-    for t, rest in all_data.items():
-        for em, rest2 in rest.items():
-            for c, rest3 in rest2.items():
+    all_temps = []
+    all_c_eq = []
+    all_em_maxes = []
+    all_eb = []
 
-                name = rest3.values()[0].values()[0]["name"].split("_n_")[0]
+    for eb, init in all_data.items():
+        for t, rest in init.items():
+            for em, rest2 in rest.items():
+                for c, rest3 in rest2.items():
 
-                print name
-                for length, all_runs in rest3.items():
-                    print
-                    print length
+                    name = rest3.values()[0].values()[0]["name"].split("_n_")[0]
 
-                    time_array = [data["Time"] for data in all_runs.values()]
-                    rms_array = [data["heightRMS"] for data in all_runs.values()]
-                    h_array = [data["height"] for data in all_runs.values()]
-                    acf = [data["AutoCorr"] for data in all_runs.values()]
+                    for length, all_runs in rest3.items():
 
-                    toss = []
-                    for i, t in enumerate(time_array):
-                        if where(t < 0)[0].size != 0:
-                            print "Negative times in run ", i
-                            toss.append(i)
+                        time_array = [data["Time"] for data in all_runs.values()]
+                        rms_array = [data["heightRMS"] for data in all_runs.values()]
+                        h_array = [data["height"] for data in all_runs.values()]
+                        acf = [data["AutoCorr"] for data in all_runs.values()]
 
-                    for i in toss[::-1]:
-                        time_array.pop(i)
-                        rms_array.pop(i)
+                        c_eq = sum([data["eqConc"] for data in all_runs.values()])/len(all_runs.values())
 
-                    t, f_t = combine_results(roughen(*time_array), roughen(*rms_array), do_roughen=True)
+                        all_c_eq.append(c_eq)
+                        all_em_maxes.append(em)
+                        all_temps.append(t)
+                        all_eb.append(eb)
+
+                        continue
+
+                        toss = []
+                        for i, t in enumerate(time_array):
+                            if where(t < 0)[0].size != 0:
+                                print "Negative times in run ", i
+                                toss.append(i)
+
+                        for i in toss[::-1]:
+                            time_array.pop(i)
+                            rms_array.pop(i)
+
+                        t, f_t = combine_results(roughen(*time_array), roughen(*rms_array), do_roughen=True)
+
+                        figure(0)
+                        hold("on")
+                        loglog(t, f_t, label=length)
+
+                        t, f_t = combine_results(roughen(*time_array), [h_i/t_i for h_i, t_i in zip(h_array, time_array)])
+
+                        K = 10
+                        L = len(t)/K
+
+                        figure(1)
+                        hold("on")
+                        plot(t[L:], f_t[L:], label=length)
+
+                        if int(length) == 512:
+
+                            a = []
+
+                            figure(2)
+                            hold("on")
+
+                            for t_i, h_i in zip(time_array, h_array):
+                                v = h_i/t_i
+
+                                l_i = len(h_i)/K
+                                plot(t_i[l_i:], v[l_i:])
+                                a.append(v[l_i:].mean())
+
+                            figure(3)
+                            hist(a, max([len(time_array)/5, 20]))
+
+                        D = 20
+                        acf_tot = zeros(D)
+                        for acf_i in acf:
+                            acf_tot += acf_i[:D]
+                        acf_tot /= len(acf)
+
+                        figure(4)
+                        hold("on")
+                        plot(acf_tot, label=length)
 
                     figure(0)
-                    hold("on")
-                    loglog(t, f_t, label=length)
+                    title(name)
 
-                    t, f_t = combine_results(roughen(*time_array), [h_i/t_i for h_i, t_i in zip(h_array, time_array)])
-
-                    K = 10
-                    L = len(t)/K
+                    legend(loc=2)
+                    xlabel("t [s * R_0]")
+                    ylabel("<RMS(h)>")
+                    draw()
+                    savefig(name + "_logT_logRMS.png")
 
                     figure(1)
-                    hold("on")
-                    plot(t[L:], f_t[L:], label=length)
+                    legend(loc=2)
+                    xlabel("t [s * R_0]")
+                    ylabel("<v(t)>")
+                    xscale('log')
+                    draw()
+                    savefig(name + "_logT_v.png")
 
-                    if int(length) == 512:
+                    figure(2)
+                    draw()
+                    savefig("test.png")
 
-                        a = []
-
-                        figure(2)
-                        hold("on")
-
-                        for t_i, h_i in zip(time_array, h_array):
-                            v = h_i/t_i
-
-                            l_i = len(h_i)/K
-                            plot(t_i[l_i:], v[l_i:])
-                            a.append(v[l_i:].mean())
-
-                        figure(3)
-                        hist(a, max([len(time_array)/5, 20]))
-
-                    D = 20
-                    acf_tot = zeros(D)
-                    for acf_i in acf:
-                        acf_tot += acf_i[:D]
-                    acf_tot /= len(acf)
+                    figure(3)
+                    draw()
+                    savefig("v0dist.png")
 
                     figure(4)
-                    hold("on")
-                    plot(acf_tot, label=length)
+                    legend()
+                    xlabel("dx")
+                    ylabel("acf(dx)")
+                    draw()
+                    savefig("acf.png")
+
+                    # show()
 
 
+                    # winf, beta = get_w_beta(all_rms, all_times)
 
-                print
+    close("all")
+    figure()
 
-                figure(0)
-                title(name)
-
-                legend(loc=2)
-                xlabel("t [s * R_0]")
-                ylabel("<RMS(h)>")
-                draw()
-                savefig(name + "_logT_logRMS.png")
-
-                figure(1)
-                legend(loc=2)
-                xlabel("t [s * R_0]")
-                ylabel("<v(t)>")
-                xscale('log')
-                draw()
-                savefig(name + "_logT_v.png")
-
-                figure(2)
-                draw()
-                savefig("test.png")
-
-                figure(3)
-                draw()
-                savefig("v0dist.png")
-
-                figure(4)
-                legend()
-                xlabel("dx")
-                ylabel("acf(dx)")
-                draw()
-                savefig("acf.png")
-
-                # show()
-
-
-                # winf, beta = get_w_beta(all_rms, all_times)
+    # if len(all_temps) == len(all_c_eq) and all_temps:
+    #     all_temps_inv = [1.0/t for t in all_temps]
+    #     plot(all_temps, all_c_eq, 'kx')
+    #     xlabel("kT/E_0")
+    #     ylabel("C_0/l_0")
+    # elif len(all_em_maxes) == len(all_c_eq) and all_em_maxes:
+    # plot(all_em_maxes, all_c_eq, 'kx')
+    # xlabel("Em/E_0")
+    # ylabel("C_0/l_0")
+    plot(all_eb, all_c_eq, 'kx')
+    xlabel("Eb/E0")
+    ylabel("C_0/l_0")
+    show()
 
     #
     # close("all")

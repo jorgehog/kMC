@@ -491,6 +491,39 @@ public:
 
 };
 
+class DepositionMirrorImageArheniusNoNF : public Deposition
+{
+    using Deposition::Deposition;
+
+public:
+
+    uint nVacantNeighbors() const
+    {
+        uint nvn = 1;
+
+        if (heightDifference(leftSite()) > 0)
+        {
+            nvn++;
+        }
+        if (heightDifference(rightSite()) > 0)
+        {
+            nvn++;
+        }
+        return nvn;
+    }
+
+    double activationEnergy() const
+    {
+        return 1.0;
+    }
+
+    double prefactor() const
+    {
+        return concentration();
+    }
+
+};
+
 
 class Dissolution : public QuasiDiffusionReaction
 {

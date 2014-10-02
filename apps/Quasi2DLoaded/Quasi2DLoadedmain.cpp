@@ -11,6 +11,7 @@
 using namespace libconfig;
 using namespace kMC;
 
+
 int main()
 {
 
@@ -45,6 +46,11 @@ int main()
 
 
     ivec heightmap(solver->NX(), fill::zeros);
+
+    for (uint i = 0; i < solver->NX(); ++i)
+    {
+        heightmap(i) = KMC_RNG_UNIFORM()*1000;
+    }
 
     DumpHeighmap dumpHeightmap(heightmap);
     HeightRMS heightRMS(heightmap);
@@ -90,10 +96,10 @@ int main()
     EqConc *eqC = new EqConc();
     ConcEquilibriator *cc = new ConcEquilibriator(eqC, N, gCrit, treshold);
 
-    eqC->setDependency(wallEvent);
 
     if (useWall)
     {
+        eqC->setDependency(wallEvent);
         wallEvent->setDependency(solver->solverEvent());
         wallEvent->setOnsetTime(wallOnsetCycle);
 
@@ -101,21 +107,20 @@ int main()
 
         eqC->setOnsetTime(wallOnsetCycle);
         cc->setOnsetTime(wallOnsetCycle);
+    }
 
-
-        if (concEquil)
-        {
-            solver->addEvent(eqC);
-            solver->addEvent(cc);
-        }
+    if (concEquil)
+    {
+        solver->addEvent(eqC);
+        solver->addEvent(cc);
     }
 
     for (uint site = 0; site < solver->NX(); ++site)
     {
         SoluteParticle* particle = solver->forceSpawnParticle(site, 0, 0);
-        particle->addReaction(new LeftHopPressurized(particle, heightmap, Eb, *wallEvent));
-        particle->addReaction(new RightHopPressurized(particle, heightmap, Eb, *wallEvent));
-        particle->addReaction(new DepositionMirrorImageArhenius(particle, heightmap, Eb, *wallEvent));
+//        particle->addReaction(new LeftHopPressurized(particle, heightmap, Eb, *wallEvent));
+//        particle->addReaction(new RightHopPressurized(particle, heightmap, Eb, *wallEvent));
+        particle->addReaction(new DepositionMirrorImageArheniusNoNF(particle, heightmap, Eb, *wallEvent));
         particle->addReaction(new Dissolution(particle, heightmap, Eb, *wallEvent));
     }
 

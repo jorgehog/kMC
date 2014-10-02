@@ -27,8 +27,6 @@ class ParameterSet:
         self.parent = None
         self.current_value = None
 
-        self.reset()
-
     def reset(self):
 
         self.write_value(self.start)
@@ -119,6 +117,9 @@ class ParameterSetController:
             parameter_set.prepare()
 
     def run(self, execute_program_rule, *args, **kwargs):
+
+        for parameter_set in self.parameter_sets:
+            parameter_set.reset()
 
         while not self.parameter_sets[0].finished():
 
