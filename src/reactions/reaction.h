@@ -172,6 +172,11 @@ public:
         return name.compare(this->type()) == 0;
     }
 
+    bool hasName(const string name) const
+    {
+        return name.compare(this->name()) == 0;
+    }
+
     SoluteParticle * reactant() const
     {
         return m_reactant;

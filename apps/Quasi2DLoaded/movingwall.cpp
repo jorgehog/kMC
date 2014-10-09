@@ -96,7 +96,10 @@ void MovingWall::execute()
 
     _updatePressureRates();
 
-    BADAssClose(pressureEnergySum(), m_E0, 1E-5);
+    if (m_dh != 0)
+    {
+        BADAssClose(pressureEnergySum(), m_E0, 1E-5);
+    }
 
     if ((cycle() + 1)%10000 == 0)
     {
@@ -133,7 +136,17 @@ void MovingWall::_rescaleHeight()
 
     m_dh = m_r0*std::log(m/m_mPrev);
 
+    if (m_h + m_dh < m_heighmap.max())
+    {
+        m_dh = 0;
+        m = m_mPrev;
+#ifndef NDEBUG
+        cout << "WARNING: Unable to shift wall." << endl;
+#endif
+    }
+
     m_h += m_dh;
+
     m_mPrev = m;
 
     setValue(m_h);
@@ -142,7 +155,6 @@ void MovingWall::_rescaleHeight()
 
 void MovingWall::_updatePressureRates()
 {
-
     double rateChange;
 
     double expFac = expSmallArg(-m_dh/m_r0);
@@ -167,12 +179,7 @@ void MovingWall::_updatePressureRates()
                     continue;
                 }
 
-                //                cout << "changed rate " << *r << " from " << r->rate();
                 r->changeRate(r->rate()*rateChange);
-
-                //                cout << " to " << r->rate() << endl;
-                //                cout << r->prefactor()*exp(-Reaction::beta()*(r->localEnergy() + localPressureEvaluate(i))) << endl;
-                //                cout << r->localEnergy() << " " << r->localPressure() << " " << localPressureEvaluate(i) << endl;
 
             }
 

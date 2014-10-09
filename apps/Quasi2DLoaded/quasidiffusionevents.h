@@ -5,6 +5,133 @@
 namespace kMC
 {
 
+class Dissolution;
+
+class EqConc : public KMCEvent
+{
+public:
+
+    EqConc() :
+        KMCEvent("EqConc", "", true, true)
+    {
+        setDependency(solver()->solverEvent());
+    }
+
+    virtual ~EqConc()
+    {
+        m_dissolutionReactions.clear();
+    }
+
+    void initialize();
+
+    void execute();
+
+    void reset();
+
+    void restart();
+
+    double eqConc() const
+    {
+        return m_expFac*m_eqConc/m_counter;
+    }
+
+private:
+
+    double m_eqConc;
+
+    double m_neighbours;
+    double m_dissolutionRate;
+
+    double m_expFac;
+
+    vector<Dissolution*> m_dissolutionReactions;
+
+    uint m_counter;
+
+    void update();
+
+    void resetCounters()
+    {
+        m_counter = 1;
+
+        m_eqConc = 0;
+
+        m_neighbours = 0;
+        m_dissolutionRate = 0;
+    }
+
+
+};
+
+class Deposition;
+
+class ConcEquilibriator : public KMCEvent
+{
+public:
+
+    ConcEquilibriator(EqConc *eqConcEvent, const uint N = 100, const double gCrit = 1E-5, const double treshold = 1E-5) :
+        KMCEvent("ConcEquilibriator", "", true, true),
+        m_eqConcEvent(eqConcEvent),
+        m_N(N),
+        m_gCrit(gCrit),
+        m_treshold(treshold),
+        m_eqConcValues(N)
+    {
+        setDependency(m_eqConcEvent);
+    }
+
+    void initialize();
+
+    void execute();
+
+    double flatness()
+    {
+        double g = 0;
+
+        for (uint i = 1; i < m_N - 1; ++i)
+        {
+            g += fabs((m_eqConcValues[i + 1] - m_eqConcValues[i - 1])/2.0);
+        }
+
+        return g/(m_N - 2);
+    }
+
+    double meanConcentration() const
+    {
+        if (m_allConcentrations.empty())
+        {
+            return 0;
+        }
+
+        return m_meanConcentration/m_allConcentrations.size();
+    }
+
+
+private:
+
+    EqConc *m_eqConcEvent;
+
+    vector<Deposition*> m_depositionReactions;
+
+    vector<double> m_allConcentrations;
+    double m_meanConcentration;
+
+    const uint m_N;
+
+    const double m_gCrit;
+    const double m_treshold;
+
+    vector<double> m_eqConcValues;
+    double m_cPrev;
+
+    uint m_counter;
+
+    bool m_converged;
+
+    void initiateNextConcentrationLevel();
+};
+
+
 class HeightRMS : public KMCEvent
 {
 public:
@@ -46,6 +173,9 @@ private:
     const uint m_L;
 
 };
+
+
+
 
 class DumpHeighmap : public KMCEvent
 {

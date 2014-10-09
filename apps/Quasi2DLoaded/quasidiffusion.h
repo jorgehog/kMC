@@ -475,9 +475,7 @@ public:
         {
             nvn++;
         }
-
         return nvn;
-
     }
 
     double activationEnergy() const
@@ -487,7 +485,8 @@ public:
 
     double prefactor() const
     {
-        return nVacantNeighbors()*concentration();
+        BADAssEqual(4 - nNeighbors(), nVacantNeighbors());
+        return (4 - nNeighbors())*concentration();
     }
 
 };
