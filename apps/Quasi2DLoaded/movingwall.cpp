@@ -22,7 +22,7 @@ MovingWall::MovingWall(const double h0, const double EsMax, const double EsInit,
 
 MovingWall::~MovingWall()
 {
-    for (uint i = 0; i < m_heighmap.size(); ++i)
+    for (uint i = 0; i < m_pressureAffectedReactions.size(); ++i)
     {
         m_pressureAffectedReactions.at(i).clear();
     }

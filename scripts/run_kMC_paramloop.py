@@ -1,5 +1,6 @@
+from distutils.command.config import dump_file
 from sys import argv
-from os.path import join, split
+from os.path import join, split, exists
 from os import (system,
                 chdir,
                 getcwd,
@@ -8,11 +9,11 @@ from os import (system,
 from run_app_paramloop import *
 
 
-def run_kmc(controller, this_dir, path, app):
+def run_kmc(controller, this_dir, path, app, dump_file):
 
     print "Running ", controller
     chdir(path)
-    system("./%s >> /tmp/kmc_dump.txt" % app)
+    system("./%s >> %s" % (app, dump_file))
     chdir(this_dir)
 
 
@@ -20,7 +21,10 @@ def main():
     this_dir = getcwd()
     path, app = split(argv[1])
 
-    remove("/tmp/kmc_dump.txt")
+    dump_file = "/tmp/kmc_dump.txt"
+
+    if exists(dump_file):
+        remove(dump_file)
 
     cfg = join(path, "infiles", app + ".cfg")
     repeat_count = 30
@@ -42,7 +46,7 @@ def main():
     controller.register_parameter_set(eb_values)
     controller.register_parameter_set(run_id)
 
-    controller.run(run_kmc, controller, this_dir, path, app)
+    controller.run(run_kmc, controller, this_dir, path, app, dump_file)
 
 
 if __name__ == "__main__":
