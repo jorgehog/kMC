@@ -69,7 +69,6 @@ int main()
     solver->addEvent(new TotalTime());
     solver->addEvent(dumpHeightmap);
     solver->addEvent(heightRMS);
-    solver->addEvent(autocorr);
 #ifndef NDEBUG
     cout << "checking rates." << endl;
     solver->addEvent(new RateChecker());
@@ -81,6 +80,8 @@ int main()
     const double &Eb = getSetting<double>(initCFG, "Eb");
     const double &EsMax = getSetting<double>(initCFG, "EsMax")*Eb;
     const double &EsInit = getSetting<double>(initCFG, "EsInit")*Eb;
+
+    const bool acf = getSetting<uint>(initCFG, "acf") == 1;
 
     const bool useWall = getSetting<uint>(initCFG, "useWall") == 1;
 
@@ -101,6 +102,11 @@ int main()
 
     QuasiDiffusionSystem system(heightmap, Eb, wallEvent);
 
+    if (acf)
+    {
+        solver->addEvent(autocorr);
+    }
+
     NNeighbors nNeighbors(system);
     solver->addEvent(nNeighbors);
 
@@ -108,6 +114,8 @@ int main()
     solver->addEvent(cumulant);
 
     cumulant.setOnsetTime(therm);
+    heightRMS.setOnsetTime(therm);
+    autocorr.setOnsetTime(therm);
 
     EqConc eqC;
     ConcEquilibriator cc(eqC, N, gCrit, treshold);

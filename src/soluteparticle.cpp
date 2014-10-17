@@ -83,12 +83,8 @@ void SoluteParticle::setSite(const uint x, const uint y, const uint z)
 
     forEachNeighborSiteDo_sendIndices([this] (Site *neighbor, uint i, uint j, uint k)
     {
-        cout << *neighbor << endl;
-
         if (neighbor->isActive())
         {
-            cout << "3" << endl;
-
             neighbor->associatedParticle()->addNeighbor(this, i, j, k);
         }
 

@@ -9,11 +9,11 @@ from os import (system,
 from run_app_paramloop import *
 
 
-def run_kmc(controller, this_dir, path, app, dump_file):
+def run_kmc(controller, this_dir, path, app, dump_file_name):
 
     print "Running ", controller
     chdir(path)
-    system("./%s >> %s" % (app, dump_file))
+    system("./%s >> %s" % (app, dump_file_name))
     chdir(this_dir)
 
 
@@ -21,22 +21,22 @@ def main():
     this_dir = getcwd()
     path, app = split(argv[1])
 
-    dump_file = "/tmp/kmc_dump.txt"
+    dump_file_name = "/tmp/kmc_dump.txt"
 
-    if exists(dump_file):
-        remove(dump_file)
+    if exists(dump_file_name):
+        remove(dump_file_name)
 
     cfg = join(path, "infiles", app + ".cfg")
-    repeat_count = 30
+    repeat_count = 5
 
     controller = ParameterSetController()
 
     lengths = ParameterSet(128, 512, 2, cfg, "BoxSize\s*=\s*\[(\d+), .*\]", lambda p, i: p*i)
-    temperatures = ParameterSet(0.1, 2.0, 0.1, cfg, "beta\s*=\s*(.*)\;")
+    temperatures = ParameterSet(0.1, 1, 0.2, cfg, "beta\s*=\s*(.*)\;")
     es_maxes = ParameterSet(2.0, 20.0, 1.0, cfg, "EsMax\s*\=\s*(.*)\;")
     concentrations = ParameterSet(0.4, 0.4, 0.1, cfg, "SaturationLevel\s*=\s*(.*)\;")
     run_id = ParameterSet(1, repeat_count, 1, cfg, "runID\s*=\s*(.*)\;")
-    eb_values = ParameterSet(0.1, 1, 0.05, cfg, "Eb\s*=\s*(.*)\;")
+    eb_values = ParameterSet(0.1, 0.5, 0.1, cfg, "Eb\s*=\s*(.*)\;")
 
 
     #controller.register_parameter_set(lengths)
@@ -46,7 +46,7 @@ def main():
     controller.register_parameter_set(eb_values)
     controller.register_parameter_set(run_id)
 
-    controller.run(run_kmc, controller, this_dir, path, app, dump_file)
+    controller.run(run_kmc, controller, this_dir, path, app, dump_file_name)
 
 
 if __name__ == "__main__":

@@ -247,24 +247,42 @@ def main():
     all_em_maxes = []
     all_eb = []
 
-    for eb, init in all_data.items():
-        for t, rest in init.items():
-            for em, rest2 in rest.items():
-                for c, rest3 in rest2.items():
+    all_beta_eb = []
+    all_cumz = []
+    cum_mat = zeros(shape=(5,5))
 
-                    if float(eb) != 0.31:
-                        continue
+    i = 0
+    for eb, init in sorted(all_data.items(), key=lambda x: x[0]):
+        j = 0
+
+        for t, rest in sorted(init.items(), key=lambda x: x[0]):
+            for em, rest2 in sorted(rest.items(), key=lambda x: x[0]):
+                for c, rest3 in sorted(rest2.items(), key=lambda x: x[0]):
 
                     name = rest3.values()[0].values()[0]["name"].split("_n_")[0]
 
-                    for length, all_runs in rest3.items():
+                    for length, all_runs in sorted(rest3.items(), key=lambda x: x[0]):
 
                         time_array = [data["Time"] for data in all_runs.values()]
                         rms_array = [data["heightRMS"] for data in all_runs.values()]
                         h_array = [data["height"] for data in all_runs.values()]
                         acf = [data["AutoCorr"] for data in all_runs.values()]
+                        cum = [data["cumulant"] for data in all_runs.values()]
 
-                        c_eq = sum([data["eqConc"] for data in all_runs.values()])/len(all_runs.values())
+                        try:
+                            c_eq = sum([data["eqConc"] for data in all_runs.values()])/len(all_runs.values())
+                        except KeyError:
+                            c_eq = 0
+
+                        print eb, t
+
+                        cumz = sum([c[where(c != 0)].mean() for c in cum])/len(cum)
+                        cum_mat[i, j] = cumz
+
+                        all_beta_eb.append(t*eb)
+                        all_cumz.append(cumz)
+
+                        continue
 
                         all_c_eq.append(c_eq)
                         all_em_maxes.append(em)
@@ -359,10 +377,24 @@ def main():
 
 
                     # winf, beta = get_w_beta(all_rms, all_times)
+            j += 1
+        i += 1
 
-    return
     close("all")
     figure()
+    imshow(cum_mat, extent=(0.1, 0.5, 0.1, 0.9))
+    xlabel("beta")
+    ylabel("eb")
+    colorbar()
+    savefig("kumulant_beta_eb.png")
+
+    figure()
+    plot(all_beta_eb, all_cumz, 'k*')
+    xlabel("beta*eb")
+    ylabel("k")
+    savefig("kumulant_betaeb.png")
+    show()
+    return
 
     # if len(all_temps) == len(all_c_eq) and all_temps:
     #     all_temps_inv = [1.0/t for t in all_temps]

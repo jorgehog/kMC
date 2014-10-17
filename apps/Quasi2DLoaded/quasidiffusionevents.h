@@ -292,29 +292,24 @@ public:
     {
         const double &meanHeight = dependency("height")->value();
 
-        vec acf = zeros(m_M);
-
         for (uint dx = 0; dx < m_M; ++dx)
         {
             for (uint site = 0; site < m_M; ++site)
             {
-                acf(dx) += (m_heightmap(site) - meanHeight)*(m_heightmap(site + dx) - meanHeight);
+                m_acf(dx) += (m_heightmap(site) - meanHeight)*(m_heightmap(site + dx) - meanHeight);
             }
         }
 
-        acf /= double(m_M);
-
-        m_acf += acf;
-
         if (cycle()%solver()->mainLattice()->outputSpacing() == 0)
         {
-            m_acf.save(m_filename);
+            (m_acf/((cycle()+1)*m_M)).eval().save(m_filename);
         }
     }
 
 private:
 
     const ivec &m_heightmap;
+    vec m_acfLocal;
 
     const uint m_M;
     vec m_acf;
