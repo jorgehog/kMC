@@ -8,17 +8,113 @@ using namespace arma;
 namespace kMC
 {
 
+class QuasiDiffusionSystem
+{
+private:
+
+    ivec &m_heights;
+    const double m_Eb;
+
+    MovingWall &m_wallEvent;
+
+public:
+
+    QuasiDiffusionSystem(ivec &heights, const double Eb, MovingWall &wallEvent) :
+        m_heights(heights),
+        m_Eb(Eb),
+        m_wallEvent(wallEvent)
+    {
+
+    }
+
+    const double &Eb() const
+    {
+        return m_Eb;
+    }
+
+    const MovingWall &wallEvent() const
+    {
+        return m_wallEvent;
+    }
+
+    uint leftSite(const uint site, const uint n) const
+    {
+        return (site + size() - n)%size();
+    }
+
+    uint rightSite(const uint site, const uint n) const
+    {
+        return (site + n)%size();
+    }
+
+    bool connectedLeft(const uint leftSite, const int myHeight) const
+    {
+        return m_heights(leftSite) >= myHeight;
+    }
+
+    bool connectedRight(const uint rightSite, const int myHeight) const
+    {
+        return m_heights(rightSite) >= myHeight;
+    }
+
+    uint nNeighbors(const uint leftsite, const uint rightsite, const uint centersite) const
+    {
+        bool leftHug = connectedLeft(leftsite, m_heights(centersite));
+        bool rightHug = connectedRight(rightsite, m_heights(centersite));
+
+        if (leftHug && rightHug)
+        {
+            return 3;
+        }
+
+        else if (leftHug || rightHug)
+        {
+            return 2;
+        }
+
+        else
+        {
+            return 1;
+        }
+    }
+
+    uint nNeighbors(const uint site) const
+    {
+        return nNeighbors(leftSite(site, 1), rightSite(site, 1), site);
+    }
+
+    const int &heights(const uint i) const
+    {
+        return m_heights(i);
+    }
+
+
+    void registerHeightChange(const uint site, const int change)
+    {
+        m_heights(site) += change;
+    }
+
+    const uint &size() const
+    {
+        return m_heights.n_elem;
+    }
+
+    void markAsAffected(SoluteParticle *particle)
+    {
+        m_wallEvent.markAsAffected(particle);
+    }
+
+};
+
 class QuasiDiffusionReaction : public Reaction
 {
 public:
 
-    QuasiDiffusionReaction(SoluteParticle *particle, ivec &heights, const double Eb, MovingWall &wallEvent) :
+    QuasiDiffusionReaction(SoluteParticle *particle, QuasiDiffusionSystem &system) :
         Reaction(particle),
-        m_heights(heights),
-        m_Eb(Eb),
+        m_system(system),
         m_rightSite(rightSite(1)),
-        m_leftSite(leftSite(1)),
-        m_wallEvent(wallEvent)
+        m_leftSite(leftSite(1))
     {
         registerUpdateFlag(UpdateFlags::CALCULATE);
     }
@@ -56,64 +152,32 @@ public:
 
     uint leftSite(const uint n) const
     {
-        return (site() + nSites() - n)%nSites();
+        return m_system.leftSite(site(), n);
     }
 
     uint rightSite(const uint n) const
     {
-        return (site() + n)%nSites();
-    }
-
-    bool connectedLeft() const
-    {
-        return m_heights(leftSite()) >= myHeight();
-    }
-
-    bool connectedRight() const
-    {
-        return m_heights(rightSite()) >= myHeight();
-    }
-
-    uint nNeighbors() const
-    {
-        bool leftHug = connectedLeft();
-        bool rightHug = connectedRight();
-
-        if (leftHug && rightHug)
-        {
-            return 3;
-        }
-
-        else if (leftHug || rightHug)
-        {
-            return 2;
-        }
-
-        else
-        {
-            return 1;
-        }
-
+        return m_system.rightSite(site(), n);
     }
 
     int myHeight() const
     {
-        return m_heights(site());
+        return heights(site());
     }
 
     int heightDifference(const uint other) const
     {
-        return m_heights(site()) - m_heights(other);
+        return heights(site()) - heights(other);
     }
 
     double wallHeight() const
     {
-        if (!m_wallEvent.hasStarted())
+        if (!wallEvent().hasStarted())
         {
             return std::numeric_limits<double>::max();
         }
 
-        return m_wallEvent.height();
+        return wallEvent().height();
     }
 
     const uint &site() const
@@ -169,7 +233,7 @@ public:
 
     const MovingWall &wallEvent() const
     {
-        return m_wallEvent;
+        return m_system.wallEvent();
     }
 
     const double &concentration() const
@@ -179,12 +243,12 @@ public:
 
     const double &Eb() const
     {
-        return m_Eb;
+        return m_system.Eb();
     }
 
     double localEnergy(const uint n) const
     {
-        return 1 + n*m_Eb;
+        return 1 + n*Eb();
     }
 
     double localEnergy() const
@@ -192,14 +256,19 @@ public:
         return localEnergy(nNeighbors());
     }
 
+    uint nNeighbors() const
+    {
+        return m_system.nNeighbors(leftSite(), rightSite(), site());
+    }
+
     double localPressure() const
     {
-        if (!m_wallEvent.hasStarted())
+        if (!wallEvent().hasStarted())
         {
             return 0;
         }
 
-        return m_wallEvent.localPressure(site());
+        return wallEvent().localPressure(site());
     }
 
     virtual const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const
@@ -227,14 +296,14 @@ protected:
 
     void registerHeightChange(const uint site, const int change)
     {
-        m_heights(site) += change;
+        m_system.registerHeightChange(site, change);
     }
 
     void markAsAffected(SoluteParticle *particle)
     {
-        if (m_wallEvent.hasStarted())
+        if (wallEvent().hasStarted())
         {
-            m_wallEvent.markAsAffected(particle);
+            m_system.markAsAffected(particle);
         }
         else
         {
@@ -255,26 +324,17 @@ protected:
         markAsAffected(solver()->getSite(rightSite(), 0, 0)->associatedParticle());
     }
 
-    MovingWall &wallEvent()
-    {
-        return m_wallEvent;
-    }
-
     const int &heights(const uint i) const
     {
-        return m_heights(i);
+        return m_system.heights(i);
     }
 
 private:
 
-    ivec &m_heights;
-
-    const double m_Eb;
+    QuasiDiffusionSystem &m_system;
 
     const uint m_rightSite;
     const uint m_leftSite;
-
-    MovingWall &m_wallEvent;
 
 
 };
@@ -410,52 +470,52 @@ public:
 
 };
 
-class DepositionSpesifiedChemicalPotential : public Deposition
-{
-public:
-    DepositionSpesifiedChemicalPotential(SoluteParticle *particle,
-                                         ivec &heights,
-                                         const double Eb,
-                                         MovingWall &wallEvent,
-                                         const double chemicalPotentialDifference) :
-        Deposition(particle, heights, Eb, wallEvent),
-        m_chemicalPotentialDifference(chemicalPotentialDifference)
-    {
+//class DepositionSpesifiedChemicalPotential : public Deposition
+//{
+//public:
+//    DepositionSpesifiedChemicalPotential(SoluteParticle *particle,
+//                                         ivec &heights,
+//                                         const double Eb,
+//                                         MovingWall &wallEvent,
+//                                         const double chemicalPotentialDifference) :
+//        Deposition(particle, heights, Eb, wallEvent),
+//        m_chemicalPotentialDifference(chemicalPotentialDifference)
+//    {
 
-    }
+//    }
 
-    double activationEnergy() const
-    {
-        return 1.0 + 2*Eb();
-    }
-    double prefactor() const
-    {
-        return exp(beta()*m_chemicalPotentialDifference);
-    }
+//    double activationEnergy() const
+//    {
+//        return 1.0 + 2*Eb();
+//    }
+//    double prefactor() const
+//    {
+//        return exp(beta()*m_chemicalPotentialDifference);
+//    }
 
-private:
+//private:
 
-    const double m_chemicalPotentialDifference;
+//    const double m_chemicalPotentialDifference;
 
-};
+//};
 
-class DepositionPurelyFromConcentration : public Deposition
-{
-    using Deposition::Deposition;
+//class DepositionPurelyFromConcentration : public Deposition
+//{
+//    using Deposition::Deposition;
 
-public:
+//public:
 
-    double activationEnergy() const
-    {
-        return 1.0 + 2*Eb();
-    }
+//    double activationEnergy() const
+//    {
+//        return 1.0 + 2*Eb();
+//    }
 
-    double prefactor() const
-    {
-        return concentration();
-    }
+//    double prefactor() const
+//    {
+//        return concentration();
+//    }
 
-};
+//};
 
 class DepositionMirrorImageArhenius : public Deposition
 {

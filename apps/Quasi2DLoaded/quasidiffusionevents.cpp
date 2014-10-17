@@ -11,6 +11,7 @@ void EqConc::initialize()
 
     resetCounters();
 
+    m_dissolutionReactions.clear();
     for (SoluteParticle *particle : solver()->particles())
     {
         for (Reaction *reaction : particle->reactions())
@@ -42,21 +43,16 @@ void EqConc::restart()
 
 void EqConc::update()
 {
-    double localNeighbors = 0;
     double localDissolutionRate = 0;
 
-    double Eb;
     uint nDissolutionReactions = 0;
     for (const Dissolution *dissolutionReaction : m_dissolutionReactions)
     {
-        Eb = dissolutionReaction->Eb();
         if (dissolutionReaction->isAllowed())
         {
             localDissolutionRate += dissolutionReaction->rate();
             nDissolutionReactions++;
         }
-
-        localNeighbors += dissolutionReaction->nNeighbors();
     }
 
 #ifndef NDEBUG
@@ -66,34 +62,26 @@ void EqConc::update()
     }
 #endif
 
-    localNeighbors /= m_dissolutionReactions.size();
     if (nDissolutionReactions != 0)
     {
         localDissolutionRate /= nDissolutionReactions;
     }
 
-    m_neighbours += localNeighbors;
     m_dissolutionRate += localDissolutionRate;
 
-    double avgNeighbours = m_neighbours/m_counter;
+    const double &avgNeighbors = dependency("nNeighbors")->value();
     double avgDissolutionRate = m_dissolutionRate/m_counter;
 
-//    m_eqConc += avgDissolutionRate/(4 - avgNeighbours);
-    m_eqConc += avgDissolutionRate;
+    m_eqConc += avgDissolutionRate/(4 - avgNeighbors);
 
     m_counter++;
-
-    if (cycle()%1000 == 0)
-    {
-        cout << "k : " << -log(eqConc())/(Reaction::beta()*Eb) << endl;
-        cout << "n : " << avgNeighbours << endl;
-    }
 }
 
 
 void ConcEquilibriator::initialize()
 {
     m_cPrev = solver()->targetConcentration();
+
 
     m_counter = 0;
 
@@ -113,7 +101,7 @@ void ConcEquilibriator::initialize()
 
 void ConcEquilibriator::execute()
 {
-    double eqConc = m_eqConcEvent->value();
+    double eqConc = m_eqConcEvent.value();
 
     if (m_counter >= m_N)
     {
@@ -162,7 +150,7 @@ void ConcEquilibriator::initiateNextConcentrationLevel()
     else
     {
         solver()->setTargetConcentration(cNew);
-        m_eqConcEvent->restart();
+        m_eqConcEvent.restart();
 
         for (Deposition *depositionReaction : m_depositionReactions)
         {
@@ -171,4 +159,43 @@ void ConcEquilibriator::initiateNextConcentrationLevel()
 
         m_cPrev = cNew;
     }
+}
+
+
+void NNeighbors::execute()
+{
+    m_localValue = 0;
+
+    for (uint site = 0; site < m_system.size(); ++site)
+    {
+        m_localValue += m_system.nNeighbors(site);
+    }
+
+    m_localValue /= m_system.size();
+
+    m_sum += m_localValue;
+
+    setValue(m_sum/cycle());
+}
+
+
+void Cumulant::execute()
+{
+    double localValue = 0;
+
+    for (uint site = 0; site < m_system.size(); ++site)
+    {
+        localValue += exp(Reaction::beta()*m_system.Eb()*m_system.nNeighbors(site));
+    }
+
+    m_cumulant = localValue/m_system.size();
+
+    setValue(cumulant());
+
+
+}
+
+double Cumulant::cumulant() const
+{
+    return std::log(m_cumulant)/(Reaction::beta()*m_system.Eb());
 }

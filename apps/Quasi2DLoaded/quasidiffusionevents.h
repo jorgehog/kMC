@@ -5,6 +5,40 @@
 namespace kMC
 {
 
+class QuasiDiffusionSystem;
+
+class NNeighbors : public KMCEvent
+{
+public:
+
+    NNeighbors(const QuasiDiffusionSystem &system) :
+        KMCEvent("nNeighbors", "", true),
+        m_system(system)
+    {
+
+    }
+
+    void initialize()
+    {
+        m_sum = 0;
+    }
+
+    void execute();
+
+    const double &localValue() const
+    {
+        return m_localValue;
+    }
+
+private:
+
+    const QuasiDiffusionSystem &m_system;
+
+    double m_sum;
+    double m_localValue;
+
+};
+
 class Dissolution;
 
 class EqConc : public KMCEvent
@@ -69,7 +103,7 @@ class ConcEquilibriator : public KMCEvent
 {
 public:
 
-    ConcEquilibriator(EqConc *eqConcEvent, const uint N = 100, const double gCrit = 1E-5, const double treshold = 1E-5) :
+    ConcEquilibriator(EqConc &eqConcEvent, const uint N = 100, const double gCrit = 1E-5, const double treshold = 1E-5) :
         KMCEvent("ConcEquilibriator", "", true, true),
         m_eqConcEvent(eqConcEvent),
         m_N(N),
@@ -109,7 +143,7 @@ public:
 
 private:
 
-    EqConc *m_eqConcEvent;
+    EqConc &m_eqConcEvent;
 
     vector<Deposition*> m_depositionReactions;
 
@@ -129,6 +163,32 @@ private:
     bool m_converged;
 
     void initiateNextConcentrationLevel();
+};
+
+class Cumulant : public KMCEvent
+{
+public:
+    Cumulant(const QuasiDiffusionSystem &system) :
+        KMCEvent("cumulant", "", true, true),
+        m_system(system)
+    {
+
+    }
+
+    void initialize()
+    {
+        m_cumulant = 0;
+    }
+
+    void execute();
+
+    double cumulant() const;
+
+private:
+
+    double m_cumulant;
+    const QuasiDiffusionSystem &m_system;
+
 };
 
 

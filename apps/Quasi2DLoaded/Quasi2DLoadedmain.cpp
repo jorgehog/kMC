@@ -47,10 +47,16 @@ int main()
 
     ivec heightmap(solver->NX(), fill::zeros);
 
-    for (uint i = 0; i < solver->NX(); ++i)
-    {
-        heightmap(i) = KMC_RNG_UNIFORM()*1000;
-    }
+//    uint HMM = 10;
+//    for (uint i= 0; i < solver->NX()/HMM; ++i)
+//    {
+//        heightmap(i*HMM) = KMC_RNG_UNIFORM()*1000;
+
+//        for (uint j = 1; j < HMM; ++j)
+//        {
+//            heightmap(i*HMM + j) = heightmap(i*HMM);
+//        }
+//    }
 
     DumpHeighmap dumpHeightmap(heightmap);
     HeightRMS heightRMS(heightmap);
@@ -70,6 +76,7 @@ int main()
 #endif
 
     const uint &h0 = getSetting<uint>(initCFG, "h0");
+    const uint &therm = getSetting<uint>(initCFG, "therm");
 
     const double &Eb = getSetting<double>(initCFG, "Eb");
     const double &EsMax = getSetting<double>(initCFG, "EsMax")*Eb;
@@ -78,10 +85,10 @@ int main()
     const bool useWall = getSetting<uint>(initCFG, "useWall") == 1;
 
     const bool concEquil = getSetting<uint>(initCFG, "concEquil") == 1;
+    const bool reset = getSetting<uint>(initCFG, "reset") == 1;
     const double &gCrit = getSetting<double>(initCFG, "gCrit");
     const double &treshold = getSetting<double>(initCFG, "treshold");
     const uint &N = getSetting<uint>(initCFG, "N");
-
 
     const uint &wallOnsetCycle = getSetting<uint>(initCFG, "wallOnsetCycle");
 
@@ -90,23 +97,38 @@ int main()
     //Override standard diffusion. Necessary for quasi diffusive simulations.
     solver->setDiffusionType(KMCSolver::DiffusionTypes::None);
 
-    //BAD PRATICE WITH POINTERS.. WILL FIX..
-    MovingWall *wallEvent = new MovingWall(h0, EsMax, EsInit, heightmap);
+    MovingWall wallEvent(h0, EsMax, EsInit, heightmap);
 
-    EqConc *eqC = new EqConc();
-    ConcEquilibriator *cc = new ConcEquilibriator(eqC, N, gCrit, treshold);
+    QuasiDiffusionSystem system(heightmap, Eb, wallEvent);
 
+    NNeighbors nNeighbors(system);
+    solver->addEvent(nNeighbors);
+
+    Cumulant cumulant(system);
+    solver->addEvent(cumulant);
+
+    cumulant.setOnsetTime(therm);
+
+    EqConc eqC;
+    ConcEquilibriator cc(eqC, N, gCrit, treshold);
+
+    eqC.setDependency(nNeighbors);
 
     if (useWall)
     {
-        eqC->setDependency(wallEvent);
-        wallEvent->setDependency(solver->solverEvent());
-        wallEvent->setOnsetTime(wallOnsetCycle);
+        eqC.setDependency(wallEvent);
+        wallEvent.setDependency(solver->solverEvent());
+        wallEvent.setOnsetTime(wallOnsetCycle);
 
         solver->addEvent(wallEvent);
 
-        eqC->setOnsetTime(wallOnsetCycle);
-        cc->setOnsetTime(wallOnsetCycle);
+        eqC.setOnsetTime(wallOnsetCycle + therm);
+        cc.setOnsetTime(wallOnsetCycle + therm);
+    }
+    else
+    {
+        eqC.setOnsetTime(therm);
+        cc.setOnsetTime(therm);
     }
 
     if (concEquil)
@@ -117,13 +139,12 @@ int main()
 
     for (uint site = 0; site < solver->NX(); ++site)
     {
-        SoluteParticle* particle = solver->forceSpawnParticle(site, 0, 0);
-//        particle->addReaction(new LeftHopPressurized(particle, heightmap, Eb, *wallEvent));
-//        particle->addReaction(new RightHopPressurized(particle, heightmap, Eb, *wallEvent));
-        particle->addReaction(new DepositionMirrorImageArheniusNoNF(particle, heightmap, Eb, *wallEvent));
-        particle->addReaction(new Dissolution(particle, heightmap, Eb, *wallEvent));
+        SoluteParticle*  particle = solver->forceSpawnParticle(site, 0, 0);
+        particle->addReaction(new LeftHopPressurized(particle, system));
+        particle->addReaction(new RightHopPressurized(particle, system));
+        particle->addReaction(new DepositionMirrorImageArhenius(particle, system));
+        particle->addReaction(new Dissolution(particle, system));
     }
-
 
     H5Wrapper::Member &sizeMember = h5root.addMember(solver->NX());
 
@@ -132,6 +153,15 @@ int main()
     s << "_n_" << runID;
 
     H5Wrapper::Member &potentialMember = sizeMember.addMember(s.str());
+
+    if (concEquil && reset)
+    {
+        solver->mainloop();
+        potentialMember.addData("eqConc", eqC.eqConc());
+
+        solver->mainLattice()->removeEvent(&eqC);
+        solver->mainLattice()->removeEvent(&cc);
+    }
 
     t.tic();
     solver->mainloop();
@@ -142,9 +172,9 @@ int main()
     potentialMember.addData("ignisEventDescriptions", solver->mainLattice()->outputEventDescriptions(), overwrite);
     potentialMember.addData("AutoCorr", autocorr.acf(), overwrite);
 
-    if (concEquil)
+    if (concEquil && !reset)
     {
-        potentialMember.addData("eqConc", eqC->eqConc());
+        potentialMember.addData("eqConc", eqC.eqConc());
     }
 
     return 0;

@@ -77,15 +77,18 @@ void SoluteParticle::setSite(const uint x, const uint y, const uint z)
 
     m_site->associateWith(this);
 
-
     setupAllNeighbors();
 
     setNewParticleState(detectParticleState());
 
     forEachNeighborSiteDo_sendIndices([this] (Site *neighbor, uint i, uint j, uint k)
     {
+        cout << *neighbor << endl;
+
         if (neighbor->isActive())
         {
+            cout << "3" << endl;
+
             neighbor->associatedParticle()->addNeighbor(this, i, j, k);
         }
 
@@ -104,7 +107,6 @@ void SoluteParticle::setSite(const uint x, const uint y, const uint z)
     {
         reaction->forceUpdateFlag(Reaction::defaultUpdateFlag);
     });
-
 
     BADAss(m_site->associatedParticle(), ==, this, "mismatch in site and particle.");
     BADAssClose(getBruteForceTotalEnergy(), m_totalEnergy, 1E-3, "mismatch in total energy calculation.", [&] ()
@@ -450,11 +452,9 @@ void SoluteParticle::_updateNeighborProps(const int sign,
 
     const uint &level = Site::levelMatrix(i, j, k);
 
-
     m_nNeighbors(level) += sign;
 
     m_nNeighborsSum += sign;
-
 
     double dE = sign*potentialBetween(neighbor, i, j, k);
 

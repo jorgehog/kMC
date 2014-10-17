@@ -252,6 +252,9 @@ def main():
             for em, rest2 in rest.items():
                 for c, rest3 in rest2.items():
 
+                    if float(eb) != 0.31:
+                        continue
+
                     name = rest3.values()[0].values()[0]["name"].split("_n_")[0]
 
                     for length, all_runs in rest3.items():
@@ -267,8 +270,6 @@ def main():
                         all_em_maxes.append(em)
                         all_temps.append(t)
                         all_eb.append(eb)
-
-                        continue
 
                         toss = []
                         for i, t in enumerate(time_array):
@@ -359,6 +360,7 @@ def main():
 
                     # winf, beta = get_w_beta(all_rms, all_times)
 
+    return
     close("all")
     figure()
 
