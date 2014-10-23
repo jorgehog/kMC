@@ -429,6 +429,43 @@ public:
 
 };
 
+class RightHopUp : public RightHop
+{
+    using RightHop::RightHop;
+
+public:
+
+    double activationEnergy() const override
+    {
+        return localEnergy() + localPressure();
+    }
+
+
+    // Reaction interface
+public:
+    bool isAllowed() const
+    {
+        return true;
+    }
+};
+
+class LeftHopUp : public LeftHop
+{
+    using LeftHop::LeftHop;
+
+public:
+    double activationEnergy() const override
+    {
+        return localEnergy() + localPressure();
+    }
+
+public:
+    bool isAllowed() const
+    {
+        return true;
+    }
+
+};
 
 class Deposition : public QuasiDiffusionReaction
 {
@@ -469,53 +506,6 @@ public:
     }
 
 };
-
-//class DepositionSpesifiedChemicalPotential : public Deposition
-//{
-//public:
-//    DepositionSpesifiedChemicalPotential(SoluteParticle *particle,
-//                                         ivec &heights,
-//                                         const double Eb,
-//                                         MovingWall &wallEvent,
-//                                         const double chemicalPotentialDifference) :
-//        Deposition(particle, heights, Eb, wallEvent),
-//        m_chemicalPotentialDifference(chemicalPotentialDifference)
-//    {
-
-//    }
-
-//    double activationEnergy() const
-//    {
-//        return 1.0 + 2*Eb();
-//    }
-//    double prefactor() const
-//    {
-//        return exp(beta()*m_chemicalPotentialDifference);
-//    }
-
-//private:
-
-//    const double m_chemicalPotentialDifference;
-
-//};
-
-//class DepositionPurelyFromConcentration : public Deposition
-//{
-//    using Deposition::Deposition;
-
-//public:
-
-//    double activationEnergy() const
-//    {
-//        return 1.0 + 2*Eb();
-//    }
-
-//    double prefactor() const
-//    {
-//        return concentration();
-//    }
-
-//};
 
 class DepositionMirrorImageArhenius : public Deposition
 {

@@ -23,7 +23,7 @@ public:
         stringstream s;
         s << "EsMax_" << m_EsMax
           << "_EsInit_" << m_EsInit
-          << "_h0_" << m_h0;
+          << "_E0_" << m_E0;
 
         return s.str();
 
@@ -92,11 +92,6 @@ public:
         return _pressureExpression(m_h - m_heighmap(site));
     }
 
-    const double &initialHeight() const
-    {
-        return m_h0;
-    }
-
     const double &height() const
     {
         return m_h;
@@ -155,7 +150,6 @@ private:
 
     vector<vector<QuasiDiffusionReaction *>> m_pressureAffectedReactions;
 
-    const double m_h0;
     double m_h;
     double m_dh;
     double m_mPrev;

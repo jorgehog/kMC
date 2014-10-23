@@ -47,16 +47,16 @@ int main()
 
     ivec heightmap(solver->NX(), fill::zeros);
 
-//    uint HMM = 10;
-//    for (uint i= 0; i < solver->NX()/HMM; ++i)
-//    {
-//        heightmap(i*HMM) = KMC_RNG_UNIFORM()*1000;
+    //    uint HMM = 10;
+    //    for (uint i= 0; i < solver->NX()/HMM; ++i)
+    //    {
+    //        heightmap(i*HMM) = KMC_RNG_UNIFORM()*1000;
 
-//        for (uint j = 1; j < HMM; ++j)
-//        {
-//            heightmap(i*HMM + j) = heightmap(i*HMM);
-//        }
-//    }
+    //        for (uint j = 1; j < HMM; ++j)
+    //        {
+    //            heightmap(i*HMM + j) = heightmap(i*HMM);
+    //        }
+    //    }
 
     DumpHeighmap dumpHeightmap(heightmap);
     HeightRMS heightRMS(heightmap);
@@ -69,10 +69,6 @@ int main()
     solver->addEvent(new TotalTime());
     solver->addEvent(dumpHeightmap);
     solver->addEvent(heightRMS);
-#ifndef NDEBUG
-    cout << "checking rates." << endl;
-    solver->addEvent(new RateChecker());
-#endif
 
     const uint &h0 = getSetting<uint>(initCFG, "h0");
     const uint &therm = getSetting<uint>(initCFG, "therm");
@@ -84,6 +80,7 @@ int main()
     const bool acf = getSetting<uint>(initCFG, "acf") == 1;
 
     const bool useWall = getSetting<uint>(initCFG, "useWall") == 1;
+    const bool useDiffusion = getSetting<uint>(initCFG, "useDiffusion") == 1;
 
     const bool concEquil = getSetting<uint>(initCFG, "concEquil") == 1;
     const bool reset = getSetting<uint>(initCFG, "reset") == 1;
@@ -145,11 +142,20 @@ int main()
         solver->addEvent(cc);
     }
 
+#ifndef NDEBUG
+    cout << "checking rates." << endl;
+    RateChecker rateChecker;
+    solver->addEvent(rateChecker);
+#endif
+
     for (uint site = 0; site < solver->NX(); ++site)
     {
         SoluteParticle*  particle = solver->forceSpawnParticle(site, 0, 0);
-        particle->addReaction(new LeftHopPressurized(particle, system));
-        particle->addReaction(new RightHopPressurized(particle, system));
+        if (useDiffusion)
+        {
+            particle->addReaction(new LeftHopPressurized(particle, system));
+            particle->addReaction(new RightHopPressurized(particle, system));
+        }
         particle->addReaction(new DepositionMirrorImageArhenius(particle, system));
         particle->addReaction(new Dissolution(particle, system));
     }
@@ -169,6 +175,17 @@ int main()
 
         solver->mainLattice()->removeEvent(&eqC);
         solver->mainLattice()->removeEvent(&cc);
+
+        for (SoluteParticle *particle : solver->particles())
+        {
+            for (Reaction *reaction : particle->reactions())
+            {
+                if (reaction->isAllowed())
+                {
+                    reaction->registerUpdateFlag(QuasiDiffusionReaction::UpdateFlags::CALCULATE);
+                }
+            }
+        }
     }
 
     t.tic();

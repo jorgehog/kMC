@@ -7,13 +7,11 @@ using namespace kMC;
 
 MovingWall::MovingWall(const double h0, const double EsMax, const double EsInit, const ivec &heighmap):
     KMCEvent("MovingWall", "h0", true, true),
-    m_h0(h0),
-    m_h(h0),
     m_EsMax(EsMax),
     m_EsInit(EsInit),
     m_r0(r0FromEs(h0, EsMax, EsInit)),
     m_s0(s0FromEs(h0, EsMax, EsInit)),
-    m_E0(heighmap.size()*_pressureExpression(m_h0)),
+    m_E0(heighmap.size()*_pressureExpression(h0)),
     m_heighmap(heighmap),
     m_localPressure(heighmap.size())
 {
@@ -28,6 +26,7 @@ MovingWall::~MovingWall()
     }
 
     m_pressureAffectedReactions.clear();
+
 }
 
 void MovingWall::initialize()
@@ -43,6 +42,7 @@ void MovingWall::initialize()
         site = particle->x();
 
         m_mPrev += exp(m_heighmap(site)/m_r0);
+        m_pressureAffectedReactions[site].clear();
 
         for (Reaction *reaction : particle->reactions())
         {
@@ -61,6 +61,11 @@ void MovingWall::initialize()
     m_mPrev /= m_heighmap.size();
 
     m_h = m_r0*std::log(m_heighmap.size()*m_s0*m_mPrev/(-m_E0));
+
+    if (m_h < m_heighmap.max())
+    {
+        throw std::runtime_error("Invalid wall placement");
+    }
 
     for (uint site = 0; site < m_heighmap.size(); ++site)
     {

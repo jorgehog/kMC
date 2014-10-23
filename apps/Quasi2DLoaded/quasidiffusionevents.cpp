@@ -175,7 +175,7 @@ void NNeighbors::execute()
 
     m_sum += m_localValue;
 
-    setValue(m_sum/cycle());
+    setValue(m_sum/(cycle() + 1));
 }
 
 
