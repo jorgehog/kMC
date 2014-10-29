@@ -66,7 +66,7 @@ public:
 
     double eqConc() const
     {
-        return m_expFac*m_eqConc/m_counter;
+        return m_expFac*m_eqConc/m_totalTime;
     }
 
 private:
@@ -80,13 +80,13 @@ private:
 
     vector<Dissolution*> m_dissolutionReactions;
 
-    uint m_counter;
+    double m_totalTime;
 
     void update();
 
     void resetCounters()
     {
-        m_counter = 1;
+        m_totalTime = 0;
 
         m_eqConc = 0;
 
@@ -132,12 +132,7 @@ public:
 
     double meanConcentration() const
     {
-        if (m_allConcentrations.empty())
-        {
-            return 0;
-        }
-
-        return m_meanConcentration/m_allConcentrations.size();
+        return m_cPrev;
     }
 
 
@@ -205,8 +200,6 @@ public:
     }
 
 
-protected:
-
     void execute()
     {
 
@@ -234,9 +227,6 @@ private:
 
 };
 
-
-
-
 class DumpHeighmap : public KMCEvent
 {
 public:
@@ -259,6 +249,7 @@ protected:
         {
             m_heighmap.save(m_filename);
         }
+
     }
 
 private:
@@ -317,5 +308,35 @@ private:
     const string m_filename;
 
 };
+
+
+class SurfaceSize : public KMCEvent
+{
+public:
+
+    SurfaceSize(const QuasiDiffusionSystem &system) :
+        KMCEvent("SurfaceSize", "l0", true, true),
+        m_system(system)
+    {
+
+    }
+
+    void initialize()
+    {
+        m_sum = 0;
+    }
+
+    void execute();
+
+private:
+
+    const QuasiDiffusionSystem& m_system;
+
+    double m_sum;
+    double m_localValue;
+
+};
+
+
 
 }

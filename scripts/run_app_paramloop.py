@@ -141,7 +141,7 @@ class ParameterSetController:
 
         if ans.startswith("t "):
             time = float(ans.lstrip("t "))
-            t = n
+            t = n*time
 
             unit = ""
             if t > 3600:

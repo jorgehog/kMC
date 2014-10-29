@@ -588,7 +588,7 @@ public:
 
     bool isAllowed() const
     {
-        return concentration() != 1;
+        return true;
     }
 
     double activationEnergy() const

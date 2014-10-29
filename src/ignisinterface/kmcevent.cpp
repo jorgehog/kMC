@@ -7,6 +7,16 @@
 using namespace kMC;
 
 
+const double &KMCEvent::dt() const
+{
+    return solver()->solverEvent()->lastTimeStep();
+}
+
+const double &KMCEvent::T() const
+{
+    return solver()->solverEvent()->totalTime();
+}
+
 const DiffusionReaction *KMCEvent::lastReaction() const
 {
     return reinterpret_cast<const DiffusionReaction*>(solver()->solverEvent()->selectedReaction());

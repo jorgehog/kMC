@@ -11,6 +11,27 @@
 using namespace libconfig;
 using namespace kMC;
 
+class Delay : public LatticeEvent
+{
+public:
+
+    Delay(double s) :
+        LatticeEvent("Delay"),
+        m_s(s)
+
+    {
+
+    }
+
+    void execute()
+    {
+        sleep(m_s);
+    }
+
+private:
+    double m_s;
+
+};
 
 int main()
 {
@@ -28,10 +49,11 @@ int main()
 
     KMCDebugger_SetEnabledTo(getSetting<int>(root, "buildTrace") == 0 ? false : true);
 
-    //    KMCSolver::enableLocalUpdating(false);
+
     KMCSolver::enableDumpLAMMPS(false);
 
     KMCSolver* solver = new KMCSolver(root);
+//    solver->addEvent(new Delay(0.1));
 
     string ignisOutputName = "ignisQuasi2Dloaded.ign";
     solver->mainLattice()->enableEventValueStorage(true, true, ignisOutputName, solver->filePath(), 1);
@@ -47,16 +69,16 @@ int main()
 
     ivec heightmap(solver->NX(), fill::zeros);
 
-    //    uint HMM = 10;
-    //    for (uint i= 0; i < solver->NX()/HMM; ++i)
-    //    {
-    //        heightmap(i*HMM) = KMC_RNG_UNIFORM()*1000;
+//        uint HMM = 10;
+//        for (uint i= 0; i < solver->NX()/HMM; ++i)
+//        {
+//            heightmap(i*HMM) = KMC_RNG_UNIFORM()*1000;
 
-    //        for (uint j = 1; j < HMM; ++j)
-    //        {
-    //            heightmap(i*HMM + j) = heightmap(i*HMM);
-    //        }
-    //    }
+//            for (uint j = 1; j < HMM; ++j)
+//            {
+//                heightmap(i*HMM + j) = heightmap(i*HMM);
+//            }
+//        }
 
     DumpHeighmap dumpHeightmap(heightmap);
     HeightRMS heightRMS(heightmap);
@@ -110,9 +132,13 @@ int main()
     Cumulant cumulant(system);
     solver->addEvent(cumulant);
 
-    cumulant.setOnsetTime(therm);
-    heightRMS.setOnsetTime(therm);
+    SurfaceSize size(system);
+    solver->addEvent(size);
+
     autocorr.setOnsetTime(therm);
+    nNeighbors.setOnsetTime(therm);
+    cumulant.setOnsetTime(therm);
+    size.setOnsetTime(therm);
 
     EqConc eqC;
     ConcEquilibriator cc(eqC, N, gCrit, treshold);
@@ -156,8 +182,10 @@ int main()
             particle->addReaction(new LeftHopPressurized(particle, system));
             particle->addReaction(new RightHopPressurized(particle, system));
         }
+
         particle->addReaction(new DepositionMirrorImageArhenius(particle, system));
         particle->addReaction(new Dissolution(particle, system));
+
     }
 
     H5Wrapper::Member &sizeMember = h5root.addMember(solver->NX());
@@ -192,6 +220,11 @@ int main()
     solver->mainloop();
     cout << "Simulation ended after " << t.toc() << " seconds" << endl;
 
+
+    potentialMember.addData("useConcEquil", concEquil, overwrite);
+    potentialMember.addData("usediffusion", useDiffusion, overwrite);
+    potentialMember.addData("usewall", useWall, overwrite);
+    potentialMember.addData("size", size.value(), overwrite);
     potentialMember.addData("heightmap", heightmap, overwrite);
     potentialMember.addData("ignisData", solver->mainLattice()->storedEventValues(), overwrite);
     potentialMember.addData("ignisEventDescriptions", solver->mainLattice()->outputEventDescriptions(), overwrite);

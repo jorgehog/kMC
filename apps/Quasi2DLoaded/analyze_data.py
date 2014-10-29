@@ -249,7 +249,8 @@ def main():
 
     all_beta_eb = []
     all_cumz = []
-    cum_mat = zeros(shape=(5,5))
+    all_sizes = []
+    # cum_mat = zeros(shape=(5,5))
 
     i = 0
     for eb, init in sorted(all_data.items(), key=lambda x: x[0]):
@@ -268,6 +269,7 @@ def main():
                         h_array = [data["height"] for data in all_runs.values()]
                         acf = [data["AutoCorr"] for data in all_runs.values()]
                         cum = [data["cumulant"] for data in all_runs.values()]
+                        sizes = [data["SurfaceSize"] for data in all_runs.values()]
 
                         try:
                             c_eq = sum([data["eqConc"] for data in all_runs.values()])/len(all_runs.values())
@@ -277,10 +279,12 @@ def main():
                         print eb, t
 
                         cumz = sum([c[where(c != 0)].mean() for c in cum])/len(cum)
-                        cum_mat[i, j] = cumz
+                        surfacesize = sum(s[-1] for s in sizes)/len(sizes)
+                        # cum_mat[i, j] = cumz
 
                         all_beta_eb.append(t*eb)
                         all_cumz.append(cumz)
+                        all_sizes.append(surfacesize)
 
                         continue
 
@@ -382,11 +386,17 @@ def main():
 
     close("all")
     figure()
-    imshow(cum_mat, extent=(0.1, 0.5, 0.1, 0.9))
-    xlabel("beta")
-    ylabel("eb")
-    colorbar()
-    savefig("kumulant_beta_eb.png")
+    plot(all_beta_eb, all_sizes, 'k*')
+    xlabel("beta*eb")
+    ylabel("<s>")
+    savefig("sizes_betaeb.png")
+
+    # figure()
+    # imshow(cum_mat, extent=(0.1, 0.5, 0.1, 0.9))
+    # xlabel("beta")
+    # ylabel("eb")
+    # colorbar()
+    # savefig("kumulant_beta_eb.png")
 
     figure()
     plot(all_beta_eb, all_cumz, 'k*')
