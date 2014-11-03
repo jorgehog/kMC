@@ -486,6 +486,12 @@ public:
 
     bool isAllowed() const
     {
+        if (!(myHeight() < floor(wallHeight())))
+        {
+            cout << "DENIED" << myHeight() << endl;
+            sleep(0.5);
+        }
+
         return myHeight() < floor(wallHeight());
     }
 
@@ -513,21 +519,6 @@ class DepositionMirrorImageArhenius : public Deposition
 
 public:
 
-    uint nVacantNeighbors() const
-    {
-        uint nvn = 1;
-
-        if (heightDifference(leftSite()) > 0)
-        {
-            nvn++;
-        }
-        if (heightDifference(rightSite()) > 0)
-        {
-            nvn++;
-        }
-        return nvn;
-    }
-
     double activationEnergy() const
     {
         return 1.0;
@@ -535,32 +526,16 @@ public:
 
     double prefactor() const
     {
-        BADAssEqual(4 - nNeighbors(), nVacantNeighbors());
         return (4 - nNeighbors())*concentration();
     }
 
 };
 
-class DepositionMirrorImageArheniusNoNF : public Deposition
+class DepositionMirrorImageArheniusNoShadowing : public Deposition
 {
     using Deposition::Deposition;
 
 public:
-
-    uint nVacantNeighbors() const
-    {
-        uint nvn = 1;
-
-        if (heightDifference(leftSite()) > 0)
-        {
-            nvn++;
-        }
-        if (heightDifference(rightSite()) > 0)
-        {
-            nvn++;
-        }
-        return nvn;
-    }
 
     double activationEnergy() const
     {

@@ -101,11 +101,18 @@ int main()
 
     const bool acf = getSetting<uint>(initCFG, "acf") == 1;
 
-    const bool useWall = getSetting<uint>(initCFG, "useWall") == 1;
-    const bool useDiffusion = getSetting<uint>(initCFG, "useDiffusion") == 1;
+    const uint &concEquilInt = getSetting<uint>(initCFG, "concEquil");
+    const uint &shadowingInt = getSetting<uint>(initCFG, "shadowing");
+    const uint &useDiffusionInt = getSetting<uint>(initCFG, "useDiffusion");
+    const uint &useWallInt = getSetting<uint>(initCFG, "useWall");
+    const uint &resetInt = getSetting<uint>(initCFG, "reset");
 
-    const bool concEquil = getSetting<uint>(initCFG, "concEquil") == 1;
-    const bool reset = getSetting<uint>(initCFG, "reset") == 1;
+    const bool useWall = useWallInt == 1;
+    const bool useDiffusion = useDiffusionInt == 1;
+    const bool useShadowing = shadowingInt == 1;
+
+    const bool concEquil = concEquilInt == 1;
+    const bool reset = resetInt == 1;
     const double &gCrit = getSetting<double>(initCFG, "gCrit");
     const double &treshold = getSetting<double>(initCFG, "treshold");
     const uint &N = getSetting<uint>(initCFG, "N");
@@ -140,13 +147,14 @@ int main()
     cumulant.setOnsetTime(therm);
     size.setOnsetTime(therm);
 
-    EqConc eqC;
+    EqConc eqC(useShadowing);
     ConcEquilibriator cc(eqC, N, gCrit, treshold);
 
     eqC.setDependency(nNeighbors);
 
     if (useWall)
     {
+        wallEvent.setDependency(dumpHeightmap);
         eqC.setDependency(wallEvent);
         wallEvent.setDependency(solver->solverEvent());
         wallEvent.setOnsetTime(wallOnsetCycle);
@@ -183,7 +191,15 @@ int main()
             particle->addReaction(new RightHopPressurized(particle, system));
         }
 
-        particle->addReaction(new DepositionMirrorImageArhenius(particle, system));
+        if (!useShadowing)
+        {
+            particle->addReaction(new DepositionMirrorImageArheniusNoShadowing(particle, system));
+        }
+        else
+        {
+            particle->addReaction(new DepositionMirrorImageArhenius(particle, system));
+        }
+
         particle->addReaction(new Dissolution(particle, system));
 
     }
@@ -221,9 +237,11 @@ int main()
     cout << "Simulation ended after " << t.toc() << " seconds" << endl;
 
 
-    potentialMember.addData("useConcEquil", concEquil, overwrite);
-    potentialMember.addData("usediffusion", useDiffusion, overwrite);
-    potentialMember.addData("usewall", useWall, overwrite);
+    potentialMember.addData("shadowing", shadowingInt, overwrite);
+    potentialMember.addData("ConcEquilReset", resetInt, overwrite);
+    potentialMember.addData("useConcEquil", concEquilInt, overwrite);
+    potentialMember.addData("usediffusion", useDiffusionInt, overwrite);
+    potentialMember.addData("usewall", useWallInt, overwrite);
     potentialMember.addData("size", size.value(), overwrite);
     potentialMember.addData("heightmap", heightmap, overwrite);
     potentialMember.addData("ignisData", solver->mainLattice()->storedEventValues(), overwrite);

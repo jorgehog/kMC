@@ -29,6 +29,7 @@ public:
 
     void initialize()
     {
+
         KMCDebugger_Init();
 
         BADAssBool(Site::boundariesIsInitialized(), "Boundaries are not initialized.");

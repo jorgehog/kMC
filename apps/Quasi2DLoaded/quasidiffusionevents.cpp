@@ -63,13 +63,25 @@ void EqConc::update()
     }
 
     m_dissolutionRate += dt()*localDissolutionRate;
-    m_neighbours += dt()*dependency<NNeighbors>("nNeighbors")->localValue();
     m_totalTime += dt();
 
-    const double &avgNeighbors = m_neighbours/m_totalTime;
     double avgDissolutionRate = m_dissolutionRate/m_totalTime;
 
-    m_eqConc += dt()*avgDissolutionRate/(4 - avgNeighbors);
+    double scale;
+
+    if (m_shadowing)
+    {
+        m_neighbours += dt()*dependency<NNeighbors>("nNeighbors")->localValue();
+        const double &avgNeighbors = m_neighbours/m_totalTime;
+
+        scale = 1/(4 - avgNeighbors);
+    }
+    else
+    {
+        scale = 1.0;
+    }
+
+    m_eqConc += dt()*avgDissolutionRate*scale;
 
 }
 
@@ -112,6 +124,7 @@ void ConcEquilibriator::execute()
         if (g < m_gCrit)
         {
             initiateNextConcentrationLevel();
+            m_counter = 0;
         }
 
 
@@ -137,7 +150,7 @@ void ConcEquilibriator::initiateNextConcentrationLevel()
     m_allConcentrations.push_back(cNew);
     m_meanConcentration += cNew;
 
-    uint N = 10;
+    uint N = 3;
 
     if (m_allConcentrations.size() > N)
     {

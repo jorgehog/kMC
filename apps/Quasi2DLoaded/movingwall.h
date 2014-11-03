@@ -160,6 +160,7 @@ private:
     const double m_r0;
     const double m_s0;
     const double m_E0;
+    const double m_h0;
 
     const ivec &m_heighmap;
     vec m_localPressure;

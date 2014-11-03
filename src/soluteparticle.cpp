@@ -2,6 +2,8 @@
 
 #include "kmcsolver.h"
 
+#include "ignisinterface/solverevent.h"
+
 #include "boundary/boundary.h"
 
 #include "reactions/diffusion/tstdiffusion.h"
@@ -97,12 +99,17 @@ void SoluteParticle::setSite(const uint x, const uint y, const uint z)
         shiftEnergy(dE);
     }
 
-    markAsAffected();
-
-    forEachActiveReactionDo([] (Reaction *reaction)
+    if (m_solver->solverEvent()->initialized())
     {
-        reaction->forceUpdateFlag(Reaction::defaultUpdateFlag);
-    });
+
+        forEachActiveReactionDo([] (Reaction *reaction)
+        {
+            reaction->forceUpdateFlag(Reaction::defaultUpdateFlag);
+        });
+
+        markAsAffected();
+
+    }
 
     BADAss(m_site->associatedParticle(), ==, this, "mismatch in site and particle.");
     BADAssClose(getBruteForceTotalEnergy(), m_totalEnergy, 1E-3, "mismatch in total energy calculation.", [&] ()
@@ -149,18 +156,10 @@ void SoluteParticle::disableSite()
     m_site->desociate();
     m_site = NULL;
 
-    forEachNeighborSiteDo_sendIndices([this] (Site *neighbor, uint i, uint j, uint k)
-    {
-        if (neighbor->isActive())
-        {
-            neighbor->associatedParticle()->removeNeighbor(this, i, j, k);
-        }
-    });
-
+    clearNeighborhood();
 
     m_totalParticles(particleState())--;
 
-    setZeroEnergy();
 
     BADAssClose(getBruteForceTotalEnergy(), m_totalEnergy, 1E-3, "mismatch in total energy calculation.");
 
@@ -345,6 +344,19 @@ void SoluteParticle::setVectorSizes()
 
 }
 
+void SoluteParticle::clearNeighborhood()
+{
+    forEachNeighborSiteDo_sendIndices([this] (Site *neighbor, uint i, uint j, uint k)
+    {
+        if (neighbor->isActive())
+        {
+            neighbor->associatedParticle()->removeNeighbor(this, i, j, k);
+        }
+    });
+
+    setZeroEnergy();
+}
+
 uint SoluteParticle::nActiveReactions() const
 {
 
@@ -469,12 +481,16 @@ void SoluteParticle::_updateNeighborProps(const int sign,
 
     shiftEnergy(dE);
 
-    forEachActiveReactionDo([&level, &neighbor] (Reaction *reaction)
+    if (m_solver->solverEvent()->initialized())
     {
-        reaction->setDirectUpdateFlags(neighbor, level);
-    });
+        forEachActiveReactionDo([&level, &neighbor] (Reaction *reaction)
+        {
+            reaction->setDirectUpdateFlags(neighbor, level);
+        });
 
-    markAsAffected();
+        markAsAffected();
+
+    }
 
 #ifdef KMC_EXTRA_DEBUG
     BADAssClose(getBruteForceEnergy(), m_energy, 1E-3, "mismatch in energy calculation.");

@@ -12,6 +12,7 @@ MovingWall::MovingWall(const double h0, const double EsMax, const double EsInit,
     m_r0(r0FromEs(h0, EsMax, EsInit)),
     m_s0(s0FromEs(h0, EsMax, EsInit)),
     m_E0(heighmap.size()*_pressureExpression(h0)),
+    m_h0(h0),
     m_heighmap(heighmap),
     m_localPressure(heighmap.size())
 {
@@ -154,7 +155,7 @@ void MovingWall::_rescaleHeight()
 
     m_mPrev = m;
 
-    setValue(m_h);
+    setValue((m_h - dependency("height")->value())/m_h0);
 
 }
 

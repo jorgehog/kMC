@@ -45,8 +45,9 @@ class EqConc : public KMCEvent
 {
 public:
 
-    EqConc() :
-        KMCEvent("EqConc", "", true, true)
+    EqConc(const bool shadowing) :
+        KMCEvent("EqConc", "", true, true),
+        m_shadowing(shadowing)
     {
         setDependency(solver()->solverEvent());
     }
@@ -70,6 +71,8 @@ public:
     }
 
 private:
+
+    const double m_shadowing;
 
     double m_eqConc;
 

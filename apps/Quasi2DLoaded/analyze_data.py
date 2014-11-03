@@ -171,7 +171,7 @@ def main():
     all_data = {}
 
     c0 = 0.4
-    em0 = 10
+    em0 = 1
     t0 = 1
     n0 = 1
     l0 = 128
@@ -198,6 +198,7 @@ def main():
                 n = int(n[0])
             else:
                 n = ""
+
             #
             # # print c,c0, em, em0*eb, t, t0, l, l0
             # if c != c0 or em != em0*eb or t != t0:
@@ -226,13 +227,19 @@ def main():
             all_data[eb][t][em][c][l][n] = {}
 
             for i, name in enumerate(data["ignisEventDescriptions"][0]):
-                all_data[eb][t][em][c][l][n][str(name).split("@")[0]] = data["ignisData"][i, :]
+
+                if name.split("@")[0] == "SurfaceSize":
+                    all_data[eb][t][em][c][l][n][str(name).split("@")[0]] = data["ignisData"][i, :]
+
             all_data[eb][t][em][c][l][n]["name"] = potential
 
-            all_data[eb][t][em][c][l][n]["AutoCorr"] = array(data["AutoCorr"])
+            # all_data[eb][t][em][c][l][n]["AutoCorr"] = array(data["AutoCorr"])
+
+            all_data[eb][t][em][c][l][n]["AutoCorr"] = array([0])
 
             if "eqConc" in data.attrs.keys():
                 all_data[eb][t][em][c][l][n]["eqConc"] = data.attrs["eqConc"]
+
 
         k += 1
 
@@ -264,11 +271,11 @@ def main():
 
                     for length, all_runs in sorted(rest3.items(), key=lambda x: x[0]):
 
-                        time_array = [data["Time"] for data in all_runs.values()]
-                        rms_array = [data["heightRMS"] for data in all_runs.values()]
-                        h_array = [data["height"] for data in all_runs.values()]
-                        acf = [data["AutoCorr"] for data in all_runs.values()]
-                        cum = [data["cumulant"] for data in all_runs.values()]
+                        # time_array = [data["Time"] for data in all_runs.values()]
+                        # rms_array = [data["heightRMS"] for data in all_runs.values()]
+                        # h_array = [data["height"] for data in all_runs.values()]
+                        # acf = [data["AutoCorr"] for data in all_runs.values()]
+                        # cum = [data["cumulant"] for data in all_runs.values()]
                         sizes = [data["SurfaceSize"] for data in all_runs.values()]
 
                         try:
@@ -278,17 +285,17 @@ def main():
 
                         print eb, t
 
-                        cumz = sum([c[where(c != 0)].mean() for c in cum])/len(cum)
+                        # cumz = sum([c[where(c != 0)].mean() for c in cum])/len(cum)
                         surfacesize = sum(s[-1] for s in sizes)/len(sizes)
                         # cum_mat[i, j] = cumz
 
                         all_beta_eb.append(t*eb)
-                        all_cumz.append(cumz)
+                        # all_cumz.append(cumz)
                         all_sizes.append(surfacesize)
 
+                        all_c_eq.append(c_eq)
                         continue
 
-                        all_c_eq.append(c_eq)
                         all_em_maxes.append(em)
                         all_temps.append(t)
                         all_eb.append(eb)
@@ -391,6 +398,9 @@ def main():
     ylabel("<s>")
     savefig("sizes_betaeb.png")
 
+    save("all_beta_eb", all_beta_eb)
+    save("all_sizes", all_sizes)
+
     # figure()
     # imshow(cum_mat, extent=(0.1, 0.5, 0.1, 0.9))
     # xlabel("beta")
@@ -398,12 +408,21 @@ def main():
     # colorbar()
     # savefig("kumulant_beta_eb.png")
 
+    # figure()
+    # plot(all_beta_eb, all_cumz, 'k*')
+    # xlabel("beta*eb")
+    # ylabel("k")
+    # savefig("kumulant_betaeb.png")
+
+    save("all_eqc", all_c_eq)
+
     figure()
-    plot(all_beta_eb, all_cumz, 'k*')
-    xlabel("beta*eb")
-    ylabel("k")
-    savefig("kumulant_betaeb.png")
+    plot(all_beta_eb, all_c_eq, 'kx')
+    xlabel("Eb/kT")
+    ylabel("C_0/l_0")
+    savefig("eqc_betaeb.png")
     show()
+
     return
 
     # if len(all_temps) == len(all_c_eq) and all_temps:

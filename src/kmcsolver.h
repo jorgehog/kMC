@@ -235,9 +235,15 @@ public:
 
     void setTargetConcentration(const double concentration)
     {
-        if (concentration > 1 || concentration < 0)
+        if (concentration < 0)
         {
-            exit("invalid concentration set,");
+            stringstream s;
+            s << "invalid concentration set: " << concentration;
+            exit(s.str());
+        }
+        else if (concentration > 1)
+        {
+            cout << "Warning: concentration cannot be reached on lattice" << endl;
         }
 
         m_targetConcentration = concentration;
