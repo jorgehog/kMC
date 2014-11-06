@@ -350,7 +350,7 @@ public:
         return "LeftHop";
     }
 
-    bool isAllowed() const
+    virtual bool isAllowed() const
     {
         return heights(leftSite()) < myHeight();
     }
@@ -383,7 +383,7 @@ public:
         return "RightHop";
     }
 
-    bool isAllowed() const
+    virtual bool isAllowed() const
     {
         return heights(rightSite()) < myHeight();
     }
@@ -486,12 +486,6 @@ public:
 
     bool isAllowed() const
     {
-        if (!(myHeight() < floor(wallHeight())))
-        {
-            cout << "DENIED" << myHeight() << endl;
-            sleep(0.5);
-        }
-
         return myHeight() < floor(wallHeight());
     }
 

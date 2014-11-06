@@ -104,11 +104,13 @@ int main()
     const uint &concEquilInt = getSetting<uint>(initCFG, "concEquil");
     const uint &shadowingInt = getSetting<uint>(initCFG, "shadowing");
     const uint &useDiffusionInt = getSetting<uint>(initCFG, "useDiffusion");
+    const uint &isotropicDiffusionInt = getSetting<uint>(initCFG, "isotropicDiffusion");
     const uint &useWallInt = getSetting<uint>(initCFG, "useWall");
     const uint &resetInt = getSetting<uint>(initCFG, "reset");
 
     const bool useWall = useWallInt == 1;
     const bool useDiffusion = useDiffusionInt == 1;
+    const bool useIsotropicDiffusion = isotropicDiffusionInt == 1;
     const bool useShadowing = shadowingInt == 1;
 
     const bool concEquil = concEquilInt == 1;
@@ -187,8 +189,16 @@ int main()
         SoluteParticle*  particle = solver->forceSpawnParticle(site, 0, 0);
         if (useDiffusion)
         {
-            particle->addReaction(new LeftHopPressurized(particle, system));
-            particle->addReaction(new RightHopPressurized(particle, system));
+            if (useIsotropicDiffusion)
+            {
+                particle->addReaction(new LeftHopUp(particle, system));
+                particle->addReaction(new RightHopUp(particle, system));
+            }
+            else
+            {
+                particle->addReaction(new LeftHopPressurized(particle, system));
+                particle->addReaction(new RightHopPressurized(particle, system));
+            }
         }
 
         if (!useShadowing)
@@ -241,6 +251,7 @@ int main()
     potentialMember.addData("ConcEquilReset", resetInt, overwrite);
     potentialMember.addData("useConcEquil", concEquilInt, overwrite);
     potentialMember.addData("usediffusion", useDiffusionInt, overwrite);
+    potentialMember.addData("useisotropicdiffusion", isotropicDiffusionInt, overwrite);
     potentialMember.addData("usewall", useWallInt, overwrite);
     potentialMember.addData("size", size.value(), overwrite);
     potentialMember.addData("heightmap", heightmap, overwrite);

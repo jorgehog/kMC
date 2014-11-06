@@ -7,6 +7,7 @@ using namespace kMC;
 
 MovingWall::MovingWall(const double h0, const double EsMax, const double EsInit, const ivec &heighmap):
     KMCEvent("MovingWall", "h0", true, true),
+    m_inContact(true),
     m_EsMax(EsMax),
     m_EsInit(EsInit),
     m_r0(r0FromEs(h0, EsMax, EsInit)),
@@ -14,7 +15,7 @@ MovingWall::MovingWall(const double h0, const double EsMax, const double EsInit,
     m_E0(heighmap.size()*_pressureExpression(h0)),
     m_h0(h0),
     m_heighmap(heighmap),
-    m_localPressure(heighmap.size())
+    m_localPressure(heighmap.size(), fill::zeros)
 {
 
 }
@@ -63,9 +64,14 @@ void MovingWall::initialize()
 
     m_h = m_r0*std::log(m_heighmap.size()*m_s0*m_mPrev/(-m_E0));
 
-    if (m_h < m_heighmap.max())
+    if (m_h <= m_heighmap.max())
     {
-        throw std::runtime_error("Invalid wall placement");
+        m_h = m_heighmap.max();
+        m_inContact = true;
+    }
+    else
+    {
+        m_inContact = false;
     }
 
     for (uint site = 0; site < m_heighmap.size(); ++site)
@@ -102,7 +108,7 @@ void MovingWall::execute()
 
     _updatePressureRates();
 
-    if (m_dh != 0)
+    if (!m_inContact)
     {
         BADAssClose(pressureEnergySum(), m_E0, 1E-5);
     }
@@ -140,34 +146,78 @@ void MovingWall::_rescaleHeight()
 
     m /= m_heighmap.size();
 
-    m_dh = m_r0*std::log(m/m_mPrev);
+    double trialHeight;
 
-    if (m_h + m_dh < m_heighmap.max())
+    if (m_inContact)
     {
-        m_dh = 0;
-        m = m_mPrev;
-#ifndef NDEBUG
-        cout << "WARNING: Unable to shift wall." << endl;
-#endif
+        trialHeight = m_r0*std::log(m_heighmap.size()*m_s0*m/(-m_E0));
     }
 
-    m_h += m_dh;
+    else
+    {
+        m_dh = m_r0*std::log(m/m_mPrev);
+        cout << "PRE: not in contact" << endl;
 
-    m_mPrev = m;
+        trialHeight = m_h + m_dh;
+    }
 
-    setValue((m_h - dependency("height")->value())/m_h0);
+
+    if (trialHeight <= m_heighmap.max())
+    {
+
+#ifndef NDEBUG
+        cout << "CONTACT: Unable to shift wall. " << m_h << " / " << m_heighmap.max() << endl;
+#endif
+
+        m_dh = m_heighmap.max() - m_h;
+        m_h += m_dh;
+
+        if (!m_inContact)
+        {
+            cout << "connected" << endl;
+
+            m_inContact = true;
+            remakeUpdatedValues();
+
+            m_dh = 0;
+        }
+
+        cout << "POST: in contact" << endl;
+
+    }
+    else
+    {
+        m_h = trialHeight;
+
+        if (m_inContact)
+        {
+            cout << "disconnected" << endl;
+
+            m_inContact = false;
+            remakeUpdatedValues();
+
+            m_dh = 0;
+        }
+
+        m_mPrev = m;
+
+        cout << "POST: not in contact" << endl;
+    }
+
+    setValue(m_h - dependency("height")->value());
 
 }
 
 void MovingWall::_updatePressureRates()
 {
+
     double rateChange;
 
     double expFac = expSmallArg(-m_dh/m_r0);
 
     for (uint i = 0; i < m_heighmap.size(); ++i)
     {
-        BADAss(m_heighmap(i), <, m_h);
+        BADAss(m_heighmap(i), <=, m_h);
 
         if (!isAffected(solver()->particle(i)))
         {
@@ -200,7 +250,7 @@ void MovingWall::_updatePressureRates()
 
         BADAssClose(localPressureEvaluate(i), m_localPressure(i), 1E-3, "incorrect pressure update", [&] ()
         {
-            BADAssSimpleDump(cycle(), i, localPressure(i), expFac, m_heighmap);
+            BADAssSimpleDump(cycle(), i, localPressure(i), expFac, m_dh);
         });
     }
 

@@ -9,7 +9,7 @@ from os import (system,
 from run_app_paramloop import *
 
 
-def run_kmc(controller, this_dir, path, app, dump_file_name):
+def run_kmc(controller, this_dir, path, app, dump_file_name, **kwargs):
 
     print "Running ", controller
     chdir(path)
@@ -31,16 +31,32 @@ def main():
 
     controller = ParameterSetController()
 
-    temperatures = ParameterSet(0.5, 1, 0.5, cfg, "beta\s*=\s*(.*)\;")
-    concentrations = ParameterSet(0.1, 0.9, 0.1, cfg, "SaturationLevel\s*=\s*(.*)\;")
-    eb_values = ParameterSet(0.1, 0.5, 0.1, cfg, "Eb\s*=\s*(.*)\;")
+    no_eqVal = ParameterSet(0, 0, 1, cfg, "concEquil\s*\=\s*(.*)\;")
+    temperatures = ParameterSet(0.1, 1., 0.1, cfg, "beta\s*=\s*(.*)\;")
+    concentrations = ParameterSet(0.1, 0.9, 0.01, cfg, "SaturationLevel\s*=\s*(.*)\;")
+    eb_values = ParameterSet(0.1, 1., 0.1, cfg, "Eb\s*=\s*(.*)\;")
 
+    controller.register_parameter_set(no_eqVal)
     controller.register_parameter_set(temperatures)
     controller.register_parameter_set(concentrations)
     controller.register_parameter_set(eb_values)
 
     controller.run(run_kmc, controller, this_dir, path, app, dump_file_name)
 
+    print "equilibriating"
+
+    eqController = ParameterSetController()
+
+    eqVal = ParameterSet(1, 1, 1, cfg, "concEquil\s*\=\s*(.*)\;")
+    reset = ParameterSet(0, 0, 1, cfg, "reset\s*\=\s*(.*)\;")
+
+    eqController.register_parameter_set(eqVal)
+    eqController.register_parameter_set(reset)
+
+    eqController.register_parameter_set(temperatures)
+    eqController.register_parameter_set(eb_values)
+
+    eqController.run(run_kmc, eqController, this_dir, path, app, dump_file_name, ask=False)
 
 if __name__ == "__main__":
     main()

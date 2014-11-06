@@ -87,6 +87,11 @@ public:
         return m_localPressure(site);
     }
 
+    const bool &inContact() const
+    {
+        return m_inContact;
+    }
+
     double localPressureEvaluate(const uint site) const
     {
         return _pressureExpression(m_h - m_heighmap(site));
@@ -149,6 +154,8 @@ public:
 private:
 
     vector<vector<QuasiDiffusionReaction *>> m_pressureAffectedReactions;
+
+    bool m_inContact;
 
     double m_h;
     double m_dh;
