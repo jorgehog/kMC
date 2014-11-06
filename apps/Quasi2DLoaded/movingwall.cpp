@@ -156,7 +156,6 @@ void MovingWall::_rescaleHeight()
     else
     {
         m_dh = m_r0*std::log(m/m_mPrev);
-        cout << "PRE: not in contact" << endl;
 
         trialHeight = m_h + m_dh;
     }
@@ -174,15 +173,12 @@ void MovingWall::_rescaleHeight()
 
         if (!m_inContact)
         {
-            cout << "connected" << endl;
 
             m_inContact = true;
             remakeUpdatedValues();
 
             m_dh = 0;
         }
-
-        cout << "POST: in contact" << endl;
 
     }
     else
@@ -191,8 +187,6 @@ void MovingWall::_rescaleHeight()
 
         if (m_inContact)
         {
-            cout << "disconnected" << endl;
-
             m_inContact = false;
             remakeUpdatedValues();
 
@@ -200,8 +194,6 @@ void MovingWall::_rescaleHeight()
         }
 
         m_mPrev = m;
-
-        cout << "POST: not in contact" << endl;
     }
 
     setValue(m_h - dependency("height")->value());

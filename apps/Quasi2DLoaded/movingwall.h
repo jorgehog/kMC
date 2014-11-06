@@ -23,7 +23,7 @@ public:
         stringstream s;
         s << "EsMax_" << m_EsMax
           << "_EsInit_" << m_EsInit
-          << "_E0_" << m_E0;
+          << "_h0_" << m_h0;
 
         return s.str();
 
