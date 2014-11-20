@@ -74,11 +74,11 @@ void EqConc::update()
         m_neighbours += dt()*dependency<NNeighbors>("nNeighbors")->localValue();
         const double &avgNeighbors = m_neighbours/m_totalTime;
 
-        scale = 1/(4 - avgNeighbors);
+        scale = 1./DepositionMirrorImageArhenius::promoteFactor(avgNeighbors);
     }
     else
     {
-        scale = 1.0;
+        scale = 1./DepositionMirrorImageArheniusNoShadowing::promoteFactor();
     }
 
     m_eqConc += dt()*avgDissolutionRate*scale;

@@ -17,16 +17,6 @@ for potential, eb, beta, es, em, h0, c, ignis_index_map, data, n in obj:
     if h0 not in cases:
         cases.append(h0)
 
-        print h0
-
-for potential, eb, beta, es, em, h0, c, ignis_index_map, data, n in obj:
-
-    print "hei", eb, beta, h0
-
-for potential, eb, beta, es, em, h0, c, ignis_index_map, data, n in obj:
-
-    print "du"
-
 
 for h0_c in cases:
 
@@ -47,10 +37,11 @@ for h0_c in cases:
         all_beta_eb.append(beta*eb)
 
     figure(1)
-    plot(all_beta_eb, all_sizes, '*', label="h0=%g" % h0_c)
+    # all_beta_eb, all_sizes = sorted(zip(all_beta_eb, all_sizes), key=lambda x: x[0])
+    plot(all_beta_eb, all_sizes, '-*', label="h0=%g" % h0_c)
 
     figure(2)
-    plot(all_beta_eb, all_c_eq, 'x', label="h0=%g" % h0_c)
+    plot(all_beta_eb, all_c_eq, '-x', label="h0=%g" % h0_c)
 
 figure(1)
 xlabel("beta*eb")

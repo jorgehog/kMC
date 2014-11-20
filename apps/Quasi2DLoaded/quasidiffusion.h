@@ -513,6 +513,11 @@ class DepositionMirrorImageArhenius : public Deposition
 
 public:
 
+    static double promoteFactor(const double n)
+    {
+        return (4 - n);
+    }
+
     double activationEnergy() const
     {
         return 1.0;
@@ -520,7 +525,7 @@ public:
 
     double prefactor() const
     {
-        return (4 - nNeighbors())*concentration();
+        return promoteFactor(nNeighbors())*concentration();
     }
 
 };
@@ -531,6 +536,11 @@ class DepositionMirrorImageArheniusNoShadowing : public Deposition
 
 public:
 
+    static double promoteFactor()
+    {
+        return 2.0;
+    }
+
     double activationEnergy() const
     {
         return 1.0;
@@ -538,7 +548,7 @@ public:
 
     double prefactor() const
     {
-        return concentration();
+        return promoteFactor()*concentration();
     }
 
 };
