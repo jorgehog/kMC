@@ -11,28 +11,6 @@
 using namespace libconfig;
 using namespace kMC;
 
-class Delay : public LatticeEvent
-{
-public:
-
-    Delay(double s) :
-        LatticeEvent("Delay"),
-        m_s(s)
-
-    {
-
-    }
-
-    void execute()
-    {
-        sleep(m_s);
-    }
-
-private:
-    double m_s;
-
-};
-
 int main()
 {
 
@@ -53,7 +31,6 @@ int main()
     KMCSolver::enableDumpLAMMPS(false);
 
     KMCSolver* solver = new KMCSolver(root);
-//    solver->addEvent(new Delay(0.1));
 
     string ignisOutputName = "ignisQuasi2Dloaded.ign";
     solver->mainLattice()->enableEventValueStorage(true, true, ignisOutputName, solver->filePath(), 1);

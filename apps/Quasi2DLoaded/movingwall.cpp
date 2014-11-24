@@ -7,7 +7,6 @@ using namespace kMC;
 
 MovingWall::MovingWall(const double h0, const double EsMax, const double EsInit, const ivec &heighmap):
     KMCEvent("MovingWall", "h0", true, true),
-    m_inContact(true),
     m_EsMax(EsMax),
     m_EsInit(EsInit),
     m_r0(r0FromEs(h0, EsMax, EsInit)),
@@ -64,16 +63,6 @@ void MovingWall::initialize()
 
     m_h = m_r0*std::log(m_heighmap.size()*m_s0*m_mPrev/(-m_E0));
 
-    if (m_h <= m_heighmap.max())
-    {
-        m_h = m_heighmap.max();
-        m_inContact = true;
-    }
-    else
-    {
-        m_inContact = false;
-    }
-
     for (uint site = 0; site < m_heighmap.size(); ++site)
     {
         m_localPressure(site) = localPressureEvaluate(site);
@@ -108,15 +97,14 @@ void MovingWall::execute()
 
     _updatePressureRates();
 
-    if (!m_inContact)
-    {
-        BADAssClose(pressureEnergySum(), m_E0, 1E-5);
-    }
+    BADAssClose(pressureEnergySum(), m_E0, 1E-5);
+
 
     if ((cycle() + 1)%10000 == 0)
     {
         remakeUpdatedValues();
     }
+
 
     for (SoluteParticle *particle : m_affectedParticles)
     {
@@ -146,55 +134,11 @@ void MovingWall::_rescaleHeight()
 
     m /= m_heighmap.size();
 
-    double trialHeight;
+    m_dh = m_r0*std::log(m/m_mPrev);
 
-    if (m_inContact)
-    {
-        trialHeight = m_r0*std::log(m_heighmap.size()*m_s0*m/(-m_E0));
-    }
+    m_mPrev = m;
 
-    else
-    {
-        m_dh = m_r0*std::log(m/m_mPrev);
-
-        trialHeight = m_h + m_dh;
-    }
-
-
-    if (trialHeight <= m_heighmap.max())
-    {
-
-#ifndef NDEBUG
-        cout << "CONTACT: Unable to shift wall. " << m_h << " / " << m_heighmap.max() << endl;
-#endif
-
-        m_dh = m_heighmap.max() - m_h;
-        m_h += m_dh;
-
-        if (!m_inContact)
-        {
-
-            m_inContact = true;
-            remakeUpdatedValues();
-
-            m_dh = 0;
-        }
-
-    }
-    else
-    {
-        m_h = trialHeight;
-
-        if (m_inContact)
-        {
-            m_inContact = false;
-            remakeUpdatedValues();
-
-            m_dh = 0;
-        }
-
-        m_mPrev = m;
-    }
+    m_h += m_dh;
 
     setValue(m_h - dependency("height")->value());
 
@@ -209,7 +153,6 @@ void MovingWall::_updatePressureRates()
 
     for (uint i = 0; i < m_heighmap.size(); ++i)
     {
-        BADAss(m_heighmap(i), <=, m_h);
 
         if (!isAffected(solver()->particle(i)))
         {

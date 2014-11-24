@@ -84,12 +84,13 @@ public:
 
     const double &localPressure(const uint site) const
     {
-        return m_localPressure(site);
-    }
+        if (!initialized())
+        {
+            return localPressureEvaluate(site);
+        }
 
-    const bool &inContact() const
-    {
-        return m_inContact;
+        BADAssClose(m_localPressure(site), localPressureEvaluate(site), 1E-5);
+        return m_localPressure(site);
     }
 
     double localPressureEvaluate(const uint site) const
@@ -154,8 +155,6 @@ public:
 private:
 
     vector<vector<QuasiDiffusionReaction *>> m_pressureAffectedReactions;
-
-    bool m_inContact;
 
     double m_h;
     double m_dh;
