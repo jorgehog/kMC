@@ -510,6 +510,8 @@ public:
 
     void setVectorSizes();
 
+    void clearNeighborhood();
+
 
 private:
 

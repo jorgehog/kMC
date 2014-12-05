@@ -27,7 +27,16 @@ class ParameterSet:
         self.parent = None
         self.current_value = None
 
-        self.reset()
+    def __len__(self):
+        n = 0
+
+        value = self.start
+
+        while value <= self.stop:
+            value = self.increment_rule(value, self.increment)
+            n += 1
+
+        return n
 
     def reset(self):
 
@@ -119,6 +128,40 @@ class ParameterSetController:
             parameter_set.prepare()
 
     def run(self, execute_program_rule, *args, **kwargs):
+
+        n = 1
+
+        for parameter_set in self.parameter_sets:
+            n *= len(parameter_set)
+            parameter_set.reset()
+
+        ans = raw_input("Press either: \n\tenter to run %d simulations."
+                        "\n\tt [time per sim in seconds] for a time estimate. "
+                        "\n\tq to end.\n" % n)
+
+        if ans.startswith("t "):
+            time = float(ans.lstrip("t "))
+            t = n*time
+
+            unit = ""
+            if t > 3600:
+                t /= 3600.
+                unit = "hours"
+
+            elif t > 60:
+                t /= 60.
+                unit = "minutes"
+
+            else:
+                unit = "seconds"
+
+            print "Expected time: %g %s" % (t, unit)
+
+            return self.run(execute_program_rule, *args, **kwargs)
+
+        elif ans == "q":
+            print "exiting.."
+            return
 
         while not self.parameter_sets[0].finished():
 

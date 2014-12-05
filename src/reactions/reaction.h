@@ -149,7 +149,7 @@ public:
         m_updateFlag = static_cast<int>(flag);
     }
 
-    const double &  rate() const
+    const double & rate() const
     {
         return m_rate;
     }

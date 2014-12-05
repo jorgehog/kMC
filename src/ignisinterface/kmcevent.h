@@ -31,6 +31,9 @@ public:
 
     virtual ~KMCEvent() {}
 
+    const double &dt() const;
+    const double &T() const;
+
 protected:
 
     KMCSolver *solver() const

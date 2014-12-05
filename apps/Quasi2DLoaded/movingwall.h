@@ -84,17 +84,18 @@ public:
 
     const double &localPressure(const uint site) const
     {
+        if (!initialized())
+        {
+            return localPressureEvaluate(site);
+        }
+
+        BADAssClose(m_localPressure(site), localPressureEvaluate(site), 1E-5);
         return m_localPressure(site);
     }
 
     double localPressureEvaluate(const uint site) const
     {
         return _pressureExpression(m_h - m_heighmap(site));
-    }
-
-    const double &initialHeight() const
-    {
-        return m_h0;
     }
 
     const double &height() const
@@ -155,7 +156,6 @@ private:
 
     vector<vector<QuasiDiffusionReaction *>> m_pressureAffectedReactions;
 
-    const double m_h0;
     double m_h;
     double m_dh;
     double m_mPrev;
@@ -166,6 +166,7 @@ private:
     const double m_r0;
     const double m_s0;
     const double m_E0;
+    const double m_h0;
 
     const ivec &m_heighmap;
     vec m_localPressure;

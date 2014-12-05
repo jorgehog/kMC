@@ -7,27 +7,27 @@ using namespace kMC;
 
 MovingWall::MovingWall(const double h0, const double EsMax, const double EsInit, const ivec &heighmap):
     KMCEvent("MovingWall", "h0", true, true),
-    m_h0(h0),
-    m_h(h0),
     m_EsMax(EsMax),
     m_EsInit(EsInit),
     m_r0(r0FromEs(h0, EsMax, EsInit)),
     m_s0(s0FromEs(h0, EsMax, EsInit)),
-    m_E0(heighmap.size()*_pressureExpression(m_h0)),
+    m_E0(heighmap.size()*_pressureExpression(h0)),
+    m_h0(h0),
     m_heighmap(heighmap),
-    m_localPressure(heighmap.size())
+    m_localPressure(heighmap.size(), fill::zeros)
 {
 
 }
 
 MovingWall::~MovingWall()
 {
-    for (uint i = 0; i < m_heighmap.size(); ++i)
+    for (uint i = 0; i < m_pressureAffectedReactions.size(); ++i)
     {
         m_pressureAffectedReactions.at(i).clear();
     }
 
     m_pressureAffectedReactions.clear();
+
 }
 
 void MovingWall::initialize()
@@ -43,6 +43,7 @@ void MovingWall::initialize()
         site = particle->x();
 
         m_mPrev += exp(m_heighmap(site)/m_r0);
+        m_pressureAffectedReactions[site].clear();
 
         for (Reaction *reaction : particle->reactions())
         {
@@ -96,15 +97,14 @@ void MovingWall::execute()
 
     _updatePressureRates();
 
-    if (m_dh != 0)
-    {
-        BADAssClose(pressureEnergySum(), m_E0, 1E-5);
-    }
+    BADAssClose(pressureEnergySum(), m_E0, 1E-5);
+
 
     if ((cycle() + 1)%10000 == 0)
     {
         remakeUpdatedValues();
     }
+
 
     for (SoluteParticle *particle : m_affectedParticles)
     {
@@ -136,32 +136,23 @@ void MovingWall::_rescaleHeight()
 
     m_dh = m_r0*std::log(m/m_mPrev);
 
-    if (m_h + m_dh < m_heighmap.max())
-    {
-        m_dh = 0;
-        m = m_mPrev;
-#ifndef NDEBUG
-        cout << "WARNING: Unable to shift wall." << endl;
-#endif
-    }
+    m_mPrev = m;
 
     m_h += m_dh;
 
-    m_mPrev = m;
-
-    setValue(m_h);
+    setValue(m_h - dependency("height")->value());
 
 }
 
 void MovingWall::_updatePressureRates()
 {
+
     double rateChange;
 
     double expFac = expSmallArg(-m_dh/m_r0);
 
     for (uint i = 0; i < m_heighmap.size(); ++i)
     {
-        BADAss(m_heighmap(i), <, m_h);
 
         if (!isAffected(solver()->particle(i)))
         {
@@ -194,7 +185,7 @@ void MovingWall::_updatePressureRates()
 
         BADAssClose(localPressureEvaluate(i), m_localPressure(i), 1E-3, "incorrect pressure update", [&] ()
         {
-            BADAssSimpleDump(cycle(), i, localPressure(i), expFac, m_heighmap);
+            BADAssSimpleDump(cycle(), i, localPressure(i), expFac, m_dh);
         });
     }
 

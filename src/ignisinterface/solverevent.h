@@ -29,6 +29,7 @@ public:
 
     void initialize()
     {
+
         KMCDebugger_Init();
 
         BADAssBool(Site::boundariesIsInitialized(), "Boundaries are not initialized.");
@@ -41,14 +42,15 @@ public:
 
         solver()->getRateVariables();
 
-        m_totalTime = 0;
-
         resetReaction();
 
         if (!solver()->localUpdating())
         {
             solver()->remakeAccuAllRates();
         }
+
+        m_totalTime = 0;
+        getTimeStep();
 
     }
 
@@ -84,6 +86,8 @@ public:
             solver()->remakeAccuAllRates();
         }
 
+        getTimeStep();
+
         BADAssBool(!solver()->allPossibleReactions().empty(), "No available reactions.");
         BADAss(solver()->allPossibleReactions().size(), ==, solver()->accuAllRates().size(), "These vectors should be equal of length.");
         BADAssClose(solver()->accuAllRates().at(0), solver()->allPossibleReactions().at(0)->rate(), solver()->minRateThreshold(), "zeroth accuallrate should be the first rate.");
@@ -102,11 +106,6 @@ public:
 
         m_selectedReaction->execute();
 
-        m_lastTimeStep = -Reaction::linearRateScale()*std::log(KMC_RNG_UNIFORM())/solver()->kTot();
-
-        BADAss(m_lastTimeStep, >, 0, "timestep should be posiive.");
-
-        m_totalTime += m_lastTimeStep;
     }
 
 private:
@@ -120,6 +119,15 @@ private:
     uint choice;
 
     Reaction * m_selectedReaction;
+
+    void getTimeStep()
+    {
+        m_lastTimeStep = -Reaction::linearRateScale()*std::log(KMC_RNG_UNIFORM())/solver()->kTot();
+
+        BADAss(m_lastTimeStep, >, 0, "timestep should be posiive.");
+
+        m_totalTime += m_lastTimeStep;
+    }
 
 };
 

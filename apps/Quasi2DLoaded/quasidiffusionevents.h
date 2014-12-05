@@ -5,14 +5,49 @@
 namespace kMC
 {
 
+class QuasiDiffusionSystem;
+
+class NNeighbors : public KMCEvent
+{
+public:
+
+    NNeighbors(const QuasiDiffusionSystem &system) :
+        KMCEvent("nNeighbors", "", true),
+        m_system(system)
+    {
+
+    }
+
+    void initialize()
+    {
+        m_sum = 0;
+    }
+
+    void execute();
+
+    const double &localValue() const
+    {
+        return m_localValue;
+    }
+
+private:
+
+    const QuasiDiffusionSystem &m_system;
+
+    double m_sum;
+    double m_localValue;
+
+};
+
 class Dissolution;
 
 class EqConc : public KMCEvent
 {
 public:
 
-    EqConc() :
-        KMCEvent("EqConc", "", true, true)
+    EqConc(const bool shadowing) :
+        KMCEvent("EqConc", "", true, true),
+        m_shadowing(shadowing)
     {
         setDependency(solver()->solverEvent());
     }
@@ -32,10 +67,12 @@ public:
 
     double eqConc() const
     {
-        return m_expFac*m_eqConc/m_counter;
+        return m_expFac*m_eqConc/m_totalTime;
     }
 
 private:
+
+    const double m_shadowing;
 
     double m_eqConc;
 
@@ -46,13 +83,13 @@ private:
 
     vector<Dissolution*> m_dissolutionReactions;
 
-    uint m_counter;
+    double m_totalTime;
 
     void update();
 
     void resetCounters()
     {
-        m_counter = 1;
+        m_totalTime = 0;
 
         m_eqConc = 0;
 
@@ -69,7 +106,7 @@ class ConcEquilibriator : public KMCEvent
 {
 public:
 
-    ConcEquilibriator(EqConc *eqConcEvent, const uint N = 100, const double gCrit = 1E-5, const double treshold = 1E-5) :
+    ConcEquilibriator(EqConc &eqConcEvent, const uint N = 100, const double gCrit = 1E-5, const double treshold = 1E-5) :
         KMCEvent("ConcEquilibriator", "", true, true),
         m_eqConcEvent(eqConcEvent),
         m_N(N),
@@ -98,18 +135,13 @@ public:
 
     double meanConcentration() const
     {
-        if (m_allConcentrations.empty())
-        {
-            return 0;
-        }
-
-        return m_meanConcentration/m_allConcentrations.size();
+        return m_cPrev;
     }
 
 
 private:
 
-    EqConc *m_eqConcEvent;
+    EqConc &m_eqConcEvent;
 
     vector<Deposition*> m_depositionReactions;
 
@@ -131,6 +163,32 @@ private:
     void initiateNextConcentrationLevel();
 };
 
+class Cumulant : public KMCEvent
+{
+public:
+    Cumulant(const QuasiDiffusionSystem &system) :
+        KMCEvent("cumulant", "", true, true),
+        m_system(system)
+    {
+
+    }
+
+    void initialize()
+    {
+        m_cumulant = 0;
+    }
+
+    void execute();
+
+    double cumulant() const;
+
+private:
+
+    double m_cumulant;
+    const QuasiDiffusionSystem &m_system;
+
+};
+
 
 class HeightRMS : public KMCEvent
 {
@@ -144,8 +202,6 @@ public:
 
     }
 
-
-protected:
 
     void execute()
     {
@@ -174,9 +230,6 @@ private:
 
 };
 
-
-
-
 class DumpHeighmap : public KMCEvent
 {
 public:
@@ -199,6 +252,7 @@ protected:
         {
             m_heighmap.save(m_filename);
         }
+
     }
 
 private:
@@ -232,29 +286,24 @@ public:
     {
         const double &meanHeight = dependency("height")->value();
 
-        vec acf = zeros(m_M);
-
         for (uint dx = 0; dx < m_M; ++dx)
         {
             for (uint site = 0; site < m_M; ++site)
             {
-                acf(dx) += (m_heightmap(site) - meanHeight)*(m_heightmap(site + dx) - meanHeight);
+                m_acf(dx) += (m_heightmap(site) - meanHeight)*(m_heightmap(site + dx) - meanHeight);
             }
         }
 
-        acf /= double(m_M);
-
-        m_acf += acf;
-
         if (cycle()%solver()->mainLattice()->outputSpacing() == 0)
         {
-            m_acf.save(m_filename);
+            (m_acf/((cycle()+1)*m_M)).eval().save(m_filename);
         }
     }
 
 private:
 
     const ivec &m_heightmap;
+    vec m_acfLocal;
 
     const uint m_M;
     vec m_acf;
@@ -262,5 +311,35 @@ private:
     const string m_filename;
 
 };
+
+
+class SurfaceSize : public KMCEvent
+{
+public:
+
+    SurfaceSize(const QuasiDiffusionSystem &system) :
+        KMCEvent("SurfaceSize", "l0", true, true),
+        m_system(system)
+    {
+
+    }
+
+    void initialize()
+    {
+        m_sum = 0;
+    }
+
+    void execute();
+
+private:
+
+    const QuasiDiffusionSystem& m_system;
+
+    double m_sum;
+    double m_localValue;
+
+};
+
+
 
 }

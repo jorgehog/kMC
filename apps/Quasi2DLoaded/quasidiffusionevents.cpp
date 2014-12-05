@@ -11,6 +11,7 @@ void EqConc::initialize()
 
     resetCounters();
 
+    m_dissolutionReactions.clear();
     for (SoluteParticle *particle : solver()->particles())
     {
         for (Reaction *reaction : particle->reactions())
@@ -42,7 +43,6 @@ void EqConc::restart()
 
 void EqConc::update()
 {
-    double localNeighbors = 0;
     double localDissolutionRate = 0;
 
     uint nDissolutionReactions = 0;
@@ -53,30 +53,36 @@ void EqConc::update()
             localDissolutionRate += dissolutionReaction->rate();
             nDissolutionReactions++;
         }
-
-        localNeighbors += dissolutionReaction->nNeighbors();
     }
 
-    if (localDissolutionRate > 100)
-    {
-        solver()->exit("Pressure too high?");
-    }
+    BADAss(localDissolutionRate, <=, 100, "Pressure too high?");
 
-    localNeighbors /= m_dissolutionReactions.size();
     if (nDissolutionReactions != 0)
     {
         localDissolutionRate /= nDissolutionReactions;
     }
 
-    m_neighbours += localNeighbors;
-    m_dissolutionRate += localDissolutionRate;
+    m_dissolutionRate += dt()*localDissolutionRate;
+    m_totalTime += dt();
 
-    double avgNeighbours = m_neighbours/m_counter;
-    double avgDissolutionRate = m_dissolutionRate/m_counter;
+    double avgDissolutionRate = m_dissolutionRate/m_totalTime;
 
-    m_eqConc += avgDissolutionRate/(4 - avgNeighbours);
+    double scale;
 
-    m_counter++;
+    if (m_shadowing)
+    {
+        m_neighbours += dt()*dependency<NNeighbors>("nNeighbors")->localValue();
+        const double &avgNeighbors = m_neighbours/m_totalTime;
+
+        scale = 1./DepositionMirrorImageArhenius::promoteFactor(avgNeighbors);
+    }
+    else
+    {
+        scale = 1./DepositionMirrorImageArheniusNoShadowing::promoteFactor();
+    }
+
+    m_eqConc += dt()*avgDissolutionRate*scale;
+
 }
 
 
@@ -102,7 +108,7 @@ void ConcEquilibriator::initialize()
 
 void ConcEquilibriator::execute()
 {
-    double eqConc = m_eqConcEvent->value();
+    double eqConc = m_eqConcEvent.value();
 
     if (m_counter >= m_N)
     {
@@ -118,6 +124,7 @@ void ConcEquilibriator::execute()
         if (g < m_gCrit)
         {
             initiateNextConcentrationLevel();
+            m_counter = 0;
         }
 
 
@@ -143,22 +150,99 @@ void ConcEquilibriator::initiateNextConcentrationLevel()
     m_allConcentrations.push_back(cNew);
     m_meanConcentration += cNew;
 
-    if (m_allConcentrations.size() > 2 && fabs((cNew + m_cPrev)/2 - meanConcentration()) < m_treshold)
-    {
-        terminateLoop("Concentration converged");
-    }
+    uint N = 3;
 
-    else
+    if (m_allConcentrations.size() > N)
     {
-        cout << fabs((cNew + m_cPrev)/2 - meanConcentration())/m_treshold << endl;
-        solver()->setTargetConcentration(cNew);
-        m_eqConcEvent->restart();
 
-        for (Deposition *depositionReaction : m_depositionReactions)
+        double cMean = 0;
+        for (uint i = 0; i < N; ++i)
         {
-            depositionReaction->registerUpdateFlag(QuasiDiffusionReaction::UpdateFlags::CALCULATE);
+            cMean += m_allConcentrations[m_allConcentrations.size() - (i + 1)];
         }
 
-        m_cPrev = cNew;
+        cMean /= N;
+
+        if (fabs(cMean - m_cPrev) < m_treshold)
+        {
+            for (double c : m_allConcentrations)
+            {
+                cout << "c " << c << endl;
+            }
+
+            cout << cMean << " " << cNew << " " << m_cPrev << " " << meanConcentration() << endl;
+
+            cNew = cMean;
+
+            terminateLoop("Concentration converged");
+        }
+
     }
+
+    solver()->setTargetConcentration(cNew);
+    m_eqConcEvent.restart();
+
+    for (Deposition *depositionReaction : m_depositionReactions)
+    {
+        depositionReaction->registerUpdateFlag(QuasiDiffusionReaction::UpdateFlags::CALCULATE);
+    }
+
+    m_cPrev = cNew;
+
+}
+
+
+void NNeighbors::execute()
+{
+    m_localValue = 0;
+
+    for (uint site = 0; site < m_system.size(); ++site)
+    {
+        m_localValue += m_system.nNeighbors(site);
+    }
+
+    m_localValue /= m_system.size();
+
+    m_sum += m_localValue;
+
+    setValue(m_sum/(cycle() + 1));
+}
+
+
+void Cumulant::execute()
+{
+    double localValue = 0;
+
+    for (uint site = 0; site < m_system.size(); ++site)
+    {
+        localValue += exp(Reaction::beta()*m_system.Eb()*m_system.nNeighbors(site));
+    }
+
+    m_cumulant = localValue/m_system.size();
+
+    setValue(cumulant());
+
+
+}
+
+double Cumulant::cumulant() const
+{
+    return std::log(m_cumulant)/(Reaction::beta()*m_system.Eb());
+}
+
+
+void SurfaceSize::execute()
+{
+    m_localValue = 0;
+
+    for (uint site = 0; site < m_system.size(); ++site)
+    {
+        m_localValue += 0.5*abs(m_system.heights(site) - m_system.heights(m_system.rightSite(site, 1)));
+    }
+
+    m_localValue /= m_system.size();
+
+    m_sum += dt()*m_localValue;
+
+    setValue(m_sum/T());
 }
