@@ -33,7 +33,7 @@ int main()
     KMCSolver* solver = new KMCSolver(root);
 
     string ignisOutputName = "ignisQuasi2Dloaded.ign";
-    solver->mainLattice()->enableEventValueStorage(true, true, ignisOutputName, solver->filePath(), 1);
+    solver->mainLattice()->enableEventValueStorage(true, true, ignisOutputName, solver->filePath(), 100);
 
     H5Wrapper::Root h5root("Quasi2D.h5");
 
@@ -71,6 +71,8 @@ int main()
 
     const uint &h0 = getSetting<uint>(initCFG, "h0");
     const uint &therm = getSetting<uint>(initCFG, "therm");
+
+    const double &concMult = getSetting<double>(initCFG, "concMult");
 
     const double &Eb = getSetting<double>(initCFG, "Eb");
     const double &EsMax = getSetting<double>(initCFG, "EsMax")*Eb;
@@ -168,13 +170,13 @@ int main()
         {
             if (useIsotropicDiffusion)
             {
-                particle->addReaction(new LeftHopUp(particle, system));
-                particle->addReaction(new RightHopUp(particle, system));
+                particle->addReaction(new LeftHopIsotropic(particle, system));
+                particle->addReaction(new RightHopIsotropic(particle, system));
             }
             else
             {
-                particle->addReaction(new LeftHopPressurized(particle, system));
-                particle->addReaction(new RightHopPressurized(particle, system));
+                particle->addReaction(new LeftHopDownOnly(particle, system));
+                particle->addReaction(new RightHopDownOnly(particle, system));
             }
         }
 
@@ -219,11 +221,17 @@ int main()
         }
     }
 
+    if (concMult != 1)
+    {
+        solver->setTargetConcentration(solver->targetConcentration()*concMult);
+    }
+
     t.tic();
     solver->mainloop();
     cout << "Simulation ended after " << t.toc() << " seconds" << endl;
 
 
+    potentialMember.addData("concMult", concMult, overwrite);
     potentialMember.addData("shadowing", shadowingInt, overwrite);
     potentialMember.addData("ConcEquilReset", resetInt, overwrite);
     potentialMember.addData("useConcEquil", concEquilInt, overwrite);
@@ -234,7 +242,10 @@ int main()
     potentialMember.addData("heightmap", heightmap, overwrite);
     potentialMember.addData("ignisData", solver->mainLattice()->storedEventValues(), overwrite);
     potentialMember.addData("ignisEventDescriptions", solver->mainLattice()->outputEventDescriptions(), overwrite);
-    potentialMember.addData("AutoCorr", autocorr.acf(), overwrite);
+    if (acf)
+    {
+        potentialMember.addData("AutoCorr", autocorr.acf(), overwrite);
+    }
 
     if (concEquil && !reset)
     {

@@ -32,12 +32,16 @@ for h0_c in cases:
         c_eq = data.attrs["eqConc"]
         s = data["ignisData"][ignis_index_map["SurfaceSize"], -1]
 
+        if (c_eq < 0):
+            print "Warning: negative concentration", c_eq, beta, eb
+
         all_c_eq.append(c_eq)
         all_sizes.append(s)
         all_beta_eb.append(beta*eb)
 
     figure(1)
-    # all_beta_eb, all_sizes = sorted(zip(all_beta_eb, all_sizes), key=lambda x: x[0])
+    all_beta_eb, all_sizes, all_c_eq = zip(*[[beb, s, c] for beb, s, c in sorted(zip(all_beta_eb, all_sizes, all_c_eq),
+                                                                                 key=lambda x: x[0])])
     plot(all_beta_eb, all_sizes, '-*', label="h0=%g" % h0_c)
 
     figure(2)
