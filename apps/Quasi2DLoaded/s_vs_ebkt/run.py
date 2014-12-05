@@ -32,11 +32,13 @@ def main():
     controller = ParameterSetController()
 
     eqVal = ParameterSet(1, 1, 1, cfg, "concEquil\s*\=\s*(.*)\;")
-    h0_values = ParameterSet(2, 32, 2, cfg, "h0\s*\=\s*(.*)\;", lambda x, i: i*x);
-    eb_values = ParameterSet(0.05, 0.5, 0.05, cfg, "Eb\s*=\s*(.*)\;")
+    concMult = ParameterSet(0.5, 0.5, 1, cfg, "concMult\s*\=\s*(.*)\;")
+    h0_values = ParameterSet(2, 32, 2, cfg, "h0\s*\=\s*(.*)\;", lambda x, i: i*x)
+    eb_values = ParameterSet(0.2, 5, 0.1, cfg, "Eb\s*=\s*(.*)\;")
 
-    controller.register_parameter_set(eqVal)
-    controller.register_parameter_set(h0_values)
+    #controller.register_parameter_set(eqVal)
+   # controller.register_parameter_set(concMult)
+    #controller.register_parameter_set(h0_values)
     controller.register_parameter_set(eb_values)
 
     controller.run(run_kmc, controller, this_dir, path, app, dump_file_name)

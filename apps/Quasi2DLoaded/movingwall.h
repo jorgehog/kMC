@@ -82,11 +82,11 @@ public:
         return m_dh;
     }
 
-    const double &localPressure(const uint site) const
+    double localPressure(const uint site) const
     {
         if (!initialized())
         {
-            return localPressureEvaluate(site);
+            return 0;
         }
 
         BADAssClose(m_localPressure(site), localPressureEvaluate(site), 1E-5);

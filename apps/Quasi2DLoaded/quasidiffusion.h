@@ -404,7 +404,7 @@ public:
 
 };
 
-class LeftHopPressurized : public LeftHop
+class LeftHopDownOnly : public LeftHop
 {
     using LeftHop::LeftHop;
 
@@ -416,7 +416,7 @@ public:
 
 };
 
-class RightHopPressurized : public RightHop
+class RightHopDownOnly : public RightHop
 {
     using RightHop::RightHop;
 
@@ -429,7 +429,7 @@ public:
 
 };
 
-class RightHopUp : public RightHop
+class RightHopIsotropic : public RightHop
 {
     using RightHop::RightHop;
 
@@ -449,7 +449,7 @@ public:
     }
 };
 
-class LeftHopUp : public LeftHop
+class LeftHopIsotropic : public LeftHop
 {
     using LeftHop::LeftHop;
 
