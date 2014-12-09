@@ -129,7 +129,7 @@ int main()
     size.setOnsetTime(therm);
 
     EqConc eqC(useShadowing);
-    ConcEquilibriator cc(eqC, N, gCrit, treshold);
+    ConcEquilibriator cc(system, eqC, N, gCrit, treshold);
 
     eqC.setDependency(nNeighbors);
 

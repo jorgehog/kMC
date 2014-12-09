@@ -84,12 +84,8 @@ public:
 
     double localPressure(const uint site) const
     {
-        if (!initialized())
-        {
-            return 0;
-        }
+        if (m_onsetTime != 0) BADAssClose(m_localPressure(site), localPressureEvaluate(site), 1E-5);
 
-        BADAssClose(m_localPressure(site), localPressureEvaluate(site), 1E-5);
         return m_localPressure(site);
     }
 
@@ -143,14 +139,18 @@ public:
 
         for (uint site = 0; site < m_heighmap.size(); ++site)
         {
-            BADAssClose(localPressure(site), localPressureEvaluate(site), 1E-3);
+            BADAssClose(m_localPressure(site), localPressureEvaluate(site), 1E-3);
 
-            s += localPressure(site);
+            s += m_localPressure(site);
         }
 
         return s;
     }
 
+    void onHeightsSet()
+    {
+        recalculateAllPressures();
+    }
 
 private:
 
@@ -179,6 +179,8 @@ private:
     void _locateNewAffected();
 
     void remakeUpdatedValues();
+
+    void recalculateAllPressures();
 
     double _pressureExpression(const double heightDifference) const
     {

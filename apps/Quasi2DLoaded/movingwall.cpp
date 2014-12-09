@@ -209,15 +209,20 @@ void MovingWall::_locateNewAffected()
 void MovingWall::remakeUpdatedValues()
 {
 
-    for (uint i = 0; i < m_heighmap.size(); ++i)
-    {
-        m_localPressure(i) = localPressureEvaluate(i);
-    }
+    recalculateAllPressures();
 
     for (Reaction *reaction : solver()->allPossibleReactions())
     {
         reaction->registerUpdateFlag(QuasiDiffusionReaction::UpdateFlags::CALCULATE);
         reaction->setRate();
+    }
+}
+
+void MovingWall::recalculateAllPressures()
+{
+    for (uint i = 0; i < m_heighmap.size(); ++i)
+    {
+        m_localPressure(i) = localPressureEvaluate(i);
     }
 }
 

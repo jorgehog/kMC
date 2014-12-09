@@ -67,7 +67,7 @@ public:
 
     double eqConc() const
     {
-        return m_expFac*m_eqConc/m_totalTime;
+        return m_eqConc/m_totalTime;
     }
 
 private:
@@ -78,8 +78,6 @@ private:
 
     double m_neighbours;
     double m_dissolutionRate;
-
-    double m_expFac;
 
     vector<Dissolution*> m_dissolutionReactions;
 
@@ -106,8 +104,9 @@ class ConcEquilibriator : public KMCEvent
 {
 public:
 
-    ConcEquilibriator(EqConc &eqConcEvent, const uint N = 100, const double gCrit = 1E-5, const double treshold = 1E-5) :
+    ConcEquilibriator(QuasiDiffusionSystem &system, EqConc &eqConcEvent, const uint N = 100, const double gCrit = 1E-5, const double treshold = 1E-5) :
         KMCEvent("ConcEquilibriator", "", true, true),
+        m_system(system),
         m_eqConcEvent(eqConcEvent),
         m_N(N),
         m_gCrit(gCrit),
@@ -140,6 +139,10 @@ public:
 
 
 private:
+
+    QuasiDiffusionSystem &m_system;
+
+    ivec m_initialHeights;
 
     EqConc &m_eqConcEvent;
 

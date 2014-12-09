@@ -7,8 +7,6 @@ using namespace kMC;
 
 void EqConc::initialize()
 {
-    m_expFac = exp(Reaction::beta());
-
     resetCounters();
 
     m_dissolutionReactions.clear();
@@ -93,6 +91,8 @@ void ConcEquilibriator::initialize()
     m_counter = 0;
 
     m_converged = false;
+
+    m_initialHeights = m_system.heights();
 
     for (SoluteParticle *particle : solver()->particles())
     {
@@ -180,6 +180,7 @@ void ConcEquilibriator::initiateNextConcentrationLevel()
     }
 
     solver()->setTargetConcentration(cNew);
+    m_system.setHeights(m_initialHeights);
     m_eqConcEvent.restart();
 
     for (Deposition *depositionReaction : m_depositionReactions)
