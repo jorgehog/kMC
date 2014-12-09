@@ -58,6 +58,7 @@ save("all_sizes", all_sizes)
 save("all_eqc", all_c_eq)
 
 figure(2)
+plot(all_beta_eb, np.exp(-2*array(all_beta_eb)))
 xlabel("Eb/kT")
 ylabel("C_0/l_0")
 legend()
