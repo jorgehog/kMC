@@ -377,6 +377,8 @@ class Deposition : public QuasiDiffusionReaction
     using QuasiDiffusionReaction::QuasiDiffusionReaction;
 
 public:
+    static vec histcount;
+    static int count;
 
     virtual string name() const
     {
@@ -395,9 +397,14 @@ public:
 
     void execute()
     {
+        histcount(site())++;
+        count++;
+
         registerHeightChange(site(), +1);
 
         markAsAffected();
+
+        (histcount/count).eval().save("/tmp/hist.arma");
     }
 
     double activationEnergy() const = 0;
@@ -456,6 +463,7 @@ public:
     }
 
 };
+
 
 
 class Dissolution : public QuasiDiffusionReaction

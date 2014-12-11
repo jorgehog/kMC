@@ -97,7 +97,7 @@ public:
 
     void execute()
     {
-        R = solver()->kTot()*KMC_RNG_UNIFORM();
+        R = solver()->kTot()*as_scalar(randu<mat>(1,1));
 
         choice = solver()->getReactionChoice(R);
 

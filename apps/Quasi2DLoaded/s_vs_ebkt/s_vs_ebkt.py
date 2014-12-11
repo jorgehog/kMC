@@ -48,6 +48,7 @@ for h0_c in cases:
     plot(all_beta_eb, all_c_eq, '-x', label="h0=%g" % h0_c)
 
 figure(1)
+plot(all_beta_eb, np.exp(-float(sys.argv[2])*array(all_beta_eb))/array(all_beta_eb))
 xlabel("beta*eb")
 ylabel("<s>")
 legend()

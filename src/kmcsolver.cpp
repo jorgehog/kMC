@@ -1459,6 +1459,7 @@ void KMCSolver::getRateVariables()
     {
         remakeAccuAllRates();
     }
+
 }
 
 const uint &KMCSolver::cycle() const

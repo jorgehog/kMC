@@ -10,6 +10,8 @@
 
 using namespace libconfig;
 using namespace kMC;
+vec Deposition::histcount;
+int Deposition::count = 0;
 
 int main()
 {
@@ -45,17 +47,20 @@ int main()
 
 
     ivec heightmap(solver->NX(), fill::zeros);
+    Deposition::histcount.set_size(solver->NX());
+    Deposition::histcount.fill(0);
 
-//        uint HMM = 10;
-//        for (uint i= 0; i < solver->NX()/HMM; ++i)
+
+//    uint HMM = 1;
+//    for (uint i= 0; i < solver->NX()/HMM; ++i)
+//    {
+//        heightmap(i*HMM) = KMC_RNG_UNIFORM()*10;
+
+//        for (uint j = 1; j < HMM; ++j)
 //        {
-//            heightmap(i*HMM) = KMC_RNG_UNIFORM()*1000;
-
-//            for (uint j = 1; j < HMM; ++j)
-//            {
-//                heightmap(i*HMM + j) = heightmap(i*HMM);
-//            }
+//            heightmap(i*HMM + j) = heightmap(i*HMM);
 //        }
+//    }
 
     DumpHeighmap dumpHeightmap(heightmap);
     HeightRMS heightRMS(heightmap);
