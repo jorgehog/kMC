@@ -26,7 +26,7 @@ void EqConc::initialize()
 
 void EqConc::execute()
 {
-    setValue(eqConc());
+    setValue(dlog2C());
 }
 
 void EqConc::reset()
@@ -53,8 +53,6 @@ void EqConc::update()
         }
     }
 
-    BADAss(localDissolutionRate, <=, 100, "Pressure too high?");
-
     if (nDissolutionReactions != 0)
     {
         localDissolutionRate /= nDissolutionReactions;
@@ -65,32 +63,28 @@ void EqConc::update()
 
     double avgDissolutionRate = m_dissolutionRate/m_totalTime;
 
-    double scale;
+    double inverseKStar;
 
     if (m_shadowing)
     {
         m_neighbours += dt()*dependency<NNeighbors>("nNeighbors")->localValue();
         const double &avgNeighbors = m_neighbours/m_totalTime;
 
-        scale = 1./DepositionMirrorImageArhenius::promoteFactor(avgNeighbors);
+        inverseKStar = 1./DepositionMirrorImageArhenius::promoteFactor(avgNeighbors);
     }
     else
     {
-        scale = 1./DepositionMirrorImageArheniusNoShadowing::promoteFactor();
+        inverseKStar = 1./DepositionMirrorImageArheniusNoShadowing::promoteFactor();
     }
 
-    m_eqConc += dt()*avgDissolutionRate*scale;
+    m_dlog2C = avgDissolutionRate*inverseKStar;
 
 }
 
 
 void ConcEquilibriator::initialize()
 {
-    m_cPrev = solver()->targetConcentration();
-
     m_counter = 0;
-
-    m_converged = false;
 
     m_initialHeights = m_system.heights();
 
@@ -98,9 +92,9 @@ void ConcEquilibriator::initialize()
     {
         for (Reaction *reaction : particle->reactions())
         {
-            if (reaction->hasName("Deposition"))
+            if (!reaction->hasName("Deposition"))
             {
-                m_depositionReactions.push_back(static_cast<Deposition*>(reaction));
+                m_affectedReactions.push_back(static_cast<QuasiDiffusionReaction*>(reaction));
             }
         }
     }
@@ -108,16 +102,16 @@ void ConcEquilibriator::initialize()
 
 void ConcEquilibriator::execute()
 {
-    double eqConc = m_eqConcEvent.value();
+    double shift = m_eqConcEvent.value();
 
     if (m_counter >= m_N)
     {
         for (uint i = 1; i < m_N; ++i)
         {
-            m_eqConcValues[i - 1] = m_eqConcValues[i];
+            m_logCShiftValues[i - 1] = m_logCShiftValues[i];
         }
 
-        m_eqConcValues[m_N - 1] = eqConc;
+        m_logCShiftValues[m_N - 1] = shift;
 
         double g = flatness();
 
@@ -126,70 +120,35 @@ void ConcEquilibriator::execute()
             initiateNextConcentrationLevel();
             m_counter = 0;
         }
-
-
     }
     else
     {
-        m_eqConcValues[m_counter] = eqConc;
+        m_logCShiftValues[m_counter] = shift;
         m_counter++;
     }
 
-    if (!m_allConcentrations.empty())
-    {
-        setValue(meanConcentration());
-    }
+    setValue(m_system.log2C());
 
 }
 
 
 void ConcEquilibriator::initiateNextConcentrationLevel()
 {
-    double cNew = m_eqConcValues[m_N - 1];
+    double shift = m_logCShiftValues[m_N - 1];
 
-    m_allConcentrations.push_back(cNew);
-    m_meanConcentration += cNew;
-
-    uint N = 3;
-
-    if (m_allConcentrations.size() > N)
+    if (fabs(shift) < m_treshold)
     {
-
-        double cMean = 0;
-        for (uint i = 0; i < N; ++i)
-        {
-            cMean += m_allConcentrations[m_allConcentrations.size() - (i + 1)];
-        }
-
-        cMean /= N;
-
-        if (fabs(cMean - m_cPrev) < m_treshold)
-        {
-            for (double c : m_allConcentrations)
-            {
-                cout << "c " << c << endl;
-            }
-
-            cout << cMean << " " << cNew << " " << m_cPrev << " " << meanConcentration() << endl;
-
-            cNew = cMean;
-
-            terminateLoop("Concentration converged");
-        }
-
+        terminateLoop("Concentration converged");
     }
 
-    solver()->setTargetConcentration(cNew);
-    m_system.setHeights(m_initialHeights);
+    m_system.setLog2C(m_system.log2C() + shift);
+//    m_system.setHeights(m_initialHeights);
     m_eqConcEvent.restart();
 
-    for (Deposition *depositionReaction : m_depositionReactions)
+    for (QuasiDiffusionReaction *reaction : m_affectedReactions)
     {
-        depositionReaction->registerUpdateFlag(QuasiDiffusionReaction::UpdateFlags::CALCULATE);
+        reaction->registerUpdateFlag(QuasiDiffusionReaction::UpdateFlags::CALCULATE);
     }
-
-    m_cPrev = cNew;
-
 }
 
 
@@ -222,13 +181,11 @@ void Cumulant::execute()
     m_cumulant = localValue/m_system.size();
 
     setValue(cumulant());
-
-
 }
 
 double Cumulant::cumulant() const
 {
-    return std::log(m_cumulant)/(m_system.alpha());
+    return std::log(m_cumulant)/m_system.alpha();
 }
 
 

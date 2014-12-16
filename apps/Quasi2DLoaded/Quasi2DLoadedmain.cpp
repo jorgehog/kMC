@@ -75,7 +75,7 @@ int main()
     const double &alpha = getSetting<double>(initCFG, "alpha");
     const double &mu = getSetting<double>(initCFG, "mu");
 
-    const double &concMult = getSetting<double>(initCFG, "concMult");
+    const double &concAdd = getSetting<double>(initCFG, "concAdd");
 
     const double &EsMax = getSetting<double>(initCFG, "EsMax");
     const double &EsInit = getSetting<double>(initCFG, "EsInit");
@@ -206,7 +206,7 @@ int main()
     if (concEquil && reset)
     {
         solver->mainloop();
-        potentialMember.addData("eqConc", eqC.eqConc());
+        potentialMember.addData("log2Ceq", system.log2C());
 
         solver->mainLattice()->removeEvent(&eqC);
         solver->mainLattice()->removeEvent(&cc);
@@ -221,11 +221,13 @@ int main()
                 }
             }
         }
+
+        sleep(3);
     }
 
-    if (concMult != 1)
+    if (concAdd != 0)
     {
-        solver->setTargetConcentration(solver->targetConcentration()*concMult);
+        system.setLog2C(concAdd + system.log2C());
     }
 
     t.tic();
@@ -233,7 +235,7 @@ int main()
     cout << "Simulation ended after " << t.toc() << " seconds" << endl;
 
 
-    potentialMember.addData("concMult", concMult, overwrite);
+    potentialMember.addData("concAdd", concAdd, overwrite);
     potentialMember.addData("shadowing", shadowingInt, overwrite);
     potentialMember.addData("ConcEquilReset", resetInt, overwrite);
     potentialMember.addData("useConcEquil", concEquilInt, overwrite);
@@ -251,7 +253,7 @@ int main()
 
     if (concEquil && !reset)
     {
-        potentialMember.addData("eqConc", eqC.eqConc());
+        potentialMember.addData("eqConc", eqC.dlog2C());
     }
 
     return 0;

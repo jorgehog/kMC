@@ -38,8 +38,7 @@ public:
         stringstream s;
         s << "alpha_" << betaEb()
           << "mu_" << mu()
-          << "_" << wallEvent().numericDescription()
-          << "_concentration_" << concentration();
+          << "_" << wallEvent().numericDescription();
 
         return s.str();
     }
@@ -137,7 +136,7 @@ public:
 
     double calcRateBruteForce() const
     {
-        return prefactor()*exp(-betaEb()*activationEnergy());
+        return prefactor()*exp(-activationEnergy());
     }
 
     virtual bool pressureAffected() const
@@ -150,14 +149,9 @@ public:
         return m_system.wallEvent();
     }
 
-    const double &concentration() const
-    {
-        return solver()->targetConcentration();
-    }
-
     double localEnergy(const uint n) const
     {
-        return betaEb()*(n + localPressure() - 2) + m_system.log2C();
+        return betaEb()*(n + localPressure() - 2) - m_system.log2C();
     }
 
     double localEnergy() const

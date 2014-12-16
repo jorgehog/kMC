@@ -34,7 +34,7 @@ def main():
     eqVal = ParameterSet(1, 1, 1, cfg, "concEquil\s*\=\s*(.*)\;")
     concMult = ParameterSet(0.5, 0.5, 1, cfg, "concMult\s*\=\s*(.*)\;")
     h0_values = ParameterSet(2, 32, 2, cfg, "h0\s*\=\s*(.*)\;", lambda x, i: i*x)
-    eb_values = ParameterSet(0.2, 5, 0.1, cfg, "Eb\s*=\s*(.*)\;")
+    eb_values = ParameterSet(0.1, 5, 0.1, cfg, "alpha\s*=\s*(.*)\;")
 
     #controller.register_parameter_set(eqVal)
    # controller.register_parameter_set(concMult)

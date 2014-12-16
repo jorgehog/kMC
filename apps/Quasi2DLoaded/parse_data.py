@@ -18,8 +18,8 @@ class ParseKMCHDF5:
 
             for potential, data in run.items():
 
-                eb, beta, es, em, c, h0 = [float(re.findall("%s\_(-?\d+\.?\d*)" % ID, potential)[0]) for ID in
-                                           ["Eb", "beta", "EsInit", "EsMax", "concentration", "h0"]]
+                alpha, mu, es, em, c, h0 = [float(re.findall("%s\_(-?\d+\.?\d*)" % ID, potential)[0]) for ID in
+                                           ["alpha", "mu", "EsInit", "EsMax", "concentration", "h0"]]
 
                 n = re.findall("\_n_(\d+)", potential)
 
@@ -29,11 +29,11 @@ class ParseKMCHDF5:
                     name_strip = str(name).split("@")[0]
                     _ignis_index_map[name_strip] = i
 
-                yield potential, eb, beta, es, em, h0, c, _ignis_index_map, data, n
+                yield potential, alpha, mu, es, em, h0, c, _ignis_index_map, data, n
 
 
 if __name__ == "__main__":
     obj = ParseKMCHDF5("/home/jorgehog/code/build-kMC-Desktop_Qt_5_3_GCC_64bit-Release/apps/Quasi2DLoaded/Quasi2D.h5")
 
-    for potential, eb, beta, em, c, ignis_index_map, data, n in obj:
-        print eb, data["ignisData"][ignis_index_map["SurfaceSize"], -1]
+    for potential, alpha, mu, em, c, ignis_index_map, data, n in obj:
+        print alpha, data["ignisData"][ignis_index_map["SurfaceSize"], -1]

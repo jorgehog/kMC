@@ -24,20 +24,24 @@ for h0_c in cases:
     all_c_eq = []
     all_sizes = []
 
-    for potential, eb, beta, es, em, h0, c, ignis_index_map, data, n in obj:
+    for potential, alpha, mu, es, em, h0, c, ignis_index_map, data, n in obj:
 
         if h0 != h0_c:
             continue
 
-        c_eq = data.attrs["eqConc"]
+        if "log2Ceq" in data.attrs:
+            c_eq = data.attrs["log2Ceq"]
+        else:
+            c_eq = mu
+
         s = data["ignisData"][ignis_index_map["SurfaceSize"], -1]
 
-        if (c_eq < 0):
+        if c_eq < 0:
             print "Warning: negative concentration", c_eq, beta, eb
 
         all_c_eq.append(c_eq)
         all_sizes.append(s)
-        all_beta_eb.append(beta*eb)
+        all_beta_eb.append(alpha)
 
     figure(1)
     all_beta_eb, all_sizes, all_c_eq = zip(*[[beb, s, c] for beb, s, c in sorted(zip(all_beta_eb, all_sizes, all_c_eq),
@@ -48,7 +52,7 @@ for h0_c in cases:
     plot(all_beta_eb, all_c_eq, '-x', label="h0=%g" % h0_c)
 
 figure(1)
-plot(all_beta_eb, np.exp(-float(sys.argv[2])*array(all_beta_eb))/array(all_beta_eb))
+# plot(all_beta_eb, np.exp(-float(sys.argv[2])*array(all_beta_eb))/array(all_beta_eb))
 xlabel("beta*eb")
 ylabel("<s>")
 legend()
