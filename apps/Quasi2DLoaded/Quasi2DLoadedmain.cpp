@@ -10,8 +10,6 @@
 
 using namespace libconfig;
 using namespace kMC;
-vec Deposition::histcount;
-int Deposition::count = 0;
 
 int main()
 {
@@ -47,9 +45,6 @@ int main()
 
 
     ivec heightmap(solver->NX(), fill::zeros);
-    Deposition::histcount.set_size(solver->NX());
-    Deposition::histcount.fill(0);
-
 
 //    uint HMM = 1;
 //    for (uint i= 0; i < solver->NX()/HMM; ++i)
@@ -77,11 +72,13 @@ int main()
     const uint &h0 = getSetting<uint>(initCFG, "h0");
     const uint &therm = getSetting<uint>(initCFG, "therm");
 
+    const double &alpha = getSetting<double>(initCFG, "alpha");
+    const double &mu = getSetting<double>(initCFG, "mu");
+
     const double &concMult = getSetting<double>(initCFG, "concMult");
 
-    const double &Eb = getSetting<double>(initCFG, "Eb");
-    const double &EsMax = getSetting<double>(initCFG, "EsMax")*Eb;
-    const double &EsInit = getSetting<double>(initCFG, "EsInit")*Eb;
+    const double &EsMax = getSetting<double>(initCFG, "EsMax");
+    const double &EsInit = getSetting<double>(initCFG, "EsInit");
 
     const bool acf = getSetting<uint>(initCFG, "acf") == 1;
 
@@ -112,7 +109,7 @@ int main()
 
     MovingWall wallEvent(h0, EsMax, EsInit, heightmap);
 
-    QuasiDiffusionSystem system(heightmap, Eb, wallEvent);
+    QuasiDiffusionSystem system(heightmap, wallEvent, alpha, mu);
 
     if (acf)
     {

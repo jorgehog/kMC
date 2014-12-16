@@ -156,6 +156,7 @@ void MovingWall::_updatePressureRates()
 
         if (!isAffected(solver()->particle(i)))
         {
+            cout << "DERP" << endl;
             rateChange = expSmallArg(-Reaction::beta()*m_localPressure(i)*(expFac - 1));
 
             for (auto &r : m_pressureAffectedReactions[i])

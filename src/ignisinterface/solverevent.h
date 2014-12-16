@@ -76,6 +76,8 @@ public:
 
     void reset()
     {
+        m_selectedReaction->execute();
+
         Site::updateBoundaries();
 
         solver()->getRateVariables();
@@ -103,8 +105,6 @@ public:
 
         m_selectedReaction = solver()->allPossibleReactions().at(choice);
         KMCDebugger_SetActiveReaction(m_selectedReaction);
-
-        m_selectedReaction->execute();
 
     }
 

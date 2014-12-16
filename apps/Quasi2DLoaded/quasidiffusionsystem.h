@@ -14,26 +14,24 @@ class QuasiDiffusionSystem
 private:
 
     ivec &m_heights;
-    const double m_Eb;
 
     MovingWall &m_wallEvent;
 
+    const double &m_alpha;
+    const double &m_mu;
+
 public:
 
-    QuasiDiffusionSystem(ivec &heights, const double Eb, MovingWall &wallEvent) :
+    QuasiDiffusionSystem(ivec &heights, MovingWall &wallEvent, const double alpha, const double mu) :
         m_heights(heights),
-        m_Eb(Eb),
-        m_wallEvent(wallEvent)
+        m_wallEvent(wallEvent),
+        m_alpha(alpha),
+        m_mu(mu)
     {
 
     }
 
     void setHeights(const ivec &heights);
-
-    const double &Eb() const
-    {
-        return m_Eb;
-    }
 
     const MovingWall &wallEvent() const
     {
@@ -110,6 +108,16 @@ public:
     void markAsAffected(SoluteParticle *particle)
     {
         m_wallEvent.markAsAffected(particle);
+    }
+
+    const double &alpha() const
+    {
+        return m_alpha;
+    }
+
+    const double &log2C() const
+    {
+        return m_mu;
     }
 
 };

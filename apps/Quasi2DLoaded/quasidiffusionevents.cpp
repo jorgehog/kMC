@@ -216,7 +216,7 @@ void Cumulant::execute()
 
     for (uint site = 0; site < m_system.size(); ++site)
     {
-        localValue += exp(Reaction::beta()*m_system.Eb()*m_system.nNeighbors(site));
+        localValue += exp(m_system.alpha()*m_system.nNeighbors(site));
     }
 
     m_cumulant = localValue/m_system.size();
@@ -228,7 +228,7 @@ void Cumulant::execute()
 
 double Cumulant::cumulant() const
 {
-    return std::log(m_cumulant)/(Reaction::beta()*m_system.Eb());
+    return std::log(m_cumulant)/(m_system.alpha());
 }
 
 

@@ -36,12 +36,22 @@ public:
     const string numericDescription() const
     {
         stringstream s;
-        s << "Eb_" << Eb()
-          << "_beta_" << beta()
+        s << "alpha_" << betaEb()
+          << "mu_" << mu()
           << "_" << wallEvent().numericDescription()
           << "_concentration_" << concentration();
 
         return s.str();
+    }
+
+    const double &betaEb() const
+    {
+        return m_system.alpha();
+    }
+
+    const double &mu() const
+    {
+        return m_system.log2C();
     }
 
     const uint &leftSite() const
@@ -120,14 +130,14 @@ public:
         }
         else
         {
-            return prefactor()*exp(-beta()*Ea);
+            return prefactor()*exp(-Ea);
         }
 
     }
 
     double calcRateBruteForce() const
     {
-        return prefactor()*exp(-beta()*activationEnergy());
+        return prefactor()*exp(-betaEb()*activationEnergy());
     }
 
     virtual bool pressureAffected() const
@@ -145,14 +155,9 @@ public:
         return solver()->targetConcentration();
     }
 
-    const double &Eb() const
-    {
-        return m_system.Eb();
-    }
-
     double localEnergy(const uint n) const
     {
-        return n*Eb();
+        return betaEb()*(n + localPressure() - 2) + m_system.log2C();
     }
 
     double localEnergy() const
@@ -163,16 +168,6 @@ public:
     uint nNeighbors() const
     {
         return m_system.nNeighbors(leftSite(), rightSite(), site());
-    }
-
-    double localPressure() const
-    {
-        if (!wallEvent().hasStarted())
-        {
-            return 0;
-        }
-
-        return wallEvent().localPressure(site());
     }
 
     virtual const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const
@@ -240,6 +235,15 @@ private:
     const uint m_rightSite;
     const uint m_leftSite;
 
+    double localPressure() const
+    {
+        if (!wallEvent().hasStarted())
+        {
+            return 0;
+        }
+
+        return wallEvent().localPressure(site());
+    }
 
 };
 
@@ -315,7 +319,7 @@ class LeftHopDownOnly : public LeftHop
 public:
     double activationEnergy() const override
     {
-        return localEnergy() + localPressure();
+        return localEnergy();
     }
 
 };
@@ -328,7 +332,7 @@ public:
 
     double activationEnergy() const override
     {
-        return localEnergy() + localPressure();
+        return localEnergy();
     }
 
 };
@@ -341,7 +345,7 @@ public:
 
     double activationEnergy() const override
     {
-        return localEnergy() + localPressure();
+        return localEnergy();
     }
 
 
@@ -360,7 +364,7 @@ class LeftHopIsotropic : public LeftHop
 public:
     double activationEnergy() const override
     {
-        return localEnergy() + localPressure();
+        return localEnergy();
     }
 
 public:
@@ -377,8 +381,6 @@ class Deposition : public QuasiDiffusionReaction
     using QuasiDiffusionReaction::QuasiDiffusionReaction;
 
 public:
-    static vec histcount;
-    static int count;
 
     virtual string name() const
     {
@@ -397,14 +399,9 @@ public:
 
     void execute()
     {
-        histcount(site())++;
-        count++;
-
         registerHeightChange(site(), +1);
 
         markAsAffected();
-
-        (histcount/count).eval().save("/tmp/hist.arma");
     }
 
     double activationEnergy() const = 0;
@@ -426,7 +423,7 @@ public:
 
     static double promoteFactor(const double n)
     {
-        return (4 - n);
+        return (2 - n/2);
     }
 
     double activationEnergy() const
@@ -436,7 +433,7 @@ public:
 
     double prefactor() const
     {
-        return promoteFactor(nNeighbors())*concentration();
+        return promoteFactor(nNeighbors());
     }
 
 };
@@ -449,7 +446,7 @@ public:
 
     static double promoteFactor()
     {
-        return 2.0;
+        return 1.0;
     }
 
     double activationEnergy() const
@@ -459,7 +456,7 @@ public:
 
     double prefactor() const
     {
-        return promoteFactor()*concentration();
+        return promoteFactor();
     }
 
 };
@@ -484,7 +481,7 @@ public:
 
     double activationEnergy() const
     {
-        return localEnergy() + localPressure();
+        return localEnergy();
     }
 
     void execute()
