@@ -88,6 +88,9 @@ void ConcEquilibriator::initialize()
 
     m_initialHeights = m_system.heights();
 
+    m_prevShift = 0;
+    m_nswaps = 0;
+
     for (SoluteParticle *particle : solver()->particles())
     {
         for (Reaction *reaction : particle->reactions())
@@ -135,13 +138,49 @@ void ConcEquilibriator::execute()
 void ConcEquilibriator::initiateNextConcentrationLevel()
 {
     double shift = m_logCShiftValues[m_N - 1];
+    uint swapmax = 100;
+
+    if (m_prevShift != 0 && shift != 0)
+    {
+        if (m_prevShift/shift < 0)
+        {
+            if (m_nswaps < swapmax)
+            {
+                m_nswaps++;
+            }
+        }
+        else
+        {
+            if (m_nswaps != 0)
+            {
+                m_nswaps--;
+            }
+        }
+    }
+
+    m_prevShift = shift;
+
+    shift /= (m_nswaps + 1);
+
+    m_system.setLog2C(m_system.log2C() + shift);
+
+    m_shifts.push_back(shift);
+    m_values.push_back(m_system.log2C());
+
+    conv_to<vec>::from(m_shifts).eval().save("/tmp/shifts.arma");
+    conv_to<vec>::from(m_values).eval().save("/tmp/values.arma");
 
     if (fabs(shift) < m_treshold)
     {
         terminateLoop("Concentration converged");
+
+        for (uint i = 0; i < m_shifts.size(); ++i)
+        {
+            cout << m_shifts.at(i) << " " << m_values.at(i) << endl;
+        }
     }
 
-    m_system.setLog2C(m_system.log2C() + shift);
+
 //    m_system.setHeights(m_initialHeights);
     m_eqConcEvent.restart();
 
@@ -202,5 +241,5 @@ void SurfaceSize::execute()
 
     m_sum += dt()*m_localValue;
 
-    setValue(m_sum/T());
+    setValue(m_sum/(T() - m_T0));
 }

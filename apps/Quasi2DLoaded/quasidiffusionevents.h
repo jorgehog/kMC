@@ -154,6 +154,12 @@ private:
     uint m_counter;
 
     void initiateNextConcentrationLevel();
+
+    vector<double> m_shifts;
+    vector<double> m_values;
+
+    uint m_nswaps;
+    double m_prevShift;
 };
 
 class Cumulant : public KMCEvent
@@ -320,6 +326,7 @@ public:
     void initialize()
     {
         m_sum = 0;
+        m_T0 = T() - dt();
     }
 
     void execute();
@@ -330,6 +337,8 @@ private:
 
     double m_sum;
     double m_localValue;
+
+    double m_T0;
 
 };
 

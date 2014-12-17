@@ -33,7 +33,7 @@ int main()
     KMCSolver* solver = new KMCSolver(root);
 
     string ignisOutputName = "ignisQuasi2Dloaded.ign";
-    solver->mainLattice()->enableEventValueStorage(true, true, ignisOutputName, solver->filePath(), 100);
+    solver->mainLattice()->enableEventValueStorage(true, true, ignisOutputName, solver->filePath(), 1000);
 
     H5Wrapper::Root h5root("Quasi2D.h5");
 
