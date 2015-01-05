@@ -12,7 +12,7 @@ obj = ParseKMCHDF5(sys.argv[1])
 
 cases = []
 
-for potential, eb, beta, es, em, h0, c, ignis_index_map, data, n in obj:
+for potential, eb, beta, es, em, h0, ignis_index_map, data, n in obj:
 
     if h0 not in cases:
         cases.append(h0)
@@ -24,7 +24,7 @@ for h0_c in cases:
     all_c_eq = []
     all_sizes = []
 
-    for potential, alpha, mu, es, em, h0, c, ignis_index_map, data, n in obj:
+    for potential, alpha, mu, es, em, h0, ignis_index_map, data, n in obj:
 
         if h0 != h0_c:
             continue
