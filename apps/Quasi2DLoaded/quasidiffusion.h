@@ -1,110 +1,14 @@
 #pragma once
 
 #include <kMC>
+
 #include "movingwall.h"
+#include "quasidiffusionsystem.h"
 
 using namespace arma;
 
 namespace kMC
 {
-
-class QuasiDiffusionSystem
-{
-private:
-
-    ivec &m_heights;
-    const double m_Eb;
-
-    MovingWall &m_wallEvent;
-
-public:
-
-    QuasiDiffusionSystem(ivec &heights, const double Eb, MovingWall &wallEvent) :
-        m_heights(heights),
-        m_Eb(Eb),
-        m_wallEvent(wallEvent)
-    {
-
-    }
-
-    const double &Eb() const
-    {
-        return m_Eb;
-    }
-
-    const MovingWall &wallEvent() const
-    {
-        return m_wallEvent;
-    }
-
-    uint leftSite(const uint site, const uint n) const
-    {
-        return (site + size() - n)%size();
-    }
-
-    uint rightSite(const uint site, const uint n) const
-    {
-        return (site + n)%size();
-    }
-
-    bool connectedLeft(const uint leftSite, const int myHeight) const
-    {
-        return m_heights(leftSite) >= myHeight;
-    }
-
-    bool connectedRight(const uint rightSite, const int myHeight) const
-    {
-        return m_heights(rightSite) >= myHeight;
-    }
-
-    uint nNeighbors(const uint leftsite, const uint rightsite, const uint centersite) const
-    {
-        bool leftHug = connectedLeft(leftsite, m_heights(centersite));
-        bool rightHug = connectedRight(rightsite, m_heights(centersite));
-
-        if (leftHug && rightHug)
-        {
-            return 3;
-        }
-
-        else if (leftHug || rightHug)
-        {
-            return 2;
-        }
-
-        else
-        {
-            return 1;
-        }
-    }
-
-    uint nNeighbors(const uint site) const
-    {
-        return nNeighbors(leftSite(site, 1), rightSite(site, 1), site);
-    }
-
-    const int &heights(const uint i) const
-    {
-        return m_heights(i);
-    }
-
-
-    void registerHeightChange(const uint site, const int change)
-    {
-        m_heights(site) += change;
-    }
-
-    const uint &size() const
-    {
-        return m_heights.n_elem;
-    }
-
-    void markAsAffected(SoluteParticle *particle)
-    {
-        m_wallEvent.markAsAffected(particle);
-    }
-
-};
 
 class QuasiDiffusionReaction : public Reaction
 {
@@ -132,12 +36,21 @@ public:
     const string numericDescription() const
     {
         stringstream s;
-        s << "Eb_" << Eb()
-          << "_beta_" << beta()
-          << "_" << wallEvent().numericDescription()
-          << "_concentration_" << concentration();
+        s << "alpha_" << betaEb()
+          << "mu_" << mu()
+          << "_" << wallEvent().numericDescription();
 
         return s.str();
+    }
+
+    const double &betaEb() const
+    {
+        return m_system.alpha();
+    }
+
+    const double &mu() const
+    {
+        return m_system.log2C();
     }
 
     const uint &leftSite() const
@@ -208,6 +121,8 @@ public:
             return rate();
         }
 
+        forceUpdateFlag(Reaction::AllUpdateFlags::defaultUpdateFlag);
+
         double Ea = activationEnergy();
 
         if (Ea == 0)
@@ -216,14 +131,14 @@ public:
         }
         else
         {
-            return prefactor()*exp(-beta()*Ea);
+            return prefactor()*exp(-Ea);
         }
 
     }
 
     double calcRateBruteForce() const
     {
-        return prefactor()*exp(-beta()*activationEnergy());
+        return prefactor()*exp(-activationEnergy());
     }
 
     virtual bool pressureAffected() const
@@ -236,19 +151,9 @@ public:
         return m_system.wallEvent();
     }
 
-    const double &concentration() const
-    {
-        return solver()->targetConcentration();
-    }
-
-    const double &Eb() const
-    {
-        return m_system.Eb();
-    }
-
     double localEnergy(const uint n) const
     {
-        return 1 + n*Eb();
+        return betaEb()*(n + localPressure() - 2) - m_system.log2C();
     }
 
     double localEnergy() const
@@ -259,16 +164,6 @@ public:
     uint nNeighbors() const
     {
         return m_system.nNeighbors(leftSite(), rightSite(), site());
-    }
-
-    double localPressure() const
-    {
-        if (!wallEvent().hasStarted())
-        {
-            return 0;
-        }
-
-        return wallEvent().localPressure(site());
     }
 
     virtual const string info(int xr = 0, int yr = 0, int zr = 0, string desc = "X") const
@@ -336,6 +231,15 @@ private:
     const uint m_rightSite;
     const uint m_leftSite;
 
+    double localPressure() const
+    {
+        if (!wallEvent().hasStarted())
+        {
+            return 0;
+        }
+
+        return wallEvent().localPressure(site());
+    }
 
 };
 
@@ -411,7 +315,7 @@ class LeftHopDownOnly : public LeftHop
 public:
     double activationEnergy() const override
     {
-        return localEnergy() + localPressure();
+        return localEnergy();
     }
 
 };
@@ -424,7 +328,7 @@ public:
 
     double activationEnergy() const override
     {
-        return localEnergy() + localPressure();
+        return localEnergy();
     }
 
 };
@@ -437,7 +341,7 @@ public:
 
     double activationEnergy() const override
     {
-        return localEnergy() + localPressure();
+        return localEnergy();
     }
 
 
@@ -456,7 +360,7 @@ class LeftHopIsotropic : public LeftHop
 public:
     double activationEnergy() const override
     {
-        return localEnergy() + localPressure();
+        return localEnergy();
     }
 
 public:
@@ -486,7 +390,7 @@ public:
 
     bool isAllowed() const
     {
-        return myHeight() < floor(wallHeight());
+        return myHeight() < wallHeight(); //don't floor to allow elastic penetration into solid.
     }
 
     void execute()
@@ -515,17 +419,17 @@ public:
 
     static double promoteFactor(const double n)
     {
-        return (4 - n);
+        return (2 - n/2);
     }
 
     double activationEnergy() const
     {
-        return 1.0;
+        return 0.0;
     }
 
     double prefactor() const
     {
-        return promoteFactor(nNeighbors())*concentration();
+        return promoteFactor(nNeighbors());
     }
 
 };
@@ -538,20 +442,21 @@ public:
 
     static double promoteFactor()
     {
-        return 2.0;
+        return 1.0;
     }
 
     double activationEnergy() const
     {
-        return 1.0;
+        return 0.0;
     }
 
     double prefactor() const
     {
-        return promoteFactor()*concentration();
+        return promoteFactor();
     }
 
 };
+
 
 
 class Dissolution : public QuasiDiffusionReaction
@@ -572,7 +477,7 @@ public:
 
     double activationEnergy() const
     {
-        return localEnergy() + localPressure();
+        return localEnergy();
     }
 
     void execute()

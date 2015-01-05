@@ -6,6 +6,8 @@ namespace kMC
 {
 
 class QuasiDiffusionSystem;
+class QuasiDiffusionReaction;
+class Dissolution;
 
 class NNeighbors : public KMCEvent
 {
@@ -39,8 +41,6 @@ private:
 
 };
 
-class Dissolution;
-
 class EqConc : public KMCEvent
 {
 public:
@@ -65,21 +65,19 @@ public:
 
     void restart();
 
-    double eqConc() const
+    double dlog2C() const
     {
-        return m_expFac*m_eqConc/m_totalTime;
+        return -log(m_dlog2C);
     }
 
 private:
 
     const double m_shadowing;
 
-    double m_eqConc;
+    double m_dlog2C;
 
     double m_neighbours;
     double m_dissolutionRate;
-
-    double m_expFac;
 
     vector<Dissolution*> m_dissolutionReactions;
 
@@ -91,7 +89,7 @@ private:
     {
         m_totalTime = 0;
 
-        m_eqConc = 0;
+        m_dlog2C = 0;
 
         m_neighbours = 0;
         m_dissolutionRate = 0;
@@ -100,19 +98,22 @@ private:
 
 };
 
-class Deposition;
-
 class ConcEquilibriator : public KMCEvent
 {
 public:
 
-    ConcEquilibriator(EqConc &eqConcEvent, const uint N = 100, const double gCrit = 1E-5, const double treshold = 1E-5) :
+    ConcEquilibriator(QuasiDiffusionSystem &system,
+                      EqConc &eqConcEvent,
+                      const uint N = 100,
+                      const double gCrit = 1E-5,
+                      const double treshold = 1E-5) :
         KMCEvent("ConcEquilibriator", "", true, true),
+        m_system(system),
         m_eqConcEvent(eqConcEvent),
         m_N(N),
         m_gCrit(gCrit),
         m_treshold(treshold),
-        m_eqConcValues(N)
+        m_logCShiftValues(m_N)
     {
         setDependency(m_eqConcEvent);
     }
@@ -127,40 +128,38 @@ public:
 
         for (uint i = 1; i < m_N - 1; ++i)
         {
-            g += fabs((m_eqConcValues[i + 1] - m_eqConcValues[i - 1])/2.0);
+            g += fabs((m_logCShiftValues[i + 1] - m_logCShiftValues[i - 1])/2.0);
         }
 
         return g/(m_N - 2);
     }
 
-    double meanConcentration() const
-    {
-        return m_cPrev;
-    }
-
-
 private:
+
+    QuasiDiffusionSystem &m_system;
+
+    ivec m_initialHeights;
 
     EqConc &m_eqConcEvent;
 
-    vector<Deposition*> m_depositionReactions;
-
-    vector<double> m_allConcentrations;
-    double m_meanConcentration;
+    vector<QuasiDiffusionReaction*> m_affectedReactions;
 
     const uint m_N;
 
     const double m_gCrit;
     const double m_treshold;
 
-    vector<double> m_eqConcValues;
-    double m_cPrev;
+    vector<double> m_logCShiftValues;
 
     uint m_counter;
 
-    bool m_converged;
-
     void initiateNextConcentrationLevel();
+
+    vector<double> m_shifts;
+    vector<double> m_values;
+
+    uint m_nswaps;
+    double m_prevShift;
 };
 
 class Cumulant : public KMCEvent
@@ -327,6 +326,7 @@ public:
     void initialize()
     {
         m_sum = 0;
+        m_T0 = T() - dt();
     }
 
     void execute();
@@ -337,6 +337,8 @@ private:
 
     double m_sum;
     double m_localValue;
+
+    double m_T0;
 
 };
 

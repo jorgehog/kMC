@@ -33,7 +33,7 @@ int main()
     KMCSolver* solver = new KMCSolver(root);
 
     string ignisOutputName = "ignisQuasi2Dloaded.ign";
-    solver->mainLattice()->enableEventValueStorage(true, true, ignisOutputName, solver->filePath(), 100);
+    solver->mainLattice()->enableEventValueStorage(true, true, ignisOutputName, solver->filePath(), 1000);
 
     H5Wrapper::Root h5root("Quasi2D.h5");
 
@@ -46,16 +46,16 @@ int main()
 
     ivec heightmap(solver->NX(), fill::zeros);
 
-//        uint HMM = 10;
-//        for (uint i= 0; i < solver->NX()/HMM; ++i)
-//        {
-//            heightmap(i*HMM) = KMC_RNG_UNIFORM()*1000;
+//    uint HMM = 1;
+//    for (uint i= 0; i < solver->NX()/HMM; ++i)
+//    {
+//        heightmap(i*HMM) = KMC_RNG_UNIFORM()*10;
 
-//            for (uint j = 1; j < HMM; ++j)
-//            {
-//                heightmap(i*HMM + j) = heightmap(i*HMM);
-//            }
+//        for (uint j = 1; j < HMM; ++j)
+//        {
+//            heightmap(i*HMM + j) = heightmap(i*HMM);
 //        }
+//    }
 
     DumpHeighmap dumpHeightmap(heightmap);
     HeightRMS heightRMS(heightmap);
@@ -72,11 +72,13 @@ int main()
     const uint &h0 = getSetting<uint>(initCFG, "h0");
     const uint &therm = getSetting<uint>(initCFG, "therm");
 
-    const double &concMult = getSetting<double>(initCFG, "concMult");
+    const double &alpha = getSetting<double>(initCFG, "alpha");
+    const double &mu = getSetting<double>(initCFG, "mu");
 
-    const double &Eb = getSetting<double>(initCFG, "Eb");
-    const double &EsMax = getSetting<double>(initCFG, "EsMax")*Eb;
-    const double &EsInit = getSetting<double>(initCFG, "EsInit")*Eb;
+    const double &concAdd = getSetting<double>(initCFG, "concAdd");
+
+    const double &EsMax = getSetting<double>(initCFG, "EsMax");
+    const double &EsInit = getSetting<double>(initCFG, "EsInit");
 
     const bool acf = getSetting<uint>(initCFG, "acf") == 1;
 
@@ -107,7 +109,7 @@ int main()
 
     MovingWall wallEvent(h0, EsMax, EsInit, heightmap);
 
-    QuasiDiffusionSystem system(heightmap, Eb, wallEvent);
+    QuasiDiffusionSystem system(heightmap, wallEvent, alpha, mu);
 
     if (acf)
     {
@@ -129,7 +131,7 @@ int main()
     size.setOnsetTime(therm);
 
     EqConc eqC(useShadowing);
-    ConcEquilibriator cc(eqC, N, gCrit, treshold);
+    ConcEquilibriator cc(system, eqC, N, gCrit, treshold);
 
     eqC.setDependency(nNeighbors);
 
@@ -204,7 +206,7 @@ int main()
     if (concEquil && reset)
     {
         solver->mainloop();
-        potentialMember.addData("eqConc", eqC.eqConc());
+        potentialMember.addData("log2Ceq", system.log2C());
 
         solver->mainLattice()->removeEvent(&eqC);
         solver->mainLattice()->removeEvent(&cc);
@@ -219,11 +221,13 @@ int main()
                 }
             }
         }
+
+        sleep(3);
     }
 
-    if (concMult != 1)
+    if (concAdd != 0)
     {
-        solver->setTargetConcentration(solver->targetConcentration()*concMult);
+        system.setLog2C(concAdd + system.log2C());
     }
 
     t.tic();
@@ -231,7 +235,7 @@ int main()
     cout << "Simulation ended after " << t.toc() << " seconds" << endl;
 
 
-    potentialMember.addData("concMult", concMult, overwrite);
+    potentialMember.addData("concAdd", concAdd, overwrite);
     potentialMember.addData("shadowing", shadowingInt, overwrite);
     potentialMember.addData("ConcEquilReset", resetInt, overwrite);
     potentialMember.addData("useConcEquil", concEquilInt, overwrite);
@@ -249,7 +253,7 @@ int main()
 
     if (concEquil && !reset)
     {
-        potentialMember.addData("eqConc", eqC.eqConc());
+        potentialMember.addData("eqConc", eqC.dlog2C());
     }
 
     return 0;

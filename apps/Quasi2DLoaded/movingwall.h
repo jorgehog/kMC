@@ -7,6 +7,7 @@
 namespace kMC
 {
 
+class QuasiDiffusionSystem;
 class QuasiDiffusionReaction;
 
 class MovingWall : public KMCEvent
@@ -58,7 +59,10 @@ public:
 
     void initialize();
 
-    void execute();
+    void execute()
+    {
+
+    }
 
     void reset();
 
@@ -84,12 +88,8 @@ public:
 
     double localPressure(const uint site) const
     {
-        if (!initialized())
-        {
-            return 0;
-        }
+        if (m_onsetTime != 0) BADAssClose(m_localPressure(site), localPressureEvaluate(site), 1E-5);
 
-        BADAssClose(m_localPressure(site), localPressureEvaluate(site), 1E-5);
         return m_localPressure(site);
     }
 
@@ -143,16 +143,27 @@ public:
 
         for (uint site = 0; site < m_heighmap.size(); ++site)
         {
-            BADAssClose(localPressure(site), localPressureEvaluate(site), 1E-3);
+            BADAssClose(m_localPressure(site), localPressureEvaluate(site), 1E-4);
 
-            s += localPressure(site);
+            s += m_localPressure(site);
         }
 
         return s;
     }
 
+    void onHeightsSet()
+    {
+        recalculateAllPressures();
+    }
+
+    void _setSystem(const QuasiDiffusionSystem *system)
+    {
+        m_system = system;
+    }
 
 private:
+
+    const QuasiDiffusionSystem *m_system;
 
     vector<vector<QuasiDiffusionReaction *>> m_pressureAffectedReactions;
 
@@ -179,6 +190,8 @@ private:
     void _locateNewAffected();
 
     void remakeUpdatedValues();
+
+    void recalculateAllPressures();
 
     double _pressureExpression(const double heightDifference) const
     {

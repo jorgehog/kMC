@@ -79,8 +79,10 @@ void MovingWall::initialize()
 
 }
 
-void MovingWall::execute()
+void MovingWall::reset()
 {
+
+    //Check that everything is updated correctly from previous runs.
 #ifndef NDEBUG
     for (uint i = 0; i < m_heighmap.size(); ++i)
     {
@@ -91,8 +93,10 @@ void MovingWall::execute()
     }
 #endif
 
+    //Calculate new height of wall to conserve total force.
     _rescaleHeight();
 
+    //Check if the move allowed any new reactions to occur.
     _locateNewAffected();
 
     _updatePressureRates();
@@ -113,13 +117,11 @@ void MovingWall::execute()
             if (reaction->isAllowed())
             {
                 reaction->registerUpdateFlag(QuasiDiffusionReaction::UpdateFlags::CALCULATE);
+                reaction->setRate();
             }
         }
     }
-}
 
-void MovingWall::reset()
-{
     m_affectedParticles.clear();
 }
 
@@ -156,8 +158,11 @@ void MovingWall::_updatePressureRates()
 
         if (!isAffected(solver()->particle(i)))
         {
-            rateChange = expSmallArg(-Reaction::beta()*m_localPressure(i)*(expFac - 1));
 
+            rateChange = expSmallArg(-m_system->alpha()*m_localPressure(i)*(expFac - 1));
+
+            //For every affected particle we update only those who include the pressure term.
+            //Vector is set up in initialize based on virtual reaction function isPressureAffected().
             for (auto &r : m_pressureAffectedReactions[i])
             {
                 BADAssBool(r->pressureAffected(), "This reaction does not belong here.", [&r] ()
@@ -173,10 +178,7 @@ void MovingWall::_updatePressureRates()
                 r->changeRate(r->rate()*rateChange);
 
             }
-
             m_localPressure(i) *= expFac;
-
-
         }
         else
         {
@@ -209,15 +211,20 @@ void MovingWall::_locateNewAffected()
 void MovingWall::remakeUpdatedValues()
 {
 
-    for (uint i = 0; i < m_heighmap.size(); ++i)
-    {
-        m_localPressure(i) = localPressureEvaluate(i);
-    }
+    recalculateAllPressures();
 
     for (Reaction *reaction : solver()->allPossibleReactions())
     {
         reaction->registerUpdateFlag(QuasiDiffusionReaction::UpdateFlags::CALCULATE);
         reaction->setRate();
+    }
+}
+
+void MovingWall::recalculateAllPressures()
+{
+    for (uint i = 0; i < m_heighmap.size(); ++i)
+    {
+        m_localPressure(i) = localPressureEvaluate(i);
     }
 }
 

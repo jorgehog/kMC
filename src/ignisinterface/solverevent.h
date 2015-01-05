@@ -76,6 +76,8 @@ public:
 
     void reset()
     {
+        m_selectedReaction->execute();
+
         Site::updateBoundaries();
 
         solver()->getRateVariables();
@@ -97,14 +99,12 @@ public:
 
     void execute()
     {
-        R = solver()->kTot()*KMC_RNG_UNIFORM();
+        R = solver()->kTot()*as_scalar(randu<mat>(1,1));
 
         choice = solver()->getReactionChoice(R);
 
         m_selectedReaction = solver()->allPossibleReactions().at(choice);
         KMCDebugger_SetActiveReaction(m_selectedReaction);
-
-        m_selectedReaction->execute();
 
     }
 
