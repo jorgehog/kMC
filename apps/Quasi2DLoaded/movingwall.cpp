@@ -5,14 +5,14 @@
 using namespace kMC;
 
 
-MovingWall::MovingWall(const double h0, const double EsMax, const double EsInit, const ivec &heighmap):
+MovingWall::MovingWall(const double E0,
+                       const double sigma0,
+                       const double r0,
+                       const ivec &heighmap):
     KMCEvent("MovingWall", "h0", true, true),
-    m_EsMax(EsMax),
-    m_EsInit(EsInit),
-    m_r0(r0FromEs(h0, EsMax, EsInit)),
-    m_s0(s0FromEs(h0, EsMax, EsInit)),
-    m_E0(heighmap.size()*_pressureExpression(h0)),
-    m_h0(h0),
+    m_r0(r0),
+    m_s0(sigma0),
+    m_E0(E0),
     m_heighmap(heighmap),
     m_localPressure(heighmap.size(), fill::zeros)
 {
@@ -62,6 +62,7 @@ void MovingWall::initialize()
     m_mPrev /= m_heighmap.size();
 
     m_h = m_r0*std::log(m_heighmap.size()*m_s0*m_mPrev/(-m_E0));
+    cout << m_h << endl;
 
     for (uint site = 0; site < m_heighmap.size(); ++site)
     {
@@ -99,6 +100,9 @@ void MovingWall::reset()
     //Check if the move allowed any new reactions to occur.
     _locateNewAffected();
 
+    //Check if the move blocked any active reactions.
+    _removeBlocked();
+
     _updatePressureRates();
 
     BADAssClose(pressureEnergySum(), m_E0, 1E-5);
@@ -120,6 +124,14 @@ void MovingWall::reset()
                 reaction->setRate();
             }
         }
+    }
+
+    //if any of the reactions are enabled and disabled, we need to remake the event list.
+    //This should really be automated in the KMCSolver
+    if (m_changed != 0)
+    {
+        KMCSolver::instance()->reshuffleReactions();
+        KMCSolver::instance()->remakeAccuAllRates();
     }
 
     m_affectedParticles.clear();
@@ -195,17 +207,37 @@ void MovingWall::_updatePressureRates()
 
 void MovingWall::_locateNewAffected()
 {
+    m_changed = 0;
+
     for (SoluteParticle *particle : solver()->particles())
     {
         for (Reaction *reaction : particle->reactions())
         {
             if (reaction->isAllowed() && (reaction->rate() == Reaction::UNSET_RATE))
             {
+                m_changed++;
                 m_affectedParticles.insert(particle);
                 break;
             }
         }
     }
+}
+
+void MovingWall::_removeBlocked()
+{
+    for (SoluteParticle *particle : solver()->particles())
+    {
+        for (Reaction *reaction : particle->reactions())
+        {
+            if (!reaction->isAllowed() && (reaction->rate() != Reaction::UNSET_RATE))
+            {
+                m_changed++;
+                reaction->disable();
+                reaction->resetUpdateFlag();
+            }
+        }
+    }
+
 }
 
 void MovingWall::remakeUpdatedValues()

@@ -37,7 +37,10 @@ public:
 
         for (Reaction *reaction : solver()->allPossibleReactions())
         {
-            BADAssBool(reaction->isAllowed());
+            BADAssBool(reaction->isAllowed(), "reaction should be active.", [&] ()
+            {
+                cout << reaction->info() << endl;
+            });
 
             double rate = reaction->rate();
             reaction->forceNewRate(Reaction::UNSET_RATE);

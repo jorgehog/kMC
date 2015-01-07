@@ -37,7 +37,7 @@ public:
     {
         stringstream s;
         s << "alpha_" << betaEb()
-          << "mu_" << mu()
+          << "_mu_" << mu()
           << "_" << wallEvent().numericDescription();
 
         return s.str();
@@ -50,7 +50,7 @@ public:
 
     const double &mu() const
     {
-        return m_system.log2C();
+        return m_system.mu();
     }
 
     const uint &leftSite() const
@@ -121,7 +121,7 @@ public:
             return rate();
         }
 
-        forceUpdateFlag(Reaction::AllUpdateFlags::defaultUpdateFlag);
+        resetUpdateFlag();
 
         double Ea = activationEnergy();
 
@@ -153,7 +153,7 @@ public:
 
     double localEnergy(const uint n) const
     {
-        return betaEb()*(n + localPressure() - 2) - m_system.log2C();
+        return betaEb()*(n + localPressure() - 2) - m_system.mu();
     }
 
     double localEnergy() const

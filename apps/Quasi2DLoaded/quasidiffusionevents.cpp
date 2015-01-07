@@ -26,7 +26,7 @@ void EqConc::initialize()
 
 void EqConc::execute()
 {
-    setValue(dlog2C());
+    setValue(dMu());
 }
 
 void EqConc::reset()
@@ -77,7 +77,7 @@ void EqConc::update()
         inverseKStar = 1./DepositionMirrorImageArheniusNoShadowing::promoteFactor();
     }
 
-    m_dlog2C = avgDissolutionRate*inverseKStar;
+    m_dMu = avgDissolutionRate*inverseKStar;
 
 }
 
@@ -130,7 +130,7 @@ void ConcEquilibriator::execute()
         m_counter++;
     }
 
-    setValue(m_system.log2C());
+    setValue(m_system.mu());
 
 }
 
@@ -162,10 +162,10 @@ void ConcEquilibriator::initiateNextConcentrationLevel()
 
     shift /= (m_nswaps + 1);
 
-    m_system.setLog2C(m_system.log2C() + shift);
+    m_system.setMu(m_system.mu() + shift);
 
     m_shifts.push_back(shift);
-    m_values.push_back(m_system.log2C());
+    m_values.push_back(m_system.mu());
 
     conv_to<vec>::from(m_shifts).eval().save("/tmp/shifts.arma");
     conv_to<vec>::from(m_values).eval().save("/tmp/values.arma");

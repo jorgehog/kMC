@@ -18,7 +18,7 @@ private:
     MovingWall &m_wallEvent;
 
     const double m_alpha;
-    double m_log2C;
+    double m_mu;
 
 public:
 
@@ -26,7 +26,7 @@ public:
         m_heights(heights),
         m_wallEvent(wallEvent),
         m_alpha(alpha),
-        m_log2C(mu)
+        m_mu(mu)
     {
         m_wallEvent._setSystem(this);
     }
@@ -114,19 +114,19 @@ public:
         return m_alpha;
     }
 
-    const double &log2C() const
+    const double &mu() const
     {
-        return m_log2C;
+        return m_mu;
     }
 
-    void setLog2C(const double log2C)
+    void setMu(const double mu)
     {
-        m_log2C = log2C;
+        m_mu = mu;
     }
 
     double concentration() const
     {
-        return 0.5*exp(m_log2C);
+        return 0.5*exp(m_mu);
     }
 
 };

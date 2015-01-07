@@ -14,17 +14,17 @@ class MovingWall : public KMCEvent
 {
 public:
 
-    MovingWall(const double h0,
-               const double EsMax,
-               const double EsInit,
+    MovingWall(const double E0,
+               const double sigma0,
+               const double r0,
                const ivec &heighmap);
 
     const string numericDescription() const
     {
         stringstream s;
-        s << "EsMax_" << m_EsMax
-          << "_EsInit_" << m_EsInit
-          << "_h0_" << m_h0;
+        s << "E0_" << m_E0
+          << "_s0_" << m_s0
+          << "_r0_" << m_r0;
 
         return s.str();
 
@@ -171,13 +171,11 @@ private:
     double m_dh;
     double m_mPrev;
 
-    const double m_EsMax;
-    const double m_EsInit;
+    uint m_changed;
 
     const double m_r0;
     const double m_s0;
     const double m_E0;
-    const double m_h0;
 
     const ivec &m_heighmap;
     vec m_localPressure;
@@ -188,6 +186,8 @@ private:
     void _updatePressureRates();
 
     void _locateNewAffected();
+
+    void _removeBlocked();
 
     void remakeUpdatedValues();
 

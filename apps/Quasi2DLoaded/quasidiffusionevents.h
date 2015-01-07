@@ -65,16 +65,16 @@ public:
 
     void restart();
 
-    double dlog2C() const
+    double dMu() const
     {
-        return -log(m_dlog2C);
+        return -log(m_dMu);
     }
 
 private:
 
     const double m_shadowing;
 
-    double m_dlog2C;
+    double m_dMu;
 
     double m_neighbours;
     double m_dissolutionRate;
@@ -89,7 +89,7 @@ private:
     {
         m_totalTime = 0;
 
-        m_dlog2C = 0;
+        m_dMu = 0;
 
         m_neighbours = 0;
         m_dissolutionRate = 0;

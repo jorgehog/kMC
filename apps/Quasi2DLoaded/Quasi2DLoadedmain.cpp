@@ -69,7 +69,6 @@ int main()
     solver->addEvent(dumpHeightmap);
     solver->addEvent(heightRMS);
 
-    const uint &h0 = getSetting<uint>(initCFG, "h0");
     const uint &therm = getSetting<uint>(initCFG, "therm");
 
     const double &alpha = getSetting<double>(initCFG, "alpha");
@@ -77,8 +76,11 @@ int main()
 
     const double &concAdd = getSetting<double>(initCFG, "concAdd");
 
-    const double &EsMax = getSetting<double>(initCFG, "EsMax");
-    const double &EsInit = getSetting<double>(initCFG, "EsInit");
+
+    const double &sigma0 = getSetting<double>(initCFG, "sigma0");
+    const double &r0 = getSetting<double>(initCFG, "r0");
+    const double &Ew0dL = getSetting<double>(initCFG, "Ew0dL");
+    const double Ew0 = Ew0dL*heightmap.size();
 
     const bool acf = getSetting<uint>(initCFG, "acf") == 1;
 
@@ -107,7 +109,8 @@ int main()
     //Override standard diffusion. Necessary for quasi diffusive simulations.
     solver->setDiffusionType(KMCSolver::DiffusionTypes::None);
 
-    MovingWall wallEvent(h0, EsMax, EsInit, heightmap);
+
+    MovingWall wallEvent(Ew0, sigma0, r0, heightmap);
 
     QuasiDiffusionSystem system(heightmap, wallEvent, alpha, mu);
 
@@ -206,7 +209,7 @@ int main()
     if (concEquil && reset)
     {
         solver->mainloop();
-        potentialMember.addData("log2Ceq", system.log2C());
+        potentialMember.addData("mu", system.mu());
 
         solver->mainLattice()->removeEvent(&eqC);
         solver->mainLattice()->removeEvent(&cc);
@@ -227,7 +230,7 @@ int main()
 
     if (concAdd != 0)
     {
-        system.setLog2C(concAdd + system.log2C());
+        system.setMu(concAdd + system.mu());
     }
 
     t.tic();
@@ -235,13 +238,17 @@ int main()
     cout << "Simulation ended after " << t.toc() << " seconds" << endl;
 
 
+    potentialMember.addData("usewall", useWallInt, overwrite);
+    potentialMember.addData("sigma0", sigma0, overwrite);
+    potentialMember.addData("r0", r0, overwrite);
+    potentialMember.addData("Ew0dL", Ew0dL, overwrite);
+
     potentialMember.addData("concAdd", concAdd, overwrite);
     potentialMember.addData("shadowing", shadowingInt, overwrite);
     potentialMember.addData("ConcEquilReset", resetInt, overwrite);
     potentialMember.addData("useConcEquil", concEquilInt, overwrite);
     potentialMember.addData("usediffusion", useDiffusionInt, overwrite);
     potentialMember.addData("useisotropicdiffusion", isotropicDiffusionInt, overwrite);
-    potentialMember.addData("usewall", useWallInt, overwrite);
     potentialMember.addData("size", size.value(), overwrite);
     potentialMember.addData("heightmap", heightmap, overwrite);
     potentialMember.addData("ignisData", solver->mainLattice()->storedEventValues(), overwrite);
@@ -253,7 +260,7 @@ int main()
 
     if (concEquil && !reset)
     {
-        potentialMember.addData("eqConc", eqC.dlog2C());
+        potentialMember.addData("mu", eqC.dMu());
     }
 
     return 0;
