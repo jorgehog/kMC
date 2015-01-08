@@ -35,7 +35,7 @@ int main()
     string ignisOutputName = "ignisQuasi2Dloaded.ign";
     solver->mainLattice()->enableEventValueStorage(true, true, ignisOutputName, solver->filePath(), 1000);
 
-    H5Wrapper::Root h5root("Quasi2D.h5");
+    H5Wrapper::Root h5root(solver->filePath() + "Quasi2D.h5");
 
     const Setting &initCFG = getSetting(root, "Initialization");
 
@@ -123,7 +123,7 @@ int main()
     solver->addEvent(nNeighbors);
 
     Cumulant cumulant(system);
-    solver->addEvent(cumulant);
+//    solver->addEvent(cumulant);
 
     SurfaceSize size(system);
     solver->addEvent(size);
@@ -209,7 +209,7 @@ int main()
     if (concEquil && reset)
     {
         solver->mainloop();
-        potentialMember.addData("mu", system.mu());
+        potentialMember.addData("muEq", system.mu());
 
         solver->mainLattice()->removeEvent(&eqC);
         solver->mainLattice()->removeEvent(&cc);
@@ -260,7 +260,7 @@ int main()
 
     if (concEquil && !reset)
     {
-        potentialMember.addData("mu", eqC.dMu());
+        potentialMember.addData("muEq", eqC.dMu());
     }
 
     return 0;

@@ -8,64 +8,57 @@ sys.path.append("..")
 from parse_data import ParseKMCHDF5
 
 
+
 obj = ParseKMCHDF5(sys.argv[1])
 
-cases = []
+all_E0 = []
+for potential, alpha, mu, E0, s0, r0, ignis_index_map, data, n in obj:
+    if E0 not in all_E0:
+        all_E0.append(E0)
 
-for potential, eb, beta, es, em, h0, ignis_index_map, data, n in obj:
+for E0_case in all_E0:
 
-    if h0 not in cases:
-        cases.append(h0)
-
-
-for h0_c in cases:
-
-    all_beta_eb = []
-    all_c_eq = []
+    all_alpha = []
+    all_mu_eq = []
     all_sizes = []
 
-    for potential, alpha, mu, es, em, h0, ignis_index_map, data, n in obj:
+    for potential, alpha, mu, E0, s0, r0, ignis_index_map, data, n in obj:
 
-        if h0 != h0_c:
+        if E0 != E0_case:
             continue
 
-        if "log2Ceq" in data.attrs:
-            c_eq = data.attrs["log2Ceq"]
+        if "muEq" in data.attrs:
+            mu_eq = data.attrs["muEq"]
         else:
-            c_eq = mu
+            mu_eq = mu
 
         s = data["ignisData"][ignis_index_map["SurfaceSize"], -1]
 
-        if c_eq < 0:
-            print "Warning: negative concentration", c_eq, beta, eb
-
-        all_c_eq.append(c_eq)
+        all_mu_eq.append(mu_eq)
         all_sizes.append(s)
-        all_beta_eb.append(alpha)
+        all_alpha.append(alpha)
 
     figure(1)
-    all_beta_eb, all_sizes, all_c_eq = zip(*[[beb, s, c] for beb, s, c in sorted(zip(all_beta_eb, all_sizes, all_c_eq),
+    all_alpha, all_sizes, all_mu_eq = zip(*[[beb, s, c] for beb, s, c in sorted(zip(all_alpha, all_sizes, all_mu_eq),
                                                                                  key=lambda x: x[0])])
-    plot(all_beta_eb, all_sizes, '-*', label="h0=%g" % h0_c)
+    plot(all_alpha, all_sizes, '-*', label="E0=%g" % E0)
 
     figure(2)
-    plot(all_beta_eb, all_c_eq, '-x', label="h0=%g" % h0_c)
+    plot(all_alpha, all_mu_eq, '-x', label="E0=%g" % E0)
 
 figure(1)
-# plot(all_beta_eb, np.exp(-float(sys.argv[2])*array(all_beta_eb))/array(all_beta_eb))
-xlabel("beta*eb")
+xlabel("alpha")
 ylabel("<s>")
 legend()
 savefig("sizes_betaeb.png")
 
-save("all_beta_eb", all_beta_eb)
+save("all_beta_eb", all_alpha)
 save("all_sizes", all_sizes)
-save("all_eqc", all_c_eq)
+save("all_eqc", all_mu_eq)
 
 figure(2)
-plot(all_beta_eb, np.exp(-2*array(all_beta_eb)))
-xlabel("Eb/kT")
-ylabel("C_0/l_0")
+xlabel("alpha")
+ylabel("mu")
 legend()
 savefig("eqc_betaeb.png")
 

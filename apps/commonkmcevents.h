@@ -31,6 +31,19 @@ public:
                 if (reaction->isAllowed())
                 {
                     BADAss(reaction->address(), !=, Reaction::UNSET_ADDRESS);
+
+                    BADAssBool(solver()->isPossibleReaction(reaction), "reaction should be listed.", [&] ()
+                    {
+                        cout << reaction->info() << endl;
+                    });
+                }
+
+                else
+                {
+                    BADAssBool(!solver()->isPossibleReaction(reaction), "reaction should not be listed.", [&] ()
+                    {
+                        cout << reaction->info() << endl;
+                    });
                 }
             }
         }

@@ -18,8 +18,9 @@ class ParseKMCHDF5:
 
             for potential, data in run.items():
 
-                alpha, mu, es, em, h0 = [float(re.findall("%s\_(-?\d+\.?\d*)" % ID, potential)[0]) for ID in
-                                           ["alpha", "mu", "EsInit", "EsMax", "h0"]]
+                print potential
+                alpha, mu, E0, s0, r0 = [float(re.findall("%s\_(-?\d+\.?\d*)" % ID, potential)[0]) for ID in
+                                           ["alpha", "mu", "E0", "s0", "r0"]]
 
                 n = re.findall("\_n_(\d+)", potential)
 
@@ -29,7 +30,7 @@ class ParseKMCHDF5:
                     name_strip = str(name).split("@")[0]
                     _ignis_index_map[name_strip] = i
 
-                yield potential, alpha, mu, es, em, h0, _ignis_index_map, data, n
+                yield potential, alpha, mu, E0, s0, r0, _ignis_index_map, data, n
 
 
 if __name__ == "__main__":
