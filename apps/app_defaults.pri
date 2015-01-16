@@ -5,12 +5,10 @@ CONFIG += console
 
 INCLUDEPATH  += $$TOP_PWD/include /usr/local/hdf5/include $$PWD
 
-QMAKE_LIBDIR += $$TOP_PWD/lib
-
-LIBS += -lkMC \
-    -L$$UTILS/DCViz/lib -lDCViz \
-    -L$$UTILS/HDF5Wrapper/lib -lHDF5Wrapper \
-    -L/usr/local/hdf5/lib -lhdf5_cpp -lhdf5
+LIBS += -L$$shadowed($$TOP_PWD)/lib -lkMC \
+        -L$$UTILS/DCViz/lib -lDCViz \
+        -L$$UTILS/HDF5Wrapper/lib -lHDF5Wrapper \
+        -L/usr/local/hdf5/lib -lhdf5_cpp -lhdf5
 
 DIRS = outfiles
 

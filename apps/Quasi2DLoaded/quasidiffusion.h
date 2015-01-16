@@ -153,7 +153,7 @@ public:
 
     double localEnergy(const uint n) const
     {
-        return betaEb()*(n + localPressure() - 2) - m_system.mu();
+        return betaEb()*(n + localPressure() - 2) + m_system.mu();
     }
 
     double localEnergy() const

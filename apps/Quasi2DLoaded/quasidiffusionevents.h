@@ -67,7 +67,7 @@ public:
 
     double dMu() const
     {
-        return -log(m_dMu);
+        return log(m_dMu);
     }
 
 private:
@@ -331,6 +331,11 @@ public:
 
     void execute();
 
+    const double &localValue() const
+    {
+        return m_localValue;
+    }
+
 private:
 
     const QuasiDiffusionSystem& m_system;
@@ -339,6 +344,23 @@ private:
     double m_localValue;
 
     double m_T0;
+
+};
+
+class SurfaceSizeLocal : public KMCEvent
+{
+public:
+
+    SurfaceSizeLocal() :
+        KMCEvent("SurfaceSizeLocal", "l0", true, true)
+    {
+
+    }
+
+    void execute()
+    {
+        setValue(dependency<SurfaceSize>("SurfaceSize")->localValue());
+    }
 
 };
 

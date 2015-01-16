@@ -18,7 +18,6 @@ class ParseKMCHDF5:
 
             for potential, data in run.items():
 
-                print potential
                 alpha, mu, E0, s0, r0 = [float(re.findall("%s\_(-?\d+\.?\d*)" % ID, potential)[0]) for ID in
                                            ["alpha", "mu", "E0", "s0", "r0"]]
 

@@ -33,7 +33,7 @@ int main()
     KMCSolver* solver = new KMCSolver(root);
 
     string ignisOutputName = "ignisQuasi2Dloaded.ign";
-    solver->mainLattice()->enableEventValueStorage(true, true, ignisOutputName, solver->filePath(), 1000);
+    solver->mainLattice()->enableEventValueStorage(true, true, ignisOutputName, solver->filePath(), 1);
 
     H5Wrapper::Root h5root(solver->filePath() + "Quasi2D.h5");
 
@@ -127,6 +127,10 @@ int main()
 
     SurfaceSize size(system);
     solver->addEvent(size);
+
+    SurfaceSizeLocal sizeLocal;
+    sizeLocal.setDependency(size);
+    solver->addEvent(sizeLocal);
 
     autocorr.setOnsetTime(therm);
     nNeighbors.setOnsetTime(therm);

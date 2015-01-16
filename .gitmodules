@@ -23,3 +23,6 @@
 [submodule "utils/HDF5Wrapper"]
 	path = utils/HDF5Wrapper
 	url = https://github.com/jorgehog/HDF5Wrapper
+[submodule "apps/Quasi2DLoaded/block_surfacesize/pyblockzor"]
+	path = apps/Quasi2DLoaded/block_surfacesize/pyblockzor
+	url = https://github.com/jorgehog/pyblockzor
