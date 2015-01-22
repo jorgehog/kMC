@@ -16,7 +16,7 @@ MovingWall::MovingWall(const double E0,
     m_heighmap(heighmap),
     m_localPressure(heighmap.size(), fill::zeros)
 {
-
+    BADAss(E0, <, 0, "E0 should be negative.");
 }
 
 MovingWall::~MovingWall()
