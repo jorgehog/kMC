@@ -29,8 +29,13 @@ class ParseKMCHDF5:
                     name_strip = str(name).split("@")[0]
                     _ignis_index_map[name_strip] = i
 
-                yield potential, alpha, mu, E0, s0, r0, _ignis_index_map, data, n
+                yield l, potential, alpha, mu, E0, s0, r0, _ignis_index_map, data, n
 
+    def getfile(self):
+        return self.file
+
+    def close(self):
+        self.file.close()
 
 if __name__ == "__main__":
     obj = ParseKMCHDF5("/home/jorgehog/code/build-kMC-Desktop_Qt_5_3_GCC_64bit-Release/apps/Quasi2DLoaded/Quasi2D.h5")

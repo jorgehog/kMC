@@ -136,6 +136,7 @@ int main()
     nNeighbors.setOnsetTime(therm);
     cumulant.setOnsetTime(therm);
     size.setOnsetTime(therm);
+    sizeLocal.setOnsetTime(therm);
 
     EqConc eqC(useShadowing);
     ConcEquilibriator cc(system, eqC, N, gCrit, treshold);
@@ -213,7 +214,10 @@ int main()
     if (concEquil && reset)
     {
         solver->mainloop();
-        potentialMember.addData("muEq", system.mu());
+        potentialMember.addData("muEq", cc.averageMu(), overwrite);
+        potentialMember.addData("muEqError", cc.error(), overwrite);
+
+        system.setMu(cc.averageMu());
 
         solver->mainLattice()->removeEvent(&eqC);
         solver->mainLattice()->removeEvent(&cc);
@@ -264,7 +268,8 @@ int main()
 
     if (concEquil && !reset)
     {
-        potentialMember.addData("muEq", eqC.dMu());
+        potentialMember.addData("muEq", cc.averageMu(), overwrite);
+        potentialMember.addData("muEqError", cc.error(), overwrite);
     }
 
     return 0;

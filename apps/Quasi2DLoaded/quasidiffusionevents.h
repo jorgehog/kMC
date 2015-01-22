@@ -47,7 +47,10 @@ public:
 
     EqConc(const bool shadowing) :
         KMCEvent("EqConc", "", true, true),
-        m_shadowing(shadowing)
+        m_shadowing(shadowing),
+        m_neighbours(0),
+        m_dissolutionRate(0),
+        m_totalTime(0)
     {
         setDependency(solver()->solverEvent());
     }
@@ -89,8 +92,6 @@ private:
     {
         m_totalTime = 0;
 
-        m_dMu = 0;
-
         m_neighbours = 0;
         m_dissolutionRate = 0;
     }
@@ -113,7 +114,11 @@ public:
         m_N(N),
         m_gCrit(gCrit),
         m_treshold(treshold),
-        m_logCShiftValues(m_N)
+        m_doAverage(false),
+        m_averageMu(0),
+        m_averageMu2Sum(0),
+        m_averageMuCount(0),
+        m_logMuShiftValues(m_N)
     {
         setDependency(m_eqConcEvent);
     }
@@ -128,10 +133,20 @@ public:
 
         for (uint i = 1; i < m_N - 1; ++i)
         {
-            g += fabs((m_logCShiftValues[i + 1] - m_logCShiftValues[i - 1])/2.0);
+            g += fabs((m_logMuShiftValues[i + 1] - m_logMuShiftValues[i - 1])/2.0);
         }
 
         return g/(m_N - 2);
+    }
+
+    const double &averageMu() const
+    {
+        return m_averageMu;
+    }
+
+    const double &error() const
+    {
+        return m_error;
     }
 
 private:
@@ -149,7 +164,13 @@ private:
     const double m_gCrit;
     const double m_treshold;
 
-    vector<double> m_logCShiftValues;
+    bool m_doAverage;
+    double m_averageMu;
+    double m_averageMu2Sum;
+    double m_error;
+    uint m_averageMuCount;
+
+    vector<double> m_logMuShiftValues;
 
     uint m_counter;
 
@@ -157,9 +178,12 @@ private:
 
     vector<double> m_shifts;
     vector<double> m_values;
+    vector<double> m_swaps;
 
-    uint m_nswaps;
     double m_prevShift;
+
+    void finalizeAverages();
+
 };
 
 class Cumulant : public KMCEvent

@@ -58,8 +58,9 @@ void EqConc::update()
         localDissolutionRate /= nDissolutionReactions;
     }
 
-    m_dissolutionRate += dt()*localDissolutionRate;
     m_totalTime += dt();
+
+    m_dissolutionRate += dt()*localDissolutionRate;
 
     double avgDissolutionRate = m_dissolutionRate/m_totalTime;
 
@@ -78,7 +79,6 @@ void EqConc::update()
     }
 
     m_dMu = avgDissolutionRate*inverseKStar;
-
 }
 
 
@@ -89,7 +89,6 @@ void ConcEquilibriator::initialize()
     m_initialHeights = m_system.heights();
 
     m_prevShift = 0;
-    m_nswaps = 0;
 
     for (SoluteParticle *particle : solver()->particles())
     {
@@ -111,10 +110,10 @@ void ConcEquilibriator::execute()
     {
         for (uint i = 1; i < m_N; ++i)
         {
-            m_logCShiftValues[i - 1] = m_logCShiftValues[i];
+            m_logMuShiftValues[i - 1] = m_logMuShiftValues[i];
         }
 
-        m_logCShiftValues[m_N - 1] = shift;
+        m_logMuShiftValues[m_N - 1] = shift;
 
         double g = flatness();
 
@@ -126,7 +125,7 @@ void ConcEquilibriator::execute()
     }
     else
     {
-        m_logCShiftValues[m_counter] = shift;
+        m_logMuShiftValues[m_counter] = shift;
         m_counter++;
     }
 
@@ -137,57 +136,68 @@ void ConcEquilibriator::execute()
 
 void ConcEquilibriator::initiateNextConcentrationLevel()
 {
-    double shift = m_logCShiftValues[m_N - 1];
-    uint swapmax = 100;
 
-    if (m_prevShift != 0 && shift != 0)
+    double shift = m_logMuShiftValues[m_N - 1];
+
+    double newMu = m_system.mu() + shift;
+
+    //Cannot use 'else' because this could occur even when the prev test goes through
+    if (m_doAverage)
     {
-        if (m_prevShift/shift < 0)
+        m_averageMu += newMu;
+        m_averageMu2Sum += newMu*newMu;
+        m_averageMuCount++;
+    }
+
+    m_shifts.push_back(shift);
+    m_values.push_back(m_system.mu());
+
+    m_system.setMu(newMu);
+
+    conv_to<vec>::from(m_shifts).eval().save("/tmp/shifts.arma");
+    conv_to<vec>::from(m_values).eval().save("/tmp/values.arma");
+
+
+    if (fabs(shift) < m_treshold)
+    {
+        terminateLoop("Concentration converged");
+
+        finalizeAverages();
+    }
+
+    if (!m_doAverage)
+    {
+        if (m_prevShift != 0 && shift != 0)
         {
-            if (m_nswaps < swapmax)
+            if (m_prevShift/shift < 0)
             {
-                m_nswaps++;
-            }
-        }
-        else
-        {
-            if (m_nswaps != 0)
-            {
-                m_nswaps--;
+                m_doAverage = true;
             }
         }
     }
 
     m_prevShift = shift;
 
-    shift /= (m_nswaps + 1);
-
-    m_system.setMu(m_system.mu() + shift);
-
-    m_shifts.push_back(shift);
-    m_values.push_back(m_system.mu());
-
-    conv_to<vec>::from(m_shifts).eval().save("/tmp/shifts.arma");
-    conv_to<vec>::from(m_values).eval().save("/tmp/values.arma");
-
-    if (fabs(shift) < m_treshold)
-    {
-        terminateLoop("Concentration converged");
-
-        for (uint i = 0; i < m_shifts.size(); ++i)
-        {
-            cout << m_shifts.at(i) << " " << m_values.at(i) << endl;
-        }
-    }
-
-
-//    m_system.setHeights(m_initialHeights);
     m_eqConcEvent.restart();
 
     for (QuasiDiffusionReaction *reaction : m_affectedReactions)
     {
         reaction->registerUpdateFlag(QuasiDiffusionReaction::UpdateFlags::CALCULATE);
     }
+}
+
+void ConcEquilibriator::finalizeAverages()
+{
+    for (uint i = 0; i < m_shifts.size(); ++i)
+    {
+        cout << m_shifts.at(i) << " " << m_values.at(i) << endl;
+    }
+
+    const uint &N = m_averageMuCount;
+
+    m_averageMu /= N;
+
+    m_error = sqrt(1.0/(N - 1)*(m_averageMu2Sum - m_averageMu*m_averageMu*N));
 }
 
 
