@@ -57,17 +57,7 @@ int main()
 //        }
 //    }
 
-    DumpHeighmap dumpHeightmap(heightmap);
-    HeightRMS heightRMS(heightmap);
-    AutoCorrHeight autocorr(heightmap);
 
-
-    heightRMS.setDependency(dumpHeightmap);
-    autocorr.setDependency(dumpHeightmap);
-
-    solver->addEvent(new TotalTime());
-    solver->addEvent(dumpHeightmap);
-    solver->addEvent(heightRMS);
 
     const uint &therm = getSetting<uint>(initCFG, "therm");
 
@@ -98,9 +88,8 @@ int main()
 
     const bool concEquil = concEquilInt == 1;
     const bool reset = resetInt == 1;
-    const double &gCrit = getSetting<double>(initCFG, "gCrit");
-    const double &treshold = getSetting<double>(initCFG, "treshold");
     const uint &N = getSetting<uint>(initCFG, "N");
+    const uint &nRounds = getSetting<uint>(initCFG, "nRounds");
 
     const uint &wallOnsetCycle = getSetting<uint>(initCFG, "wallOnsetCycle");
 
@@ -114,32 +103,14 @@ int main()
 
     QuasiDiffusionSystem system(heightmap, wallEvent, alpha, mu);
 
-    if (acf)
-    {
-        solver->addEvent(autocorr);
-    }
+    DumpHeighmap dumpHeightmap(heightmap);
+    solver->addEvent(dumpHeightmap);
 
     NNeighbors nNeighbors(system);
     solver->addEvent(nNeighbors);
 
-    Cumulant cumulant(system);
-//    solver->addEvent(cumulant);
-
-    SurfaceSize size(system);
-    solver->addEvent(size);
-
-    SurfaceSizeLocal sizeLocal;
-    sizeLocal.setDependency(size);
-    solver->addEvent(sizeLocal);
-
-    autocorr.setOnsetTime(therm);
-    nNeighbors.setOnsetTime(therm);
-    cumulant.setOnsetTime(therm);
-    size.setOnsetTime(therm);
-    sizeLocal.setOnsetTime(therm);
-
     EqConc eqC(useShadowing);
-    ConcEquilibriator cc(system, eqC, N, gCrit, treshold);
+    ConcEquilibriator cc(system, eqC, nRounds, N);
 
     eqC.setDependency(nNeighbors);
 
@@ -214,6 +185,12 @@ int main()
     if (concEquil && reset)
     {
         solver->mainloop();
+
+        if (!cc.finalized())
+        {
+            cc.finalizeAverages();
+        }
+
         potentialMember.addData("muEq", cc.averageMu(), overwrite);
         potentialMember.addData("muEqError", cc.error(), overwrite);
 
@@ -240,6 +217,38 @@ int main()
     {
         system.setMu(concAdd + system.mu());
     }
+
+    HeightRMS heightRMS(heightmap);
+    AutoCorrHeight autocorr(heightmap);
+
+
+    heightRMS.setDependency(dumpHeightmap);
+    autocorr.setDependency(dumpHeightmap);
+
+    solver->addEvent(new TotalTime());
+    solver->addEvent(heightRMS);
+
+    if (acf)
+    {
+        solver->addEvent(autocorr);
+    }
+
+
+    Cumulant cumulant(system);
+//    solver->addEvent(cumulant);
+
+    SurfaceSize size(system);
+    solver->addEvent(size);
+
+    SurfaceSizeLocal sizeLocal;
+    sizeLocal.setDependency(size);
+    solver->addEvent(sizeLocal);
+
+    autocorr.setOnsetTime(therm);
+    nNeighbors.setOnsetTime(therm);
+    cumulant.setOnsetTime(therm);
+    size.setOnsetTime(therm);
+    sizeLocal.setOnsetTime(therm);
 
     t.tic();
     solver->mainloop();

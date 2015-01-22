@@ -90,6 +90,16 @@ void ConcEquilibriator::initialize()
 
     m_prevShift = 0;
 
+    m_doAverage = false;
+
+    m_averageMu = 0;
+
+    m_averageMu2Sum = 0;
+
+    m_averageMuCount = 0;
+
+    m_finalized = false;
+
     for (SoluteParticle *particle : solver()->particles())
     {
         for (Reaction *reaction : particle->reactions())
@@ -106,27 +116,11 @@ void ConcEquilibriator::execute()
 {
     double shift = m_eqConcEvent.value();
 
+    m_counter++;
     if (m_counter >= m_N)
     {
-        for (uint i = 1; i < m_N; ++i)
-        {
-            m_logMuShiftValues[i - 1] = m_logMuShiftValues[i];
-        }
-
-        m_logMuShiftValues[m_N - 1] = shift;
-
-        double g = flatness();
-
-        if (g < m_gCrit)
-        {
-            initiateNextConcentrationLevel();
-            m_counter = 0;
-        }
-    }
-    else
-    {
-        m_logMuShiftValues[m_counter] = shift;
-        m_counter++;
+        initiateNextConcentrationLevel(shift);
+        m_counter = 0;
     }
 
     setValue(m_system.mu());
@@ -134,10 +128,8 @@ void ConcEquilibriator::execute()
 }
 
 
-void ConcEquilibriator::initiateNextConcentrationLevel()
+void ConcEquilibriator::initiateNextConcentrationLevel(const double shift)
 {
-
-    double shift = m_logMuShiftValues[m_N - 1];
 
     double newMu = m_system.mu() + shift;
 
@@ -158,7 +150,7 @@ void ConcEquilibriator::initiateNextConcentrationLevel()
     conv_to<vec>::from(m_values).eval().save("/tmp/values.arma");
 
 
-    if (fabs(shift) < m_treshold)
+    if (m_averageMuCount == m_nRounds)
     {
         terminateLoop("Concentration converged");
 
@@ -188,6 +180,11 @@ void ConcEquilibriator::initiateNextConcentrationLevel()
 
 void ConcEquilibriator::finalizeAverages()
 {
+    if (m_finalized)
+    {
+        return;
+    }
+
     for (uint i = 0; i < m_shifts.size(); ++i)
     {
         cout << m_shifts.at(i) << " " << m_values.at(i) << endl;
@@ -195,9 +192,15 @@ void ConcEquilibriator::finalizeAverages()
 
     const uint &N = m_averageMuCount;
 
+    cout << "N = " << N << endl;
+
     m_averageMu /= N;
 
     m_error = sqrt(1.0/(N - 1)*(m_averageMu2Sum - m_averageMu*m_averageMu*N));
+
+    cout << "Average = " << m_averageMu << " error = " << m_error << endl;
+
+    m_finalized = true;
 }
 
 

@@ -105,19 +105,18 @@ public:
 
     ConcEquilibriator(QuasiDiffusionSystem &system,
                       EqConc &eqConcEvent,
-                      const uint N = 100,
-                      const double gCrit = 1E-5,
-                      const double treshold = 1E-5) :
+                      const uint nRounds = 100,
+                      const uint N = 100) :
         KMCEvent("ConcEquilibriator", "", true, true),
         m_system(system),
         m_eqConcEvent(eqConcEvent),
+        m_nRounds(nRounds),
         m_N(N),
-        m_gCrit(gCrit),
-        m_treshold(treshold),
         m_doAverage(false),
         m_averageMu(0),
         m_averageMu2Sum(0),
         m_averageMuCount(0),
+        m_finalized(false),
         m_logMuShiftValues(m_N)
     {
         setDependency(m_eqConcEvent);
@@ -127,27 +126,26 @@ public:
 
     void execute();
 
-    double flatness()
-    {
-        double g = 0;
-
-        for (uint i = 1; i < m_N - 1; ++i)
-        {
-            g += fabs((m_logMuShiftValues[i + 1] - m_logMuShiftValues[i - 1])/2.0);
-        }
-
-        return g/(m_N - 2);
-    }
-
     const double &averageMu() const
     {
+        BADAssBool(m_finalized);
+
         return m_averageMu;
     }
 
     const double &error() const
     {
+        BADAssBool(m_finalized);
+
         return m_error;
     }
+
+    const bool &finalized() const
+    {
+        return m_finalized;
+    }
+
+    void finalizeAverages();
 
 private:
 
@@ -159,10 +157,8 @@ private:
 
     vector<QuasiDiffusionReaction*> m_affectedReactions;
 
+    const uint m_nRounds;
     const uint m_N;
-
-    const double m_gCrit;
-    const double m_treshold;
 
     bool m_doAverage;
     double m_averageMu;
@@ -170,19 +166,19 @@ private:
     double m_error;
     uint m_averageMuCount;
 
+    bool m_finalized;
+
     vector<double> m_logMuShiftValues;
 
     uint m_counter;
 
-    void initiateNextConcentrationLevel();
+    void initiateNextConcentrationLevel(const double shift);
 
     vector<double> m_shifts;
     vector<double> m_values;
     vector<double> m_swaps;
 
     double m_prevShift;
-
-    void finalizeAverages();
 
 };
 
