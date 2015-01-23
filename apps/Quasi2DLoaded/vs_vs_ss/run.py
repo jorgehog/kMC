@@ -1,10 +1,11 @@
-from distutils.command.config import dump_file
 from sys import argv, path
 from os.path import join, split, exists
 from os import (system,
                 chdir,
                 getcwd,
                 remove)
+
+path.append(join(getcwd(), "..", ".."))
 
 from run_app_paramloop import *
 

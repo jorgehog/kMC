@@ -11,14 +11,38 @@
 using namespace libconfig;
 using namespace kMC;
 
-int main()
+string addProcEnding(string filename, string ending, string procending)
 {
+    stringstream s;
+    s << filename << procending << "." << ending;
+
+    return s.str();
+}
+
+int main(int argv, char** argc)
+{
+
+    string tail;
+
+    if (argv == 2)
+    {
+        int proc = atoi(argc[1]);
+
+        stringstream ending;
+        ending << "_" << proc;
+
+        tail = ending.str();
+    }
+    else
+    {
+        tail = "";
+    }
 
     Config cfg;
     wall_clock t;
 
-
-    cfg.readFile("infiles/Quasi2DLoaded.cfg");
+    string cfgName = "infiles/" + addProcEnding("Quasi2DLoaded", "cfg", tail);
+    cfg.readFile(cfgName.c_str());
 
     const Setting & root = cfg.getRoot();
 
@@ -32,10 +56,10 @@ int main()
 
     KMCSolver* solver = new KMCSolver(root);
 
-    string ignisOutputName = "ignisQuasi2Dloaded.ign";
-    solver->mainLattice()->enableEventValueStorage(true, true, ignisOutputName, solver->filePath(), 1);
+    string ignisOutputName = addProcEnding("ignisQuasi2Dloaded", "ign", tail);
+    solver->mainLattice()->enableEventValueStorage(true, true, ignisOutputName, solver->filePath(), 1000);
 
-    H5Wrapper::Root h5root(solver->filePath() + "Quasi2D.h5");
+    H5Wrapper::Root h5root(solver->filePath() +  addProcEnding("Quasi2D", "h5", tail));
 
     const Setting &initCFG = getSetting(root, "Initialization");
 
@@ -70,7 +94,7 @@ int main()
     const double &sigma0 = getSetting<double>(initCFG, "sigma0");
     const double &r0 = getSetting<double>(initCFG, "r0");
     const double &Ew0dL = getSetting<double>(initCFG, "Ew0dL");
-    const double Ew0 = Ew0dL*heightmap.size();
+    const double Ew0 = -Ew0dL*heightmap.size();
 
     const bool acf = getSetting<uint>(initCFG, "acf") == 1;
 
